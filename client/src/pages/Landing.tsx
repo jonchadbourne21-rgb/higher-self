@@ -19,6 +19,25 @@ export default function Landing() {
   const [, navigate] = useLocation();
 
   useEffect(() => {
+    // Set SEO title and meta description
+    document.title = "Higher Self — Your AI Mirror for Personal Growth";
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute(
+        "content",
+        "Meet your AI Mirror — a personalized guide to emotional maturity, inner peace, and authentic living. Daily growth through reflection and wisdom."
+      );
+    }
+    const metaKeywords = document.querySelector('meta[name="keywords"]');
+    if (metaKeywords) {
+      metaKeywords.setAttribute(
+        "content",
+        "personal growth, emotional maturity, AI coach, self-awareness, inner peace, daily reflection, mindfulness, authentic living"
+      );
+    }
+  }, []);
+
+  useEffect(() => {
     // Show error toast if OAuth callback failed
     const params = new URLSearchParams(window.location.search);
     if (params.get("auth_error") === "1") {
@@ -79,6 +98,9 @@ export default function Landing() {
             <br />
             <span className="text-gold-gradient italic">were meant to be</span>
           </h1>
+          <h2 className="text-lg font-light text-muted-foreground mt-4">
+            Transform your life with personalized AI guidance
+          </h2>
         </motion.div>
 
         <motion.p
@@ -88,7 +110,7 @@ export default function Landing() {
           animate="visible"
           className="text-muted-foreground text-base leading-relaxed font-light"
         >
-          Your AI mirror — a higher, more connected version of you — guides you toward inner peace, emotional maturity, and authentic living.
+          Your AI mirror — a higher, more connected version of you — guides you toward inner peace, emotional maturity, and authentic living. Track your growth across life domains, reflect daily, and evolve into your best self.
         </motion.p>
 
         <motion.div
