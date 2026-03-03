@@ -14,25 +14,44 @@ function getQueryParam(req: Request, key: string): string | undefined {
  * The client sends: redirectUri = window.location.origin + "/api/oauth/callback"
  * We must send the SAME value back during token exchange.
  *
- * Strategy: reconstruct from the incoming request's host header + known path.
- * This is always correct regardless of how state was encoded.
+ * The Manus proxy sets x-forwarded-host and x-forwarded-proto headers.
+ * We use those to reconstruct the exact public-facing origin.
  */
 function getRedirectUri(req: Request): string {
-  // x-forwarded-host is set by the Manus proxy on the published domain
-  const host = req.headers["x-forwarded-host"] || req.headers.host || req.hostname;
-  const proto = req.headers["x-forwarded-proto"]
-    ? (Array.isArray(req.headers["x-forwarded-proto"])
-        ? req.headers["x-forwarded-proto"][0]
-        : req.headers["x-forwarded-proto"].split(",")[0].trim())
-    : req.protocol;
+  // x-forwarded-host is set by the Manus/Cloudflare proxy
+  const forwardedHost = req.headers["x-forwarded-host"];
+  const host = (Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost) || req.headers.host || req.hostname;
+
+  const forwardedProto = req.headers["x-forwarded-proto"];
+  const proto = (Array.isArray(forwardedProto)
+    ? forwardedProto[0]
+    : forwardedProto?.split(",")[0].trim()) || req.protocol || "https";
 
   const origin = `${proto}://${host}`;
   const redirectUri = `${origin}/api/oauth/callback`;
   console.log("[OAuth] Reconstructed redirectUri:", redirectUri);
+  console.log("[OAuth] Request headers:", JSON.stringify({
+    host: req.headers.host,
+    "x-forwarded-host": req.headers["x-forwarded-host"],
+    "x-forwarded-proto": req.headers["x-forwarded-proto"],
+    "x-forwarded-for": req.headers["x-forwarded-for"],
+    protocol: req.protocol,
+    hostname: req.hostname,
+  }));
   return redirectUri;
 }
 
 export function registerOAuthRoutes(app: Express) {
+  // Debug endpoint to inspect request headers from the proxy
+  app.get("/api/debug/headers", (req: Request, res: Response) => {
+    res.json({
+      headers: req.headers,
+      hostname: req.hostname,
+      protocol: req.protocol,
+      reconstructedRedirectUri: getRedirectUri(req),
+    });
+  });
+
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
@@ -43,10 +62,8 @@ export function registerOAuthRoutes(app: Express) {
     }
 
     try {
-      console.log("[OAuth] Callback received, code length:", code?.length);
-
-      // Reconstruct redirectUri from the request — most reliable, no encoding issues
       const redirectUri = getRedirectUri(req);
+      console.log("[OAuth] Attempting token exchange with redirectUri:", redirectUri);
 
       const tokenResponse = await sdk.exchangeCodeForToken(code, state, redirectUri);
       console.log("[OAuth] Token exchange succeeded");
@@ -75,15 +92,19 @@ export function registerOAuthRoutes(app: Express) {
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      // Redirect to root — the SPA router handles the rest
       console.log("[OAuth] Login successful, redirecting to /");
       res.redirect(302, "/");
     } catch (error: any) {
-      const errMsg = error?.response?.data
-        ? JSON.stringify(error.response.data)
+      const errData = error?.response?.data;
+      const errMsg = errData
+        ? JSON.stringify(errData)
         : error instanceof Error ? error.message : String(error);
-      console.error("[OAuth] Callback failed:", errMsg);
-      // Redirect to landing page with error instead of showing raw JSON
+      console.error("[OAuth] Callback failed. Error:", errMsg);
+      console.error("[OAuth] Full error response:", JSON.stringify({
+        status: error?.response?.status,
+        data: error?.response?.data,
+        message: error?.message,
+      }));
       res.redirect(302, "/?auth_error=1");
     }
   });
