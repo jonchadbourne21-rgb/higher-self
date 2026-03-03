@@ -50,13 +50,18 @@ class OAuthService {
 
   async getTokenByCode(
     code: string,
-    state: string
+    state: string,
+    redirectUriOverride?: string
   ): Promise<ExchangeTokenResponse> {
+    // Use the explicit redirectUri if provided, otherwise decode from state
+    // The redirectUri MUST exactly match what was sent in the original authorization request
+    const redirectUri = redirectUriOverride ?? this.decodeState(state);
+    console.log("[OAuth] Using redirectUri for token exchange:", redirectUri);
     const payload: ExchangeTokenRequest = {
       clientId: ENV.appId,
       grantType: "authorization_code",
       code,
-      redirectUri: this.decodeState(state),
+      redirectUri,
     };
 
     const { data } = await this.client.post<ExchangeTokenResponse>(
@@ -125,9 +130,10 @@ class SDKServer {
    */
   async exchangeCodeForToken(
     code: string,
-    state: string
+    state: string,
+    redirectUriOverride?: string
   ): Promise<ExchangeTokenResponse> {
-    return this.oauthService.getTokenByCode(code, state);
+    return this.oauthService.getTokenByCode(code, state, redirectUriOverride);
   }
 
   /**

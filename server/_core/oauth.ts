@@ -13,6 +13,8 @@ export function registerOAuthRoutes(app: Express) {
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
+    // The redirectUri in the query param is the exact URI registered with Manus OAuth
+    const redirectUri = getQueryParam(req, "redirectUri");
 
     if (!code || !state) {
       res.status(400).json({ error: "code and state are required" });
@@ -20,8 +22,10 @@ export function registerOAuthRoutes(app: Express) {
     }
 
     try {
-      console.log("[OAuth] Callback received, code length:", code?.length, "state:", state?.slice(0, 30));
-      const tokenResponse = await sdk.exchangeCodeForToken(code, state);
+      console.log("[OAuth] Callback received, code length:", code?.length);
+      // Pass the redirectUri from query params if available (most reliable)
+      // Fall back to decoding from state for backwards compatibility
+      const tokenResponse = await sdk.exchangeCodeForToken(code, state, redirectUri);
       console.log("[OAuth] Token exchange succeeded");
       const userInfo = await sdk.getUserInfo(tokenResponse.accessToken);
       console.log("[OAuth] Got user info, openId:", userInfo.openId ? "present" : "missing");
@@ -47,9 +51,10 @@ export function registerOAuthRoutes(app: Express) {
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      // Redirect to the origin extracted from the state, or fallback to /
+      // Determine redirect target: decode origin from state, fallback to /
       let redirectTo = "/";
       try {
+        // state = btoa(redirectUri) where redirectUri = origin + /api/oauth/callback
         const decoded = Buffer.from(state, "base64").toString("utf-8");
         const url = new URL(decoded);
         redirectTo = url.origin + "/";
@@ -58,8 +63,11 @@ export function registerOAuthRoutes(app: Express) {
       }
       console.log("[OAuth] Redirecting to:", redirectTo);
       res.redirect(302, redirectTo);
-    } catch (error) {
-      console.error("[OAuth] Callback failed:", error instanceof Error ? error.message : String(error));
+    } catch (error: any) {
+      const errMsg = error?.response?.data
+        ? JSON.stringify(error.response.data)
+        : error instanceof Error ? error.message : String(error);
+      console.error("[OAuth] Callback failed:", errMsg);
       // Redirect to landing page with error instead of showing raw JSON
       res.redirect(302, "/?auth_error=1");
     }
