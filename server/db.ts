@@ -1,11 +1,22 @@
-import { eq } from "drizzle-orm";
+import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
-import { ENV } from './_core/env';
+import {
+  InsertUser,
+  chatMessages,
+  dailyCheckIns,
+  growthMilestones,
+  habitCompletions,
+  habits,
+  journalEntries,
+  lifeDomainScores,
+  userProfiles,
+  users,
+  weeklyInsights,
+} from "../drizzle/schema";
+import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
@@ -18,75 +29,397 @@ export async function getDb() {
   return _db;
 }
 
+// ─── Users ────────────────────────────────────────────────────────────────────
+
 export async function upsertUser(user: InsertUser): Promise<void> {
-  if (!user.openId) {
-    throw new Error("User openId is required for upsert");
-  }
-
+  if (!user.openId) throw new Error("User openId is required for upsert");
   const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot upsert user: database not available");
-    return;
+  if (!db) return;
+
+  const values: InsertUser = { openId: user.openId };
+  const updateSet: Record<string, unknown> = {};
+
+  const textFields = ["name", "email", "loginMethod"] as const;
+  for (const field of textFields) {
+    const value = user[field];
+    if (value === undefined) continue;
+    const normalized = value ?? null;
+    values[field] = normalized;
+    updateSet[field] = normalized;
   }
 
-  try {
-    const values: InsertUser = {
-      openId: user.openId,
-    };
-    const updateSet: Record<string, unknown> = {};
-
-    const textFields = ["name", "email", "loginMethod"] as const;
-    type TextField = (typeof textFields)[number];
-
-    const assignNullable = (field: TextField) => {
-      const value = user[field];
-      if (value === undefined) return;
-      const normalized = value ?? null;
-      values[field] = normalized;
-      updateSet[field] = normalized;
-    };
-
-    textFields.forEach(assignNullable);
-
-    if (user.lastSignedIn !== undefined) {
-      values.lastSignedIn = user.lastSignedIn;
-      updateSet.lastSignedIn = user.lastSignedIn;
-    }
-    if (user.role !== undefined) {
-      values.role = user.role;
-      updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = 'admin';
-      updateSet.role = 'admin';
-    }
-
-    if (!values.lastSignedIn) {
-      values.lastSignedIn = new Date();
-    }
-
-    if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date();
-    }
-
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet,
-    });
-  } catch (error) {
-    console.error("[Database] Failed to upsert user:", error);
-    throw error;
+  if (user.lastSignedIn !== undefined) {
+    values.lastSignedIn = user.lastSignedIn;
+    updateSet.lastSignedIn = user.lastSignedIn;
   }
+  if (user.role !== undefined) {
+    values.role = user.role;
+    updateSet.role = user.role;
+  } else if (user.openId === ENV.ownerOpenId) {
+    values.role = "admin";
+    updateSet.role = "admin";
+  }
+
+  if (!values.lastSignedIn) values.lastSignedIn = new Date();
+  if (Object.keys(updateSet).length === 0) updateSet.lastSignedIn = new Date();
+
+  await db.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
 }
 
 export async function getUserByOpenId(openId: string) {
   const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot get user: database not available");
-    return undefined;
-  }
-
+  if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-
-  return result.length > 0 ? result[0] : undefined;
+  return result[0];
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function markOnboardingComplete(userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({ onboardingCompleted: true }).where(eq(users.id, userId));
+}
+
+// ─── User Profiles ────────────────────────────────────────────────────────────
+
+export async function getUserProfile(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(userProfiles).where(eq(userProfiles.userId, userId)).limit(1);
+  return result[0];
+}
+
+export async function upsertUserProfile(userId: number, data: Partial<typeof userProfiles.$inferInsert>) {
+  const db = await getDb();
+  if (!db) return;
+  const existing = await getUserProfile(userId);
+  if (existing) {
+    await db.update(userProfiles).set(data).where(eq(userProfiles.userId, userId));
+  } else {
+    await db.insert(userProfiles).values({ userId, ...data });
+  }
+}
+
+// ─── Life Domain Scores ───────────────────────────────────────────────────────
+
+export async function getLatestDomainScores(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  // Get the most recent score per domain
+  const domains = ["mindset", "relationships", "work", "health", "spirituality", "finances"] as const;
+  const results = await Promise.all(
+    domains.map(async (domain) => {
+      const rows = await db
+        .select()
+        .from(lifeDomainScores)
+        .where(and(eq(lifeDomainScores.userId, userId), eq(lifeDomainScores.domain, domain)))
+        .orderBy(desc(lifeDomainScores.recordedAt))
+        .limit(1);
+      return rows[0] ?? null;
+    })
+  );
+  return results.filter(Boolean);
+}
+
+export async function getDomainScoreHistory(userId: number, domain: string, days = 30) {
+  const db = await getDb();
+  if (!db) return [];
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  return db
+    .select()
+    .from(lifeDomainScores)
+    .where(
+      and(
+        eq(lifeDomainScores.userId, userId),
+        eq(lifeDomainScores.domain, domain as any),
+        gte(lifeDomainScores.recordedAt, since)
+      )
+    )
+    .orderBy(desc(lifeDomainScores.recordedAt));
+}
+
+export async function insertDomainScore(
+  userId: number,
+  domain: typeof lifeDomainScores.$inferInsert["domain"],
+  score: number,
+  notes?: string
+) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(lifeDomainScores).values({ userId, domain, score, notes });
+}
+
+// ─── Habits ───────────────────────────────────────────────────────────────────
+
+export async function getUserHabits(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(habits).where(and(eq(habits.userId, userId), eq(habits.isActive, true)));
+}
+
+export async function createHabit(data: typeof habits.$inferInsert) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(habits).values(data);
+}
+
+export async function deleteHabit(habitId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(habits).set({ isActive: false }).where(and(eq(habits.id, habitId), eq(habits.userId, userId)));
+}
+
+export async function getTodayCompletions(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999);
+  return db
+    .select()
+    .from(habitCompletions)
+    .where(
+      and(
+        eq(habitCompletions.userId, userId),
+        gte(habitCompletions.completedAt, startOfDay),
+        lte(habitCompletions.completedAt, endOfDay)
+      )
+    );
+}
+
+export async function toggleHabitCompletion(habitId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999);
+  const existing = await db
+    .select()
+    .from(habitCompletions)
+    .where(
+      and(
+        eq(habitCompletions.habitId, habitId),
+        eq(habitCompletions.userId, userId),
+        gte(habitCompletions.completedAt, startOfDay),
+        lte(habitCompletions.completedAt, endOfDay)
+      )
+    )
+    .limit(1);
+  if (existing.length > 0) {
+    await db.delete(habitCompletions).where(eq(habitCompletions.id, existing[0].id));
+    return false;
+  } else {
+    await db.insert(habitCompletions).values({ habitId, userId });
+    return true;
+  }
+}
+
+export async function getHabitStreaks(userId: number) {
+  const db = await getDb();
+  if (!db) return {};
+  const userHabits = await getUserHabits(userId);
+  const streaks: Record<number, number> = {};
+  for (const habit of userHabits) {
+    // Count consecutive days with completions
+    let streak = 0;
+    let checkDate = new Date();
+    for (let i = 0; i < 365; i++) {
+      const start = new Date(checkDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(checkDate);
+      end.setHours(23, 59, 59, 999);
+      const completions = await db
+        .select()
+        .from(habitCompletions)
+        .where(
+          and(
+            eq(habitCompletions.habitId, habit.id),
+            gte(habitCompletions.completedAt, start),
+            lte(habitCompletions.completedAt, end)
+          )
+        )
+        .limit(1);
+      if (completions.length > 0) {
+        streak++;
+        checkDate = new Date(checkDate.getTime() - 24 * 60 * 60 * 1000);
+      } else {
+        break;
+      }
+    }
+    streaks[habit.id] = streak;
+  }
+  return streaks;
+}
+
+// ─── Daily Check-ins ──────────────────────────────────────────────────────────
+
+export async function getTodayCheckIn(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const result = await db
+    .select()
+    .from(dailyCheckIns)
+    .where(and(eq(dailyCheckIns.userId, userId), gte(dailyCheckIns.createdAt, startOfDay)))
+    .orderBy(desc(dailyCheckIns.createdAt))
+    .limit(1);
+  return result[0];
+}
+
+export async function createCheckIn(data: typeof dailyCheckIns.$inferInsert) {
+  const db = await getDb();
+  if (!db) return;
+  const result = await db.insert(dailyCheckIns).values(data);
+  return result;
+}
+
+export async function updateCheckInAiResponse(checkInId: number, aiResponse: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(dailyCheckIns).set({ aiResponse }).where(eq(dailyCheckIns.id, checkInId));
+}
+
+export async function getRecentCheckIns(userId: number, days = 30) {
+  const db = await getDb();
+  if (!db) return [];
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  return db
+    .select()
+    .from(dailyCheckIns)
+    .where(and(eq(dailyCheckIns.userId, userId), gte(dailyCheckIns.createdAt, since)))
+    .orderBy(desc(dailyCheckIns.createdAt));
+}
+
+// ─── Journal Entries ──────────────────────────────────────────────────────────
+
+export async function getJournalEntries(userId: number, limit = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(journalEntries)
+    .where(eq(journalEntries.userId, userId))
+    .orderBy(desc(journalEntries.createdAt))
+    .limit(limit);
+}
+
+export async function getJournalEntry(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(journalEntries)
+    .where(and(eq(journalEntries.id, id), eq(journalEntries.userId, userId)))
+    .limit(1);
+  return result[0];
+}
+
+export async function createJournalEntry(data: typeof journalEntries.$inferInsert) {
+  const db = await getDb();
+  if (!db) return;
+  const result = await db.insert(journalEntries).values(data);
+  return result;
+}
+
+export async function updateJournalEntryAi(
+  id: number,
+  userId: number,
+  aiPerspective: string,
+  themes: string[]
+) {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(journalEntries)
+    .set({ aiPerspective, themes })
+    .where(and(eq(journalEntries.id, id), eq(journalEntries.userId, userId)));
+}
+
+// ─── Chat Messages ────────────────────────────────────────────────────────────
+
+export async function getChatHistory(userId: number, limit = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(chatMessages)
+    .where(eq(chatMessages.userId, userId))
+    .orderBy(desc(chatMessages.createdAt))
+    .limit(limit);
+}
+
+export async function saveChatMessage(data: typeof chatMessages.$inferInsert) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(chatMessages).values(data);
+}
+
+// ─── Weekly Insights ──────────────────────────────────────────────────────────
+
+export async function getLatestInsight(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(weeklyInsights)
+    .where(eq(weeklyInsights.userId, userId))
+    .orderBy(desc(weeklyInsights.createdAt))
+    .limit(1);
+  return result[0];
+}
+
+export async function getAllInsights(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(weeklyInsights)
+    .where(eq(weeklyInsights.userId, userId))
+    .orderBy(desc(weeklyInsights.createdAt))
+    .limit(20);
+}
+
+export async function saveWeeklyInsight(data: typeof weeklyInsights.$inferInsert) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(weeklyInsights).values(data);
+}
+
+// ─── Growth Milestones ────────────────────────────────────────────────────────
+
+export async function getMilestones(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(growthMilestones)
+    .where(eq(growthMilestones.userId, userId))
+    .orderBy(desc(growthMilestones.achievedAt));
+}
+
+export async function createMilestone(data: typeof growthMilestones.$inferInsert) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(growthMilestones).values(data);
+}
+
+// ─── Analytics ────────────────────────────────────────────────────────────────
+
+export async function getMoodTrend(userId: number, days = 14) {
+  const db = await getDb();
+  if (!db) return [];
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  return db
+    .select({
+      date: sql<string>`DATE(${dailyCheckIns.createdAt})`,
+      avgMood: sql<number>`AVG(${dailyCheckIns.mood})`,
+      avgEnergy: sql<number>`AVG(${dailyCheckIns.energy})`,
+      avgStress: sql<number>`AVG(${dailyCheckIns.stress})`,
+    })
+    .from(dailyCheckIns)
+    .where(and(eq(dailyCheckIns.userId, userId), gte(dailyCheckIns.createdAt, since)))
+    .groupBy(sql`DATE(${dailyCheckIns.createdAt})`)
+    .orderBy(sql`DATE(${dailyCheckIns.createdAt})`);
+}
