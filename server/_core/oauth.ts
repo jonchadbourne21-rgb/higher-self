@@ -9,12 +9,33 @@ function getQueryParam(req: Request, key: string): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+/**
+ * Reconstruct the exact redirectUri that was registered with the Manus OAuth portal.
+ * The client sends: redirectUri = window.location.origin + "/api/oauth/callback"
+ * We must send the SAME value back during token exchange.
+ *
+ * Strategy: reconstruct from the incoming request's host header + known path.
+ * This is always correct regardless of how state was encoded.
+ */
+function getRedirectUri(req: Request): string {
+  // x-forwarded-host is set by the Manus proxy on the published domain
+  const host = req.headers["x-forwarded-host"] || req.headers.host || req.hostname;
+  const proto = req.headers["x-forwarded-proto"]
+    ? (Array.isArray(req.headers["x-forwarded-proto"])
+        ? req.headers["x-forwarded-proto"][0]
+        : req.headers["x-forwarded-proto"].split(",")[0].trim())
+    : req.protocol;
+
+  const origin = `${proto}://${host}`;
+  const redirectUri = `${origin}/api/oauth/callback`;
+  console.log("[OAuth] Reconstructed redirectUri:", redirectUri);
+  return redirectUri;
+}
+
 export function registerOAuthRoutes(app: Express) {
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
-    // The redirectUri in the query param is the exact URI registered with Manus OAuth
-    const redirectUri = getQueryParam(req, "redirectUri");
 
     if (!code || !state) {
       res.status(400).json({ error: "code and state are required" });
@@ -23,10 +44,13 @@ export function registerOAuthRoutes(app: Express) {
 
     try {
       console.log("[OAuth] Callback received, code length:", code?.length);
-      // Pass the redirectUri from query params if available (most reliable)
-      // Fall back to decoding from state for backwards compatibility
+
+      // Reconstruct redirectUri from the request — most reliable, no encoding issues
+      const redirectUri = getRedirectUri(req);
+
       const tokenResponse = await sdk.exchangeCodeForToken(code, state, redirectUri);
       console.log("[OAuth] Token exchange succeeded");
+
       const userInfo = await sdk.getUserInfo(tokenResponse.accessToken);
       console.log("[OAuth] Got user info, openId:", userInfo.openId ? "present" : "missing");
 
@@ -51,7 +75,7 @@ export function registerOAuthRoutes(app: Express) {
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      // Always redirect to relative root — the SPA router handles the rest
+      // Redirect to root — the SPA router handles the rest
       console.log("[OAuth] Login successful, redirecting to /");
       res.redirect(302, "/");
     } catch (error: any) {
