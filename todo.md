@@ -87,3 +87,6 @@
 - [x] Vitest: domains router
 - [x] Vitest: insights router
 - [x] Vitest: timeline router
+
+## Bugs
+- [ ] Fix OAuth login failure on published domain (persistent issue)

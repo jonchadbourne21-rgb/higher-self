@@ -61,7 +61,8 @@ export function registerOAuthRoutes(app: Express) {
       const redirectUri = decodeRedirectUriFromState(state);
 
       console.log("[OAuth] Attempting token exchange with redirectUri:", redirectUri);
-      const tokenResponse = await sdk.exchangeCodeForToken(code, state, redirectUri);
+      // Pass empty state since we're providing the explicit redirectUri
+      const tokenResponse = await sdk.exchangeCodeForToken(code, "", redirectUri);
       console.log("[OAuth] Token exchange succeeded");
 
       const userInfo = await sdk.getUserInfo(tokenResponse.accessToken);
