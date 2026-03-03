@@ -39,8 +39,13 @@ class OAuthService {
   }
 
   private decodeState(state: string): string {
-    const redirectUri = atob(state);
-    return redirectUri;
+    // Use Buffer for robust base64 decoding (handles URL-encoded base64 from browsers)
+    try {
+      return Buffer.from(state, "base64").toString("utf-8");
+    } catch {
+      // Fallback to atob if Buffer fails
+      return atob(state);
+    }
   }
 
   async getTokenByCode(

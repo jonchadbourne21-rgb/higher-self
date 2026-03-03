@@ -3,6 +3,7 @@ import { getLoginUrl } from "@/const";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { useLocation } from "wouter";
+import { toast } from "sonner";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -16,6 +17,16 @@ const fadeUp = {
 export default function Landing() {
   const { isAuthenticated, loading, user } = useAuth();
   const [, navigate] = useLocation();
+
+  useEffect(() => {
+    // Show error toast if OAuth callback failed
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("auth_error") === "1") {
+      toast.error("Sign-in failed. Please try again.");
+      // Clean up the URL
+      window.history.replaceState({}, "", "/");
+    }
+  }, []);
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
