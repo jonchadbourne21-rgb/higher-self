@@ -24,13 +24,13 @@ export function getSessionCookieOptions(
     };
   }
 
-  // Published domain (manus.space or any HTTPS host):
-  // sameSite=none requires secure=true for cross-site cookies
-  // The published app is always served over HTTPS
+  // Published domain: frontend and API share the same manus.space domain,
+  // so sameSite=lax is sufficient and more compatible than sameSite=none.
+  // secure=true is required since the site is served over HTTPS.
   return {
     httpOnly: true,
     path: "/",
-    sameSite: "none",
+    sameSite: "lax",
     secure: true,
   };
 }
