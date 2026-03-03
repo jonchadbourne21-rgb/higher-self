@@ -10,48 +10,41 @@ function getQueryParam(req: Request, key: string): string | undefined {
 }
 
 /**
- * Reconstruct the exact redirectUri that was registered with the Manus OAuth portal.
- * The client sends: redirectUri = window.location.origin + "/api/oauth/callback"
- * We must send the SAME value back during token exchange.
+ * Decode the redirectUri from the OAuth state parameter.
  *
- * The Manus proxy sets x-forwarded-host and x-forwarded-proto headers.
- * We use those to reconstruct the exact public-facing origin.
+ * The client encodes: state = btoa(redirectUri)
+ * where redirectUri = window.location.origin + "/api/oauth/callback"
+ * e.g. "https://higherself-lqwmd5t8.manus.space/api/oauth/callback"
+ *
+ * The state may be URL-encoded when it arrives (base64 chars +, =, / become %2B, %3D, %2F).
+ * We must URL-decode it first, then base64-decode it.
+ *
+ * This is the ONLY reliable source of the exact redirectUri the client used —
+ * we cannot reconstruct it from request headers because the server runs on an
+ * internal Cloud Run hostname, not the public manus.space domain.
  */
-function getRedirectUri(req: Request): string {
-  // x-forwarded-host is set by the Manus/Cloudflare proxy
-  const forwardedHost = req.headers["x-forwarded-host"];
-  const host = (Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost) || req.headers.host || req.hostname;
-
-  const forwardedProto = req.headers["x-forwarded-proto"];
-  const proto = (Array.isArray(forwardedProto)
-    ? forwardedProto[0]
-    : forwardedProto?.split(",")[0].trim()) || req.protocol || "https";
-
-  const origin = `${proto}://${host}`;
-  const redirectUri = `${origin}/api/oauth/callback`;
-  console.log("[OAuth] Reconstructed redirectUri:", redirectUri);
-  console.log("[OAuth] Request headers:", JSON.stringify({
-    host: req.headers.host,
-    "x-forwarded-host": req.headers["x-forwarded-host"],
-    "x-forwarded-proto": req.headers["x-forwarded-proto"],
-    "x-forwarded-for": req.headers["x-forwarded-for"],
-    protocol: req.protocol,
-    hostname: req.hostname,
-  }));
-  return redirectUri;
+function decodeRedirectUriFromState(state: string): string {
+  try {
+    // Step 1: URL-decode the state (handles %2B -> +, %3D -> =, %2F -> /)
+    const urlDecoded = decodeURIComponent(state);
+    // Step 2: Base64-decode to get the original redirectUri
+    const redirectUri = Buffer.from(urlDecoded, "base64").toString("utf-8");
+    console.log("[OAuth] Decoded redirectUri from state:", redirectUri);
+    return redirectUri;
+  } catch (e1) {
+    try {
+      // Fallback: try decoding without URL-decoding first
+      const redirectUri = Buffer.from(state, "base64").toString("utf-8");
+      console.log("[OAuth] Decoded redirectUri from state (fallback):", redirectUri);
+      return redirectUri;
+    } catch (e2) {
+      console.error("[OAuth] Failed to decode state:", state, e1, e2);
+      throw new Error("Failed to decode OAuth state parameter");
+    }
+  }
 }
 
 export function registerOAuthRoutes(app: Express) {
-  // Debug endpoint to inspect request headers from the proxy
-  app.get("/api/debug/headers", (req: Request, res: Response) => {
-    res.json({
-      headers: req.headers,
-      hostname: req.hostname,
-      protocol: req.protocol,
-      reconstructedRedirectUri: getRedirectUri(req),
-    });
-  });
-
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
@@ -62,9 +55,12 @@ export function registerOAuthRoutes(app: Express) {
     }
 
     try {
-      const redirectUri = getRedirectUri(req);
-      console.log("[OAuth] Attempting token exchange with redirectUri:", redirectUri);
+      console.log("[OAuth] Callback received, code length:", code?.length, "state:", state?.substring(0, 20) + "...");
 
+      // Decode the exact redirectUri the client sent — this MUST match what Manus has registered
+      const redirectUri = decodeRedirectUriFromState(state);
+
+      console.log("[OAuth] Attempting token exchange with redirectUri:", redirectUri);
       const tokenResponse = await sdk.exchangeCodeForToken(code, state, redirectUri);
       console.log("[OAuth] Token exchange succeeded");
 
@@ -100,11 +96,6 @@ export function registerOAuthRoutes(app: Express) {
         ? JSON.stringify(errData)
         : error instanceof Error ? error.message : String(error);
       console.error("[OAuth] Callback failed. Error:", errMsg);
-      console.error("[OAuth] Full error response:", JSON.stringify({
-        status: error?.response?.status,
-        data: error?.response?.data,
-        message: error?.message,
-      }));
       res.redirect(302, "/?auth_error=1");
     }
   });
