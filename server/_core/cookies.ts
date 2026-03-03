@@ -8,41 +8,29 @@ function isIpAddress(host: string) {
   return host.includes(":");
 }
 
-function isSecureRequest(req: Request) {
-  if (req.protocol === "https") return true;
-
-  const forwardedProto = req.headers["x-forwarded-proto"];
-  if (!forwardedProto) return false;
-
-  const protoList = Array.isArray(forwardedProto)
-    ? forwardedProto
-    : forwardedProto.split(",");
-
-  return protoList.some(proto => proto.trim().toLowerCase() === "https");
-}
-
 export function getSessionCookieOptions(
   req: Request
 ): Pick<CookieOptions, "domain" | "httpOnly" | "path" | "sameSite" | "secure"> {
-  // const hostname = req.hostname;
-  // const shouldSetDomain =
-  //   hostname &&
-  //   !LOCAL_HOSTS.has(hostname) &&
-  //   !isIpAddress(hostname) &&
-  //   hostname !== "127.0.0.1" &&
-  //   hostname !== "::1";
+  const hostname = req.hostname || "";
+  const isLocal = LOCAL_HOSTS.has(hostname) || isIpAddress(hostname);
 
-  // const domain =
-  //   shouldSetDomain && !hostname.startsWith(".")
-  //     ? `.${hostname}`
-  //     : shouldSetDomain
-  //       ? hostname
-  //       : undefined;
+  // Local dev: use lax + no secure so cookies work without HTTPS
+  if (isLocal) {
+    return {
+      httpOnly: true,
+      path: "/",
+      sameSite: "lax",
+      secure: false,
+    };
+  }
 
+  // Published domain (manus.space or any HTTPS host):
+  // sameSite=none requires secure=true for cross-site cookies
+  // The published app is always served over HTTPS
   return {
     httpOnly: true,
     path: "/",
     sameSite: "none",
-    secure: isSecureRequest(req),
+    secure: true,
   };
 }

@@ -51,18 +51,9 @@ export function registerOAuthRoutes(app: Express) {
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      // Determine redirect target: decode origin from state, fallback to /
-      let redirectTo = "/";
-      try {
-        // state = btoa(redirectUri) where redirectUri = origin + /api/oauth/callback
-        const decoded = Buffer.from(state, "base64").toString("utf-8");
-        const url = new URL(decoded);
-        redirectTo = url.origin + "/";
-      } catch {
-        // state wasn't a URL, just redirect to root
-      }
-      console.log("[OAuth] Redirecting to:", redirectTo);
-      res.redirect(302, redirectTo);
+      // Always redirect to relative root — the SPA router handles the rest
+      console.log("[OAuth] Login successful, redirecting to /");
+      res.redirect(302, "/");
     } catch (error: any) {
       const errMsg = error?.response?.data
         ? JSON.stringify(error.response.data)
