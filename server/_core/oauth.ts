@@ -93,10 +93,12 @@ export function registerOAuthRoutes(app: Express) {
       res.redirect(302, "/");
     } catch (error: any) {
       const errData = error?.response?.data;
+      const errStatus = error?.response?.status;
       const errMsg = errData
         ? JSON.stringify(errData)
         : error instanceof Error ? error.message : String(error);
-      console.error("[OAuth] Callback failed. Error:", errMsg);
+      console.error("[OAuth] Callback failed. Status:", errStatus, "Error:", errMsg);
+      console.error("[OAuth] Full error object:", JSON.stringify(error, null, 2));
       res.redirect(302, "/?auth_error=1");
     }
   });
