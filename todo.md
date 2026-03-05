@@ -88,5 +88,17 @@
 - [x] Vitest: insights router
 - [x] Vitest: timeline router
 
+## Database Schema Fixes
+- [x] Fixed missing onboardingCompleted column in users table
+- [x] Created all 9 missing tables
+- [x] Fixed user_profiles table schema with all required columns
+- [x] Fixed all other table schemas to match Drizzle definitions
+
+## Demo Mode (Temporary)
+- [ ] Create demo mode to bypass OAuth login
+- [ ] Add demo user with sample data
+- [ ] Update routing to support demo mode
+- [ ] Test all 11 pages in demo mode
+
 ## Bugs
 - [ ] Fix OAuth login failure on published domain (persistent issue)
