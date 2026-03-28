@@ -266,6 +266,19 @@ describe("journal", () => {
     expect(result.success).toBe(true);
     expect(createJournalEntry).toHaveBeenCalled();
   });
+
+  it("suggestTitle returns an AI-generated title based on content", async () => {
+    const { invokeLLM } = await import("./_core/llm");
+    vi.mocked(invokeLLM).mockResolvedValueOnce({
+      choices: [{ message: { content: "The Weight of Becoming" } }],
+    });
+    const caller = appRouter.createCaller(createCtx());
+    const result = await caller.journal.suggestTitle({
+      content: "Today I sat with my fears and realized they are just old stories I keep telling myself. I want to break free from the patterns that hold me back.",
+    });
+    expect(result.title).toBe("The Weight of Becoming");
+    expect(invokeLLM).toHaveBeenCalled();
+  });
 });
 
 // ─── Chat tests ───────────────────────────────────────────────────────────────

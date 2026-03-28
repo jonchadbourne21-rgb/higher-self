@@ -403,6 +403,27 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
 
         return { success: true, id: newEntry.id };
       }),
+
+    suggestTitle: protectedProcedure
+      .input(z.object({ content: z.string().min(30) }))
+      .mutation(async ({ input }) => {
+        const res = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a poetic journal assistant. Given a journal entry, suggest ONE short, evocative title (4–8 words). The title should feel personal, reflective, and meaningful — not generic. Return ONLY the title text, no quotes, no explanation.",
+            },
+            {
+              role: "user",
+              content: `Journal entry:\n\n${input.content.slice(0, 1000)}`,
+            },
+          ],
+        });
+        const raw = res.choices[0]?.message?.content;
+        const title = (typeof raw === "string" ? raw : "").trim().replace(/^"|"$/g, "");
+        return { title };
+      }),
   }),
 
   // ─── AI Mirror Chat ───────────────────────────────────────────────────────

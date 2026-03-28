@@ -2,14 +2,19 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, Link } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Plus, X, ChevronRight, Sparkles } from "lucide-react";
+import { Plus, X, ChevronRight, Sparkles, Wand2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
 const MOOD_TAGS = ["Reflective", "Grateful", "Anxious", "Hopeful", "Sad", "Peaceful", "Confused", "Inspired", "Tired", "Joyful"];
+
+// Minimum content length before suggesting a title
+const MIN_CONTENT_FOR_SUGGESTION = 60;
+// Debounce delay in ms
+const SUGGESTION_DEBOUNCE_MS = 1800;
 
 export default function Journal() {
   const { isAuthenticated, loading } = useAuth();
@@ -18,6 +23,12 @@ export default function Journal() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [moodTag, setMoodTag] = useState("");
+
+  // Title suggestion state
+  const [suggestedTitle, setSuggestedTitle] = useState<string | null>(null);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [lastSuggestedContent, setLastSuggestedContent] = useState("");
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: entries, refetch } = trpc.journal.list.useQuery(
     { limit: 30 },
@@ -28,17 +39,75 @@ export default function Journal() {
     onSuccess: () => {
       toast.success("Entry saved. Your Higher Self is reflecting...");
       setIsCreating(false);
-      setTitle("");
-      setContent("");
-      setMoodTag("");
+      resetForm();
       refetch();
     },
     onError: () => toast.error("Failed to save entry"),
   });
 
+  const suggestTitleMutation = trpc.journal.suggestTitle.useMutation({
+    onSuccess: (data) => {
+      setSuggestedTitle(data.title);
+      setIsSuggesting(false);
+      setLastSuggestedContent(content);
+    },
+    onError: () => {
+      setIsSuggesting(false);
+    },
+  });
+
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate("/");
   }, [isAuthenticated, loading]);
+
+  // Reset form state when closing
+  const resetForm = useCallback(() => {
+    setTitle("");
+    setContent("");
+    setMoodTag("");
+    setSuggestedTitle(null);
+    setLastSuggestedContent("");
+    setIsSuggesting(false);
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+  }, []);
+
+  // Debounced title suggestion trigger
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    setContent(newContent);
+
+    // Clear existing suggestion if content changes significantly
+    if (suggestedTitle && Math.abs(newContent.length - lastSuggestedContent.length) > 40) {
+      setSuggestedTitle(null);
+    }
+
+    // Debounce the suggestion request
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+
+    if (newContent.trim().length >= MIN_CONTENT_FOR_SUGGESTION) {
+      debounceTimerRef.current = setTimeout(() => {
+        // Only suggest if title is still empty and content changed enough
+        if (!title && newContent.trim() !== lastSuggestedContent.trim()) {
+          setIsSuggesting(true);
+          setSuggestedTitle(null);
+          suggestTitleMutation.mutate({ content: newContent });
+        }
+      }, SUGGESTION_DEBOUNCE_MS);
+    }
+  };
+
+  // Accept the suggested title
+  const acceptSuggestion = () => {
+    if (suggestedTitle) {
+      setTitle(suggestedTitle);
+      setSuggestedTitle(null);
+    }
+  };
+
+  // Dismiss the suggestion
+  const dismissSuggestion = () => {
+    setSuggestedTitle(null);
+  };
 
   const handleCreate = () => {
     if (!content.trim()) return;
@@ -73,25 +142,76 @@ export default function Journal() {
             >
               <div className="px-5 pt-8 pb-4 flex items-center justify-between border-b border-border/30">
                 <h2 className="text-xl font-serif">New Entry</h2>
-                <button onClick={() => setIsCreating(false)} className="text-muted-foreground">
+                <button onClick={() => { setIsCreating(false); resetForm(); }} className="text-muted-foreground">
                   <X size={20} />
                 </button>
               </div>
+
               <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 scrollbar-hide">
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Title (optional)"
-                  className="w-full bg-transparent border-b border-border/50 pb-2 text-xl font-serif text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                />
+                {/* Title field with suggestion chip */}
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Title (optional)"
+                    className="w-full bg-transparent border-b border-border/50 pb-2 text-xl font-serif text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                  />
+
+                  {/* AI suggestion chip */}
+                  <AnimatePresence>
+                    {isSuggesting && (
+                      <motion.div
+                        key="suggesting"
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        className="flex items-center gap-2 text-xs text-muted-foreground"
+                      >
+                        <Wand2 size={12} className="text-primary animate-pulse" />
+                        <span>Crafting a title for you...</span>
+                      </motion.div>
+                    )}
+
+                    {suggestedTitle && !isSuggesting && !title && (
+                      <motion.div
+                        key="suggestion"
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        className="flex items-center gap-2 flex-wrap"
+                      >
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Wand2 size={11} className="text-primary" />
+                          Suggested:
+                        </span>
+                        <button
+                          onClick={acceptSuggestion}
+                          className="px-3 py-1 rounded-full text-xs border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition-all font-medium"
+                        >
+                          {suggestedTitle}
+                        </button>
+                        <button
+                          onClick={dismissSuggestion}
+                          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          Dismiss
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Content textarea */}
                 <textarea
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={handleContentChange}
                   placeholder="What's present for you right now? Write freely, without judgment..."
                   className="w-full bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none text-sm leading-relaxed resize-none min-h-[200px]"
                   autoFocus
                 />
+
+                {/* Mood tags */}
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground">How are you feeling?</p>
                   <div className="flex flex-wrap gap-2">
@@ -111,6 +231,7 @@ export default function Journal() {
                   </div>
                 </div>
               </div>
+
               <div className="px-5 pb-8 pt-4 border-t border-border/30">
                 <Button
                   onClick={handleCreate}

@@ -113,6 +113,12 @@
 - [ ] Write vitest tests for program procedures
 - [ ] Test end-to-end program enrollment and lesson completion
 
+## Journal Title Suggestion
+- [x] Add tRPC procedure: journal.suggestTitle — calls LLM with entry content, returns a short evocative title
+- [x] Update Journal page: debounced trigger after user types 60+ chars, show suggested title chip below title field
+- [x] Accept/dismiss/edit flow: clicking chip fills the title input; user can still type manually
+- [x] Write vitest test for journal.suggestTitle procedure
+
 ## Bugs
 - [ ] Fix OAuth login failure on published domain (persistent issue)
 - [x] Fix duplicate sql import in db.ts
