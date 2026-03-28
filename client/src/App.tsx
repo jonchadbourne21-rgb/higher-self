@@ -1,7 +1,8 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
+import { AnimatePresence, motion } from "framer-motion";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Landing from "./pages/Landing";
@@ -15,24 +16,79 @@ import Domains from "./pages/Domains";
 import Dashboard from "./pages/Dashboard";
 import Timeline from "./pages/Timeline";
 import Insights from "./pages/Insights";
+import { useRef } from "react";
 
-function Router() {
+// Tab order — used to determine slide direction
+const TAB_ORDER = ["/home", "/domains", "/chat", "/journal", "/dashboard"];
+
+function getTabIndex(path: string) {
+  return TAB_ORDER.findIndex(
+    (t) => path === t || path.startsWith(t + "/")
+  );
+}
+
+// Variants factory — direction: 1 = slide left (forward), -1 = slide right (back), 0 = fade only
+function makeVariants(direction: number) {
+  const x = direction !== 0 ? direction * 40 : 0;
+  return {
+    initial: { opacity: 0, x },
+    animate: { opacity: 1, x: 0 },
+    exit:    { opacity: 0, x: -x },
+  };
+}
+
+function AnimatedRouter() {
+  const [location] = useLocation();
+  const prevLocation = useRef(location);
+  const directionRef = useRef(0);
+
+  // Compute direction before updating prevLocation
+  const prevIdx = getTabIndex(prevLocation.current);
+  const currIdx = getTabIndex(location);
+
+  if (location !== prevLocation.current) {
+    if (prevIdx !== -1 && currIdx !== -1) {
+      directionRef.current = currIdx > prevIdx ? 1 : -1;
+    } else {
+      directionRef.current = 0; // non-tab nav → fade
+    }
+    prevLocation.current = location;
+  }
+
+  const variants = makeVariants(directionRef.current);
+
   return (
-    <Switch>
-      <Route path="/" component={Landing} />
-      <Route path="/onboarding" component={Onboarding} />
-      <Route path="/home" component={Home} />
-      <Route path="/checkin" component={CheckIn} />
-      <Route path="/chat" component={Chat} />
-      <Route path="/journal" component={Journal} />
-      <Route path="/journal/:id" component={JournalEntry} />
-      <Route path="/domains" component={Domains} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/timeline" component={Timeline} />
-      <Route path="/insights" component={Insights} />
-      <Route path="/404" component={NotFound} />
-      <Route component={NotFound} />
-    </Switch>
+    // overflow-hidden on the outer wrapper prevents the sliding page from
+    // being visible outside the viewport during the transition
+    <div className="overflow-hidden w-full">
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.div
+          key={location}
+          variants={variants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          transition={{ type: "spring", stiffness: 340, damping: 34, mass: 0.9 }}
+          style={{ willChange: "transform, opacity" }}
+        >
+          <Switch location={location}>
+            <Route path="/" component={Landing} />
+            <Route path="/onboarding" component={Onboarding} />
+            <Route path="/home" component={Home} />
+            <Route path="/checkin" component={CheckIn} />
+            <Route path="/chat" component={Chat} />
+            <Route path="/journal" component={Journal} />
+            <Route path="/journal/:id" component={JournalEntry} />
+            <Route path="/domains" component={Domains} />
+            <Route path="/dashboard" component={Dashboard} />
+            <Route path="/timeline" component={Timeline} />
+            <Route path="/insights" component={Insights} />
+            <Route path="/404" component={NotFound} />
+            <Route component={NotFound} />
+          </Switch>
+        </motion.div>
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -51,7 +107,7 @@ function App() {
               },
             }}
           />
-          <Router />
+          <AnimatedRouter />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

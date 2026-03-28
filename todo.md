@@ -171,3 +171,6 @@
 ## Haptic + Swipe Navigation (Mar 28)
 - [x] Haptic feedback on nav taps using Web Vibration API (Android) — 8ms pulse on tap, 6ms on swipe
 - [x] Horizontal swipe gesture to navigate between tabs — 50px threshold, horizontal-dominant check prevents scroll conflicts
+
+## Page Transition Animation (Mar 28)
+- [x] Directional slide transitions between tabs — slides left when going forward in tab order, right when going back, fade-only for non-tab navigation (e.g. journal entry detail)
