@@ -128,6 +128,11 @@
 - [x] Accept/dismiss/edit flow: clicking chip fills the title input; user can still type manually
 - [x] Write vitest test for journal.suggestTitle procedure
 
+## UI Improvements (Mar 28)
+- [x] Color-coded life domain cards — each domain has its own accent color for card bg, border, progress bar, score text, and habit checkboxes
+- [x] Re-suggest title wand button in Journal — visible once content is 60+ chars, lets user manually re-trigger AI title suggestion
+- [x] Home greeting animation — staggered word-by-word blur+slide reveal for the user's name
+
 ## Bugs
 - [x] Fix OAuth login failure on published domain — restored sameSite=none+secure=true cookie setting that iOS Safari requires for cross-site OAuth redirect chains
 - [x] Fix OAuth callback 404 on published domain — NotFound now smart-redirects authenticated users to /home or /onboarding

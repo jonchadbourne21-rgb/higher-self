@@ -7,6 +7,26 @@ import AppShell from "@/components/AppShell";
 import { Sparkles, ChevronRight, Sun, Moon, Star } from "lucide-react";
 import { format } from "date-fns";
 
+// Staggered word-by-word animation for the greeting name
+function AnimatedName({ name }: { name: string }) {
+  const words = name.split(" ");
+  return (
+    <span className="text-violet-gradient inline-flex flex-wrap gap-x-[0.25em]">
+      {words.map((word, i) => (
+        <motion.span
+          key={i}
+          initial={{ opacity: 0, y: 12, filter: "blur(6px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          transition={{ duration: 0.5, delay: 0.35 + i * 0.12, ease: [0.22, 1, 0.36, 1] }}
+          style={{ display: "inline-block" }}
+        >
+          {word}
+        </motion.span>
+      ))}
+    </span>
+  );
+}
+
 export default function Home() {
   const { isAuthenticated, loading, user } = useAuth();
   const [, navigate] = useLocation();
@@ -84,8 +104,16 @@ export default function Home() {
             <span>{today}</span>
           </div>
           <h1 className="text-4xl font-serif font-light text-foreground leading-tight">
-            {greeting},<br />
-            <span className="text-violet-gradient">{name}</span>
+            <motion.span
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.15 }}
+              style={{ display: "inline-block" }}
+            >
+              {greeting},
+            </motion.span>
+            <br />
+            <AnimatedName name={name} />
           </h1>
         </motion.div>
 

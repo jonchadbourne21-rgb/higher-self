@@ -96,6 +96,15 @@ export default function Journal() {
     }
   };
 
+  // Manually re-trigger title suggestion
+  const reSuggestTitle = () => {
+    if (content.trim().length >= MIN_CONTENT_FOR_SUGGESTION && !isSuggesting) {
+      setIsSuggesting(true);
+      setSuggestedTitle(null);
+      suggestTitleMutation.mutate({ content });
+    }
+  };
+
   // Accept the suggested title
   const acceptSuggestion = () => {
     if (suggestedTitle) {
@@ -150,13 +159,26 @@ export default function Journal() {
               <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 scrollbar-hide">
                 {/* Title field with suggestion chip */}
                 <div className="space-y-2">
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Title (optional)"
-                    className="w-full bg-transparent border-b border-border/50 pb-2 text-xl font-serif text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="Title (optional)"
+                      className="flex-1 bg-transparent border-b border-border/50 pb-2 text-xl font-serif text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                    />
+                    {/* Re-suggest button — visible when content is long enough */}
+                    {content.trim().length >= MIN_CONTENT_FOR_SUGGESTION && (
+                      <button
+                        onClick={reSuggestTitle}
+                        disabled={isSuggesting}
+                        title="Suggest a title"
+                        className="pb-1 text-muted-foreground hover:text-primary transition-colors disabled:opacity-40"
+                      >
+                        <Wand2 size={16} className={isSuggesting ? "animate-pulse text-primary" : ""} />
+                      </button>
+                    )}
+                  </div>
 
                   {/* AI suggestion chip */}
                   <AnimatePresence>

@@ -8,13 +8,63 @@ import AppShell from "@/components/AppShell";
 import { Plus, X, Check, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+// Each domain has its own identity: color class, accent hex for the progress bar,
+// and a subtle tinted background for the card.
 const DOMAIN_INFO = {
-  mindset: { label: "Mindset", emoji: "🧠", color: "domain-mindset", desc: "Mental clarity, emotional regulation, peace" },
-  relationships: { label: "Relationships", emoji: "❤️", color: "domain-relationships", desc: "Love, connection, communication" },
-  work: { label: "Work & Purpose", emoji: "⚡", color: "domain-work", desc: "Career, creativity, contribution" },
-  health: { label: "Health", emoji: "🌿", color: "domain-health", desc: "Body, energy, sleep, nutrition" },
-  spirituality: { label: "Spirituality", emoji: "✨", color: "domain-spirituality", desc: "Meaning, connection, transcendence" },
-  finances: { label: "Finances", emoji: "🌊", color: "domain-finances", desc: "Abundance, security, generosity" },
+  mindset: {
+    label: "Mindset",
+    emoji: "🧠",
+    colorClass: "domain-mindset",
+    barColor: "oklch(0.46 0.20 295)",   // violet
+    cardBg: "oklch(0.97 0.03 295 / 0.5)",
+    cardBorder: "oklch(0.85 0.06 295 / 0.5)",
+    desc: "Mental clarity, emotional regulation, peace",
+  },
+  relationships: {
+    label: "Relationships",
+    emoji: "❤️",
+    colorClass: "domain-relationships",
+    barColor: "oklch(0.58 0.20 15)",    // rose
+    cardBg: "oklch(0.97 0.03 15 / 0.5)",
+    cardBorder: "oklch(0.85 0.06 15 / 0.5)",
+    desc: "Love, connection, communication",
+  },
+  work: {
+    label: "Work & Purpose",
+    emoji: "⚡",
+    colorClass: "domain-work",
+    barColor: "oklch(0.72 0.18 60)",    // amber
+    cardBg: "oklch(0.97 0.04 60 / 0.5)",
+    cardBorder: "oklch(0.85 0.08 60 / 0.5)",
+    desc: "Career, creativity, contribution",
+  },
+  health: {
+    label: "Health",
+    emoji: "🌿",
+    colorClass: "domain-health",
+    barColor: "oklch(0.55 0.18 155)",   // teal
+    cardBg: "oklch(0.97 0.03 155 / 0.5)",
+    cardBorder: "oklch(0.85 0.06 155 / 0.5)",
+    desc: "Body, energy, sleep, nutrition",
+  },
+  spirituality: {
+    label: "Spirituality",
+    emoji: "✨",
+    colorClass: "domain-spirituality",
+    barColor: "oklch(0.55 0.18 230)",   // sky blue
+    cardBg: "oklch(0.97 0.03 230 / 0.5)",
+    cardBorder: "oklch(0.85 0.06 230 / 0.5)",
+    desc: "Meaning, connection, transcendence",
+  },
+  finances: {
+    label: "Finances",
+    emoji: "🌊",
+    colorClass: "domain-finances",
+    barColor: "oklch(0.55 0.16 165)",   // green
+    cardBg: "oklch(0.97 0.03 165 / 0.5)",
+    cardBorder: "oklch(0.85 0.06 165 / 0.5)",
+    desc: "Abundance, security, generosity",
+  },
 };
 
 type Domain = keyof typeof DOMAIN_INFO;
@@ -99,32 +149,48 @@ export default function Domains() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
-                className="glass rounded-3xl p-5 space-y-4"
+                className="rounded-3xl p-5 space-y-4"
+                style={{
+                  background: `linear-gradient(145deg, white 60%, ${info.cardBg})`,
+                  border: `1px solid ${info.cardBorder}`,
+                  boxShadow: `0 2px 12px ${info.cardBg.replace("0.5)", "0.3)")}`,
+                }}
               >
                 {/* Domain header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{info.emoji}</span>
+                    {/* Colored emoji badge */}
+                    <div
+                      className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl"
+                      style={{ background: info.cardBg, border: `1px solid ${info.cardBorder}` }}
+                    >
+                      {info.emoji}
+                    </div>
                     <div>
-                      <p className="text-sm font-medium text-foreground">{info.label}</p>
+                      <p className="text-sm font-semibold text-foreground">{info.label}</p>
                       <p className="text-xs text-muted-foreground">{info.desc}</p>
                     </div>
                   </div>
                   <button
                     onClick={() => { setShowUpdateScore(domain); setNewScore(score || 5); }}
-                    className="flex flex-col items-center"
+                    className="flex flex-col items-center min-w-[40px]"
                   >
-                    <span className="text-2xl font-serif text-primary">{score > 0 ? score.toFixed(1) : "—"}</span>
+                    <span
+                      className="text-2xl font-serif font-semibold"
+                      style={{ color: info.barColor }}
+                    >
+                      {score > 0 ? score.toFixed(1) : "—"}
+                    </span>
                     <span className="text-xs text-muted-foreground">/ 10</span>
                   </button>
                 </div>
 
                 {/* Score bar */}
                 {score > 0 && (
-                  <div className="h-1.5 bg-border rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-border/50 rounded-full overflow-hidden">
                     <motion.div
-                      className={`h-full rounded-full ${info.color}`}
-                      style={{ backgroundColor: undefined }}
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: info.barColor }}
                       initial={{ width: 0 }}
                       animate={{ width: `${score * 10}%` }}
                       transition={{ duration: 0.8, delay: i * 0.1 }}
@@ -137,28 +203,29 @@ export default function Domains() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <p className="text-xs text-muted-foreground uppercase tracking-widest">Habits</p>
-                      {domainHabits.length > 0 && (
-                        <span className="text-xs text-primary">{completedCount}/{domainHabits.length} today</span>
-                      )}
+                      <span className="text-xs font-medium" style={{ color: info.barColor }}>
+                        {completedCount}/{domainHabits.length} today
+                      </span>
                     </div>
                     {domainHabits.map((habit) => (
                       <div key={habit.id} className="flex items-center gap-3">
                         <button
                           onClick={() => toggleMutation.mutate({ habitId: habit.id })}
-                          className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-all ${
+                          className="w-7 h-7 rounded-lg border flex items-center justify-center transition-all"
+                          style={
                             habit.completedToday
-                              ? "bg-primary border-primary"
-                              : "border-border hover:border-primary/50"
-                          }`}
+                              ? { backgroundColor: info.barColor, borderColor: info.barColor }
+                              : { borderColor: info.cardBorder }
+                          }
                         >
-                          {habit.completedToday && <Check size={14} className="text-primary-foreground" />}
+                          {habit.completedToday && <Check size={14} className="text-white" />}
                         </button>
                         <span className="text-base">{habit.emoji}</span>
                         <span className={`text-sm flex-1 ${habit.completedToday ? "text-muted-foreground line-through" : "text-foreground"}`}>
                           {habit.name}
                         </span>
                         {habit.streak > 0 && (
-                          <span className="text-xs text-primary">🔥 {habit.streak}</span>
+                          <span className="text-xs" style={{ color: info.barColor }}>🔥 {habit.streak}</span>
                         )}
                         <button
                           onClick={() => deleteHabitMutation.mutate({ habitId: habit.id })}
@@ -174,7 +241,7 @@ export default function Domains() {
                 {domainHabits.length === 0 && (
                   <button
                     onClick={() => { setNewHabitDomain(domain); setShowAddHabit(true); }}
-                    className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                   >
                     <Plus size={12} /> Add a habit
                   </button>
@@ -234,11 +301,12 @@ export default function Domains() {
                       <button
                         key={d}
                         onClick={() => setNewHabitDomain(d)}
-                        className={`flex items-center gap-2 p-2 rounded-xl border text-xs transition-all ${
+                        className="flex items-center gap-2 p-2 rounded-xl border text-xs transition-all"
+                        style={
                           newHabitDomain === d
-                            ? "border-primary bg-primary/10 text-foreground"
-                            : "border-border text-muted-foreground hover:text-foreground"
-                        }`}
+                            ? { background: info.cardBg, borderColor: info.cardBorder, color: info.barColor }
+                            : {}
+                        }
                       >
                         <span>{info.emoji}</span>
                         <span className="truncate">{info.label}</span>
@@ -287,13 +355,19 @@ export default function Domains() {
 
               <div className="space-y-4">
                 <div className="text-center">
-                  <span className="text-5xl font-serif text-primary">{newScore}</span>
+                  <span
+                    className="text-5xl font-serif font-semibold"
+                    style={{ color: DOMAIN_INFO[showUpdateScore].barColor }}
+                  >
+                    {newScore}
+                  </span>
                   <span className="text-muted-foreground text-lg"> / 10</span>
                 </div>
                 <input
                   type="range" min={1} max={10} step={0.5} value={newScore}
                   onChange={(e) => setNewScore(Number(e.target.value))}
                   className="w-full accent-primary"
+                  style={{ accentColor: DOMAIN_INFO[showUpdateScore].barColor }}
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Struggling</span><span>Thriving</span>
