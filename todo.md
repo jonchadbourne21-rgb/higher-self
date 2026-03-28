@@ -164,3 +164,6 @@
 ## Bottom Nav Cleanup (Mar 28)
 - [x] Make bottom nav slimmer — floating pill design, icons only (active item shows label), reduced height by ~40%
 - [x] Ensure all modals render above the nav bar — Domains, Journal, Timeline modals all moved outside AppShell with z-[100]
+
+## Auto-hide Nav on Scroll (Mar 28)
+- [x] Hide nav bar when scrolling down, show it again when scrolling up — spring animation, 4px threshold to prevent jitter, tapping a tab always restores nav
