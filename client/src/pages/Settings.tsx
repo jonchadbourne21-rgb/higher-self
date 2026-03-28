@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { User, Phone, Mail, Heart, Save, ArrowLeft, CheckCircle } from "lucide-react";
+import { User, Phone, Mail, Heart, Save, ArrowLeft, CheckCircle, PhoneCall, AtSign } from "lucide-react";
 import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -158,8 +158,53 @@ export default function Settings() {
                   Keep your therapist's info here so it's always one tap away. Your Higher Self journey works best alongside professional support.
                 </p>
                 {field("therapistName", "Therapist Name", "Dr. Jane Smith")}
-                {field("therapistPhone", "Therapist Phone", "+1 (555) 000-0000", "tel")}
-                {field("therapistEmail", "Therapist Email", "therapist@practice.com", "email")}
+
+                {/* Therapist Phone with quick-dial */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-foreground/60 uppercase tracking-wider">Therapist Phone</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="tel"
+                      className="flex-1 rounded-xl border border-border bg-background/60 px-4 py-3 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+                      placeholder="+1 (555) 000-0000"
+                      value={form.therapistPhone}
+                      onChange={(e) => setForm((f) => ({ ...f, therapistPhone: e.target.value }))}
+                    />
+                    {form.therapistPhone && (
+                      <a
+                        href={`tel:${form.therapistPhone}`}
+                        className="flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-500 hover:bg-emerald-600 transition-colors shadow-md shadow-emerald-500/25 flex-shrink-0"
+                        title="Call therapist"
+                      >
+                        <PhoneCall className="w-5 h-5 text-white" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                {/* Therapist Email with quick-email */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-foreground/60 uppercase tracking-wider">Therapist Email</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      className="flex-1 rounded-xl border border-border bg-background/60 px-4 py-3 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+                      placeholder="therapist@practice.com"
+                      value={form.therapistEmail}
+                      onChange={(e) => setForm((f) => ({ ...f, therapistEmail: e.target.value }))}
+                    />
+                    {form.therapistEmail && (
+                      <a
+                        href={`mailto:${form.therapistEmail}`}
+                        className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-500 hover:bg-blue-600 transition-colors shadow-md shadow-blue-500/25 flex-shrink-0"
+                        title="Email therapist"
+                      >
+                        <AtSign className="w-5 h-5 text-white" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+
                 {field("therapistNotes", "Notes", "Session every Tuesday at 3pm, insurance: Aetna...", "text", true)}
               </div>
             </motion.section>

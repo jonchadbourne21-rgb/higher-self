@@ -761,6 +761,8 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
         notes: z.string().optional(),
         color: z.string().max(20).optional(),
         isAllDay: z.boolean().default(false),
+        recurrence: z.enum(["none", "weekly", "monthly"]).default("none"),
+        recurrenceEnd: z.number().optional(), // UTC timestamp ms
       }))
       .mutation(async ({ ctx, input }) => {
         const { createCalendarEvent } = await import("./db");
@@ -773,6 +775,8 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
           notes: input.notes,
           color: input.color ?? "#8b5cf6",
           isAllDay: input.isAllDay,
+          recurrence: input.recurrence,
+          recurrenceEnd: input.recurrenceEnd ? new Date(input.recurrenceEnd) : undefined,
         });
         return { success: true, id };
       }),
@@ -787,6 +791,8 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
         notes: z.string().optional(),
         color: z.string().max(20).optional(),
         isAllDay: z.boolean().optional(),
+        recurrence: z.enum(["none", "weekly", "monthly"]).optional(),
+        recurrenceEnd: z.number().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const { updateCalendarEvent } = await import("./db");
@@ -794,6 +800,7 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
           ...input,
           eventDate: input.eventDate ? new Date(input.eventDate) : undefined,
           endDate: input.endDate ? new Date(input.endDate) : undefined,
+          recurrenceEnd: input.recurrenceEnd ? new Date(input.recurrenceEnd) : undefined,
         });
         return { success: true };
       }),

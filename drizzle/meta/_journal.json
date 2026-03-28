@@ -43,6 +43,13 @@
       "when": 1774730076139,
       "tag": "0005_damp_slapstick",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1774732134402,
+      "tag": "0006_unknown_wild_pack",
+      "breakpoints": true
     }
   ]
 }

@@ -366,6 +366,10 @@ export const calendarEvents = mysqlTable("calendar_events", {
   notes: text("notes"),
   color: varchar("color", { length: 20 }).default("#8b5cf6").notNull(),
   isAllDay: boolean("isAllDay").default(false).notNull(),
+  // Recurrence: none | weekly | monthly
+  recurrence: mysqlEnum("recurrence", ["none", "weekly", "monthly"]).default("none").notNull(),
+  // Optional end date for recurring events (null = repeat indefinitely)
+  recurrenceEnd: timestamp("recurrenceEnd"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

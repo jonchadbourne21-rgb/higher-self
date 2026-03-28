@@ -203,3 +203,17 @@
 - [x] Build /calendar Calendar page with monthly view, event creation modal, event list
 - [x] Add Settings and Calendar to nav (profile icon → settings, calendar icon in nav or home)
 - [ ] Write vitest tests for new procedures
+
+## Feature Sprint — Recurring Events, Quick-Dial, Goals Integration (Mar 28)
+- [x] Add recurrence columns to calendar_events table (recurrence: none/weekly/monthly, recurrenceEnd: date)
+- [x] Run DB migration for recurrence columns
+- [x] Update tRPC calendar.create to accept recurrence + recurrenceEnd
+- [x] Update tRPC calendar.list to expand recurring events into instances for the queried month
+- [x] Add Repeat option (None / Weekly / Monthly) to Calendar creation modal
+- [x] Add optional "Repeat until" date picker when repeat is weekly/monthly
+- [x] Show recurrence badge on event cards (e.g. "Weekly")
+- [x] Therapist quick-dial: make therapist phone a tel: link with phone icon button in Settings
+- [x] Therapist quick-email: make therapist email a mailto: link with email icon button in Settings
+- [x] Calendar+Goals integration: after saving a habit in Domains page, show "Add to Calendar?" prompt
+- [ ] Calendar+Goals integration: after onboarding goal setup, offer to schedule a milestone event
+- [x] Write vitest tests for updated calendar procedures (21 tests passing)

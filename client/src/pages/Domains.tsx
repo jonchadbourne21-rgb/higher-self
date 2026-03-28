@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Plus, X, Check, Trash2 } from "lucide-react";
+import { Plus, X, Check, Trash2, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 
 // Each domain has its own identity: color class, accent hex for the progress bar,
@@ -79,6 +79,11 @@ export default function Domains() {
   const [showUpdateScore, setShowUpdateScore] = useState<Domain | null>(null);
   const [newScore, setNewScore] = useState(5);
 
+  // Calendar integration state
+  const [calendarPrompt, setCalendarPrompt] = useState<{ habitName: string; domain: Domain } | null>(null);
+  const [calGoalDate, setCalGoalDate] = useState("");
+  const [calRecurrence, setCalRecurrence] = useState<"none" | "weekly" | "monthly">("weekly");
+
   const { data: domainScores, refetch: refetchScores } = trpc.domains.scores.useQuery(undefined, { enabled: isAuthenticated });
   const { data: habits, refetch: refetchHabits } = trpc.habits.list.useQuery(undefined, { enabled: isAuthenticated });
 
@@ -86,10 +91,22 @@ export default function Domains() {
     onSuccess: () => refetchHabits(),
   });
 
-  const createHabitMutation = trpc.habits.create.useMutation({
+  const createCalendarEvent = trpc.calendar.create.useMutation({
     onSuccess: () => {
+      toast.success("Added to Calendar!");
+      setCalendarPrompt(null);
+      setCalGoalDate("");
+    },
+  });
+
+  const createHabitMutation = trpc.habits.create.useMutation({
+    onSuccess: (_, vars) => {
       toast.success("Habit added!");
       setShowAddHabit(false);
+      // Offer to schedule this habit on the calendar
+      setCalendarPrompt({ habitName: vars.name, domain: vars.domain as Domain });
+      setCalGoalDate("");
+      setCalRecurrence("weekly");
       setNewHabitName("");
       refetchHabits();
     },
@@ -326,6 +343,105 @@ export default function Domains() {
               >
                 Add Habit
               </Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Calendar prompt after habit creation */}
+      <AnimatePresence>
+        {calendarPrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[110] bg-background/90 backdrop-blur-sm flex items-end max-w-[480px] mx-auto"
+          >
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="w-full glass rounded-t-3xl p-6 space-y-5"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+                    <CalendarPlus size={16} className="text-violet-600 dark:text-violet-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground">Add to Calendar?</h3>
+                </div>
+                <button onClick={() => setCalendarPrompt(null)} className="text-muted-foreground">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <p className="text-sm text-foreground/70">
+                Schedule <span className="font-semibold text-foreground">{calendarPrompt.habitName}</span> as a recurring calendar event to stay on track.
+              </p>
+
+              {/* Start date */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-foreground/60 uppercase tracking-wider">Start Date</label>
+                <input
+                  type="date"
+                  className="w-full rounded-xl border border-border bg-background/60 px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+                  value={calGoalDate}
+                  onChange={(e) => setCalGoalDate(e.target.value)}
+                />
+              </div>
+
+              {/* Repeat */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-foreground/60 uppercase tracking-wider">Repeat</label>
+                <div className="flex gap-2">
+                  {(["none", "weekly", "monthly"] as const).map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => setCalRecurrence(r)}
+                      className={`flex-1 py-2.5 rounded-xl text-xs font-medium border transition-all ${
+                        calRecurrence === r
+                          ? "bg-violet-600 text-white border-transparent"
+                          : "border-border text-foreground/60 bg-background hover:bg-muted"
+                      }`}
+                    >
+                      {r === "none" ? "Once" : r === "weekly" ? "Weekly" : "Monthly"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setCalendarPrompt(null)}
+                  className="flex-1 py-3 rounded-2xl border border-border text-sm font-medium text-foreground/60 hover:bg-muted transition-colors"
+                >
+                  Skip
+                </button>
+                <button
+                  onClick={() => {
+                    if (!calGoalDate) { toast.error("Please pick a start date"); return; }
+                    const [y, mo, d] = calGoalDate.split("-").map(Number);
+                    const eventDate = new Date(y, mo - 1, d, 9, 0);
+                    createCalendarEvent.mutate({
+                      title: calendarPrompt.habitName,
+                      type: "habit",
+                      eventDate: eventDate.getTime(),
+                      recurrence: calRecurrence,
+                      notes: `${DOMAIN_INFO[calendarPrompt.domain].label} habit`,
+                    });
+                  }}
+                  disabled={createCalendarEvent.isPending}
+                  className="flex-1 py-3 rounded-2xl font-semibold text-white text-sm flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  style={{ background: "linear-gradient(135deg, #8b5cf6, #6d28d9)" }}
+                >
+                  {createCalendarEvent.isPending ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <><CalendarPlus size={15} /> Add to Calendar</>
+                  )}
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}

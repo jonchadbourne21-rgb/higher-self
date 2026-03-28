@@ -601,20 +601,53 @@ export async function getMoodTrend(userId: number, days = 14) {
 export async function getCalendarEvents(userId: number, year: number, month: number) {
   const db = await getDb();
   if (!db) return [];
-  // Start/end of the requested month (UTC)
-  const start = new Date(Date.UTC(year, month - 1, 1));
-  const end = new Date(Date.UTC(year, month, 1));
-  return db
+  const monthStart = new Date(Date.UTC(year, month - 1, 1));
+  const monthEnd = new Date(Date.UTC(year, month, 1));
+
+  // Fetch events that either start in this month OR are recurring and started before month end
+  const rows = await db
     .select()
     .from(calendarEvents)
     .where(
       and(
         eq(calendarEvents.userId, userId),
-        gte(calendarEvents.eventDate, start),
-        lte(calendarEvents.eventDate, end)
+        // Include: starts in month, OR recurring (started before month end)
+        sql`(
+          (${calendarEvents.eventDate} >= ${monthStart} AND ${calendarEvents.eventDate} < ${monthEnd})
+          OR (
+            ${calendarEvents.recurrence} != 'none'
+            AND ${calendarEvents.eventDate} < ${monthEnd}
+            AND (${calendarEvents.recurrenceEnd} IS NULL OR ${calendarEvents.recurrenceEnd} >= ${monthStart})
+          )
+        )`
       )
     )
     .orderBy(calendarEvents.eventDate);
+
+  // Expand recurring events into instances that fall within this month
+  const expanded: typeof rows = [];
+  for (const event of rows) {
+    if (event.recurrence === "none") {
+      expanded.push(event);
+      continue;
+    }
+    // Generate occurrences within the month
+    const origin = new Date(event.eventDate);
+    const recEnd = event.recurrenceEnd ? new Date(event.recurrenceEnd) : null;
+    let cursor = new Date(origin);
+    // Fast-forward cursor to first occurrence >= monthStart
+    while (cursor < monthStart) {
+      if (event.recurrence === "weekly") cursor = new Date(cursor.getTime() + 7 * 86400000);
+      else { cursor = new Date(cursor); cursor.setUTCMonth(cursor.getUTCMonth() + 1); }
+    }
+    while (cursor < monthEnd) {
+      if (recEnd && cursor > recEnd) break;
+      expanded.push({ ...event, eventDate: new Date(cursor) });
+      if (event.recurrence === "weekly") cursor = new Date(cursor.getTime() + 7 * 86400000);
+      else { cursor = new Date(cursor); cursor.setUTCMonth(cursor.getUTCMonth() + 1); }
+    }
+  }
+  return expanded.sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
 }
 
 export async function createCalendarEvent(data: {
@@ -626,6 +659,8 @@ export async function createCalendarEvent(data: {
   notes?: string;
   color?: string;
   isAllDay?: boolean;
+  recurrence?: "none" | "weekly" | "monthly";
+  recurrenceEnd?: Date;
 }) {
   const db = await getDb();
   if (!db) return 0;
@@ -638,6 +673,8 @@ export async function createCalendarEvent(data: {
     notes: data.notes ?? null,
     color: data.color ?? "#8b5cf6",
     isAllDay: data.isAllDay ?? false,
+    recurrence: data.recurrence ?? "none",
+    recurrenceEnd: data.recurrenceEnd ?? null,
   });
   return (result as any).insertId as number;
 }
@@ -653,6 +690,8 @@ export async function updateCalendarEvent(
     notes?: string;
     color?: string;
     isAllDay?: boolean;
+    recurrence?: "none" | "weekly" | "monthly";
+    recurrenceEnd?: Date;
   }
 ) {
   const db = await getDb();
@@ -665,6 +704,8 @@ export async function updateCalendarEvent(
   if (data.notes !== undefined) update.notes = data.notes;
   if (data.color !== undefined) update.color = data.color;
   if (data.isAllDay !== undefined) update.isAllDay = data.isAllDay;
+  if (data.recurrence !== undefined) update.recurrence = data.recurrence;
+  if (data.recurrenceEnd !== undefined) update.recurrenceEnd = data.recurrenceEnd;
   if (Object.keys(update).length === 0) return;
   await db
     .update(calendarEvents)

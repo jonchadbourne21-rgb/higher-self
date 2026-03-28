@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `calendar_events` ADD `recurrence` enum('none','weekly','monthly') DEFAULT 'none' NOT NULL;\nALTER TABLE `calendar_events` ADD `recurrenceEnd` timestamp;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UbcpEQhTnXTazXN.root --database LQwmD5t86EFFZjkEDkXbgz --execute ALTER TABLE `calendar_events` ADD `recurrence` enum('none','weekly','monthly') DEFAULT 'none' NOT NULL;\nALTER TABLE `calendar_events` ADD `recurrenceEnd` timestamp;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1847
+}
