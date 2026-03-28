@@ -140,3 +140,9 @@
 - [x] Fix getDb() to use mysql2/promise connection pool instead of passing DATABASE_URL directly to drizzle
 - [x] Fix onboarding INSERT failures (schema-database mismatch resolved)
 - [x] Fix onboarding redirect after completion (invalidate auth.me cache)
+
+## AI Mirror Voice Overhaul (Mar 28)
+- [x] Rewrite AI Mirror system prompt — drop 'my dear/dearest', mirror user's own voice, feel like a best friend / higher-EQ version of themselves
+- [x] Update check-in AI response prompt with same voice guidelines
+- [x] Update weekly insight prompt with same voice guidelines
+- [x] Update journal AI perspective prompt with same voice guidelines
