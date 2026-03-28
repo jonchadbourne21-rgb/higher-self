@@ -63,6 +63,7 @@ export default function Timeline() {
   ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
   return (
+    <>
     <AppShell>
       <div className="px-5 pt-8 pb-4 space-y-6">
         {/* Header */}
@@ -139,14 +140,16 @@ export default function Timeline() {
         )}
       </div>
 
-      {/* Add Milestone Modal */}
+    </AppShell>
+
+      {/* Add Milestone Modal — outside AppShell so it covers the nav */}
       <AnimatePresence>
         {showAdd && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background/90 backdrop-blur-sm flex items-end max-w-[480px] mx-auto"
+            className="fixed inset-0 z-[100] bg-background/90 backdrop-blur-sm flex items-end max-w-[480px] mx-auto"
           >
             <motion.div
               initial={{ y: "100%" }}
@@ -218,6 +221,6 @@ export default function Timeline() {
           </motion.div>
         )}
       </AnimatePresence>
-    </AppShell>
+    </>
   );
 }

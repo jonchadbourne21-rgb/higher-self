@@ -120,6 +120,7 @@ export default function Domains() {
   };
 
   return (
+    <>
     <AppShell>
       <div className="px-5 pt-8 pb-4 space-y-6">
         {/* Header */}
@@ -252,14 +253,16 @@ export default function Domains() {
         </div>
       </div>
 
-      {/* Add Habit Modal */}
+    </AppShell>
+
+      {/* Add Habit Modal — outside AppShell so it covers the nav */}
       <AnimatePresence>
         {showAddHabit && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background/90 backdrop-blur-sm flex items-end max-w-[480px] mx-auto"
+            className="fixed inset-0 z-[100] bg-background/90 backdrop-blur-sm flex items-end max-w-[480px] mx-auto"
           >
             <motion.div
               initial={{ y: "100%" }}
@@ -335,7 +338,7 @@ export default function Domains() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background/90 backdrop-blur-sm flex items-end max-w-[480px] mx-auto"
+            className="fixed inset-0 z-[100] bg-background/90 backdrop-blur-sm flex items-end max-w-[480px] mx-auto"
           >
             <motion.div
               initial={{ y: "100%" }}
@@ -385,6 +388,6 @@ export default function Domains() {
           </motion.div>
         )}
       </AnimatePresence>
-    </AppShell>
+    </>
   );
 }

@@ -160,3 +160,7 @@
 
 ## Journal Save Button Fix (Mar 28)
 - [x] Fix Save Entry button hidden behind bottom nav bar — moved modal outside AppShell so it renders as true full-screen overlay above the nav
+
+## Bottom Nav Cleanup (Mar 28)
+- [x] Make bottom nav slimmer — floating pill design, icons only (active item shows label), reduced height by ~40%
+- [x] Ensure all modals render above the nav bar — Domains, Journal, Timeline modals all moved outside AppShell with z-[100]
