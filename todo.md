@@ -217,3 +217,8 @@
 - [x] Calendar+Goals integration: after saving a habit in Domains page, show "Add to Calendar?" prompt
 - [ ] Calendar+Goals integration: after onboarding goal setup, offer to schedule a milestone event
 - [x] Write vitest tests for updated calendar procedures (21 tests passing)
+
+## OAuth Redirect URI Fix (Mar 28)
+- [ ] Investigate how redirect URI is constructed in OAuth flow (client const.ts + server oauth.ts)
+- [ ] Fix redirect URI logic so higherself.cloud works the same as higherself.manus.space
+- [ ] Test both domains work for login
