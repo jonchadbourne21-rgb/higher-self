@@ -146,3 +146,14 @@
 - [x] Update check-in AI response prompt with same voice guidelines
 - [x] Update weekly insight prompt with same voice guidelines
 - [x] Update journal AI perspective prompt with same voice guidelines
+
+## Journal Overhaul (Mar 28)
+- [x] Add journal_categories table to DB schema (id, userId, name, color, createdAt)
+- [x] Add categoryId column to journal_entries table
+- [x] Run DB migration for new tables/columns
+- [x] Add tRPC procedures: journal.categories.list, journal.categories.create, journal.categories.delete
+- [x] Add categoryId support to journal.create and journal.list procedures
+- [x] Add search/filter support to journal.list (by keyword, date range, category, mood)
+- [x] Rebuild Journal page: working Save button, date-organized entry list, search bar, category/mood filter panel
+- [x] Add category management UI (create/delete custom categories with 10-color picker)
+- [ ] Write vitest tests for new journal category procedures

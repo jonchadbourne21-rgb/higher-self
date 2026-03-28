@@ -317,13 +317,23 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
       }),
   }),
 
-  // ─── Journal ─────────────────────────────────────────────────────────────
+  // ─── Journal ─────────────────────────────────────────────────────────
 
   journal: router({
     list: protectedProcedure
-      .input(z.object({ limit: z.number().default(20) }))
+      .input(
+        z.object({
+          limit: z.number().default(50),
+          search: z.string().optional(),
+          categoryId: z.number().nullable().optional(),
+          dateFrom: z.date().optional(),
+          dateTo: z.date().optional(),
+          moodTag: z.string().optional(),
+        })
+      )
       .query(async ({ ctx, input }) => {
-        return getJournalEntries(ctx.user.id, input.limit);
+        const { limit, ...filters } = input;
+        return getJournalEntries(ctx.user.id, limit, filters);
       }),
 
     get: protectedProcedure
@@ -334,12 +344,39 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
         return entry;
       }),
 
+    categories: router({
+      list: protectedProcedure.query(async ({ ctx }) => {
+        const { getJournalCategories } = await import("./db");
+        return getJournalCategories(ctx.user.id);
+      }),
+      create: protectedProcedure
+        .input(
+          z.object({
+            name: z.string().min(1).max(100),
+            color: z.string().default("#8b5cf6"),
+          })
+        )
+        .mutation(async ({ ctx, input }) => {
+          const { createJournalCategory } = await import("./db");
+          await createJournalCategory(ctx.user.id, input.name, input.color);
+          return { success: true };
+        }),
+      delete: protectedProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ ctx, input }) => {
+          const { deleteJournalCategory } = await import("./db");
+          await deleteJournalCategory(input.id, ctx.user.id);
+          return { success: true };
+        }),
+    }),
+
     create: protectedProcedure
       .input(
         z.object({
           title: z.string().optional(),
           content: z.string().min(1),
           moodTag: z.string().optional(),
+          categoryId: z.number().nullable().optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {

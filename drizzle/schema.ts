@@ -151,12 +151,27 @@ export const journalEntries = mysqlTable("journal_entries", {
   moodTag: varchar("moodTag", { length: 50 }),
   // Themes detected by AI (JSON array)
   themes: json("themes").$type<string[]>().default([]),
+  // Optional user-defined category
+  categoryId: int("categoryId"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 export type JournalEntry = typeof journalEntries.$inferSelect;
 export type InsertJournalEntry = typeof journalEntries.$inferInsert;
+
+// ─── Journal Categories ─────────────────────────────────────────────────────────
+
+export const journalCategories = mysqlTable("journal_categories", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  color: varchar("color", { length: 20 }).default("#8b5cf6").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type JournalCategory = typeof journalCategories.$inferSelect;
+export type InsertJournalCategory = typeof journalCategories.$inferInsert;
 
 // ─── AI Chat Messages ─────────────────────────────────────────────────────────
 

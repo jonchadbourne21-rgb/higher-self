@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, like, lte, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2";
 import {
@@ -8,6 +8,7 @@ import {
   growthMilestones,
   habitCompletions,
   habits,
+  journalCategories,
   journalEntries,
   lifeDomainScores,
   userProfiles,
@@ -317,13 +318,36 @@ export async function getRecentCheckIns(userId: number, days = 30) {
 
 // ─── Journal Entries ──────────────────────────────────────────────────────────
 
-export async function getJournalEntries(userId: number, limit = 20) {
+export async function getJournalEntries(
+  userId: number,
+  limit = 50,
+  filters?: {
+    search?: string;
+    categoryId?: number | null;
+    dateFrom?: Date;
+    dateTo?: Date;
+    moodTag?: string;
+  }
+) {
   const db = await getDb();
   if (!db) return [];
+  const conditions = [eq(journalEntries.userId, userId)];
+  if (filters?.search) {
+    const term = `%${filters.search}%`;
+    conditions.push(
+      sql`(${journalEntries.title} LIKE ${term} OR ${journalEntries.content} LIKE ${term})`
+    );
+  }
+  if (filters?.categoryId !== undefined && filters.categoryId !== null) {
+    conditions.push(eq(journalEntries.categoryId, filters.categoryId));
+  }
+  if (filters?.dateFrom) conditions.push(gte(journalEntries.createdAt, filters.dateFrom));
+  if (filters?.dateTo) conditions.push(lte(journalEntries.createdAt, filters.dateTo));
+  if (filters?.moodTag) conditions.push(eq(journalEntries.moodTag, filters.moodTag));
   return db
     .select()
     .from(journalEntries)
-    .where(eq(journalEntries.userId, userId))
+    .where(and(...conditions))
     .orderBy(desc(journalEntries.createdAt))
     .limit(limit);
 }
@@ -358,6 +382,41 @@ export async function updateJournalEntryAi(
     .update(journalEntries)
     .set({ aiPerspective, themes })
     .where(and(eq(journalEntries.id, id), eq(journalEntries.userId, userId)));
+}
+
+// ─── Journal Categories ─────────────────────────────────────────────────────────
+
+export async function getJournalCategories(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(journalCategories)
+    .where(eq(journalCategories.userId, userId))
+    .orderBy(journalCategories.name);
+}
+
+export async function createJournalCategory(
+  userId: number,
+  name: string,
+  color: string
+) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(journalCategories).values({ userId, name, color });
+}
+
+export async function deleteJournalCategory(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  // Remove category from entries first
+  await db
+    .update(journalEntries)
+    .set({ categoryId: null })
+    .where(and(eq(journalEntries.categoryId, id), eq(journalEntries.userId, userId)));
+  await db
+    .delete(journalCategories)
+    .where(and(eq(journalCategories.id, id), eq(journalCategories.userId, userId)));
 }
 
 // ─── Chat Messages ────────────────────────────────────────────────────────────
