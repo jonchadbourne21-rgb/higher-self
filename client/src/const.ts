@@ -1,16 +1,20 @@
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
-// higherself.cloud is the primary published domain and is registered with
-// Manus OAuth. We always use it as the redirectUri so the OAuth server
-// accepts the callback. The state payload carries the user's actual origin
-// (could be higherself.cloud, www.higherself.cloud, or higherself.manus.space)
-// so the server can redirect back to wherever they came from after login.
-const CANONICAL_ORIGIN = "https://higherself.cloud";
+// IMPORTANT: The Manus OAuth server only has higherself-lqwmd5t8.manus.space
+// registered as an allowed redirect URI. higherself.cloud is NOT registered
+// with the OAuth server (it's only a Cloudflare proxy alias).
+//
+// Strategy:
+//   1. Always send redirectUri = higherself-lqwmd5t8.manus.space/api/oauth/callback
+//      (the registered domain the OAuth server accepts)
+//   2. Encode the user's actual origin (higherself.cloud) in the state
+//   3. After the callback succeeds on manus.space, the server redirects
+//      the user back to higherself.cloud with the session token in ?_t=
+//
+// This way higherself.cloud users log in seamlessly without hitting
+// "Permission denied - Redirect URI is not set".
+const CANONICAL_ORIGIN = "https://higherself-lqwmd5t8.manus.space";
 
-// Generate login URL at runtime.
-// - redirectUri always points to the CANONICAL registered domain
-// - state encodes the user's actual origin + return path so the callback
-//   can redirect back to the right domain after login
 export const getLoginUrl = (returnPath = "/") => {
   const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
   const appId = import.meta.env.VITE_APP_ID;
@@ -19,7 +23,7 @@ export const getLoginUrl = (returnPath = "/") => {
   const redirectUri = `${CANONICAL_ORIGIN}/api/oauth/callback`;
 
   // Encode the user's actual origin + return path in state so the server
-  // can redirect back to the right domain after login
+  // can redirect back to higherself.cloud (or wherever) after login
   const actualOrigin = window.location.origin;
   const statePayload = JSON.stringify({ redirectUri, returnOrigin: actualOrigin, returnPath });
   const state = btoa(statePayload);
