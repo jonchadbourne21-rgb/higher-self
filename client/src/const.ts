@@ -1,14 +1,16 @@
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
-// The canonical manus.space domain that is registered with Manus OAuth.
-// The custom domain (higherself.cloud) is NOT registered, so we always use
-// this as the redirectUri in the OAuth request to avoid "Permission denied".
-const CANONICAL_ORIGIN = "https://higherself-lqwmd5t8.manus.space";
+// higherself.cloud is the primary published domain and is registered with
+// Manus OAuth. We always use it as the redirectUri so the OAuth server
+// accepts the callback. The state payload carries the user's actual origin
+// (could be higherself.cloud, www.higherself.cloud, or higherself.manus.space)
+// so the server can redirect back to wherever they came from after login.
+const CANONICAL_ORIGIN = "https://higherself.cloud";
 
 // Generate login URL at runtime.
-// - redirectUri always points to the CANONICAL (registered) manus.space domain
-// - state encodes the user's actual current origin so the callback can
-//   redirect back to higherself.cloud (or wherever) after login
+// - redirectUri always points to the CANONICAL registered domain
+// - state encodes the user's actual origin + return path so the callback
+//   can redirect back to the right domain after login
 export const getLoginUrl = (returnPath = "/") => {
   const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
   const appId = import.meta.env.VITE_APP_ID;

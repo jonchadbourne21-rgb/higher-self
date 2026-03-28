@@ -222,3 +222,8 @@
 - [ ] Investigate how redirect URI is constructed in OAuth flow (client const.ts + server oauth.ts)
 - [ ] Fix redirect URI logic so higherself.cloud works the same as higherself.manus.space
 - [ ] Test both domains work for login
+
+## URGENT — Make higherself.cloud the Primary OAuth Domain
+- [x] Update const.ts: use higherself.cloud as the canonical OAuth redirect URI
+- [x] Update oauth.ts: handle higherself.cloud as the primary callback domain
+- [x] Test, checkpoint, publish, verify login works on higherself.cloud

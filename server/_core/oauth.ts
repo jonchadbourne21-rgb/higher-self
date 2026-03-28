@@ -43,10 +43,10 @@ function decodeState(state: string): {
       returnPath: "/",
     };
   } catch {
-    // Last resort fallback
+    // Last resort fallback — use the canonical domain
     return {
-      redirectUri: "",
-      returnOrigin: "",
+      redirectUri: "https://higherself.cloud/api/oauth/callback",
+      returnOrigin: "https://higherself.cloud",
       returnPath: "/",
     };
   }
@@ -100,14 +100,9 @@ export function registerOAuthRoutes(app: Express) {
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
       // Build the final redirect URL.
-      // If the user came from a different origin (e.g. higherself.cloud) and
-      // the OAuth callback fired on manus.space, send them back to their
-      // original domain with the token in the URL so localStorage auth works.
-      const callbackOrigin = `${req.protocol}://${req.hostname}`;
-      const targetOrigin = returnOrigin && returnOrigin !== callbackOrigin
-        ? returnOrigin
-        : callbackOrigin;
-
+      // Always redirect to the returnOrigin (higherself.cloud or wherever the user came from)
+      // with the token in ?_t= so localStorage auth picks it up on any domain.
+      const targetOrigin = returnOrigin || "https://higherself.cloud";
       const finalPath = returnPath || "/";
       const separator = finalPath.includes("?") ? "&" : "?";
       const finalUrl = `${targetOrigin}${finalPath}${separator}_t=${encodeURIComponent(sessionToken)}`;
