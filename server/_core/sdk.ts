@@ -38,7 +38,7 @@ class OAuthService {
     }
   }
 
-  decodeState(state: string): string {
+  private decodeState(state: string): string {
     // Use Buffer for robust base64 decoding (handles URL-encoded base64 from browsers)
     try {
       return Buffer.from(state, "base64").toString("utf-8");
@@ -50,9 +50,12 @@ class OAuthService {
 
   async getTokenByCode(
     code: string,
-    redirectUri: string
+    state: string,
+    redirectUriOverride?: string
   ): Promise<ExchangeTokenResponse> {
+    // Use the explicit redirectUri if provided, otherwise decode from state
     // The redirectUri MUST exactly match what was sent in the original authorization request
+    const redirectUri = redirectUriOverride ?? this.decodeState(state);
     console.log("[OAuth] Using redirectUri for token exchange:", redirectUri);
     const payload: ExchangeTokenRequest = {
       clientId: ENV.appId,
@@ -130,10 +133,7 @@ class SDKServer {
     state: string,
     redirectUriOverride?: string
   ): Promise<ExchangeTokenResponse> {
-    // If redirectUriOverride is provided, use it directly (already decoded by caller)
-    // Otherwise fall back to decoding state
-    const redirectUri = redirectUriOverride || this.oauthService.decodeState(state);
-    return this.oauthService.getTokenByCode(code, redirectUri);
+    return this.oauthService.getTokenByCode(code, state, redirectUriOverride);
   }
 
   /**
