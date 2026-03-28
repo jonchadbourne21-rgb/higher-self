@@ -117,9 +117,9 @@ export default function Onboarding() {
   return (
     <div className="min-h-screen bg-aurora flex flex-col max-w-[480px] mx-auto">
       {/* Progress bar */}
-      <div className="h-1 bg-border">
+      <div className="h-1.5 bg-violet-100">
         <motion.div
-          className="h-full bg-primary"
+          className="h-full rounded-full" style={{ background: 'linear-gradient(90deg, oklch(0.46 0.20 295), oklch(0.72 0.18 60))' }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.4 }}
         />
@@ -160,7 +160,7 @@ export default function Onboarding() {
             {step === 0 && (
               <div className="space-y-4">
                 <div className="glass rounded-2xl p-6 flex flex-col items-center gap-4">
-                  <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center glow-gold">
+                  <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, oklch(0.46 0.20 295 / 0.15), oklch(0.72 0.18 60 / 0.12))', border: '1.5px solid oklch(0.46 0.20 295 / 0.25)', boxShadow: '0 4px 24px oklch(0.46 0.20 295 / 0.15)' }}>
                     <span className="text-4xl">✦</span>
                   </div>
                   <p className="text-center text-sm text-muted-foreground leading-relaxed">
@@ -194,9 +194,10 @@ export default function Onboarding() {
                         onClick={() => toggleValue(v)}
                         className={`px-4 py-2 rounded-full text-sm font-medium border transition-all duration-200 ${
                           selected
-                            ? "bg-primary text-primary-foreground border-primary glow-gold"
-                            : "bg-secondary/50 text-muted-foreground border-border hover:border-primary/50 hover:text-foreground"
+                            ? "text-white border-transparent"
+                            : "bg-white text-muted-foreground border-border hover:border-violet-300 hover:text-foreground hover:bg-violet-50"
                         }`}
+                        style={selected ? { background: 'linear-gradient(135deg, oklch(0.46 0.20 295), oklch(0.55 0.18 320))' } : undefined}
                       >
                         {selected && <Check size={12} className="inline mr-1" />}
                         {v}
@@ -307,8 +308,8 @@ export default function Onboarding() {
                         onClick={() => toggleHabit(h)}
                         className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition-all duration-200 text-left ${
                           selected
-                            ? "bg-primary/10 border-primary/50 text-foreground"
-                            : "glass border-border/50 text-muted-foreground hover:text-foreground"
+                            ? "bg-violet-50 border-violet-300 text-foreground"
+                            : "bg-white border-border text-muted-foreground hover:text-foreground hover:bg-gray-50"
                         }`}
                       >
                         <span className="text-xl">{h.emoji}</span>
@@ -332,7 +333,7 @@ export default function Onboarding() {
         <Button
           onClick={handleNext}
           disabled={!canProceed() || completeMutation.isPending}
-          className="w-full py-6 rounded-2xl text-base font-medium glow-gold"
+          className="w-full py-6 rounded-2xl text-base font-semibold text-white border-0" style={{ background: 'linear-gradient(135deg, oklch(0.46 0.20 295), oklch(0.55 0.18 320))', boxShadow: '0 6px 28px oklch(0.46 0.20 295 / 0.25)' }}
         >
           {completeMutation.isPending ? (
             <span className="animate-pulse">Creating your profile...</span>

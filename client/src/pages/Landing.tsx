@@ -6,11 +6,11 @@ import { useLocation } from "wouter";
 import { toast } from "sonner";
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 24 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.15, duration: 0.6 },
+    transition: { delay: i * 0.14, duration: 0.55 },
   }),
 };
 
@@ -19,37 +19,19 @@ export default function Landing() {
   const [, navigate] = useLocation();
 
   useEffect(() => {
-    // Set SEO title and meta description
     document.title = "Higher Self — Your AI Mirror for Personal Growth";
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute(
-        "content",
-        "Meet your AI Mirror — a personalized guide to emotional maturity, inner peace, and authentic living. Daily growth through reflection and wisdom."
-      );
-    }
-    const metaKeywords = document.querySelector('meta[name="keywords"]');
-    if (metaKeywords) {
-      metaKeywords.setAttribute(
-        "content",
-        "personal growth, emotional maturity, AI coach, self-awareness, inner peace, daily reflection, mindfulness, authentic living"
-      );
-    }
   }, []);
 
   useEffect(() => {
-    // Show error toast if OAuth callback failed
     const params = new URLSearchParams(window.location.search);
     if (params.get("auth_error") === "1") {
       toast.error("Sign-in failed. Please try again.");
-      // Clean up the URL
       window.history.replaceState({}, "", "/");
     }
   }, []);
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
-      // Check if onboarding is needed
       if (!(user as any)?.onboardingCompleted) {
         navigate("/onboarding");
       } else {
@@ -62,8 +44,8 @@ export default function Landing() {
     return (
       <div className="min-h-screen bg-aurora flex items-center justify-center">
         <motion.div
-          animate={{ opacity: [0.3, 1, 0.3] }}
-          transition={{ repeat: Infinity, duration: 2 }}
+          animate={{ opacity: [0.3, 1, 0.3], scale: [0.95, 1.05, 0.95] }}
+          transition={{ repeat: Infinity, duration: 2.2 }}
           className="text-primary text-4xl font-serif"
         >
           ✦
@@ -73,48 +55,58 @@ export default function Landing() {
   }
 
   return (
-    <div className="min-h-screen bg-aurora flex flex-col items-center justify-between px-6 py-12 max-w-[480px] mx-auto">
-      {/* Top ornament */}
+    <div
+      className="min-h-screen flex flex-col items-center justify-between px-6 py-12 max-w-[480px] mx-auto"
+      style={{
+        background:
+          "radial-gradient(ellipse at 20% 0%, oklch(0.46 0.20 295 / 0.07) 0%, transparent 50%), " +
+          "radial-gradient(ellipse at 80% 15%, oklch(0.72 0.18 60 / 0.07) 0%, transparent 50%), " +
+          "oklch(0.98 0.008 80)",
+      }}
+    >
+      {/* ── Top logo mark ─────────────────────────────────────────────────── */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
+        initial={{ opacity: 0, scale: 0.75 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 1, ease: "easeOut" }}
+        transition={{ duration: 0.9, ease: "easeOut" }}
         className="flex flex-col items-center gap-3"
       >
         <div className="relative">
-          <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center glow-gold">
-            <span className="text-3xl">✦</span>
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center"
+            style={{
+              background: "linear-gradient(135deg, oklch(0.46 0.20 295 / 0.15), oklch(0.72 0.18 60 / 0.12))",
+              border: "1.5px solid oklch(0.46 0.20 295 / 0.25)",
+              boxShadow: "0 4px 24px oklch(0.46 0.20 295 / 0.15)",
+            }}
+          >
+            <span className="text-3xl text-violet-gradient">✦</span>
           </div>
-          <div className="absolute -inset-2 rounded-full border border-primary/10 animate-pulse" />
+          <motion.div
+            animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.1, 0.4] }}
+            transition={{ repeat: Infinity, duration: 3 }}
+            className="absolute -inset-3 rounded-full"
+            style={{ border: "1px solid oklch(0.46 0.20 295 / 0.2)" }}
+          />
         </div>
-        <p className="text-xs tracking-[0.3em] text-muted-foreground uppercase">Higher Self</p>
+        <p className="text-xs tracking-[0.35em] text-violet-500 uppercase font-medium">Higher Self</p>
       </motion.div>
 
-      {/* Main content */}
+      {/* ── Main content ──────────────────────────────────────────────────── */}
       <div className="flex flex-col items-center text-center gap-8 max-w-sm">
         <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible" className="space-y-4">
           <h1 className="text-5xl font-serif font-light leading-tight text-foreground">
             Become who you
             <br />
-            <span className="text-gold-gradient italic">were meant to be</span>
+            <span className="text-violet-gradient italic">were meant to be</span>
           </h1>
-          <h2 className="text-lg font-light text-muted-foreground mt-4">
-            Transform your life with personalized AI guidance
-          </h2>
+          <p className="text-base font-light text-muted-foreground leading-relaxed">
+            Your AI mirror guides you toward inner peace, emotional maturity, and authentic living.
+          </p>
         </motion.div>
 
-        <motion.p
-          custom={1}
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="text-muted-foreground text-base leading-relaxed font-light"
-        >
-          Your AI mirror — a higher, more connected version of you — guides you toward inner peace, emotional maturity, and authentic living. Track your growth across life domains, reflect daily, and evolve into your best self.
-        </motion.p>
-
         <motion.div
-          custom={2}
+          custom={1}
           variants={fadeUp}
           initial="hidden"
           animate="visible"
@@ -122,19 +114,21 @@ export default function Landing() {
         >
           <a
             href={getLoginUrl()}
-            className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-medium text-base tracking-wide text-center glow-gold hover:bg-primary/90 transition-all duration-200 active:scale-95"
+            className="w-full py-4 rounded-2xl font-semibold text-base tracking-wide text-center text-white transition-all duration-200 active:scale-95"
+            style={{
+              background: "linear-gradient(135deg, oklch(0.46 0.20 295), oklch(0.55 0.18 320))",
+              boxShadow: "0 6px 28px oklch(0.46 0.20 295 / 0.30)",
+            }}
           >
             Begin Your Journey
           </a>
-          <p className="text-xs text-muted-foreground">
-            Free to start. Your data stays private.
-          </p>
+          <p className="text-xs text-muted-foreground">Free to start · Your data stays private</p>
         </motion.div>
       </div>
 
-      {/* Features */}
+      {/* ── Feature chips ─────────────────────────────────────────────────── */}
       <motion.div
-        custom={3}
+        custom={2}
         variants={fadeUp}
         initial="hidden"
         animate="visible"
@@ -142,13 +136,16 @@ export default function Landing() {
       >
         <div className="grid grid-cols-3 gap-3">
           {[
-            { emoji: "🪞", label: "AI Mirror" },
-            { emoji: "🌱", label: "Daily Growth" },
-            { emoji: "✨", label: "Inner Peace" },
+            { emoji: "🪞", label: "AI Mirror", bg: "bg-violet-50", border: "border-violet-100" },
+            { emoji: "🌱", label: "Daily Growth", bg: "bg-emerald-50", border: "border-emerald-100" },
+            { emoji: "✨", label: "Inner Peace", bg: "bg-amber-50", border: "border-amber-100" },
           ].map((f) => (
-            <div key={f.label} className="glass rounded-2xl p-3 flex flex-col items-center gap-2">
+            <div
+              key={f.label}
+              className={`${f.bg} border ${f.border} rounded-2xl p-3 flex flex-col items-center gap-2`}
+            >
               <span className="text-2xl">{f.emoji}</span>
-              <span className="text-xs text-muted-foreground font-medium">{f.label}</span>
+              <span className="text-xs text-foreground font-semibold">{f.label}</span>
             </div>
           ))}
         </div>

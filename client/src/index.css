@@ -42,43 +42,100 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* ─── Light theme (default) ─────────────────────────────────────────────────
+   Palette rationale (color psychology for engagement & wellbeing):
+   • Warm cream background  → paper-like warmth, reduces anxiety vs cold white
+   • Deep violet primary    → wisdom, transformation, aspirational growth
+   • Amber accent           → energy, optimism, action — pairs with violet
+   • Charcoal foreground    → high contrast, readable, grounded
+   • Soft rose/teal domain  → emotional range without overwhelming saturation
+   ─────────────────────────────────────────────────────────────────────────── */
 :root {
-  --background: oklch(0.10 0.025 260);
+  /* Base surfaces */
+  --background: oklch(0.98 0.008 80);          /* warm cream #FDFAF5 */
+  --foreground: oklch(0.18 0.02 270);          /* deep charcoal #1A1A2E */
+  --card: oklch(1.00 0.00 0);                  /* pure white cards */
+  --card-foreground: oklch(0.18 0.02 270);
+  --popover: oklch(1.00 0.00 0);
+  --popover-foreground: oklch(0.18 0.02 270);
+
+  /* Primary: deep violet → the "Higher Self" color */
+  --primary: oklch(0.46 0.20 295);             /* #6B3FA0 rich violet */
+  --primary-foreground: oklch(0.99 0.00 0);    /* white text on violet */
+
+  /* Secondary: warm lavender tint */
+  --secondary: oklch(0.94 0.04 295);           /* soft lavender bg */
+  --secondary-foreground: oklch(0.35 0.15 295);
+
+  /* Muted: warm grey-beige */
+  --muted: oklch(0.94 0.01 80);               /* warm off-white */
+  --muted-foreground: oklch(0.52 0.03 80);    /* warm grey text */
+
+  /* Accent: amber — energy, action, warmth */
+  --accent: oklch(0.95 0.06 75);              /* soft amber bg */
+  --accent-foreground: oklch(0.50 0.15 60);   /* deep amber text */
+
+  /* Semantic */
+  --destructive: oklch(0.55 0.20 25);
+  --destructive-foreground: oklch(0.99 0.00 0);
+  --border: oklch(0.88 0.02 80);              /* warm light border */
+  --input: oklch(0.96 0.01 80);
+  --ring: oklch(0.46 0.20 295);              /* violet focus ring */
+  --radius: 0.875rem;
+
+  /* Charts */
+  --chart-1: oklch(0.55 0.18 295);           /* violet */
+  --chart-2: oklch(0.72 0.14 60);            /* amber */
+  --chart-3: oklch(0.58 0.14 155);           /* teal */
+  --chart-4: oklch(0.62 0.14 15);            /* coral */
+  --chart-5: oklch(0.60 0.12 230);           /* sky */
+
+  /* Sidebar */
+  --sidebar: oklch(0.98 0.008 80);
+  --sidebar-foreground: oklch(0.18 0.02 270);
+  --sidebar-primary: oklch(0.46 0.20 295);
+  --sidebar-primary-foreground: oklch(0.99 0.00 0);
+  --sidebar-accent: oklch(0.94 0.04 295);
+  --sidebar-accent-foreground: oklch(0.35 0.15 295);
+  --sidebar-border: oklch(0.88 0.02 80);
+  --sidebar-ring: oklch(0.46 0.20 295);
+}
+
+/* Dark mode override — keep available but not default */
+.dark {
+  --background: oklch(0.12 0.025 270);
   --foreground: oklch(0.95 0.01 80);
-  --card: oklch(0.14 0.025 260);
+  --card: oklch(0.16 0.025 270);
   --card-foreground: oklch(0.95 0.01 80);
-  --popover: oklch(0.13 0.025 260);
+  --popover: oklch(0.14 0.025 270);
   --popover-foreground: oklch(0.95 0.01 80);
-  --primary: oklch(0.78 0.12 75);
-  --primary-foreground: oklch(0.12 0.02 260);
-  --secondary: oklch(0.18 0.03 260);
+  --primary: oklch(0.72 0.16 295);
+  --primary-foreground: oklch(0.12 0.02 270);
+  --secondary: oklch(0.20 0.04 270);
   --secondary-foreground: oklch(0.85 0.01 80);
-  --muted: oklch(0.18 0.02 260);
+  --muted: oklch(0.20 0.02 270);
   --muted-foreground: oklch(0.55 0.02 80);
-  --accent: oklch(0.22 0.04 260);
+  --accent: oklch(0.24 0.05 270);
   --accent-foreground: oklch(0.90 0.01 80);
   --destructive: oklch(0.55 0.18 25);
   --destructive-foreground: oklch(0.98 0.01 80);
-  --border: oklch(0.22 0.025 260);
-  --input: oklch(0.18 0.025 260);
-  --ring: oklch(0.78 0.12 75);
-  --radius: 0.75rem;
-  --chart-1: oklch(0.70 0.12 290);
-  --chart-2: oklch(0.72 0.10 15);
-  --chart-3: oklch(0.78 0.12 75);
-  --chart-4: oklch(0.65 0.10 155);
-  --chart-5: oklch(0.68 0.12 260);
-  --sidebar: oklch(0.10 0.025 260);
+  --border: oklch(0.24 0.025 270);
+  --input: oklch(0.20 0.025 270);
+  --ring: oklch(0.72 0.16 295);
+  --chart-1: oklch(0.70 0.16 295);
+  --chart-2: oklch(0.72 0.14 60);
+  --chart-3: oklch(0.65 0.12 155);
+  --chart-4: oklch(0.68 0.14 15);
+  --chart-5: oklch(0.65 0.12 230);
+  --sidebar: oklch(0.12 0.025 270);
   --sidebar-foreground: oklch(0.85 0.01 80);
-  --sidebar-primary: oklch(0.78 0.12 75);
-  --sidebar-primary-foreground: oklch(0.12 0.02 260);
-  --sidebar-accent: oklch(0.18 0.03 260);
+  --sidebar-primary: oklch(0.72 0.16 295);
+  --sidebar-primary-foreground: oklch(0.12 0.02 270);
+  --sidebar-accent: oklch(0.20 0.04 270);
   --sidebar-accent-foreground: oklch(0.85 0.01 80);
-  --sidebar-border: oklch(0.20 0.025 260);
-  --sidebar-ring: oklch(0.78 0.12 75);
+  --sidebar-border: oklch(0.22 0.025 270);
+  --sidebar-ring: oklch(0.72 0.16 295);
 }
-
-
 
 @layer base {
   * {
@@ -103,30 +160,66 @@
 }
 
 @layer utilities {
+  /* ── Card / glass surfaces ─────────────────────────────────────────────── */
   .glass {
-    background: oklch(0.14 0.025 260 / 0.7);
+    background: oklch(1.00 0.00 0 / 0.85);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid oklch(0.30 0.03 260 / 0.4);
+    border: 1px solid oklch(0.88 0.02 80 / 0.8);
+    box-shadow: 0 2px 12px oklch(0.18 0.02 270 / 0.06);
   }
   .glass-light {
-    background: oklch(0.18 0.025 260 / 0.5);
+    background: oklch(1.00 0.00 0 / 0.6);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid oklch(0.30 0.03 260 / 0.3);
+    border: 1px solid oklch(0.88 0.02 80 / 0.5);
   }
+
+  /* ── Text gradients ────────────────────────────────────────────────────── */
   .text-gold-gradient {
-    background: linear-gradient(135deg, oklch(0.85 0.10 75), oklch(0.70 0.14 55));
+    background: linear-gradient(135deg, oklch(0.46 0.20 295), oklch(0.72 0.18 60));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  .glow-gold {
-    box-shadow: 0 0 20px oklch(0.78 0.12 75 / 0.15), 0 0 60px oklch(0.78 0.12 75 / 0.05);
+  .text-violet-gradient {
+    background: linear-gradient(135deg, oklch(0.46 0.20 295), oklch(0.60 0.18 320));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
+
+  /* ── Glow effects ──────────────────────────────────────────────────────── */
+  .glow-gold {
+    box-shadow: 0 4px 24px oklch(0.46 0.20 295 / 0.18), 0 1px 4px oklch(0.46 0.20 295 / 0.10);
+  }
+  .glow-amber {
+    box-shadow: 0 4px 24px oklch(0.72 0.18 60 / 0.25), 0 1px 4px oklch(0.72 0.18 60 / 0.12);
+  }
+
+  /* ── Background textures ───────────────────────────────────────────────── */
+  .bg-aurora {
+    background:
+      radial-gradient(ellipse at 15% 0%, oklch(0.46 0.20 295 / 0.07) 0%, transparent 45%),
+      radial-gradient(ellipse at 85% 10%, oklch(0.72 0.18 60 / 0.06) 0%, transparent 45%),
+      radial-gradient(ellipse at 50% 90%, oklch(0.58 0.14 155 / 0.04) 0%, transparent 50%),
+      var(--background);
+  }
+
+  /* ── Domain color chips ────────────────────────────────────────────────── */
+  .domain-mindset      { background: oklch(0.92 0.06 295 / 0.8); color: oklch(0.40 0.18 295); border-color: oklch(0.80 0.08 295); }
+  .domain-relationships{ background: oklch(0.94 0.06 15 / 0.8);  color: oklch(0.45 0.18 15);  border-color: oklch(0.82 0.08 15); }
+  .domain-work         { background: oklch(0.94 0.06 60 / 0.8);  color: oklch(0.48 0.18 60);  border-color: oklch(0.82 0.10 60); }
+  .domain-health       { background: oklch(0.92 0.06 155 / 0.8); color: oklch(0.40 0.16 155); border-color: oklch(0.80 0.08 155); }
+  .domain-spirituality { background: oklch(0.93 0.05 230 / 0.8); color: oklch(0.42 0.16 230); border-color: oklch(0.80 0.08 230); }
+  .domain-finances     { background: oklch(0.92 0.06 165 / 0.8); color: oklch(0.40 0.16 165); border-color: oklch(0.80 0.08 165); }
+
+  /* ── Typography ────────────────────────────────────────────────────────── */
   .font-serif {
     font-family: "Cormorant Garamond", Georgia, serif;
   }
+
+  /* ── Spacing helpers ───────────────────────────────────────────────────── */
   .pb-safe {
     padding-bottom: calc(env(safe-area-inset-bottom) + 5rem);
   }
@@ -135,48 +228,50 @@
     scrollbar-width: none;
   }
   .scrollbar-hide::-webkit-scrollbar { display: none; }
-  .bg-aurora {
-    background: 
-      radial-gradient(ellipse at 20% 50%, oklch(0.65 0.12 290 / 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 20%, oklch(0.78 0.12 75 / 0.06) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 80%, oklch(0.68 0.12 260 / 0.05) 0%, transparent 50%),
-      var(--background);
+
+  /* ── Gradient button ───────────────────────────────────────────────────── */
+  .btn-gradient {
+    background: linear-gradient(135deg, oklch(0.46 0.20 295), oklch(0.55 0.18 320));
+    color: white;
+    border: none;
   }
-  .domain-mindset { background: oklch(0.70 0.12 290 / 0.15); color: oklch(0.70 0.12 290); border-color: oklch(0.70 0.12 290 / 0.3); }
-  .domain-relationships { background: oklch(0.72 0.10 15 / 0.15); color: oklch(0.72 0.10 15); border-color: oklch(0.72 0.10 15 / 0.3); }
-  .domain-work { background: oklch(0.78 0.12 75 / 0.15); color: oklch(0.78 0.12 75); border-color: oklch(0.78 0.12 75 / 0.3); }
-  .domain-health { background: oklch(0.65 0.10 155 / 0.15); color: oklch(0.65 0.10 155); border-color: oklch(0.65 0.10 155 / 0.3); }
-  .domain-spirituality { background: oklch(0.68 0.12 260 / 0.15); color: oklch(0.68 0.12 260); border-color: oklch(0.68 0.12 260 / 0.3); }
-  .domain-finances { background: oklch(0.75 0.12 165 / 0.15); color: oklch(0.75 0.12 165); border-color: oklch(0.75 0.12 165 / 0.3); }
+  .btn-gradient:hover {
+    background: linear-gradient(135deg, oklch(0.42 0.22 295), oklch(0.50 0.20 320));
+  }
+
+  /* ── Warm card variant ─────────────────────────────────────────────────── */
+  .card-warm {
+    background: linear-gradient(145deg, oklch(1.00 0.00 0), oklch(0.97 0.02 80));
+    border: 1px solid oklch(0.88 0.02 80);
+    box-shadow: 0 2px 16px oklch(0.18 0.02 270 / 0.06);
+  }
+
+  /* ── Highlight strip ───────────────────────────────────────────────────── */
+  .highlight-violet {
+    border-left: 3px solid oklch(0.46 0.20 295);
+    padding-left: 0.75rem;
+  }
 }
 
+/* ── Scrollbar ──────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: oklch(0.30 0.03 260); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: oklch(0.82 0.04 80); border-radius: 2px; }
 
-.streamdown-content p { margin-bottom: 0.75rem; line-height: 1.7; color: oklch(0.85 0.01 80); }
-.streamdown-content strong { color: oklch(0.78 0.12 75); font-weight: 600; }
-.streamdown-content em { color: oklch(0.75 0.05 80); }
+/* ── Streamdown markdown rendering ─────────────────────────────────────── */
+.streamdown-content p { margin-bottom: 0.75rem; line-height: 1.7; color: oklch(0.30 0.02 270); }
+.streamdown-content strong { color: oklch(0.46 0.20 295); font-weight: 600; }
+.streamdown-content em { color: oklch(0.45 0.05 80); }
 
 @layer components {
   /**
-   * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
+   * Custom container — centers content with responsive padding.
    */
   .container {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
+    padding-left: 1rem;
     padding-right: 1rem;
   }
 
@@ -187,7 +282,7 @@
 
   @media (min-width: 640px) {
     .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
+      padding-left: 1.5rem;
       padding-right: 1.5rem;
     }
   }

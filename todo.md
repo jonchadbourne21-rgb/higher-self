@@ -113,6 +113,15 @@
 - [ ] Write vitest tests for program procedures
 - [ ] Test end-to-end program enrollment and lesson completion
 
+## Visual Redesign — Bright Warm Theme
+- [x] Update index.css: warm cream background, violet+amber primary palette, light mode
+- [x] Update App.tsx ThemeProvider to light mode
+- [x] Update Home.tsx, AppShell/nav bar, card styles for new palette
+- [x] Update Onboarding.tsx for new palette
+- [x] Update global glass/card utility classes
+- [x] Update Landing.tsx for new palette
+- [x] Verify text contrast and readability across all pages (Home, Chat, Journal, Domains)
+
 ## Journal Title Suggestion
 - [x] Add tRPC procedure: journal.suggestTitle — calls LLM with entry content, returns a short evocative title
 - [x] Update Journal page: debounced trigger after user types 60+ chars, show suggested title chip below title field
