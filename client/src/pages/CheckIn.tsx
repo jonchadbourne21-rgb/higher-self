@@ -6,7 +6,8 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import AppShell from "@/components/AppShell";
-import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, BellRing, BellOff, Loader2 } from "lucide-react";
+import { useNotifications } from "@/hooks/useNotifications";
 import { Streamdown } from "streamdown";
 
 const MOOD_EMOJIS = ["😔", "😞", "😕", "😐", "🙂", "😊", "😄", "🌟", "✨", "🌈"];
@@ -25,6 +26,11 @@ export default function CheckIn() {
 
   const { data: todayCheckIn } = trpc.checkIn.today.useQuery(undefined, { enabled: isAuthenticated });
   const { data: habits } = trpc.habits.list.useQuery(undefined, { enabled: isAuthenticated });
+
+  // Notification opt-in
+  const { isSupported, isSubscribed, permission, isSubscribing, subscribe } = useNotifications();
+  const [notifDismissed, setNotifDismissed] = useState(false);
+  const showNotifPrompt = isSupported && !isSubscribed && permission !== "denied" && !notifDismissed;
 
   const submitMutation = trpc.checkIn.submit.useMutation({
     onSuccess: (data) => {
@@ -94,6 +100,45 @@ export default function CheckIn() {
               <p className="text-xs text-muted-foreground uppercase tracking-widest">Gratitude</p>
               <p className="text-sm text-foreground">{todayCheckIn.gratitude}</p>
             </div>
+          )}
+
+          {/* Notification opt-in prompt */}
+          {showNotifPrompt && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+              className="rounded-2xl border border-violet-200 bg-violet-50 p-5 space-y-3"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center flex-shrink-0">
+                  <BellRing className="w-5 h-5 text-violet-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-violet-900">Want a daily reminder?</p>
+                  <p className="text-xs text-violet-700 mt-0.5 leading-relaxed">
+                    Get a personalised nudge every morning at 6am — your goals, your pace.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setNotifDismissed(true)}
+                  className="text-violet-400 hover:text-violet-600 p-1 flex-shrink-0"
+                >
+                  <BellOff className="w-4 h-4" />
+                </button>
+              </div>
+              <button
+                onClick={async () => { await subscribe(); setNotifDismissed(true); }}
+                disabled={isSubscribing}
+                className="w-full py-2.5 rounded-xl bg-violet-600 text-white text-sm font-medium flex items-center justify-center gap-2 hover:bg-violet-700 transition-colors disabled:opacity-60"
+              >
+                {isSubscribing ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Enabling…</>
+                ) : (
+                  <><BellRing className="w-4 h-4" /> Yes, remind me daily</>
+                )}
+              </button>
+            </motion.div>
           )}
 
           <Button onClick={() => navigate("/home")} className="w-full rounded-2xl py-5">

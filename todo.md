@@ -185,3 +185,6 @@
 - [x] Frontend: useNotifications hook for subscription lifecycle
 - [x] Frontend: /notifications settings page with opt-in UI, time picker (5am–12pm), test button
 - [x] Frontend: Bell icon on Home header linking to notifications page
+
+## Notification Opt-in After Check-in (Mar 28)
+- [x] Show "Want a daily reminder?" card at bottom of check-in completion screen when user hasn't subscribed yet — animated violet card with enable button and dismiss (BellOff) option
