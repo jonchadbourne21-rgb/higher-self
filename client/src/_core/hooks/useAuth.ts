@@ -25,6 +25,8 @@ export function useAuth(options?: UseAuthOptions) {
   });
 
   const logout = useCallback(async () => {
+    // Clear localStorage token (used on custom domains where cookies are stripped)
+    localStorage.removeItem("app_session_token");
     try {
       await logoutMutation.mutateAsync();
     } catch (error: unknown) {

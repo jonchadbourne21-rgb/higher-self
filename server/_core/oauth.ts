@@ -50,13 +50,16 @@ export function registerOAuthRoutes(app: Express) {
         expiresInMs: ONE_YEAR_MS,
       });
 
+      // Set cookie as primary session mechanism (works on dev + manus.space domains)
       const cookieOptions = getSessionCookieOptions(req);
       console.log("[OAuth] Setting cookie with options:", JSON.stringify(cookieOptions));
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      // Always redirect to relative root — the SPA router handles the rest
-      console.log("[OAuth] Login successful, redirecting to /");
-      res.redirect(302, "/");
+      // ALSO pass token in URL so frontend can store in localStorage.
+      // This is the fallback for custom domains (higherself.cloud) where the
+      // Cloudflare proxy may strip Set-Cookie headers.
+      console.log("[OAuth] Login successful, redirecting to / with token");
+      res.redirect(302, `/?_t=${encodeURIComponent(sessionToken)}`);
     } catch (error: any) {
       const errMsg = error?.response?.data
         ? JSON.stringify(error.response.data)

@@ -266,10 +266,14 @@ class SDKServer {
   }
 
   async authenticateRequest(req: Request): Promise<User> {
-    // Regular authentication flow
+    // Read token from Authorization header first (localStorage-based auth for custom domains),
+    // then fall back to cookie (works on dev + manus.space domains)
+    const authHeader = req.headers.authorization;
+    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
     const cookies = this.parseCookies(req.headers.cookie);
     const sessionCookie = cookies.get(COOKIE_NAME);
-    const session = await this.verifySession(sessionCookie);
+    const tokenToVerify = bearerToken || sessionCookie;
+    const session = await this.verifySession(tokenToVerify);
 
     if (!session) {
       throw ForbiddenError("Invalid session cookie");
@@ -282,7 +286,7 @@ class SDKServer {
     // If user not in DB, sync from OAuth server automatically
     if (!user) {
       try {
-        const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
+        const userInfo = await this.getUserInfoWithJwt(tokenToVerify ?? "");
         await db.upsertUser({
           openId: userInfo.openId,
           name: userInfo.name || null,
