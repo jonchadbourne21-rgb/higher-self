@@ -130,6 +130,7 @@
 
 ## Bugs
 - [ ] Fix OAuth login failure on published domain (persistent issue)
+- [x] Fix OAuth callback 404 on published domain — NotFound now smart-redirects authenticated users to /home or /onboarding
 - [x] Fix duplicate sql import in db.ts
 - [x] Fix getDb() to use mysql2/promise connection pool instead of passing DATABASE_URL directly to drizzle
 - [x] Fix onboarding INSERT failures (schema-database mismatch resolved)
