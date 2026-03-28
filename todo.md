@@ -100,5 +100,22 @@
 - [ ] Update routing to support demo mode
 - [ ] Test all 11 pages in demo mode
 
+## Emotional Mastery 7-Day Program
+- [ ] Create database tables: growth_programs, program_lessons, user_program_enrollments, user_lesson_responses
+- [ ] Create database migrations for program tables
+- [ ] Build tRPC procedures: programs.list, programs.getById, programs.enroll, programs.getCurrentLesson, programs.submitLessonResponse, programs.getProgress
+- [ ] Create Programs discovery page (/programs)
+- [ ] Create Program details page (/programs/[programId])
+- [ ] Create Daily lesson interface (/programs/[programId]/lesson)
+- [ ] Create Program progress dashboard (/programs/[programId]/progress)
+- [ ] Implement AI-powered lesson feedback using LLM
+- [ ] Add completion badges and progress celebrations
+- [ ] Write vitest tests for program procedures
+- [ ] Test end-to-end program enrollment and lesson completion
+
 ## Bugs
 - [ ] Fix OAuth login failure on published domain (persistent issue)
+- [x] Fix duplicate sql import in db.ts
+- [x] Fix getDb() to use mysql2/promise connection pool instead of passing DATABASE_URL directly to drizzle
+- [x] Fix onboarding INSERT failures (schema-database mismatch resolved)
+- [x] Fix onboarding redirect after completion (invalidate auth.me cache)

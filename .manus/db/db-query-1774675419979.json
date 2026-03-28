@@ -1,0 +1,25 @@
+{
+  "query": "SELECT * FROM user_profiles LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UbcpEQhTnXTazXN.root --database LQwmD5t86EFFZjkEDkXbgz --execute SELECT * FROM user_profiles LIMIT 5;",
+  "rows": [
+    {
+      "id": "2",
+      "userId": "1",
+      "coreValues": "[\"Family\", \"Growth\", \"Wisdom\"]",
+      "lifeGoals": "NULL",
+      "beliefs": "I believe I can change and grow.",
+      "currentChallenges": "NULL",
+      "createdAt": "2026-03-28 05:17:05",
+      "updatedAt": "2026-03-28 05:23:07",
+      "shortTermGoals": "I want to grow as a person",
+      "longTermVision": "In my ideal life, I am at peace",
+      "personalityNotes": "NULL",
+      "avatarEmoji": "🌟",
+      "preferredName": "Jonny"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\tcoreValues\tlifeGoals\tbeliefs\tcurrentChallenges\tcreatedAt\tupdatedAt\tshortTermGoals\tlongTermVision\tpersonalityNotes\tavatarEmoji\tpreferredName\n2\t1\t[\"Family\", \"Growth\", \"Wisdom\"]\tNULL\tI believe I can change and grow.\tNULL\t2026-03-28 05:17:05\t2026-03-28 05:23:07\tI want to grow as a person\tIn my ideal life, I am at peace\tNULL\t🌟\tJonny\n",
+  "stderr": "",
+  "execution_time_ms": 515
+}

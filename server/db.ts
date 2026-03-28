@@ -1,5 +1,6 @@
 import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import mysql from "mysql2";
 import {
   InsertUser,
   chatMessages,
@@ -20,7 +21,8 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const poolConnection = mysql.createPool(process.env.DATABASE_URL!);
+      _db = drizzle(poolConnection);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -95,7 +97,28 @@ export async function upsertUserProfile(userId: number, data: Partial<typeof use
   if (existing) {
     await db.update(userProfiles).set(data).where(eq(userProfiles.userId, userId));
   } else {
-    await db.insert(userProfiles).values({ userId, ...data });
+    // Insert new profile - inline JSON with sql.raw() to avoid prepared statement issues
+    const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const coreValuesArr = data.coreValues ?? [];
+    // Escape single quotes in JSON string and wrap for safe SQL inlining
+    const escapedJson = JSON.stringify(coreValuesArr).replace(/'/g, "''");
+    await db.execute(
+      sql`INSERT INTO user_profiles (
+        userId, coreValues, shortTermGoals, longTermVision, personalityNotes,
+        beliefs, avatarEmoji, preferredName, createdAt, updatedAt
+      ) VALUES (
+        ${userId},
+        ${sql.raw(`'${escapedJson}'`)},
+        ${data.shortTermGoals ?? null},
+        ${data.longTermVision ?? null},
+        ${data.personalityNotes ?? null},
+        ${data.beliefs ?? null},
+        ${data.avatarEmoji ?? "🌟"},
+        ${data.preferredName ?? null},
+        ${now},
+        ${now}
+      )`
+    );
   }
 }
 

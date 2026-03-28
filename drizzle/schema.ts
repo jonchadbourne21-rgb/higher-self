@@ -214,3 +214,80 @@ export const growthMilestones = mysqlTable("growth_milestones", {
 });
 
 export type GrowthMilestone = typeof growthMilestones.$inferSelect;
+
+// ─── Growth Programs ──────────────────────────────────────────────────────────
+
+export const growthPrograms = mysqlTable("growth_programs", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  durationDays: int("durationDays").notNull(),
+  category: mysqlEnum("category", [
+    "emotional-mastery",
+    "building-presence",
+    "relationships",
+    "mindfulness",
+  ]).notNull(),
+  status: mysqlEnum("status", ["active", "archived"]).default("active"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type GrowthProgram = typeof growthPrograms.$inferSelect;
+export type InsertGrowthProgram = typeof growthPrograms.$inferInsert;
+
+// ─── Program Lessons ──────────────────────────────────────────────────────────
+
+export const programLessons = mysqlTable("program_lessons", {
+  id: int("id").autoincrement().primaryKey(),
+  programId: int("programId").notNull(),
+  day: int("day").notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  concept: text("concept").notNull(),
+  exercisePrompt: text("exercisePrompt").notNull(),
+  guidanceTemplate: text("guidanceTemplate"),
+  order: int("order").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ProgramLesson = typeof programLessons.$inferSelect;
+export type InsertProgramLesson = typeof programLessons.$inferInsert;
+
+// ─── User Program Enrollments ─────────────────────────────────────────────────
+
+export const userProgramEnrollments = mysqlTable("user_program_enrollments", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  programId: int("programId").notNull(),
+  enrolledAt: timestamp("enrolledAt").defaultNow().notNull(),
+  startedAt: timestamp("startedAt"),
+  completedAt: timestamp("completedAt"),
+  status: mysqlEnum("status", [
+    "enrolled",
+    "in_progress",
+    "completed",
+    "paused",
+  ]).default("enrolled"),
+  currentDay: int("currentDay").default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type UserProgramEnrollment = typeof userProgramEnrollments.$inferSelect;
+export type InsertUserProgramEnrollment = typeof userProgramEnrollments.$inferInsert;
+
+// ─── User Lesson Responses ────────────────────────────────────────────────────
+
+export const userLessonResponses = mysqlTable("user_lesson_responses", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  programId: int("programId").notNull(),
+  lessonId: int("lessonId").notNull(),
+  day: int("day").notNull(),
+  userReflection: text("userReflection").notNull(),
+  aiFeedback: text("aiFeedback"),
+  completedAt: timestamp("completedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type UserLessonResponse = typeof userLessonResponses.$inferSelect;
+export type InsertUserLessonResponse = typeof userLessonResponses.$inferInsert;

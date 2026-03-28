@@ -49,9 +49,11 @@ export default function Onboarding() {
   const [beliefs, setBeliefs] = useState("");
   const [selectedHabits, setSelectedHabits] = useState<typeof DEFAULT_HABITS>([]);
 
+  const utils = trpc.useUtils();
   const completeMutation = trpc.profile.completeOnboarding.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Your journey begins now ✦");
+      await utils.auth.me.invalidate();
       navigate("/home");
     },
     onError: () => toast.error("Something went wrong. Please try again."),

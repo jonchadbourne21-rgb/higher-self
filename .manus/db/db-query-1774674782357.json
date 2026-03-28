@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO user_profiles (userId, coreValues, shortTermGoals, longTermVision, personalityNotes, beliefs, avatarEmoji, preferredName) VALUES (1, '[\"Courage\",\"Growth\",\"Wisdom\"]', 'I want to grow', 'In my ideal life, I am at peace', NULL, '[\"I believe I can change.\"]', '🌟', 'Jonny');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UbcpEQhTnXTazXN.root --database LQwmD5t86EFFZjkEDkXbgz --execute INSERT INTO user_profiles (userId, coreValues, shortTermGoals, longTermVision, personalityNotes, beliefs, avatarEmoji, preferredName) VALUES (1, '[\"Courage\",\"Growth\",\"Wisdom\"]', 'I want to grow', 'In my ideal life, I am at peace', NULL, '[\"I believe I can change.\"]', '🌟', 'Jonny');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 391
+}

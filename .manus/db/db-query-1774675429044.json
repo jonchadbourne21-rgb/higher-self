@@ -1,0 +1,75 @@
+{
+  "query": "SELECT * FROM life_domain_scores WHERE userId = 1; SELECT * FROM habits WHERE userId = 1; SELECT onboardingCompleted FROM users WHERE id = 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UbcpEQhTnXTazXN.root --database LQwmD5t86EFFZjkEDkXbgz --execute SELECT * FROM life_domain_scores WHERE userId = 1; SELECT * FROM habits WHERE userId = 1; SELECT onboardingCompleted FROM users WHERE id = 1;",
+  "rows": [
+    {
+      "id": "2",
+      "userId": "1",
+      "domain": "mindset",
+      "score": "5",
+      "createdAt": "2026-03-28 05:23:07",
+      "updatedAt": "2026-03-28 05:23:07",
+      "notes": "NULL",
+      "recordedAt": "2026-03-28 05:23:07"
+    },
+    {
+      "id": "3",
+      "userId": "1",
+      "domain": "relationships",
+      "score": "5",
+      "createdAt": "2026-03-28 05:23:07",
+      "updatedAt": "2026-03-28 05:23:07",
+      "notes": "NULL",
+      "recordedAt": "2026-03-28 05:23:07"
+    },
+    {
+      "id": "4",
+      "userId": "1",
+      "domain": "work",
+      "score": "5",
+      "createdAt": "2026-03-28 05:23:07",
+      "updatedAt": "2026-03-28 05:23:07",
+      "notes": "NULL",
+      "recordedAt": "2026-03-28 05:23:07"
+    },
+    {
+      "id": "5",
+      "userId": "1",
+      "domain": "health",
+      "score": "5",
+      "createdAt": "2026-03-28 05:23:07",
+      "updatedAt": "2026-03-28 05:23:07",
+      "notes": "NULL",
+      "recordedAt": "2026-03-28 05:23:07"
+    },
+    {
+      "id": "6",
+      "userId": "1",
+      "domain": "spirituality",
+      "score": "5",
+      "createdAt": "2026-03-28 05:23:07",
+      "updatedAt": "2026-03-28 05:23:07",
+      "notes": "NULL",
+      "recordedAt": "2026-03-28 05:23:07"
+    },
+    {
+      "id": "7",
+      "userId": "1",
+      "domain": "finances",
+      "score": "5",
+      "createdAt": "2026-03-28 05:23:07",
+      "updatedAt": "2026-03-28 05:23:07",
+      "notes": "NULL",
+      "recordedAt": "2026-03-28 05:23:07"
+    }
+  ],
+  "messages": [
+    "id\tuserId\tdomain\tname\tdescription\tfrequency\tcurrentStreak\tlongestStreak\tcreatedAt\temoji\ttargetFrequency\tisActive",
+    "1\t1\tmindset\tMorning meditation\tNULL\tNULL\t0\t0\t2026-03-28 05:23:07\t🧘\tdaily\t1",
+    "onboardingCompleted",
+    "1"
+  ],
+  "stdout": "id\tuserId\tdomain\tscore\tcreatedAt\tupdatedAt\tnotes\trecordedAt\n2\t1\tmindset\t5\t2026-03-28 05:23:07\t2026-03-28 05:23:07\tNULL\t2026-03-28 05:23:07\n3\t1\trelationships\t5\t2026-03-28 05:23:07\t2026-03-28 05:23:07\tNULL\t2026-03-28 05:23:07\n4\t1\twork\t5\t2026-03-28 05:23:07\t2026-03-28 05:23:07\tNULL\t2026-03-28 05:23:07\n5\t1\thealth\t5\t2026-03-28 05:23:07\t2026-03-28 05:23:07\tNULL\t2026-03-28 05:23:07\n6\t1\tspirituality\t5\t2026-03-28 05:23:07\t2026-03-28 05:23:07\tNULL\t2026-03-28 05:23:07\n7\t1\tfinances\t5\t2026-03-28 05:23:07\t2026-03-28 05:23:07\tNULL\t2026-03-28 05:23:07\nid\tuserId\tdomain\tname\tdescription\tfrequency\tcurrentStreak\tlongestStreak\tcreatedAt\temoji\ttargetFrequency\tisActive\n1\t1\tmindset\tMorning meditation\tNULL\tNULL\t0\t0\t2026-03-28 05:23:07\t🧘\tdaily\t1\nonboardingCompleted\n1\n",
+  "stderr": "",
+  "execution_time_ms": 470
+}

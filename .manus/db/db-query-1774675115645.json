@@ -1,0 +1,55 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UbcpEQhTnXTazXN.root --database LQwmD5t86EFFZjkEDkXbgz --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_LQwmD5t86EFFZjkEDkXbgz": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_LQwmD5t86EFFZjkEDkXbgz": "chat_messages"
+    },
+    {
+      "Tables_in_LQwmD5t86EFFZjkEDkXbgz": "daily_check_ins"
+    },
+    {
+      "Tables_in_LQwmD5t86EFFZjkEDkXbgz": "growth_milestones"
+    },
+    {
+      "Tables_in_LQwmD5t86EFFZjkEDkXbgz": "growth_programs"
+    },
+    {
+      "Tables_in_LQwmD5t86EFFZjkEDkXbgz": "habit_completions"
+    },
+    {
+      "Tables_in_LQwmD5t86EFFZjkEDkXbgz": "habits"
+    },
+    {
+      "Tables_in_LQwmD5t86EFFZjkEDkXbgz": "journal_entries"
+    },
+    {
+      "Tables_in_LQwmD5t86EFFZjkEDkXbgz": "life_domain_scores"
+    },
+    {
+      "Tables_in_LQwmD5t86EFFZjkEDkXbgz": "program_lessons"
+    },
+    {
+      "Tables_in_LQwmD5t86EFFZjkEDkXbgz": "user_lesson_responses"
+    },
+    {
+      "Tables_in_LQwmD5t86EFFZjkEDkXbgz": "user_profiles"
+    },
+    {
+      "Tables_in_LQwmD5t86EFFZjkEDkXbgz": "user_program_enrollments"
+    },
+    {
+      "Tables_in_LQwmD5t86EFFZjkEDkXbgz": "users"
+    },
+    {
+      "Tables_in_LQwmD5t86EFFZjkEDkXbgz": "weekly_insights"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_LQwmD5t86EFFZjkEDkXbgz\n__drizzle_migrations\nchat_messages\ndaily_check_ins\ngrowth_milestones\ngrowth_programs\nhabit_completions\nhabits\njournal_entries\nlife_domain_scores\nprogram_lessons\nuser_lesson_responses\nuser_profiles\nuser_program_enrollments\nusers\nweekly_insights\n",
+  "stderr": "",
+  "execution_time_ms": 363
+}

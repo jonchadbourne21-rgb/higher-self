@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE habits MODIFY COLUMN domain ENUM('mindset','relationships','work','health','spirituality','finances') NOT NULL, MODIFY COLUMN name VARCHAR(200) NOT NULL, MODIFY COLUMN isActive TINYINT(1) NOT NULL DEFAULT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UbcpEQhTnXTazXN.root --database LQwmD5t86EFFZjkEDkXbgz --execute ALTER TABLE habits MODIFY COLUMN domain ENUM('mindset','relationships','work','health','spirituality','finances') NOT NULL, MODIFY COLUMN name VARCHAR(200) NOT NULL, MODIFY COLUMN isActive TINYINT(1) NOT NULL DEFAULT 1;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1026
+}
