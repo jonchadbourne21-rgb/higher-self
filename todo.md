@@ -157,3 +157,6 @@
 - [x] Rebuild Journal page: working Save button, date-organized entry list, search bar, category/mood filter panel
 - [x] Add category management UI (create/delete custom categories with 10-color picker)
 - [ ] Write vitest tests for new journal category procedures
+
+## Journal Save Button Fix (Mar 28)
+- [x] Fix Save Entry button hidden behind bottom nav bar — moved modal outside AppShell so it renders as true full-screen overlay above the nav

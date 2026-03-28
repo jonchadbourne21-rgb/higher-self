@@ -192,6 +192,7 @@ export default function Journal() {
   ].filter(Boolean).length;
 
   return (
+    <>
     <AppShell>
       <div className="px-5 pt-8 pb-24 space-y-5">
 
@@ -462,16 +463,15 @@ export default function Journal() {
             ))}
           </div>
         )}
-      </div>
+      </div>    </AppShell>
 
-      {/* ── New Entry Full-Screen Modal ─────────────────────────────────────── */}
-      <AnimatePresence>
-        {isCreating && (
+      {/* ── New Entry Full-Screen Modal (outside AppShell so it covers the nav) ── */}
+      <AnimatePresence>      {isCreating && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed inset-0 z-50 bg-background flex flex-col max-w-[480px] mx-auto"
+            className="fixed inset-0 z-[100] bg-background flex flex-col max-w-[480px] mx-auto"
           >
             {/* Modal header */}
             <div className="px-5 pt-8 pb-4 flex items-center justify-between border-b border-border/30">
@@ -617,7 +617,7 @@ export default function Journal() {
             </div>
 
             {/* ── SAVE BUTTON ─────────────────────────────────────────────── */}
-            <div className="px-5 pb-10 pt-4 border-t border-border/30 space-y-2">
+            <div className="px-5 pb-6 pt-4 border-t border-border/30 space-y-2 bg-background" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
               <Button
                 onClick={handleCreate}
                 disabled={!content.trim() || createMutation.isPending}
@@ -638,7 +638,7 @@ export default function Journal() {
         )}
       </AnimatePresence>
 
-      {/* ── Category Manager Modal ──────────────────────────────────────────── */}
+       {/* ── Category Manager Modal (also outside AppShell) ────────────────────────── */}
       <AnimatePresence>
         {showCategoryManager && (
           <motion.div
@@ -735,6 +735,6 @@ export default function Journal() {
           </motion.div>
         )}
       </AnimatePresence>
-    </AppShell>
+    </>
   );
 }
