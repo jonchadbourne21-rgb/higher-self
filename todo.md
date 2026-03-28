@@ -174,3 +174,14 @@
 
 ## Page Transition Animation (Mar 28)
 - [x] Directional slide transitions between tabs — slides left when going forward in tab order, right when going back, fade-only for non-tab navigation (e.g. journal entry detail)
+
+## Push Notifications & Daily Reminders (Mar 28)
+- [x] Add push_subscriptions table (userId, endpoint, keys, timezone, enabled)
+- [x] Add notification_preferences table (userId, reminderTime, timezone, enabled)
+- [x] Install web-push and generate VAPID keys
+- [x] Server: tRPC procedures for subscribe/unsubscribe/status/updatePrefs/sendTest
+- [x] Server: daily scheduler that fires at 6am per user timezone with goal-based message
+- [x] Frontend: service worker (sw.js) for push notification display and click handling
+- [x] Frontend: useNotifications hook for subscription lifecycle
+- [x] Frontend: /notifications settings page with opt-in UI, time picker (5am–12pm), test button
+- [x] Frontend: Bell icon on Home header linking to notifications page

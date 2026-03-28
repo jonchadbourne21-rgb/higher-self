@@ -16,6 +16,7 @@ import Domains from "./pages/Domains";
 import Dashboard from "./pages/Dashboard";
 import Timeline from "./pages/Timeline";
 import Insights from "./pages/Insights";
+import Notifications from "./pages/Notifications";
 import { useRef } from "react";
 
 // Tab order — used to determine slide direction
@@ -83,6 +84,7 @@ function AnimatedRouter() {
             <Route path="/dashboard" component={Dashboard} />
             <Route path="/timeline" component={Timeline} />
             <Route path="/insights" component={Insights} />
+            <Route path="/notifications" component={Notifications} />
             <Route path="/404" component={NotFound} />
             <Route component={NotFound} />
           </Switch>

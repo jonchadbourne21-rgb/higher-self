@@ -10,8 +10,10 @@ import {
   createHabit,
   createJournalEntry,
   createMilestone,
+  deactivatePushSubscription,
   deleteHabit,
   getAllInsights,
+  getActivePushSubscription,
   getChatHistory,
   getDomainScoreHistory,
   getHabitStreaks,
@@ -21,6 +23,7 @@ import {
   getLatestInsight,
   getMilestones,
   getMoodTrend,
+  getNotificationPreferences,
   getRecentCheckIns,
   getTodayCheckIn,
   getTodayCompletions,
@@ -32,10 +35,12 @@ import {
   toggleHabitCompletion,
   updateCheckInAiResponse,
   updateJournalEntryAi,
+  upsertNotificationPreferences,
+  upsertPushSubscription,
   upsertUserProfile,
 } from "./db";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+import { sendPushNotification } from "./pushNotifications";
+// ─── Helperss ──────────────────────────────────────────────────────────────────
 
 async function buildHigherSelfSystemPrompt(userId: number): Promise<string> {
   const profile = await getUserProfile(userId);
@@ -634,8 +639,73 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
         return getMoodTrend(ctx.user.id, input.days);
       }),
   }),
+  // ─── Push Notifications ────────────────────────────────────────────────────────────────────────────────
 
-  // ─── Timeline / Milestones ────────────────────────────────────────────────
+  notifications: router({
+    subscribe: protectedProcedure
+      .input(z.object({
+        endpoint: z.string().url(),
+        p256dh: z.string(),
+        auth: z.string(),
+        timezone: z.string().default("UTC"),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await upsertPushSubscription(ctx.user.id, input.endpoint, input.p256dh, input.auth, input.timezone);
+        await sendPushNotification(input.endpoint, input.p256dh, input.auth, {
+          title: "You're all set 🌟",
+          body: "Daily reminders are on. Your 6am check-in starts tomorrow.",
+          icon: "/icon-192.png",
+          url: "/home",
+          tag: "welcome",
+        });
+        return { success: true };
+      }),
+
+    unsubscribe: protectedProcedure.mutation(async ({ ctx }) => {
+      await deactivatePushSubscription(ctx.user.id);
+      return { success: true };
+    }),
+
+    status: protectedProcedure.query(async ({ ctx }) => {
+      const [sub, prefs] = await Promise.all([
+        getActivePushSubscription(ctx.user.id),
+        getNotificationPreferences(ctx.user.id),
+      ]);
+      return {
+        isSubscribed: !!sub,
+        endpoint: sub?.endpoint ?? null,
+        prefs: prefs ?? { dailyReminderEnabled: true, reminderHour: 6, timezone: "UTC" },
+      };
+    }),
+
+    updatePrefs: protectedProcedure
+      .input(z.object({
+        dailyReminderEnabled: z.boolean().optional(),
+        reminderHour: z.number().min(0).max(23).optional(),
+        timezone: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await upsertNotificationPreferences(ctx.user.id, input);
+        return { success: true };
+      }),
+
+    sendTest: protectedProcedure.mutation(async ({ ctx }) => {
+      const sub = await getActivePushSubscription(ctx.user.id);
+      if (!sub) throw new TRPCError({ code: "NOT_FOUND", message: "No active subscription" });
+      const profile = await getUserProfile(ctx.user.id);
+      const name = profile?.preferredName ?? "you";
+      await sendPushNotification(sub.endpoint, sub.p256dh, sub.auth, {
+        title: "Test notification 🔔",
+        body: `Hey ${name} — this is what your 6am reminder will look like.`,
+        icon: "/icon-192.png",
+        url: "/home",
+        tag: "test",
+      });
+      return { success: true };
+    }),
+  }),
+
+  // ─── Timeline / Milestones ────────────────────────────────────────────────────────────────────────────────
 
   timeline: router({
     milestones: protectedProcedure.query(async ({ ctx }) => {

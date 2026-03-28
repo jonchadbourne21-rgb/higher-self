@@ -11,6 +11,8 @@ import {
   journalCategories,
   journalEntries,
   lifeDomainScores,
+  notificationPreferences,
+  pushSubscriptions,
   userProfiles,
   users,
   weeklyInsights,
@@ -485,6 +487,93 @@ export async function createMilestone(data: typeof growthMilestones.$inferInsert
   const db = await getDb();
   if (!db) return;
   await db.insert(growthMilestones).values(data);
+}
+
+// ─── Push Subscriptions ──────────────────────────────────────────────────────
+
+export async function upsertPushSubscription(
+  userId: number,
+  endpoint: string,
+  p256dh: string,
+  auth: string,
+  timezone: string
+) {
+  const db = await getDb();
+  if (!db) return;
+  // Deactivate any existing subscriptions for this user first
+  await db
+    .update(pushSubscriptions)
+    .set({ isActive: false })
+    .where(eq(pushSubscriptions.userId, userId));
+  // Insert new active subscription
+  await db.insert(pushSubscriptions).values({
+    userId,
+    endpoint,
+    p256dh,
+    auth,
+    timezone,
+    isActive: true,
+  });
+}
+
+export async function deactivatePushSubscription(userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(pushSubscriptions)
+    .set({ isActive: false })
+    .where(eq(pushSubscriptions.userId, userId));
+}
+
+export async function getActivePushSubscription(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(pushSubscriptions)
+    .where(and(eq(pushSubscriptions.userId, userId), eq(pushSubscriptions.isActive, true)))
+    .limit(1);
+  return result[0];
+}
+
+/** Returns all active subscriptions across all users — used by the daily scheduler */
+export async function getAllActivePushSubscriptions() {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(pushSubscriptions)
+    .where(eq(pushSubscriptions.isActive, true));
+}
+
+// ─── Notification Preferences ─────────────────────────────────────────────────
+
+export async function getNotificationPreferences(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(notificationPreferences)
+    .where(eq(notificationPreferences.userId, userId))
+    .limit(1);
+  return result[0];
+}
+
+export async function upsertNotificationPreferences(
+  userId: number,
+  prefs: { dailyReminderEnabled?: boolean; reminderHour?: number; timezone?: string }
+) {
+  const db = await getDb();
+  if (!db) return;
+  const existing = await getNotificationPreferences(userId);
+  if (existing) {
+    await db
+      .update(notificationPreferences)
+      .set({ ...prefs })
+      .where(eq(notificationPreferences.userId, userId));
+  } else {
+    await db.insert(notificationPreferences).values({ userId, ...prefs });
+  }
 }
 
 // ─── Analytics ────────────────────────────────────────────────────────────────

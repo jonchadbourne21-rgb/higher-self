@@ -306,3 +306,40 @@ export const userLessonResponses = mysqlTable("user_lesson_responses", {
 
 export type UserLessonResponse = typeof userLessonResponses.$inferSelect;
 export type InsertUserLessonResponse = typeof userLessonResponses.$inferInsert;
+
+// ─── Push Subscriptions ────────────────────────────────────────────────────────────────────────────────
+
+export const pushSubscriptions = mysqlTable("push_subscriptions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // Web Push subscription object fields
+  endpoint: text("endpoint").notNull(),
+  p256dh: text("p256dh").notNull(),   // public key
+  auth: text("auth").notNull(),        // auth secret
+  // IANA timezone string e.g. "America/New_York"
+  timezone: varchar("timezone", { length: 100 }).default("UTC").notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type InsertPushSubscription = typeof pushSubscriptions.$inferInsert;
+
+// ─── Notification Preferences ───────────────────────────────────────────────────────────────────────
+
+export const notificationPreferences = mysqlTable("notification_preferences", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  // Whether daily reminders are enabled
+  dailyReminderEnabled: boolean("dailyReminderEnabled").default(true).notNull(),
+  // Hour of day in user's local time (0–23), default 6 = 6am
+  reminderHour: int("reminderHour").default(6).notNull(),
+  // IANA timezone string
+  timezone: varchar("timezone", { length: 100 }).default("UTC").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type NotificationPreference = typeof notificationPreferences.$inferSelect;
+export type InsertNotificationPreference = typeof notificationPreferences.$inferInsert;
