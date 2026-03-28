@@ -24,13 +24,15 @@ export function getSessionCookieOptions(
     };
   }
 
-  // Published domain: frontend and API share the same manus.space domain,
-  // so sameSite=lax is sufficient and more compatible than sameSite=none.
-  // secure=true is required since the site is served over HTTPS.
+  // Published domain (manus.space, higherself.cloud, etc.):
+  // Must use sameSite=none + secure=true so the cookie survives the
+  // cross-site OAuth redirect chain (manus.im → our domain).
+  // iOS Safari ITP blocks sameSite=lax cookies set during cross-site redirects.
+  // sameSite=none requires secure=true per the spec.
   return {
     httpOnly: true,
     path: "/",
-    sameSite: "lax",
+    sameSite: "none",
     secure: true,
   };
 }

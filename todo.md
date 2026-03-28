@@ -129,7 +129,7 @@
 - [x] Write vitest test for journal.suggestTitle procedure
 
 ## Bugs
-- [ ] Fix OAuth login failure on published domain (persistent issue)
+- [x] Fix OAuth login failure on published domain — restored sameSite=none+secure=true cookie setting that iOS Safari requires for cross-site OAuth redirect chains
 - [x] Fix OAuth callback 404 on published domain — NotFound now smart-redirects authenticated users to /home or /onboarding
 - [x] Fix duplicate sql import in db.ts
 - [x] Fix getDb() to use mysql2/promise connection pool instead of passing DATABASE_URL directly to drizzle

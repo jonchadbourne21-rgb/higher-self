@@ -14,14 +14,10 @@ function getQueryParam(req: Request, key: string): string | undefined {
  *
  * The client encodes: state = btoa(redirectUri)
  * where redirectUri = window.location.origin + "/api/oauth/callback"
- * e.g. "https://higherself-lqwmd5t8.manus.space/api/oauth/callback"
+ * e.g. "https://higherself.cloud/api/oauth/callback"
  *
  * The state may be URL-encoded when it arrives (base64 chars +, =, / become %2B, %3D, %2F).
  * We must URL-decode it first, then base64-decode it.
- *
- * This is the ONLY reliable source of the exact redirectUri the client used —
- * we cannot reconstruct it from request headers because the server runs on an
- * internal Cloud Run hostname, not the public manus.space domain.
  */
 function decodeRedirectUriFromState(state: string): string {
   try {
@@ -56,6 +52,10 @@ export function registerOAuthRoutes(app: Express) {
 
     try {
       console.log("[OAuth] Callback received, code length:", code?.length, "state:", state?.substring(0, 20) + "...");
+      console.log("[OAuth] Request hostname:", req.hostname);
+      console.log("[OAuth] Request protocol:", req.protocol);
+      console.log("[OAuth] x-forwarded-host:", req.headers["x-forwarded-host"]);
+      console.log("[OAuth] x-forwarded-proto:", req.headers["x-forwarded-proto"]);
 
       // Decode the exact redirectUri the client sent — this MUST match what Manus has registered
       const redirectUri = decodeRedirectUriFromState(state);
@@ -87,6 +87,7 @@ export function registerOAuthRoutes(app: Express) {
       });
 
       const cookieOptions = getSessionCookieOptions(req);
+      console.log("[OAuth] Setting cookie with options:", JSON.stringify(cookieOptions));
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
       console.log("[OAuth] Login successful, redirecting to /");
