@@ -167,3 +167,7 @@
 
 ## Auto-hide Nav on Scroll (Mar 28)
 - [x] Hide nav bar when scrolling down, show it again when scrolling up — spring animation, 4px threshold to prevent jitter, tapping a tab always restores nav
+
+## Haptic + Swipe Navigation (Mar 28)
+- [x] Haptic feedback on nav taps using Web Vibration API (Android) — 8ms pulse on tap, 6ms on swipe
+- [x] Horizontal swipe gesture to navigate between tabs — 50px threshold, horizontal-dominant check prevents scroll conflicts
