@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Sparkles, ChevronRight, Sun, Moon, Star, Bell } from "lucide-react";
+import { Sparkles, ChevronRight, Sun, Moon, Star, Bell, Settings } from "lucide-react";
 import { format } from "date-fns";
 
 // Staggered word-by-word animation for the greeting name
@@ -104,11 +104,18 @@ export default function Home() {
               {greetingIcon}
               <span>{today}</span>
             </div>
-            <Link href="/notifications">
-              <button className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground">
-                <Bell className="w-4 h-4" />
-              </button>
-            </Link>
+            <div className="flex items-center gap-1">
+              <Link href="/notifications">
+                <button className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground">
+                  <Bell className="w-4 h-4" />
+                </button>
+              </Link>
+              <Link href="/settings">
+                <button className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground">
+                  <Settings className="w-4 h-4" />
+                </button>
+              </Link>
+            </div>
           </div>
           <h1 className="text-4xl font-serif font-light text-foreground leading-tight">
             <motion.span

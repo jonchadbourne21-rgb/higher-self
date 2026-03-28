@@ -188,3 +188,18 @@
 
 ## Notification Opt-in After Check-in (Mar 28)
 - [x] Show "Want a daily reminder?" card at bottom of check-in completion screen when user hasn't subscribed yet — animated violet card with enable button and dismiss (BellOff) option
+
+## higherself.cloud OAuth Fix (Mar 28)
+- [ ] Fix OAuth login on higherself.cloud — route through registered manus.space redirect URI, return to custom domain after login
+
+## Account Settings & Calendar (Mar 28)
+- [x] Add phone, email, therapistName, therapistPhone, therapistEmail columns to user_profiles table
+- [x] Run DB migration for new profile columns
+- [x] Add tRPC procedures: profile.getSettings, profile.updateSettings
+- [x] Build /settings Account Settings page (phone, email, therapist name + contact info, notification prefs)
+- [x] Add calendar_events table (userId, title, type, date, time, notes, color)
+- [x] Run DB migration for calendar_events
+- [x] Add tRPC procedures: calendar.list, calendar.create, calendar.update, calendar.delete
+- [x] Build /calendar Calendar page with monthly view, event creation modal, event list
+- [x] Add Settings and Calendar to nav (profile icon → settings, calendar icon in nav or home)
+- [ ] Write vitest tests for new procedures

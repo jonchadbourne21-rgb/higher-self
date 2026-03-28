@@ -47,6 +47,14 @@ export const userProfiles = mysqlTable("user_profiles", {
   avatarEmoji: varchar("avatarEmoji", { length: 8 }).default("🌟"),
   // Preferred name / how the AI should address them
   preferredName: varchar("preferredName", { length: 100 }),
+  // Contact info
+  phone: varchar("phone", { length: 30 }),
+  contactEmail: varchar("contactEmail", { length: 320 }),
+  // Therapist info
+  therapistName: varchar("therapistName", { length: 200 }),
+  therapistPhone: varchar("therapistPhone", { length: 30 }),
+  therapistEmail: varchar("therapistEmail", { length: 320 }),
+  therapistNotes: text("therapistNotes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -343,3 +351,24 @@ export const notificationPreferences = mysqlTable("notification_preferences", {
 
 export type NotificationPreference = typeof notificationPreferences.$inferSelect;
 export type InsertNotificationPreference = typeof notificationPreferences.$inferInsert;
+
+// ─── Calendar Events ──────────────────────────────────────────────────────────
+
+export const calendarEvents = mysqlTable("calendar_events", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  title: varchar("title", { length: 300 }).notNull(),
+  type: mysqlEnum("type", ["therapy", "goal", "habit", "reminder", "other"]).default("other").notNull(),
+  // Date stored as UTC timestamp
+  eventDate: timestamp("eventDate").notNull(),
+  // Optional end time
+  endDate: timestamp("endDate"),
+  notes: text("notes"),
+  color: varchar("color", { length: 20 }).default("#8b5cf6").notNull(),
+  isAllDay: boolean("isAllDay").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CalendarEvent = typeof calendarEvents.$inferSelect;
+export type InsertCalendarEvent = typeof calendarEvents.$inferInsert;

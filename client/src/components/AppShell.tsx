@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import {
   BookOpen,
+  CalendarDays,
   Compass,
   Home,
   MessageCircle,
@@ -8,13 +9,14 @@ import {
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { cn } from "@/lib/utils";
-import { useRef, useCallback, useState, useEffect } from "react";
+import { useRef, useCallback, useState } from "react";
 
 const navItems = [
   { path: "/home", icon: Home, label: "Home" },
   { path: "/domains", icon: Compass, label: "Domains" },
   { path: "/chat", icon: MessageCircle, label: "Mirror" },
   { path: "/journal", icon: BookOpen, label: "Journal" },
+  { path: "/calendar", icon: CalendarDays, label: "Calendar" },
   { path: "/dashboard", icon: Sparkles, label: "Growth" },
 ];
 

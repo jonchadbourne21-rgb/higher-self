@@ -17,10 +17,12 @@ import Dashboard from "./pages/Dashboard";
 import Timeline from "./pages/Timeline";
 import Insights from "./pages/Insights";
 import Notifications from "./pages/Notifications";
+import Settings from "./pages/Settings";
+import Calendar from "./pages/Calendar";
 import { useRef } from "react";
 
 // Tab order — used to determine slide direction
-const TAB_ORDER = ["/home", "/domains", "/chat", "/journal", "/dashboard"];
+const TAB_ORDER = ["/home", "/domains", "/chat", "/journal", "/calendar", "/dashboard"];
 
 function getTabIndex(path: string) {
   return TAB_ORDER.findIndex(
@@ -85,6 +87,8 @@ function AnimatedRouter() {
             <Route path="/timeline" component={Timeline} />
             <Route path="/insights" component={Insights} />
             <Route path="/notifications" component={Notifications} />
+            <Route path="/settings" component={Settings} />
+            <Route path="/calendar" component={Calendar} />
             <Route path="/404" component={NotFound} />
             <Route component={NotFound} />
           </Switch>

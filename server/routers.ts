@@ -705,6 +705,108 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
     }),
   }),
 
+  // ─── Account Settings ──────────────────────────────────────────────────────
+
+  settings: router({
+    get: protectedProcedure.query(async ({ ctx }) => {
+      const profile = await getUserProfile(ctx.user.id);
+      return {
+        phone: profile?.phone ?? "",
+        contactEmail: profile?.contactEmail ?? "",
+        therapistName: profile?.therapistName ?? "",
+        therapistPhone: profile?.therapistPhone ?? "",
+        therapistEmail: profile?.therapistEmail ?? "",
+        therapistNotes: profile?.therapistNotes ?? "",
+        preferredName: profile?.preferredName ?? "",
+        avatarEmoji: profile?.avatarEmoji ?? "🌟",
+      };
+    }),
+
+    update: protectedProcedure
+      .input(z.object({
+        phone: z.string().max(30).optional(),
+        contactEmail: z.string().email().max(320).optional().or(z.literal("")),
+        therapistName: z.string().max(200).optional(),
+        therapistPhone: z.string().max(30).optional(),
+        therapistEmail: z.string().email().max(320).optional().or(z.literal("")),
+        therapistNotes: z.string().optional(),
+        preferredName: z.string().max(100).optional(),
+        avatarEmoji: z.string().max(8).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await upsertUserProfile(ctx.user.id, input);
+        return { success: true };
+      }),
+  }),
+
+  // ─── Calendar ─────────────────────────────────────────────────────────────
+
+  calendar: router({
+    list: protectedProcedure
+      .input(z.object({
+        year: z.number(),
+        month: z.number().min(1).max(12),
+      }))
+      .query(async ({ ctx, input }) => {
+        const { getCalendarEvents } = await import("./db");
+        return getCalendarEvents(ctx.user.id, input.year, input.month);
+      }),
+
+    create: protectedProcedure
+      .input(z.object({
+        title: z.string().min(1).max(300),
+        type: z.enum(["therapy", "goal", "habit", "reminder", "other"]).default("other"),
+        eventDate: z.number(), // UTC timestamp ms
+        endDate: z.number().optional(),
+        notes: z.string().optional(),
+        color: z.string().max(20).optional(),
+        isAllDay: z.boolean().default(false),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { createCalendarEvent } = await import("./db");
+        const id = await createCalendarEvent({
+          userId: ctx.user.id,
+          title: input.title,
+          type: input.type,
+          eventDate: new Date(input.eventDate),
+          endDate: input.endDate ? new Date(input.endDate) : undefined,
+          notes: input.notes,
+          color: input.color ?? "#8b5cf6",
+          isAllDay: input.isAllDay,
+        });
+        return { success: true, id };
+      }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().min(1).max(300).optional(),
+        type: z.enum(["therapy", "goal", "habit", "reminder", "other"]).optional(),
+        eventDate: z.number().optional(),
+        endDate: z.number().optional(),
+        notes: z.string().optional(),
+        color: z.string().max(20).optional(),
+        isAllDay: z.boolean().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { updateCalendarEvent } = await import("./db");
+        await updateCalendarEvent(ctx.user.id, input.id, {
+          ...input,
+          eventDate: input.eventDate ? new Date(input.eventDate) : undefined,
+          endDate: input.endDate ? new Date(input.endDate) : undefined,
+        });
+        return { success: true };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const { deleteCalendarEvent } = await import("./db");
+        await deleteCalendarEvent(ctx.user.id, input.id);
+        return { success: true };
+      }),
+  }),
+
   // ─── Timeline / Milestones ────────────────────────────────────────────────────────────────────────────────
 
   timeline: router({

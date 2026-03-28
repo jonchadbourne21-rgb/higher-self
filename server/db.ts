@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2";
 import {
   InsertUser,
+  calendarEvents,
   chatMessages,
   dailyCheckIns,
   growthMilestones,
@@ -593,4 +594,88 @@ export async function getMoodTrend(userId: number, days = 14) {
     .where(and(eq(dailyCheckIns.userId, userId), gte(dailyCheckIns.createdAt, since)))
     .groupBy(sql`DATE(${dailyCheckIns.createdAt})`)
     .orderBy(sql`DATE(${dailyCheckIns.createdAt})`);
+}
+
+// ─── Calendar Events ──────────────────────────────────────────────────────────
+
+export async function getCalendarEvents(userId: number, year: number, month: number) {
+  const db = await getDb();
+  if (!db) return [];
+  // Start/end of the requested month (UTC)
+  const start = new Date(Date.UTC(year, month - 1, 1));
+  const end = new Date(Date.UTC(year, month, 1));
+  return db
+    .select()
+    .from(calendarEvents)
+    .where(
+      and(
+        eq(calendarEvents.userId, userId),
+        gte(calendarEvents.eventDate, start),
+        lte(calendarEvents.eventDate, end)
+      )
+    )
+    .orderBy(calendarEvents.eventDate);
+}
+
+export async function createCalendarEvent(data: {
+  userId: number;
+  title: string;
+  type: "therapy" | "goal" | "habit" | "reminder" | "other";
+  eventDate: Date;
+  endDate?: Date;
+  notes?: string;
+  color?: string;
+  isAllDay?: boolean;
+}) {
+  const db = await getDb();
+  if (!db) return 0;
+  const [result] = await db.insert(calendarEvents).values({
+    userId: data.userId,
+    title: data.title,
+    type: data.type,
+    eventDate: data.eventDate,
+    endDate: data.endDate ?? null,
+    notes: data.notes ?? null,
+    color: data.color ?? "#8b5cf6",
+    isAllDay: data.isAllDay ?? false,
+  });
+  return (result as any).insertId as number;
+}
+
+export async function updateCalendarEvent(
+  userId: number,
+  id: number,
+  data: {
+    title?: string;
+    type?: "therapy" | "goal" | "habit" | "reminder" | "other";
+    eventDate?: Date;
+    endDate?: Date;
+    notes?: string;
+    color?: string;
+    isAllDay?: boolean;
+  }
+) {
+  const db = await getDb();
+  if (!db) return;
+  const update: Record<string, unknown> = {};
+  if (data.title !== undefined) update.title = data.title;
+  if (data.type !== undefined) update.type = data.type;
+  if (data.eventDate !== undefined) update.eventDate = data.eventDate;
+  if (data.endDate !== undefined) update.endDate = data.endDate;
+  if (data.notes !== undefined) update.notes = data.notes;
+  if (data.color !== undefined) update.color = data.color;
+  if (data.isAllDay !== undefined) update.isAllDay = data.isAllDay;
+  if (Object.keys(update).length === 0) return;
+  await db
+    .update(calendarEvents)
+    .set(update)
+    .where(and(eq(calendarEvents.id, id), eq(calendarEvents.userId, userId)));
+}
+
+export async function deleteCalendarEvent(userId: number, id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .delete(calendarEvents)
+    .where(and(eq(calendarEvents.id, id), eq(calendarEvents.userId, userId)));
 }
