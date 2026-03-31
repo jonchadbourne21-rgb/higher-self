@@ -19,6 +19,7 @@ import Insights from "./pages/Insights";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import Calendar from "./pages/Calendar";
+import About from "./pages/About";
 import { useRef } from "react";
 
 // Tab order — used to determine slide direction
@@ -89,6 +90,7 @@ function AnimatedRouter() {
             <Route path="/notifications" component={Notifications} />
             <Route path="/settings" component={Settings} />
             <Route path="/calendar" component={Calendar} />
+            <Route path="/about" component={About} />
             <Route path="/404" component={NotFound} />
             <Route component={NotFound} />
           </Switch>

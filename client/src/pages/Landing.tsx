@@ -127,28 +127,54 @@ export default function Landing() {
       </div>
 
       {/* ── Feature chips ─────────────────────────────────────────────────── */}
+        {/* ── Privacy & Encryption Badge ─────────────────────────────── */}
+        <motion.div
+          custom={2}
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          className="flex items-center justify-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 font-medium"
+        >
+          <span>🔒</span>
+          <span>Encryption-first self-reflection</span>
+        </motion.div>
+
+        {/* ── Feature chips ─────────────────────────────────────────────────── */}
+        <motion.div
+          custom={2}
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          className="flex flex-col gap-4 w-full"
+        >
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { emoji: "🪞", label: "AI Mirror", bg: "bg-violet-50", border: "border-violet-100" },
+              { emoji: "🌱", label: "Daily Growth", bg: "bg-emerald-50", border: "border-emerald-100" },
+              { emoji: "✨", label: "Inner Peace", bg: "bg-amber-50", border: "border-amber-100" },
+            ].map((f) => (
+              <div
+                key={f.label}
+                className={`${f.bg} border ${f.border} rounded-2xl p-3 flex flex-col items-center gap-2`}
+              >
+                <span className="text-2xl">{f.emoji}</span>
+                <span className="text-xs text-foreground font-semibold">{f.label}</span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+      {/* ── Medical Disclaimer Footer ──────────────────────────────────── */}
       <motion.div
-        custom={2}
+        custom={3}
         variants={fadeUp}
         initial="hidden"
         animate="visible"
-        className="flex flex-col gap-4 w-full"
+        className="text-center text-[11px] text-muted-foreground leading-relaxed max-w-sm"
       >
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { emoji: "🪞", label: "AI Mirror", bg: "bg-violet-50", border: "border-violet-100" },
-            { emoji: "🌱", label: "Daily Growth", bg: "bg-emerald-50", border: "border-emerald-100" },
-            { emoji: "✨", label: "Inner Peace", bg: "bg-amber-50", border: "border-amber-100" },
-          ].map((f) => (
-            <div
-              key={f.label}
-              className={`${f.bg} border ${f.border} rounded-2xl p-3 flex flex-col items-center gap-2`}
-            >
-              <span className="text-2xl">{f.emoji}</span>
-              <span className="text-xs text-foreground font-semibold">{f.label}</span>
-            </div>
-          ))}
-        </div>
+        <p>
+          HigherSelf is an AI-powered self-reflection tool designed for personal growth and coaching. It is not a replacement for professional medical advice, diagnosis, or treatment by a licensed therapist. If you are experiencing a mental health crisis, please contact a healthcare professional or crisis hotline immediately.
+        </p>
       </motion.div>
     </div>
   );

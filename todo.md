@@ -240,3 +240,11 @@
 ## Landing Page Copy Update (Mar 31)
 - [x] Replace landing page tagline "Your AI mirror guides you toward inner peace, emotional maturity, and authentic living" with "Process your thoughts, unlock your intuition, and find clarity in minutes. Private, secure, and built for your evolution"
 - [x] Add subtitle above tagline: "HigherSelf | AI-Supported Self-Therapy 🌱"
+
+## Trust & Safety Positioning (Mar 31)
+- [x] Add medical disclaimer to landing page footer: "HigherSelf is an AI-powered self-reflection tool designed for personal growth and coaching. It is not a replacement for professional medical advice, diagnosis, or treatment by a licensed therapist."
+- [x] Add medical disclaimer to first-run/onboarding screen (displayed in About page, accessible from Settings)
+- [x] Add privacy-first messaging to landing page: "Encryption-first self-reflection" tagline or badge
+- [x] Add "Your thoughts are private and encrypted" messaging to landing page
+- [x] Create About page with privacy vault concept and safety information
+- [x] Add link to About page in footer or navigation (route: /about)
