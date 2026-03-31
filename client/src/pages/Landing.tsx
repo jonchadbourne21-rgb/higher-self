@@ -89,7 +89,7 @@ export default function Landing() {
             style={{ border: "1px solid oklch(0.46 0.20 295 / 0.2)" }}
           />
         </div>
-        <p className="text-xs tracking-[0.35em] text-violet-500 uppercase font-medium">Higher Self</p>
+        <p className="text-xs tracking-[0.35em] text-violet-500 uppercase font-medium">HigherSelf | AI-Supported Self-Therapy 🌱</p>
       </motion.div>
 
       {/* ── Main content ──────────────────────────────────────────────────── */}
@@ -101,7 +101,7 @@ export default function Landing() {
             <span className="text-violet-gradient italic">were meant to be</span>
           </h1>
           <p className="text-base font-light text-muted-foreground leading-relaxed">
-            Your AI mirror guides you toward inner peace, emotional maturity, and authentic living.
+            Process your thoughts, unlock your intuition, and find clarity in minutes. Private, secure, and built for your evolution.
           </p>
         </motion.div>
 

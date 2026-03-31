@@ -236,3 +236,7 @@
 - [x] Add tRPC procedure: calendar.update (update existing event) — already exists in routers.ts
 - [x] Update Calendar UI to show edit button/modal on event cards (Edit2 icon button, modal title changes to "Edit Event")
 - [x] Write vitest tests for new procedures (21 tests passing)
+
+## Landing Page Copy Update (Mar 31)
+- [x] Replace landing page tagline "Your AI mirror guides you toward inner peace, emotional maturity, and authentic living" with "Process your thoughts, unlock your intuition, and find clarity in minutes. Private, secure, and built for your evolution"
+- [x] Add subtitle above tagline: "HigherSelf | AI-Supported Self-Therapy 🌱"
