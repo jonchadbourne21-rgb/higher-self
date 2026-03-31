@@ -720,3 +720,61 @@ export async function deleteCalendarEvent(userId: number, id: number) {
     .delete(calendarEvents)
     .where(and(eq(calendarEvents.id, id), eq(calendarEvents.userId, userId)));
 }
+
+export async function getUpcomingEvents(userId: number, limit: number = 3) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const now = new Date();
+  const futureDate = new Date(now.getTime() + 30 * 86400000); // 30 days from now
+  
+  // Fetch events that start in the future (next 30 days)
+  const rows = await db
+    .select()
+    .from(calendarEvents)
+    .where(
+      and(
+        eq(calendarEvents.userId, userId),
+        // Include: starts in future, OR recurring and started before futureDate
+        sql`(
+          (${calendarEvents.eventDate} >= ${now} AND ${calendarEvents.eventDate} < ${futureDate})
+          OR (
+            ${calendarEvents.recurrence} != 'none'
+            AND ${calendarEvents.eventDate} < ${futureDate}
+            AND (${calendarEvents.recurrenceEnd} IS NULL OR ${calendarEvents.recurrenceEnd} >= ${now})
+          )
+        )`
+      )
+    )
+    .orderBy(calendarEvents.eventDate);
+
+  // Expand recurring events into instances that fall within the next 30 days
+  const expanded: typeof rows = [];
+  for (const event of rows) {
+    if (event.recurrence === "none") {
+      expanded.push(event);
+      if (expanded.length >= limit) break;
+      continue;
+    }
+    // Generate occurrences within the next 30 days
+    const origin = new Date(event.eventDate);
+    const recEnd = event.recurrenceEnd ? new Date(event.recurrenceEnd) : null;
+    let cursor = new Date(origin);
+    // Fast-forward cursor to first occurrence >= now
+    while (cursor < now) {
+      if (event.recurrence === "weekly") cursor = new Date(cursor.getTime() + 7 * 86400000);
+      else { cursor = new Date(cursor); cursor.setUTCMonth(cursor.getUTCMonth() + 1); }
+    }
+    while (cursor < futureDate && expanded.length < limit) {
+      if (recEnd && cursor > recEnd) break;
+      expanded.push({ ...event, eventDate: new Date(cursor) });
+      if (event.recurrence === "weekly") cursor = new Date(cursor.getTime() + 7 * 86400000);
+      else { cursor = new Date(cursor); cursor.setUTCMonth(cursor.getUTCMonth() + 1); }
+    }
+    if (expanded.length >= limit) break;
+  }
+  
+  return expanded
+    .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())
+    .slice(0, limit);
+}

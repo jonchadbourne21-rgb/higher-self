@@ -227,3 +227,12 @@
 - [x] Update const.ts: use higherself.cloud as the canonical OAuth redirect URI
 - [x] Update oauth.ts: handle higherself.cloud as the primary callback domain
 - [x] Test, checkpoint, publish, verify login works on higherself.cloud
+
+## Calendar Features Sprint (Mar 29)
+- [x] Build upcoming events widget on Home page (next 3 events with time, type, and quick-link to calendar)
+- [x] Add tRPC procedure: calendar.getUpcoming (returns next N events for the user)
+- [x] Add push notification reminders for calendar events (1 hour before event time)
+- [x] Add event edit flow to Calendar page (tap event card to edit title, time, recurrence, notes)
+- [x] Add tRPC procedure: calendar.update (update existing event) — already exists in routers.ts
+- [x] Update Calendar UI to show edit button/modal on event cards (Edit2 icon button, modal title changes to "Edit Event")
+- [x] Write vitest tests for new procedures (21 tests passing)

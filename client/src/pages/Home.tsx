@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Sparkles, ChevronRight, Sun, Moon, Star, Bell, Settings } from "lucide-react";
+import { Sparkles, ChevronRight, Sun, Moon, Star, Bell, Settings, Calendar } from "lucide-react";
 import { format } from "date-fns";
 
 // Staggered word-by-word animation for the greeting name
@@ -34,6 +34,7 @@ export default function Home() {
   const { data: profile } = trpc.profile.get.useQuery(undefined, { enabled: isAuthenticated });
   const { data: todayCheckIn } = trpc.checkIn.today.useQuery(undefined, { enabled: isAuthenticated });
   const { data: latestInsight } = trpc.insights.latest.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: upcomingEvents } = trpc.calendar.getUpcoming.useQuery({ limit: 3 }, { enabled: isAuthenticated });
 
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate("/");
@@ -223,6 +224,50 @@ export default function Home() {
             ))}
           </div>
         </motion.div>
+
+        {/* ── Upcoming Events Widget ─────────────────────────────────────── */}
+        {upcomingEvents && upcomingEvents.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.20 }}
+          >
+            <Link href="/calendar">
+              <div
+                className="rounded-3xl p-5 space-y-3 cursor-pointer transition-all hover:shadow-md"
+                style={{
+                  background: "linear-gradient(145deg, oklch(0.97 0.04 260), oklch(0.99 0.01 80))",
+                  border: "1px solid oklch(0.86 0.08 260 / 0.6)",
+                  boxShadow: "0 2px 16px oklch(0.46 0.20 260 / 0.08)",
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar size={12} className="text-violet-600" />
+                    <p className="text-xs text-violet-700 uppercase tracking-widest font-medium">Next Events</p>
+                  </div>
+                  <ChevronRight size={14} className="text-muted-foreground" />
+                </div>
+                <div className="space-y-2">
+                  {upcomingEvents.slice(0, 3).map((event, idx) => {
+                    const eventDate = new Date(event.eventDate);
+                    const timeStr = event.isAllDay ? "All day" : eventDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                    const typeEmoji = { therapy: "🏥", goal: "🎯", habit: "✓", reminder: "🔔", other: "📌" }[event.type];
+                    return (
+                      <div key={idx} className="flex items-start gap-2 text-sm">
+                        <span className="text-base mt-0.5">{typeEmoji}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground truncate">{event.title}</p>
+                          <p className="text-xs text-muted-foreground">{format(eventDate, "MMM d")} • {timeStr}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </Link>
+          </motion.div>
+        )}
 
         {/* ── Latest insight / generate prompt ───────────────────────────── */}
         <motion.div

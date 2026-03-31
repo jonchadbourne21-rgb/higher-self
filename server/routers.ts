@@ -742,6 +742,13 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
   // ─── Calendar ─────────────────────────────────────────────────────────────
 
   calendar: router({
+    getUpcoming: protectedProcedure
+      .input(z.object({ limit: z.number().max(10).default(3) }))
+      .query(async ({ ctx, input }) => {
+        const { getUpcomingEvents } = await import("./db");
+        return getUpcomingEvents(ctx.user.id, input.limit);
+      }),
+
     list: protectedProcedure
       .input(z.object({
         year: z.number(),

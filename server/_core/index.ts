@@ -7,7 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
-import { startDailyReminderScheduler } from "../pushNotifications";
+import { startDailyReminderScheduler, startCalendarReminderScheduler } from "../pushNotifications";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -71,6 +71,8 @@ async function startServer() {
     console.log(`Server running on http://localhost:${port}/`);
     // Start the daily 6am push notification scheduler
     startDailyReminderScheduler();
+    // Start the calendar event reminder scheduler (1 hour before events)
+    startCalendarReminderScheduler();
   });
 }
 
