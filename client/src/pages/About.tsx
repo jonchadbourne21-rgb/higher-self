@@ -26,7 +26,7 @@ export default function About() {
           >
             <ChevronLeft className="w-5 h-5 text-foreground" />
           </button>
-          <h1 className="text-lg font-semibold text-foreground">About HigherSelf</h1>
+          <h1 className="text-lg font-semibold text-foreground">About Synapset</h1>
         </div>
 
         <div className="px-5 py-8 space-y-8 max-w-2xl">
@@ -45,7 +45,7 @@ export default function About() {
               <div>
                 <h2 className="text-lg font-semibold text-foreground">Your Private Vault</h2>
                 <p className="text-sm text-foreground/70 mt-2 leading-relaxed">
-                  Every thought you share with HigherSelf is encrypted and stored securely. Your reflections, insights, and conversations are yours alone — no human reads them, and no AI trains on them. This is your vault for honest self-exploration.
+                  Every thought you share with Synapset is encrypted and stored securely. Your reflections, insights, and conversations are yours alone — no human reads them, and no AI trains on them. This is your vault for honest self-exploration.
                 </p>
               </div>
             </div>
@@ -87,7 +87,7 @@ export default function About() {
               <div>
                 <h2 className="text-lg font-semibold text-foreground">Important Disclaimer</h2>
                 <p className="text-sm text-foreground/70 mt-2 leading-relaxed">
-                  HigherSelf is an AI-powered self-reflection tool designed for personal growth and coaching. <strong>It is not a replacement for professional medical advice, diagnosis, or treatment by a licensed therapist.</strong> If you are experiencing a mental health crisis, depression, suicidal thoughts, or any serious condition, please reach out to a healthcare professional or crisis hotline immediately.
+                  Synapset is an AI-powered self-reflection tool designed for personal growth and coaching. <strong>It is not a replacement for professional medical advice, diagnosis, or treatment by a licensed therapist.</strong> If you are experiencing a mental health crisis, depression, suicidal thoughts, or any serious condition, please reach out to a healthcare professional or crisis hotline immediately.
                 </p>
               </div>
             </div>
@@ -101,7 +101,7 @@ export default function About() {
             animate="visible"
             className="space-y-4"
           >
-            <h2 className="text-lg font-semibold text-foreground">How HigherSelf Works</h2>
+            <h2 className="text-lg font-semibold text-foreground">How Synapset Works</h2>
             <div className="space-y-3">
               {[
                 { num: "1", title: "You Reflect", desc: "Share your thoughts, feelings, and questions with your AI mirror." },

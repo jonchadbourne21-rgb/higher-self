@@ -92,7 +92,7 @@ export default function Chat() {
             <span className="text-lg">✦</span>
           </div>
           <div>
-            <h1 className="text-base font-medium text-foreground">Your Higher Self</h1>
+            <h1 className="text-base font-medium text-foreground">Synapset</h1>
             <p className="text-xs text-muted-foreground">Always present, always honest</p>
           </div>
         </div>
@@ -191,7 +191,7 @@ export default function Chat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Speak to your Higher Self..."
+              placeholder="Speak to Synapset..."
               rows={1}
               className="flex-1 bg-input border border-border rounded-2xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm resize-none max-h-32 scrollbar-hide"
               style={{ minHeight: "48px" }}

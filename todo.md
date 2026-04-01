@@ -248,3 +248,12 @@
 - [x] Add "Your thoughts are private and encrypted" messaging to landing page
 - [x] Create About page with privacy vault concept and safety information
 - [x] Add link to About page in footer or navigation (route: /about)
+
+## App Rebrand to "Synapset" (Mar 31)
+- [x] Update Landing page title and copy from "HigherSelf" to "Synapset"
+- [x] Update About page title from "About HigherSelf" to "About Synapset"
+- [x] Update Chat page header to "Synapset"
+- [x] Update meta tags and page titles (browser tab)
+- [ ] Update VITE_APP_TITLE environment variable to "Synapset" (must be done via Management UI Settings)
+- [x] Update footer and branding text throughout app
+- [ ] Prepare for logo upload after name is live

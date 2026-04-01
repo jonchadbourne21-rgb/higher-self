@@ -19,7 +19,7 @@ export default function Landing() {
   const [, navigate] = useLocation();
 
   useEffect(() => {
-    document.title = "Higher Self — Your AI Mirror for Personal Growth";
+    document.title = "Synapset — AI-Powered Self-Reflection & Personal Growth";
   }, []);
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function Landing() {
             style={{ border: "1px solid oklch(0.46 0.20 295 / 0.2)" }}
           />
         </div>
-        <p className="text-xs tracking-[0.35em] text-violet-500 uppercase font-medium">HigherSelf | AI-Supported Self-Therapy 🌱</p>
+        <p className="text-xs tracking-[0.35em] text-violet-500 uppercase font-medium">Synapset | AI-Supported Self-Therapy 🌱</p>
       </motion.div>
 
       {/* ── Main content ──────────────────────────────────────────────────── */}
@@ -173,7 +173,7 @@ export default function Landing() {
         className="text-center text-[11px] text-muted-foreground leading-relaxed max-w-sm"
       >
         <p>
-          HigherSelf is an AI-powered self-reflection tool designed for personal growth and coaching. It is not a replacement for professional medical advice, diagnosis, or treatment by a licensed therapist. If you are experiencing a mental health crisis, please contact a healthcare professional or crisis hotline immediately.
+          Synapset is an AI-powered self-reflection tool designed for personal growth and coaching. It is not a replacement for professional medical advice, diagnosis, or treatment by a licensed therapist. If you are experiencing a mental health crisis, please contact a healthcare professional or crisis hotline immediately.
         </p>
       </motion.div>
     </div>
