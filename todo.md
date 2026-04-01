@@ -257,3 +257,12 @@
 - [ ] Update VITE_APP_TITLE environment variable to "Synapset" (must be done via Management UI Settings)
 - [x] Update footer and branding text throughout app
 - [ ] Prepare for logo upload after name is live
+
+## Safety & Compliance (Apr 1)
+- [x] Create CrisisDisclaimerFooter component with crisis hotline info
+- [x] Add crisis disclaimer footer to all pages (Landing, Home, Chat, Journal, etc.)
+- [x] Implement safety protocol in Chat AI responses (detect self-harm/crisis keywords)
+- [x] Add kill-switch response for safety tier 1 breaches
+- [x] Create compliance logging system for safety breaches (/logs/compliance/safety_audit/)
+- [ ] Test safety protocol with sample crisis phrases
+- [ ] Document safety protocol in README

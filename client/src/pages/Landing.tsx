@@ -1,9 +1,9 @@
-import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
-import { toast } from "sonner";
+import CrisisDisclaimerFooter from "@/components/CrisisDisclaimerFooter";
+import { getLoginUrl } from "@/const";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -24,67 +24,41 @@ export default function Landing() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("auth_error") === "1") {
-      toast.error("Sign-in failed. Please try again.");
-      window.history.replaceState({}, "", "/");
+    if (params.get("auth_error")) {
+      // User cancelled login or auth failed
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
   useEffect(() => {
-    if (!loading && isAuthenticated) {
-      if (!(user as any)?.onboardingCompleted) {
-        navigate("/onboarding");
-      } else {
-        navigate("/home");
-      }
+    if (isAuthenticated && !loading) {
+      navigate("/home");
     }
-  }, [isAuthenticated, loading, user]);
+  }, [isAuthenticated, loading, navigate]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-aurora flex items-center justify-center">
-        <motion.div
-          animate={{ opacity: [0.3, 1, 0.3], scale: [0.95, 1.05, 0.95] }}
-          transition={{ repeat: Infinity, duration: 2.2 }}
-          className="text-primary text-4xl font-serif"
-        >
-          ✦
-        </motion.div>
-      </div>
-    );
-  }
+  const loginUrl = getLoginUrl("/home");
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-between px-6 py-12 max-w-[480px] mx-auto"
-      style={{
-        background:
-          "radial-gradient(ellipse at 20% 0%, oklch(0.46 0.20 295 / 0.07) 0%, transparent 50%), " +
-          "radial-gradient(ellipse at 80% 15%, oklch(0.72 0.18 60 / 0.07) 0%, transparent 50%), " +
-          "oklch(0.98 0.008 80)",
-      }}
-    >
-      {/* ── Top logo mark ─────────────────────────────────────────────────── */}
+    <div className="min-h-screen bg-aurora flex flex-col items-center justify-center px-5 py-8 gap-12 max-w-[480px] mx-auto">
+      {/* ── Hero section ───────────────────────────────────────────────────── */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.75 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.9, ease: "easeOut" }}
-        className="flex flex-col items-center gap-3"
+        custom={0}
+        variants={fadeUp}
+        initial="hidden"
+        animate="visible"
+        className="flex flex-col items-center text-center gap-6 pt-8"
       >
         <div className="relative">
           <div
-            className="w-16 h-16 rounded-full flex items-center justify-center"
+            className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center text-4xl shadow-lg"
             style={{
-              background: "linear-gradient(135deg, oklch(0.46 0.20 295 / 0.15), oklch(0.72 0.18 60 / 0.12))",
-              border: "1.5px solid oklch(0.46 0.20 295 / 0.25)",
-              boxShadow: "0 4px 24px oklch(0.46 0.20 295 / 0.15)",
+              boxShadow:
+                "0 20px 40px oklch(0.54 0.22 295 / 0.25), inset 0 1px 0 oklch(1 0 0 / 0.4)",
             }}
           >
-            <span className="text-3xl text-violet-gradient">✦</span>
+            ✦
           </div>
-          <motion.div
-            animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.1, 0.4] }}
-            transition={{ repeat: Infinity, duration: 3 }}
+          <div
             className="absolute -inset-3 rounded-full"
             style={{ border: "1px solid oklch(0.46 0.20 295 / 0.2)" }}
           />
@@ -94,39 +68,6 @@ export default function Landing() {
 
       {/* ── Main content ──────────────────────────────────────────────────── */}
       <div className="flex flex-col items-center text-center gap-8 max-w-sm">
-        <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible" className="space-y-4">
-          <h1 className="text-5xl font-serif font-light leading-tight text-foreground">
-            Become who you
-            <br />
-            <span className="text-violet-gradient italic">were meant to be</span>
-          </h1>
-          <p className="text-base font-light text-muted-foreground leading-relaxed">
-            Process your thoughts, unlock your intuition, and find clarity in minutes. Private, secure, and built for your evolution.
-          </p>
-        </motion.div>
-
-        <motion.div
-          custom={1}
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="flex flex-col gap-3 w-full"
-        >
-          <a
-            href={getLoginUrl()}
-            className="w-full py-4 rounded-2xl font-semibold text-base tracking-wide text-center text-white transition-all duration-200 active:scale-95"
-            style={{
-              background: "linear-gradient(135deg, oklch(0.46 0.20 295), oklch(0.55 0.18 320))",
-              boxShadow: "0 6px 28px oklch(0.46 0.20 295 / 0.30)",
-            }}
-          >
-            Begin Your Journey
-          </a>
-          <p className="text-xs text-muted-foreground">Free to start · Your data stays private</p>
-        </motion.div>
-      </div>
-
-      {/* ── Feature chips ─────────────────────────────────────────────────── */}
         {/* ── Privacy & Encryption Badge ─────────────────────────────── */}
         <motion.div
           custom={2}
@@ -164,6 +105,48 @@ export default function Landing() {
           </div>
         </motion.div>
 
+        {/* ── Main tagline ────────────────────────────────────────────────── */}
+        <motion.div
+          custom={1}
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          className="space-y-3"
+        >
+          <h1 className="text-4xl font-bold text-foreground leading-tight">
+            Process your thoughts, unlock your intuition, and find clarity in minutes.
+          </h1>
+          <p className="text-sm text-foreground/60 leading-relaxed">
+            Private, secure, and built for your evolution
+          </p>
+        </motion.div>
+
+        {/* ── CTA ─────────────────────────────────────────────────────────── */}
+        <motion.div
+          custom={2}
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          className="w-full space-y-3 pt-2"
+        >
+          {isAuthenticated ? (
+            <button
+              onClick={() => navigate("/home")}
+              className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-2xl hover:bg-primary/90 transition-all active:scale-95 shadow-lg hover:shadow-xl"
+            >
+              Enter Synapset
+            </button>
+          ) : (
+            <a
+              href={loginUrl}
+              className="block w-full bg-primary text-primary-foreground font-semibold py-3 rounded-2xl hover:bg-primary/90 transition-all active:scale-95 shadow-lg hover:shadow-xl text-center"
+            >
+              Begin Your Journey
+            </a>
+          )}
+        </motion.div>
+      </div>
+
       {/* ── Medical Disclaimer Footer ──────────────────────────────────── */}
       <motion.div
         custom={3}
@@ -176,6 +159,7 @@ export default function Landing() {
           Synapset is an AI-powered self-reflection tool designed for personal growth and coaching. It is not a replacement for professional medical advice, diagnosis, or treatment by a licensed therapist. If you are experiencing a mental health crisis, please contact a healthcare professional or crisis hotline immediately.
         </p>
       </motion.div>
+      <CrisisDisclaimerFooter />
     </div>
   );
 }

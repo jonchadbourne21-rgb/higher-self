@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { cn } from "@/lib/utils";
+import CrisisDisclaimerFooter from "./CrisisDisclaimerFooter";
 import { useRef, useCallback, useState } from "react";
 
 const navItems = [
@@ -113,6 +114,7 @@ export default function AppShell({ children }: AppShellProps) {
         onScroll={handleScroll}
       >
         {children}
+        <CrisisDisclaimerFooter />
       </main>
 
       {/* Floating pill nav — auto-hides on scroll down */}
