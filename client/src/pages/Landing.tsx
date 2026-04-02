@@ -53,7 +53,7 @@ export default function Landing() {
           alt="Synapset Logo"
           className="w-48 h-auto drop-shadow-lg"
         />
-        <p className="text-xs tracking-[0.35em] text-violet-500 uppercase font-medium">Synapset | AI-Supported Self-Therapy 🌱</p>
+        <p className="text-xs tracking-[0.35em] text-violet-500 uppercase font-medium">Synapset | AI-Supported Awakening-Self 🌱</p>
       </motion.div>
 
       {/* ── Main content ──────────────────────────────────────────────────── */}
