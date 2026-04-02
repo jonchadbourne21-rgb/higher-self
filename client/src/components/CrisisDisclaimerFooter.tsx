@@ -1,40 +1,46 @@
-import { AlertTriangle, Phone } from "lucide-react";
+import { Phone } from "lucide-react";
 
 export default function CrisisDisclaimerFooter() {
   return (
-    <div className="w-full bg-red-50 dark:bg-red-950/20 border-t border-red-200 dark:border-red-900/30 px-4 py-4 mt-8">
-      <div className="max-w-4xl mx-auto space-y-3">
-        <div className="flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-          <div className="space-y-2 text-xs text-red-900 dark:text-red-200">
-            <p className="font-semibold">
-              Synapset is not a licensed medical professional and does not provide clinical diagnosis or treatment.
-            </p>
-            <p className="flex items-center gap-2">
-              <Phone className="w-4 h-4 flex-shrink-0" />
-              If you are in crisis, please contact the National Suicide Prevention Lifeline at{" "}
-              <a
-                href="tel:988"
-                className="font-semibold underline hover:text-red-700 dark:hover:text-red-300"
-              >
-                988
-              </a>
-              {" "}(Suicide & Crisis Lifeline) or call{" "}
-              <a
-                href="tel:1-800-273-8255"
-                className="font-semibold underline hover:text-red-700 dark:hover:text-red-300"
-              >
-                1-800-273-8255
-              </a>
-              . In emergencies, call{" "}
-              <a
-                href="tel:911"
-                className="font-semibold underline hover:text-red-700 dark:hover:text-red-300"
-              >
-                911
-              </a>
-              .
-            </p>
+    <div className="w-full bg-background border-t border-border px-4 py-6 mt-8">
+      <div className="max-w-4xl mx-auto space-y-4">
+        {/* What Synapset Is */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-foreground">What Synapset Is</p>
+          <p className="text-xs text-foreground/70 leading-relaxed">
+            Synapset is an AI-powered self-reflection tool designed to help you process your thoughts, unlock intuition, and find clarity. It provides personalized insights, journaling support, and goal tracking for personal growth and self-awareness.
+          </p>
+        </div>
+
+        {/* What Synapset Is NOT */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-foreground">What Synapset Is NOT</p>
+          <p className="text-xs text-foreground/70 leading-relaxed">
+            Synapset is not a licensed therapist, medical doctor, or mental health professional. It does not provide clinical diagnosis, treatment, or medical advice. If you need professional mental health support, please consult a licensed therapist or healthcare provider.
+          </p>
+        </div>
+
+        {/* Crisis Support */}
+        <div className="space-y-2 pt-2 border-t border-border">
+          <p className="text-xs font-semibold text-foreground flex items-center gap-2">
+            <Phone className="w-3.5 h-3.5" />
+            In Crisis? Get Help Now
+          </p>
+          <p className="text-xs text-foreground/70 leading-relaxed">
+            If you are experiencing suicidal thoughts, self-harm urges, or a mental health crisis, please reach out immediately:
+          </p>
+          <div className="flex gap-4 text-xs text-foreground/80 font-medium">
+            <a href="tel:988" className="hover:text-violet-600 dark:hover:text-violet-400 underline">
+              Call or text 988
+            </a>
+            <span className="text-foreground/30">•</span>
+            <a href="tel:1-800-273-8255" className="hover:text-violet-600 dark:hover:text-violet-400 underline">
+              1-800-273-8255
+            </a>
+            <span className="text-foreground/30">•</span>
+            <a href="tel:911" className="hover:text-violet-600 dark:hover:text-violet-400 underline">
+              911
+            </a>
           </div>
         </div>
       </div>

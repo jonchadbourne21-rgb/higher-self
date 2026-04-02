@@ -275,3 +275,10 @@
 - [x] Create /terms page with Terms of Service and legal disclaimers
 - [x] Add links to Privacy and Terms in footer
 - [x] Add links to Privacy and Terms in About page
+
+## Footer & Title Refinement (Apr 2)
+- [x] Update page title in index.html from "self-therapy" to "awakening-self"
+- [x] Redesign CrisisDisclaimerFooter to be cleaner and better integrated
+- [x] Rewrite footer disclaimer copy to explain what Synapset IS and ISN'T
+- [x] Make footer disclaimer less red/alarming and more professional
+- [x] Add crisis hotline info in a cleaner, more readable format
