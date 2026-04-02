@@ -48,21 +48,11 @@ export default function Landing() {
         animate="visible"
         className="flex flex-col items-center text-center gap-6 pt-8"
       >
-        <div className="relative">
-          <div
-            className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center text-4xl shadow-lg"
-            style={{
-              boxShadow:
-                "0 20px 40px oklch(0.54 0.22 295 / 0.25), inset 0 1px 0 oklch(1 0 0 / 0.4)",
-            }}
-          >
-            ✦
-          </div>
-          <div
-            className="absolute -inset-3 rounded-full"
-            style={{ border: "1px solid oklch(0.46 0.20 295 / 0.2)" }}
-          />
-        </div>
+        <img
+          src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/IMG_7653_9e78c874.PNG"
+          alt="Synapset Logo"
+          className="w-48 h-auto drop-shadow-lg"
+        />
         <p className="text-xs tracking-[0.35em] text-violet-500 uppercase font-medium">Synapset | AI-Supported Self-Therapy 🌱</p>
       </motion.div>
 
@@ -147,18 +137,6 @@ export default function Landing() {
         </motion.div>
       </div>
 
-      {/* ── Medical Disclaimer Footer ──────────────────────────────────── */}
-      <motion.div
-        custom={3}
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        className="text-center text-[11px] text-muted-foreground leading-relaxed max-w-sm"
-      >
-        <p>
-          Synapset is an AI-powered self-reflection tool designed for personal growth and coaching. It is not a replacement for professional medical advice, diagnosis, or treatment by a licensed therapist. If you are experiencing a mental health crisis, please contact a healthcare professional or crisis hotline immediately.
-        </p>
-      </motion.div>
       <CrisisDisclaimerFooter />
     </div>
   );

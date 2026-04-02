@@ -150,9 +150,32 @@ export default function About() {
             </ul>
           </motion.section>
 
-          {/* ── Contact ─────────────────────────────────────────────────────── */}
+          {/* ── Legal Links ─────────────────────────────────────────────────────── */}
           <motion.section
             custom={5}
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            className="flex gap-3 justify-center pb-4"
+          >
+            <button
+              onClick={() => navigate("/privacy")}
+              className="text-xs text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300 underline"
+            >
+              Privacy Policy
+            </button>
+            <span className="text-foreground/20">•</span>
+            <button
+              onClick={() => navigate("/terms")}
+              className="text-xs text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300 underline"
+            >
+              Terms of Service
+            </button>
+          </motion.section>
+
+          {/* ── Contact ─────────────────────────────────────────────────────── */}
+          <motion.section
+            custom={6}
             variants={fadeUp}
             initial="hidden"
             animate="visible"

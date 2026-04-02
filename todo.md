@@ -266,3 +266,12 @@
 - [x] Create compliance logging system for safety breaches (/logs/compliance/safety_audit/)
 - [ ] Test safety protocol with sample crisis phrases
 - [ ] Document safety protocol in README
+
+## Logo, Disclaimer Cleanup & Legal Pages (Apr 1)
+- [x] Upload Synapset logo image to S3 and get CDN URL
+- [x] Add logo to landing page hero section (above or next to title)
+- [x] Consolidate two footer disclaimers into one clean, unified section
+- [x] Create /privacy page with full Privacy Policy and GDPR compliance info
+- [x] Create /terms page with Terms of Service and legal disclaimers
+- [x] Add links to Privacy and Terms in footer
+- [x] Add links to Privacy and Terms in About page
