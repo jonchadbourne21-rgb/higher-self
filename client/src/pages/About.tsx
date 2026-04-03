@@ -19,14 +19,18 @@ export default function About() {
     <AppShell>
       <div className="min-h-screen bg-background pb-20">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border px-5 py-4 flex items-center gap-3">
+        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border px-5 py-3 flex items-center gap-3">
           <button
             onClick={() => window.history.back()}
             className="p-2 rounded-full hover:bg-muted transition-colors"
           >
             <ChevronLeft className="w-5 h-5 text-foreground" />
           </button>
-          <h1 className="text-lg font-semibold text-foreground">About Synapset</h1>
+          <img
+            src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/IMG_7653_9e78c874.PNG"
+            alt="Synapset"
+            className="h-6 w-auto"
+          />
         </div>
 
         <div className="px-5 py-8 space-y-8 max-w-2xl">

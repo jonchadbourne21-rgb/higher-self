@@ -282,3 +282,10 @@
 - [x] Rewrite footer disclaimer copy to explain what Synapset IS and ISN'T
 - [x] Make footer disclaimer less red/alarming and more professional
 - [x] Add crisis hotline info in a cleaner, more readable format
+
+## Logo Placement on All Pages (Apr 2)
+- [x] Add Synapset logo to AppShell header (top-left or center)
+- [x] Add Synapset logo to About page header
+- [x] Add Synapset logo to Privacy page header
+- [x] Add Synapset logo to Terms page header
+- [x] Ensure logo is consistent size and styling across all pages

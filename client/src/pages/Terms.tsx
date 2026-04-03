@@ -5,7 +5,7 @@ export default function Terms() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="bg-card border-b border-border px-4 py-4 sticky top-0 z-10">
+      <div className="bg-card border-b border-border px-4 py-3 sticky top-0 z-10">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           <button
             onClick={() => window.history.back()}
@@ -13,7 +13,11 @@ export default function Terms() {
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-bold">Terms of Service</h1>
+          <img
+            src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/IMG_7653_9e78c874.PNG"
+            alt="Synapset"
+            className="h-6 w-auto"
+          />
         </div>
       </div>
 

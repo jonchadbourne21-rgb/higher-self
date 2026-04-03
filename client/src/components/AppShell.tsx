@@ -108,6 +108,15 @@ export default function AppShell({ children }: AppShellProps) {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
+      {/* Header with logo */}
+      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3">
+        <img
+          src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/IMG_7653_9e78c874.PNG"
+          alt="Synapset Logo"
+          className="h-8 w-auto"
+        />
+      </header>
+
       {/* Main content */}
       <main
         className="flex-1 overflow-y-auto pb-24 scrollbar-hide"
