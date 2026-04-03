@@ -289,3 +289,11 @@
 - [x] Add Synapset logo to Privacy page header
 - [x] Add Synapset logo to Terms page header
 - [x] Ensure logo is consistent size and styling across all pages
+
+## CRITICAL FIX — Emergency Safety Protocol (Apr 3)
+- [x] Review safety.ts implementation — ensure it detects "ending it", "suicide", "killing myself"
+- [x] Fix chat.send procedure — safety check must run BEFORE invokeLLM (already correct)
+- [x] Return ONLY kill-switch message when safety trigger detected (no AI response)
+- [x] Added "ending it" and "ending it all" to crisis keywords
+- [x] Updated kill-switch response to exact protocol message
+- [x] Ensure no empathy or counseling response is generated

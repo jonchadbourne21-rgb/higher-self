@@ -21,7 +21,10 @@ const CRISIS_KEYWORDS = [
   "slit my wrist",
 
   // Suicide ideation
+  "ending it",
+  "ending it all",
   "kill myself",
+  "killing myself",
   "suicide",
   "suicidal",
   "end my life",
@@ -36,6 +39,10 @@ const CRISIS_KEYWORDS = [
   "jump from",
   "step in front",
   "step in front of",
+  "no point in living",
+  "not worth living",
+  "everyone would be better off",
+  "world would be better",
 
   // Violence toward others
   "hurt someone",
@@ -65,7 +72,7 @@ export function detectCrisisKeywords(text: string): boolean {
   return CRISIS_KEYWORDS.some((keyword) => lowerText.includes(keyword));
 }
 
-export const SAFETY_KILL_SWITCH_RESPONSE = `I am an AI and am not equipped to handle this topic. If you are in distress or considering self-harm, please immediately contact the 988 Suicide & Crisis Lifeline (call or text 988) or emergency services (911). I cannot continue this specific conversation.`;
+export const SAFETY_KILL_SWITCH_RESPONSE = `I am an AI and cannot help with this. I hear you are hurting, but I am not equipped for this conversation. Please stop and call or text 988 (The Suicide & Crisis Lifeline) right now. They have people who can actually help. I cannot continue this chat until you are safe.`;
 
 export interface SafetyBreach {
   timestamp: string;
