@@ -1,9 +1,9 @@
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
-import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
-import CrisisDisclaimerFooter from "@/components/CrisisDisclaimerFooter";
-import { getLoginUrl } from "@/const";
+import { toast } from "sonner";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -19,125 +19,137 @@ export default function Landing() {
   const [, navigate] = useLocation();
 
   useEffect(() => {
-    document.title = "Synapset — AI-Powered Self-Reflection & Personal Growth";
+    document.title = "Higher Self — Your AI Mirror for Personal Growth";
   }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("auth_error")) {
-      // User cancelled login or auth failed
-      window.history.replaceState({}, document.title, window.location.pathname);
+    if (params.get("auth_error") === "1") {
+      toast.error("Sign-in failed. Please try again.");
+      window.history.replaceState({}, "", "/");
     }
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated && !loading) {
-      navigate("/home");
+    if (!loading && isAuthenticated) {
+      if (!(user as any)?.onboardingCompleted) {
+        navigate("/onboarding");
+      } else {
+        navigate("/home");
+      }
     }
-  }, [isAuthenticated, loading, navigate]);
+  }, [isAuthenticated, loading, user]);
 
-  const loginUrl = getLoginUrl("/home");
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-aurora flex items-center justify-center">
+        <motion.div
+          animate={{ opacity: [0.3, 1, 0.3], scale: [0.95, 1.05, 0.95] }}
+          transition={{ repeat: Infinity, duration: 2.2 }}
+          className="text-primary text-4xl font-serif"
+        >
+          ✦
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-aurora flex flex-col items-center justify-center px-5 py-8 gap-12 max-w-[480px] mx-auto">
-      {/* ── Hero section ───────────────────────────────────────────────────── */}
+    <div
+      className="min-h-screen flex flex-col items-center justify-between px-6 py-12 max-w-[480px] mx-auto"
+      style={{
+        background:
+          "radial-gradient(ellipse at 20% 0%, oklch(0.46 0.20 295 / 0.07) 0%, transparent 50%), " +
+          "radial-gradient(ellipse at 80% 15%, oklch(0.72 0.18 60 / 0.07) 0%, transparent 50%), " +
+          "oklch(0.98 0.008 80)",
+      }}
+    >
+      {/* ── Top logo mark ─────────────────────────────────────────────────── */}
       <motion.div
-        custom={0}
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        className="flex flex-col items-center text-center gap-6 pt-8"
+        initial={{ opacity: 0, scale: 0.75 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.9, ease: "easeOut" }}
+        className="flex flex-col items-center gap-3"
       >
-        <img
-          src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/IMG_7653_9e78c874.PNG"
-          alt="Synapset Logo"
-          className="w-48 h-auto drop-shadow-lg"
-        />
-        <p className="text-xs tracking-[0.35em] text-violet-500 uppercase font-medium">Synapset | AI-Supported Awakening-Self 🌱</p>
+        <div className="relative">
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center"
+            style={{
+              background: "linear-gradient(135deg, oklch(0.46 0.20 295 / 0.15), oklch(0.72 0.18 60 / 0.12))",
+              border: "1.5px solid oklch(0.46 0.20 295 / 0.25)",
+              boxShadow: "0 4px 24px oklch(0.46 0.20 295 / 0.15)",
+            }}
+          >
+            <span className="text-3xl text-violet-gradient">✦</span>
+          </div>
+          <motion.div
+            animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.1, 0.4] }}
+            transition={{ repeat: Infinity, duration: 3 }}
+            className="absolute -inset-3 rounded-full"
+            style={{ border: "1px solid oklch(0.46 0.20 295 / 0.2)" }}
+          />
+        </div>
+        <p className="text-xs tracking-[0.35em] text-violet-500 uppercase font-medium">Higher Self</p>
       </motion.div>
 
       {/* ── Main content ──────────────────────────────────────────────────── */}
       <div className="flex flex-col items-center text-center gap-8 max-w-sm">
-        {/* ── Privacy & Encryption Badge ─────────────────────────────── */}
-        <motion.div
-          custom={2}
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="flex items-center justify-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 font-medium"
-        >
-          <span>🔒</span>
-          <span>Encryption-first self-reflection</span>
+        <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible" className="space-y-4">
+          <h1 className="text-5xl font-serif font-light leading-tight text-foreground">
+            Become who you
+            <br />
+            <span className="text-violet-gradient italic">were meant to be</span>
+          </h1>
+          <p className="text-base font-light text-muted-foreground leading-relaxed">
+            Your AI mirror guides you toward inner peace, emotional maturity, and authentic living.
+          </p>
         </motion.div>
 
-        {/* ── Feature chips ─────────────────────────────────────────────────── */}
-        <motion.div
-          custom={2}
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="flex flex-col gap-4 w-full"
-        >
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { emoji: "🪞", label: "AI Mirror", bg: "bg-violet-50", border: "border-violet-100" },
-              { emoji: "🌱", label: "Daily Growth", bg: "bg-emerald-50", border: "border-emerald-100" },
-              { emoji: "✨", label: "Inner Peace", bg: "bg-amber-50", border: "border-amber-100" },
-            ].map((f) => (
-              <div
-                key={f.label}
-                className={`${f.bg} border ${f.border} rounded-2xl p-3 flex flex-col items-center gap-2`}
-              >
-                <span className="text-2xl">{f.emoji}</span>
-                <span className="text-xs text-foreground font-semibold">{f.label}</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* ── Main tagline ────────────────────────────────────────────────── */}
         <motion.div
           custom={1}
           variants={fadeUp}
           initial="hidden"
           animate="visible"
-          className="space-y-3"
+          className="flex flex-col gap-3 w-full"
         >
-          <h1 className="text-4xl font-bold text-foreground leading-tight">
-            Process your thoughts, unlock your intuition, and find clarity in minutes.
-          </h1>
-          <p className="text-sm text-foreground/60 leading-relaxed">
-            Private, secure, and built for your evolution
-          </p>
-        </motion.div>
-
-        {/* ── CTA ─────────────────────────────────────────────────────────── */}
-        <motion.div
-          custom={2}
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="w-full space-y-3 pt-2"
-        >
-          {isAuthenticated ? (
-            <button
-              onClick={() => navigate("/home")}
-              className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-2xl hover:bg-primary/90 transition-all active:scale-95 shadow-lg hover:shadow-xl"
-            >
-              Enter Synapset
-            </button>
-          ) : (
-            <a
-              href={loginUrl}
-              className="block w-full bg-primary text-primary-foreground font-semibold py-3 rounded-2xl hover:bg-primary/90 transition-all active:scale-95 shadow-lg hover:shadow-xl text-center"
-            >
-              Begin Your Journey
-            </a>
-          )}
+          <a
+            href={getLoginUrl()}
+            className="w-full py-4 rounded-2xl font-semibold text-base tracking-wide text-center text-white transition-all duration-200 active:scale-95"
+            style={{
+              background: "linear-gradient(135deg, oklch(0.46 0.20 295), oklch(0.55 0.18 320))",
+              boxShadow: "0 6px 28px oklch(0.46 0.20 295 / 0.30)",
+            }}
+          >
+            Begin Your Journey
+          </a>
+          <p className="text-xs text-muted-foreground">Free to start · Your data stays private</p>
         </motion.div>
       </div>
 
-      <CrisisDisclaimerFooter />
+      {/* ── Feature chips ─────────────────────────────────────────────────── */}
+      <motion.div
+        custom={2}
+        variants={fadeUp}
+        initial="hidden"
+        animate="visible"
+        className="flex flex-col gap-4 w-full"
+      >
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { emoji: "🪞", label: "AI Mirror", bg: "bg-violet-50", border: "border-violet-100" },
+            { emoji: "🌱", label: "Daily Growth", bg: "bg-emerald-50", border: "border-emerald-100" },
+            { emoji: "✨", label: "Inner Peace", bg: "bg-amber-50", border: "border-amber-100" },
+          ].map((f) => (
+            <div
+              key={f.label}
+              className={`${f.bg} border ${f.border} rounded-2xl p-3 flex flex-col items-center gap-2`}
+            >
+              <span className="text-2xl">{f.emoji}</span>
+              <span className="text-xs text-foreground font-semibold">{f.label}</span>
+            </div>
+          ))}
+        </div>
+      </motion.div>
     </div>
   );
 }

@@ -5,7 +5,6 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { invokeLLM } from "./_core/llm";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
-import { detectCrisisKeywords, SAFETY_KILL_SWITCH_RESPONSE, logSafetyBreach } from "./_core/safety";
 import {
   createCheckIn,
   createHabit,
@@ -32,7 +31,6 @@ import {
   getUserProfile,
   markOnboardingComplete,
   saveChatMessage,
-  saveSeedIntent,
   saveWeeklyInsight,
   toggleHabitCompletion,
   updateCheckInAiResponse,
@@ -103,17 +101,6 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
-  }),
-
-  // ─── Quick Onboarding ───────────────────────────────────────────────────
-
-  onboarding: router({
-    saveSeedIntent: protectedProcedure
-      .input(z.object({ seedIntent: z.string().min(1).max(100) }))
-      .mutation(async ({ ctx, input }) => {
-        await saveSeedIntent(ctx.user.id, input.seedIntent);
-        return { success: true };
-      }),
   }),
 
   // ─── Onboarding / Profile ────────────────────────────────────────────────
@@ -493,24 +480,6 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
     send: protectedProcedure
       .input(z.object({ message: z.string().min(1) }))
       .mutation(async ({ ctx, input }) => {
-        // SAFETY CHECK: Detect crisis keywords (TRAIGA-2026 COMPLIANCE)
-        if (detectCrisisKeywords(input.message)) {
-          await logSafetyBreach(ctx.user.id.toString(), input.message, "Crisis keyword detected");
-          // Save user message for audit
-          await saveChatMessage({
-            userId: ctx.user.id,
-            role: "user",
-            content: input.message,
-          });
-          // Save kill-switch response
-          await saveChatMessage({
-            userId: ctx.user.id,
-            role: "assistant",
-            content: SAFETY_KILL_SWITCH_RESPONSE,
-          });
-          return { response: SAFETY_KILL_SWITCH_RESPONSE };
-        }
-
         // Save user message
         await saveChatMessage({
           userId: ctx.user.id,
@@ -773,13 +742,6 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
   // ─── Calendar ─────────────────────────────────────────────────────────────
 
   calendar: router({
-    getUpcoming: protectedProcedure
-      .input(z.object({ limit: z.number().max(10).default(3) }))
-      .query(async ({ ctx, input }) => {
-        const { getUpcomingEvents } = await import("./db");
-        return getUpcomingEvents(ctx.user.id, input.limit);
-      }),
-
     list: protectedProcedure
       .input(z.object({
         year: z.number(),

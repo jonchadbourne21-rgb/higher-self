@@ -19,14 +19,10 @@ import Insights from "./pages/Insights";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import Calendar from "./pages/Calendar";
-import About from "./pages/About";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import { QuickOnboarding } from "./pages/QuickOnboarding";
 import { useRef } from "react";
 
 // Tab order — used to determine slide direction
-const TAB_ORDER = ["/onboarding", "/home", "/domains", "/chat", "/journal", "/calendar", "/dashboard"];
+const TAB_ORDER = ["/home", "/domains", "/chat", "/journal", "/calendar", "/dashboard"];
 
 function getTabIndex(path: string) {
   return TAB_ORDER.findIndex(
@@ -67,7 +63,7 @@ function AnimatedRouter() {
   return (
     // overflow-hidden on the outer wrapper prevents the sliding page from
     // being visible outside the viewport during the transition
-    <div className="overflow-hidden w-full" style={{ backgroundColor: '#e0f2f1' }}>
+    <div className="overflow-hidden w-full">
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.div
           key={location}
@@ -76,12 +72,10 @@ function AnimatedRouter() {
           animate="animate"
           exit="exit"
           transition={{ type: "spring", stiffness: 340, damping: 34, mass: 0.9 }}
-          style={{ willChange: "transform, opacity", backgroundColor: '#ffffff' }}
-          className="min-h-screen"
+          style={{ willChange: "transform, opacity" }}
         >
           <Switch location={location}>
             <Route path="/" component={Landing} />
-            <Route path="/quick-onboarding" component={QuickOnboarding} />
             <Route path="/onboarding" component={Onboarding} />
             <Route path="/home" component={Home} />
             <Route path="/checkin" component={CheckIn} />
@@ -95,9 +89,6 @@ function AnimatedRouter() {
             <Route path="/notifications" component={Notifications} />
             <Route path="/settings" component={Settings} />
             <Route path="/calendar" component={Calendar} />
-            <Route path="/about" component={About} />
-            <Route path="/privacy" component={Privacy} />
-            <Route path="/terms" component={Terms} />
             <Route path="/404" component={NotFound} />
             <Route component={NotFound} />
           </Switch>

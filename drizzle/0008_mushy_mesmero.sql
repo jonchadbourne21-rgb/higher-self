@@ -1,1 +1,0 @@
-ALTER TABLE `users` ADD `seedIntent` varchar(100);

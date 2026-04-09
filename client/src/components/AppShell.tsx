@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { cn } from "@/lib/utils";
-import CrisisDisclaimerFooter from "./CrisisDisclaimerFooter";
 import { useRef, useCallback, useState } from "react";
 
 const navItems = [
@@ -105,26 +104,15 @@ export default function AppShell({ children }: AppShellProps) {
   return (
     <div
       className="min-h-screen bg-aurora flex flex-col max-w-[480px] mx-auto relative"
-      style={{ backgroundColor: '#ffffff' }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Header with logo */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3" style={{backgroundColor: '#ffffff'}}>
-        <img
-          src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/IMG_7653_9e78c874.PNG"
-          alt="Synapset Logo"
-          className="h-8 w-auto"
-        />
-      </header>
-
       {/* Main content */}
       <main
         className="flex-1 overflow-y-auto pb-24 scrollbar-hide"
         onScroll={handleScroll}
       >
         {children}
-        <CrisisDisclaimerFooter />
       </main>
 
       {/* Floating pill nav — auto-hides on scroll down */}

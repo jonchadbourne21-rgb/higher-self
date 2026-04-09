@@ -12,7 +12,6 @@ import {
   Sparkles,
   Trash2,
   RefreshCw,
-  Edit2,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import AppShell from "@/components/AppShell";
@@ -47,16 +46,14 @@ const EMPTY_FORM = {
 function EventCard({
   event,
   onDelete,
-  onEdit,
   showDate = false,
 }: {
   event: {
     id: number; title: string; type: string;
     eventDate: Date | string; notes?: string | null;
-    recurrence?: string | null; isAllDay?: boolean; endDate?: Date | string | null;
+    recurrence?: string | null; isAllDay?: boolean;
   };
   onDelete: () => void;
-  onEdit: () => void;
   showDate?: boolean;
 }) {
   const cfg  = TYPE_CONFIG[event.type as keyof typeof TYPE_CONFIG] ?? TYPE_CONFIG.other;
@@ -84,20 +81,12 @@ function EventCard({
         </div>
         {event.notes && <p className="text-xs text-foreground/60 mt-1 line-clamp-2">{event.notes}</p>}
       </div>
-      <div className="flex gap-1">
-        <button
-          onClick={onEdit}
-          className="p-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
-        >
-          <Edit2 className="w-4 h-4 text-foreground/30 hover:text-blue-500" />
-        </button>
-        <button
-          onClick={onDelete}
-          className="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors"
-        >
-          <Trash2 className="w-4 h-4 text-foreground/30 hover:text-rose-500" />
-        </button>
-      </div>
+      <button
+        onClick={onDelete}
+        className="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors"
+      >
+        <Trash2 className="w-4 h-4 text-foreground/30 hover:text-rose-500" />
+      </button>
     </div>
   );
 }
@@ -111,14 +100,10 @@ export default function Calendar() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [showCreate, setShowCreate]   = useState(false);
   const [newEvent, setNewEvent]       = useState({ ...EMPTY_FORM });
-  const [editingEvent, setEditingEvent] = useState<any>(null);
 
   const { data: events = [], refetch } = trpc.calendar.list.useQuery({ year, month });
   const createEvent = trpc.calendar.create.useMutation({
     onSuccess: () => { refetch(); setShowCreate(false); setNewEvent({ ...EMPTY_FORM }); },
-  });
-  const updateEvent = trpc.calendar.update.useMutation({
-    onSuccess: () => { refetch(); setEditingEvent(null); setNewEvent({ ...EMPTY_FORM }); setShowCreate(false); },
   });
   const deleteEvent = trpc.calendar.delete.useMutation({ onSuccess: () => refetch() });
 
@@ -153,7 +138,7 @@ export default function Calendar() {
 
   const selectedEvents = selectedDay ? (eventsByDay[selectedDay] ?? []) : [];
 
-  const handleSave = () => {
+  const handleCreate = () => {
     if (!newEvent.title.trim() || !newEvent.date) return;
     const [y, mo, d] = newEvent.date.split("-").map(Number);
     const [h, min]   = newEvent.time.split(":").map(Number);
@@ -167,60 +152,20 @@ export default function Calendar() {
     if (newEvent.recurrence !== "none" && newEvent.recurrenceEnd) {
       recurrenceEnd = new Date(newEvent.recurrenceEnd).getTime();
     }
-
-    if (editingEvent) {
-      updateEvent.mutate({
-        id: editingEvent.id,
-        title: newEvent.title.trim(),
-        type: newEvent.type,
-        eventDate: eventDate.getTime(),
-        endDate,
-        notes: newEvent.notes || undefined,
-        isAllDay: newEvent.isAllDay,
-        recurrence: newEvent.recurrence,
-        recurrenceEnd,
-      });
-    } else {
-      createEvent.mutate({
-        title: newEvent.title.trim(),
-        type: newEvent.type,
-        eventDate: eventDate.getTime(),
-        endDate,
-        notes: newEvent.notes || undefined,
-        isAllDay: newEvent.isAllDay,
-        recurrence: newEvent.recurrence,
-        recurrenceEnd,
-      });
-    }
+    createEvent.mutate({
+      title: newEvent.title.trim(),
+      type: newEvent.type,
+      eventDate: eventDate.getTime(),
+      endDate,
+      notes: newEvent.notes || undefined,
+      isAllDay: newEvent.isAllDay,
+      recurrence: newEvent.recurrence,
+      recurrenceEnd,
+    });
   };
 
   const openCreateForDay = (day: number) => {
-    setEditingEvent(null);
     setNewEvent(f => ({ ...f, date: `${year}-${pad(month)}-${pad(day)}` }));
-    setShowCreate(true);
-  };
-
-  const openEditEvent = (event: any) => {
-    const d = new Date(event.eventDate);
-    const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-    const timeStr = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    const endDate = event.endDate ? new Date(event.endDate) : null;
-    const endTimeStr = endDate ? endDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
-    const recEnd = event.recurrenceEnd ? new Date(event.recurrenceEnd) : null;
-    const recEndStr = recEnd ? `${recEnd.getFullYear()}-${pad(recEnd.getMonth() + 1)}-${pad(recEnd.getDate())}` : "";
-    
-    setNewEvent({
-      title: event.title,
-      type: event.type,
-      date: dateStr,
-      time: timeStr,
-      endTime: endTimeStr,
-      notes: event.notes || "",
-      isAllDay: event.isAllDay || false,
-      recurrence: event.recurrence || "none",
-      recurrenceEnd: recEndStr,
-    });
-    setEditingEvent(event);
     setShowCreate(true);
   };
 
@@ -235,7 +180,7 @@ export default function Calendar() {
             <p className="text-sm text-foreground/50 mt-0.5">Goals, therapy &amp; reminders</p>
           </div>
           <button
-            onClick={() => { setEditingEvent(null); setNewEvent({ ...EMPTY_FORM }); setShowCreate(true); }}
+            onClick={() => { setNewEvent({ ...EMPTY_FORM }); setShowCreate(true); }}
             className="w-10 h-10 rounded-full bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-500/30"
           >
             <Plus className="w-5 h-5 text-white" />
@@ -318,7 +263,7 @@ export default function Calendar() {
                 </div>
               ) : (
                 selectedEvents.map((e, idx) => (
-                  <EventCard key={`${e.id}-${idx}`} event={e} onDelete={() => deleteEvent.mutate({ id: e.id })} onEdit={() => openEditEvent(e)} />
+                  <EventCard key={`${e.id}-${idx}`} event={e} onDelete={() => deleteEvent.mutate({ id: e.id })} />
                 ))
               )}
             </motion.div>
@@ -335,14 +280,14 @@ export default function Calendar() {
               </div>
             ) : (
               events.map((e, idx) => (
-                <EventCard key={`${e.id}-${idx}`} event={e} onDelete={() => deleteEvent.mutate({ id: e.id })} onEdit={() => openEditEvent(e)} showDate />
+                <EventCard key={`${e.id}-${idx}`} event={e} onDelete={() => deleteEvent.mutate({ id: e.id })} showDate />
               ))
             )}
           </div>
         )}
       </div>
 
-      {/* Create/Edit event modal */}
+      {/* Create event modal */}
       <AnimatePresence>
         {showCreate && (
           <motion.div
@@ -360,7 +305,7 @@ export default function Calendar() {
               className="w-full bg-background rounded-t-3xl p-6 pb-10 space-y-5 max-h-[92vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-foreground">{editingEvent ? "Edit Event" : "New Event"}</h2>
+                <h2 className="text-lg font-semibold text-foreground">New Event</h2>
                 <button onClick={() => setShowCreate(false)} className="p-2 rounded-full hover:bg-muted">
                   <X className="w-5 h-5 text-foreground/60" />
                 </button>
@@ -502,17 +447,17 @@ export default function Calendar() {
 
               {/* Save */}
               <button
-                onClick={handleSave}
-                disabled={!newEvent.title.trim() || !newEvent.date || (editingEvent ? updateEvent.isPending : createEvent.isPending)}
+                onClick={handleCreate}
+                disabled={!newEvent.title.trim() || !newEvent.date || createEvent.isPending}
                 className="w-full py-4 rounded-2xl font-semibold text-white text-base flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ background: "linear-gradient(135deg, #8b5cf6, #6d28d9)" }}
               >
-                {(editingEvent ? updateEvent.isPending : createEvent.isPending) ? (
+                {createEvent.isPending ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    {editingEvent ? <Edit2 className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-                    {editingEvent ? "Update Event" : "Add to Calendar"}
+                    <Plus className="w-5 h-5" />
+                    Add to Calendar
                   </>
                 )}
               </button>
