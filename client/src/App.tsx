@@ -66,7 +66,7 @@ function AnimatedRouter() {
   return (
     // overflow-hidden on the outer wrapper prevents the sliding page from
     // being visible outside the viewport during the transition
-    <div className="overflow-hidden w-full">
+    <div className="overflow-hidden w-full" style={{ backgroundColor: '#e0f2f1' }}>
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.div
           key={location}
@@ -75,7 +75,7 @@ function AnimatedRouter() {
           animate="animate"
           exit="exit"
           transition={{ type: "spring", stiffness: 340, damping: 34, mass: 0.9 }}
-          style={{ willChange: "transform, opacity", backgroundColor: '#e0f2f1' }}
+          style={{ willChange: "transform, opacity", backgroundColor: '#ffffff' }}
           className="min-h-screen"
         >
           <Switch location={location}>
