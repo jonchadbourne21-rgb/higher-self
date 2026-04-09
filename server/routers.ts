@@ -32,6 +32,7 @@ import {
   getUserProfile,
   markOnboardingComplete,
   saveChatMessage,
+  saveSeedIntent,
   saveWeeklyInsight,
   toggleHabitCompletion,
   updateCheckInAiResponse,
@@ -102,6 +103,17 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+  }),
+
+  // ─── Quick Onboarding ───────────────────────────────────────────────────
+
+  onboarding: router({
+    saveSeedIntent: protectedProcedure
+      .input(z.object({ seedIntent: z.string().min(1).max(100) }))
+      .mutation(async ({ ctx, input }) => {
+        await saveSeedIntent(ctx.user.id, input.seedIntent);
+        return { success: true };
+      }),
   }),
 
   // ─── Onboarding / Profile ────────────────────────────────────────────────

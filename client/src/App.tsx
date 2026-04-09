@@ -22,10 +22,11 @@ import Calendar from "./pages/Calendar";
 import About from "./pages/About";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import { QuickOnboarding } from "./pages/QuickOnboarding";
 import { useRef } from "react";
 
 // Tab order — used to determine slide direction
-const TAB_ORDER = ["/home", "/domains", "/chat", "/journal", "/calendar", "/dashboard"];
+const TAB_ORDER = ["/onboarding", "/home", "/domains", "/chat", "/journal", "/calendar", "/dashboard"];
 
 function getTabIndex(path: string) {
   return TAB_ORDER.findIndex(
@@ -80,6 +81,7 @@ function AnimatedRouter() {
         >
           <Switch location={location}>
             <Route path="/" component={Landing} />
+            <Route path="/quick-onboarding" component={QuickOnboarding} />
             <Route path="/onboarding" component={Onboarding} />
             <Route path="/home" component={Home} />
             <Route path="/checkin" component={CheckIn} />
