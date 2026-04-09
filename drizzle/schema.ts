@@ -110,6 +110,22 @@ export const habits = mysqlTable("habits", {
 export type Habit = typeof habits.$inferSelect;
 export type InsertHabit = typeof habits.$inferInsert;
 
+// ─── Habit Streaks ────────────────────────────────────────────────────────────
+
+export const habitStreaks = mysqlTable("habit_streaks", {
+  id: int("id").autoincrement().primaryKey(),
+  habitId: int("habitId").notNull(),
+  userId: int("userId").notNull(),
+  currentStreak: int("currentStreak").default(0).notNull(),
+  lastCheckedDate: timestamp("lastCheckedDate"),
+  longestStreak: int("longestStreak").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type HabitStreak = typeof habitStreaks.$inferSelect;
+export type InsertHabitStreak = typeof habitStreaks.$inferInsert;
+
 // ─── Habit Completions ────────────────────────────────────────────────────────
 
 export const habitCompletions = mysqlTable("habit_completions", {

@@ -297,3 +297,12 @@
 - [x] Added "ending it" and "ending it all" to crisis keywords
 - [x] Updated kill-switch response to exact protocol message
 - [x] Ensure no empathy or counseling response is generated
+
+## 7-Day Habit Streak Tracking (Apr 4)
+- [ ] Add habit_streaks table to database schema (habitId, userId, currentStreak, lastCheckedDate, longestStreak)
+- [ ] Run DB migration for habit_streaks table
+- [ ] Add tRPC procedures: habits.updateStreak, habits.getStreaks
+- [ ] Update Life Domains page to show habit streak counter under each habit
+- [ ] Add "Day X" badge on habits showing current streak
+- [ ] Add 7-day celebration alert to Home page (shows when user hits day 7 or later)
+- [ ] Write vitest tests for streak tracking procedures

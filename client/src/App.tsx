@@ -75,7 +75,8 @@ function AnimatedRouter() {
           animate="animate"
           exit="exit"
           transition={{ type: "spring", stiffness: 340, damping: 34, mass: 0.9 }}
-          style={{ willChange: "transform, opacity" }}
+          style={{ willChange: "transform, opacity", backgroundColor: '#e0f2f1' }}
+          className="min-h-screen"
         >
           <Switch location={location}>
             <Route path="/" component={Landing} />
