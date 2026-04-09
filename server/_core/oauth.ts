@@ -23,13 +23,15 @@ function decodeState(state: string): {
   try {
     // URL-decode first (browsers may URL-encode the base64 padding ==)
     const raw = Buffer.from(decodeURIComponent(state), "base64").toString("utf-8");
-    // Try new JSON format first
+    // Try JSON format first
     try {
       const parsed = JSON.parse(raw);
-      if (parsed.redirectUri && parsed.returnOrigin) {
+      if (parsed.redirectUri) {
+        // Extract origin from redirectUri (e.g., "https://example.com/api/oauth/callback" -> "https://example.com")
+        const returnOrigin = new URL(parsed.redirectUri).origin;
         return {
           redirectUri: parsed.redirectUri,
-          returnOrigin: parsed.returnOrigin,
+          returnOrigin,
           returnPath: parsed.returnPath || "/",
         };
       }
@@ -100,17 +102,11 @@ export function registerOAuthRoutes(app: Express) {
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
       // Build the final redirect URL.
-      // The OAuth callback always fires on higherself-lqwmd5t8.manus.space (the registered domain).
-      // If the user came from higherself.cloud, returnOrigin will be higherself.cloud,
-      // so we send them back there with the token in ?_t= for localStorage auth.
-      const callbackOrigin = `${req.protocol}://${req.hostname}`;
-      const targetOrigin = returnOrigin && returnOrigin !== callbackOrigin
-        ? returnOrigin
-        : callbackOrigin;
-
+      // Since we now use the current domain as redirectUri, the callback fires on the same domain.
+      // We redirect to returnPath with the session token in ?_t= for localStorage fallback auth.
       const finalPath = returnPath || "/";
       const separator = finalPath.includes("?") ? "&" : "?";
-      const finalUrl = `${targetOrigin}${finalPath}${separator}_t=${encodeURIComponent(sessionToken)}`;
+      const finalUrl = `${finalPath}${separator}_t=${encodeURIComponent(sessionToken)}`;
 
       console.log("[OAuth] Login successful, redirecting to:", finalUrl);
       res.redirect(302, finalUrl);
