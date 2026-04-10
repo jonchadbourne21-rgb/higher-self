@@ -9,55 +9,12 @@ function getQueryParam(req: Request, key: string): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
-/**
- * Decode the state parameter from the OAuth callback.
- * State can be:
- *   1. New format: base64(JSON { redirectUri, returnOrigin, returnPath })
- *   2. Legacy format: base64(redirectUri string)
- */
-function decodeState(state: string): {
-  redirectUri: string;
-  returnOrigin: string;
-  returnPath: string;
-} {
-  try {
-    // URL-decode first (browsers may URL-encode the base64 padding ==)
-    const raw = Buffer.from(decodeURIComponent(state), "base64").toString("utf-8");
-
-    // Try new JSON format first
-    try {
-      const parsed = JSON.parse(raw);
-      if (parsed.redirectUri && parsed.returnOrigin) {
-        return {
-          redirectUri: parsed.redirectUri,
-          returnOrigin: parsed.returnOrigin,
-          returnPath: parsed.returnPath || "/",
-        };
-      }
-    } catch {
-      // Not JSON — fall through to legacy format
-    }
-
-    // Legacy format: state is just the redirectUri string
-    return {
-      redirectUri: raw,
-      returnOrigin: new URL(raw).origin,
-      returnPath: "/",
-    };
-  } catch {
-    // Last resort fallback
-    return {
-      redirectUri: "",
-      returnOrigin: "",
-      returnPath: "/",
-    };
-  }
-}
-
 export function registerOAuthRoutes(app: Express) {
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
+    // The redirectUri in the query param is the exact URI registered with Manus OAuth
+    const redirectUri = getQueryParam(req, "redirectUri");
 
     if (!code || !state) {
       res.status(400).json({ error: "code and state are required" });
@@ -66,13 +23,11 @@ export function registerOAuthRoutes(app: Express) {
 
     try {
       console.log("[OAuth] Callback received, code length:", code?.length);
+      console.log("[OAuth] redirectUri from query:", redirectUri);
 
-      // Decode state to get redirectUri and where to send the user after login
-      const { redirectUri, returnOrigin, returnPath } = decodeState(state);
-      console.log("[OAuth] Decoded state — redirectUri:", redirectUri, "returnOrigin:", returnOrigin);
-
-      // The redirectUri must match exactly what was sent in the authorization request
-      const tokenResponse = await sdk.exchangeCodeForToken(code, state, redirectUri || undefined);
+      // Pass the redirectUri from query params if available (most reliable)
+      // Fall back to decoding from state for backwards compatibility
+      const tokenResponse = await sdk.exchangeCodeForToken(code, state, redirectUri);
       console.log("[OAuth] Token exchange succeeded");
 
       const userInfo = await sdk.getUserInfo(tokenResponse.accessToken);
@@ -96,30 +51,19 @@ export function registerOAuthRoutes(app: Express) {
         expiresInMs: ONE_YEAR_MS,
       });
 
-      // Set cookie (works on manus.space and dev domains)
       const cookieOptions = getSessionCookieOptions(req);
       console.log("[OAuth] Setting cookie with options:", JSON.stringify(cookieOptions));
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      // Build the final redirect URL.
-      // The OAuth callback always fires on higherself-lqwmd5t8.manus.space (the registered domain).
-      // If the user came from higherself.cloud, returnOrigin will be higherself.cloud,
-      // so we send them back there with the token in ?_t= for localStorage auth.
-      const callbackOrigin = `${req.protocol}://${req.hostname}`;
-      const targetOrigin = returnOrigin && returnOrigin !== callbackOrigin
-        ? returnOrigin
-        : callbackOrigin;
-      const finalPath = returnPath || "/";
-      const separator = finalPath.includes("?") ? "&" : "?";
-      const finalUrl = `${targetOrigin}${finalPath}${separator}_t=${encodeURIComponent(sessionToken)}`;
-
-      console.log("[OAuth] Login successful, redirecting to:", finalUrl);
-      res.redirect(302, finalUrl);
+      // Always redirect to relative root — the SPA router handles the rest
+      console.log("[OAuth] Login successful, redirecting to /");
+      res.redirect(302, "/");
     } catch (error: any) {
       const errMsg = error?.response?.data
         ? JSON.stringify(error.response.data)
         : error instanceof Error ? error.message : String(error);
       console.error("[OAuth] Callback failed:", errMsg);
+      // Redirect to landing page with error instead of showing raw JSON
       res.redirect(302, "/?auth_error=1");
     }
   });
