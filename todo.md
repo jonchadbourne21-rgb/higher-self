@@ -227,3 +227,40 @@
 - [x] Update const.ts: use higherself.cloud as the canonical OAuth redirect URI
 - [x] Update oauth.ts: handle higherself.cloud as the primary callback domain
 - [x] Test, checkpoint, publish, verify login works on higherself.cloud
+
+
+## One-Click Onboarding (Apr 9)
+- [x] Add seedIntent field to users table
+- [x] Create QuickOnboarding.tsx component with 5 visual intent tiles (Inner Peace, Clarity, Confidence, Healing, Focus)
+- [x] Add tRPC procedure: onboarding.saveSeedIntent
+- [x] Route /quick-onboarding wired into App.tsx
+- [x] Write vitest tests for onboarding router
+- [ ] Integrate QuickOnboarding into post-signup flow (route new users here before full questionnaire)
+- [ ] Use seedIntent in AI Mirror system prompt for personalization
+
+## RAG with Pinecone Integration (Apr 9)
+- [x] Install @pinecone-database/pinecone and openai packages
+- [x] Create server/rag/embeddings.ts utility with:
+  - [x] embedText() — generates OpenAI text-embedding-3-small vectors
+  - [x] upsertJournalEmbedding() — stores vector + metadata in Pinecone
+  - [x] searchSimilarEntries() — semantic search with user filter
+  - [x] fetchJournalEntriesFromIds() — retrieves full text from MySQL
+  - [x] retrieveContextForChat() — complete RAG pipeline
+  - [x] deleteEmbedding() — cleanup when entries deleted
+- [x] Add RAG context injection to chat.send procedure:
+  - [x] Retrieve top-3 similar journal entries before LLM invocation
+  - [x] Inject entries into system prompt with similarity scores
+  - [x] Log RAG context usage for debugging
+  - [x] Save context snapshot with chat messages
+- [x] Add environment variables: PINECONE_API_KEY, PINECONE_INDEX_NAME, OPENAI_API_KEY
+- [x] Create server/rag.test.ts with embedding validation tests
+- [ ] Add OpenAI credits to account (tests currently fail due to insufficient credits)
+- [ ] Test end-to-end RAG: create journal entries → chat → verify context injection
+- [ ] Create Pinecone skill documentation for future reference
+
+## Future RAG Enhancements
+- [ ] Add hard filters to RAG search (by life domain, date range)
+- [ ] Implement RAG for journal entry suggestions (suggest related past entries)
+- [ ] Add RAG to weekly insights (pull relevant patterns from vector search)
+- [ ] Implement semantic similarity clustering for pattern detection
+- [ ] Add RAG analytics dashboard (most-retrieved entries, context usage patterns)
