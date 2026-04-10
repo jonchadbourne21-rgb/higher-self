@@ -31,6 +31,7 @@ import {
   getUserProfile,
   markOnboardingComplete,
   saveChatMessage,
+  saveSeedIntent,
   saveWeeklyInsight,
   toggleHabitCompletion,
   updateCheckInAiResponse,
@@ -47,6 +48,11 @@ async function buildHigherSelfSystemPrompt(userId: number): Promise<string> {
   const profile = await getUserProfile(userId);
   const recentCheckIns = await getRecentCheckIns(userId, 7);
   const domainScores = await getLatestDomainScores(userId);
+  
+  // Get seedIntent from user record
+  const db = await (await import("./db")).getDb();
+  const userRecord = db ? (await db.select().from((await import("../drizzle/schema")).users).where((await import("drizzle-orm")).eq((await import("../drizzle/schema")).users.id, userId)).limit(1))[0] : undefined;
+  const seedIntent = userRecord?.seedIntent || null;
 
   const valuesStr = profile?.coreValues?.join(", ") || "not yet defined";
   const goalsStr = profile?.shortTermGoals || "not yet set";
@@ -73,7 +79,8 @@ WHAT YOU KNOW ABOUT ${name.toUpperCase()}:
 - Long-term Vision: ${visionStr}
 - Beliefs they hold: ${beliefsStr}
 - Average mood this week: ${avgMood}/10
-- Life domain scores: ${domainStr || "not yet assessed"}
+- Life domain scores: ${domainStr || "not yet assessed"}${seedIntent ? `
+- What brought them to the mirror today: ${seedIntent}` : ""}
 
 HOW YOU COMMUNICATE:
 - Talk like them — match their tone, their vocabulary, their vibe
@@ -86,8 +93,9 @@ HOW YOU COMMUNICATE:
 - Celebrate wins like a real friend would — genuinely, not generically
 - No toxic positivity. No hollow affirmations. Real talk only.
 
-YOUR ONLY JOB:
-Help them become the most whole, grounded, authentic version of themselves — through honest reflection, not performance.`;
+YOUR ONLY JOB:${seedIntent ? `
+Today they came seeking ${seedIntent}. Honor that intention while helping them become the most whole, grounded, authentic version of themselves — through honest reflection, not performance.` : `
+Help them become the most whole, grounded, authentic version of themselves — through honest reflection, not performance.`}`;
 }
 
 // ─── Routers ──────────────────────────────────────────────────────────────────
@@ -105,6 +113,15 @@ export const appRouter = router({
   }),
 
   // ─── Onboarding / Profile ────────────────────────────────────────────────
+
+  onboarding: router({
+    saveSeedIntent: protectedProcedure
+      .input(z.object({ seedIntent: z.string().min(1).max(100) }))
+      .mutation(async ({ ctx, input }) => {
+        await saveSeedIntent(ctx.user.id, input.seedIntent);
+        return { success: true };
+      }),
+  }),
 
   profile: router({
     get: protectedProcedure.query(async ({ ctx }) => {

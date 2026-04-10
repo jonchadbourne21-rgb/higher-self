@@ -38,7 +38,11 @@ export default function Home() {
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate("/");
     if (!loading && isAuthenticated && !(user as any)?.onboardingCompleted) navigate("/onboarding");
-  }, [isAuthenticated, loading, user]);
+    // Route to QuickOnboarding if onboarding complete but seedIntent not yet captured
+    if (!loading && isAuthenticated && (user as any)?.onboardingCompleted && !(user as any)?.seedIntent) {
+      navigate("/quick-onboarding");
+    }
+  }, [isAuthenticated, loading, user, navigate]);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";

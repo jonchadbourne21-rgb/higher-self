@@ -264,3 +264,16 @@
 - [ ] Add RAG to weekly insights (pull relevant patterns from vector search)
 - [ ] Implement semantic similarity clustering for pattern detection
 - [ ] Add RAG analytics dashboard (most-retrieved entries, context usage patterns)
+
+
+## QuickOnboarding Integration (Apr 10)
+- [x] Add seedIntent field to users table schema
+- [x] Create saveSeedIntent function in db.ts
+- [x] Add onboarding.saveSeedIntent tRPC procedure
+- [x] Create QuickOnboarding.tsx component with 5 visual intent tiles
+- [x] Route Home.tsx to redirect to /quick-onboarding if seedIntent not set
+- [x] Integrate seedIntent into buildHigherSelfSystemPrompt() for personalized AI responses
+- [x] Add /quick-onboarding route to App.tsx
+- [ ] Execute database migration: ALTER TABLE users ADD seedIntent varchar(100)
+- [ ] Test onboarding flow: signup → QuickOnboarding → Chat with personalized responses
+- [ ] Add vitest tests for seedIntent personalization in system prompt

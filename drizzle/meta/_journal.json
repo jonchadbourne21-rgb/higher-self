@@ -71,6 +71,13 @@
       "when": 1775718884136,
       "tag": "0009_marvelous_veda",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1775805297624,
+      "tag": "0010_lucky_havok",
+      "breakpoints": true
     }
   ]
 }
