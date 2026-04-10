@@ -62,7 +62,9 @@ export function registerOAuthRoutes(app: Express) {
       const errMsg = error?.response?.data
         ? JSON.stringify(error.response.data)
         : error instanceof Error ? error.message : String(error);
-      console.error("[OAuth] Callback failed:", errMsg);
+      const sqlError = error?.sqlMessage || error?.code || "";
+      console.error("[OAuth] Callback failed:", errMsg, sqlError ? `| SQL: ${sqlError}` : "");
+      if (error?.sql) console.error("[OAuth] Failed SQL:", error.sql);
       // Redirect to landing page with error instead of showing raw JSON
       res.redirect(302, "/?auth_error=1");
     }

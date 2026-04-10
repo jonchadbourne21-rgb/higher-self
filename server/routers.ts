@@ -31,7 +31,7 @@ import {
   getUserProfile,
   markOnboardingComplete,
   saveChatMessage,
-  saveSeedIntent,
+  // saveSeedIntent, // TODO: Re-enable after seedIntent column is added
   saveWeeklyInsight,
   toggleHabitCompletion,
   updateCheckInAiResponse,
@@ -49,15 +49,14 @@ async function buildHigherSelfSystemPrompt(userId: number): Promise<string> {
   const recentCheckIns = await getRecentCheckIns(userId, 7);
   const domainScores = await getLatestDomainScores(userId);
   
-  // Get seedIntent from user record
-  const db = await (await import("./db")).getDb();
-  const userRecord = db ? (await db.select().from((await import("../drizzle/schema")).users).where((await import("drizzle-orm")).eq((await import("../drizzle/schema")).users.id, userId)).limit(1))[0] : undefined;
-  const seedIntent = userRecord?.seedIntent || null;
+  // TODO: Re-enable seedIntent personalization after column is added to database
+  // const seedIntent = userRecord?.seedIntent || null;
 
   const valuesStr = profile?.coreValues?.join(", ") || "not yet defined";
   const goalsStr = profile?.shortTermGoals || "not yet set";
   const visionStr = profile?.longTermVision || "not yet defined";
   const beliefsStr = profile?.beliefs || "not yet shared";
+  const seedIntent = null; // TODO: Re-enable after seedIntent column is added
   const name = profile?.preferredName || "friend";
 
   const avgMood =
@@ -114,14 +113,15 @@ export const appRouter = router({
 
   // ─── Onboarding / Profile ────────────────────────────────────────────────
 
-  onboarding: router({
-    saveSeedIntent: protectedProcedure
-      .input(z.object({ seedIntent: z.string().min(1).max(100) }))
-      .mutation(async ({ ctx, input }) => {
-        await saveSeedIntent(ctx.user.id, input.seedIntent);
-        return { success: true };
-      }),
-  }),
+  // TODO: Re-enable onboarding router after seedIntent column is added
+    // onboarding, // TODO: Re-enable after seedIntent column is added to database: router({
+  //   saveSeedIntent: protectedProcedure
+  //     .input(z.object({ seedIntent: z.string().min(1).max(100) }))
+  //     .mutation(async ({ ctx, input }) => {
+  //       await saveSeedIntent(ctx.user.id, input.seedIntent);
+  //       return { success: true };
+  //     }),
+  // }),
 
   profile: router({
     get: protectedProcedure.query(async ({ ctx }) => {

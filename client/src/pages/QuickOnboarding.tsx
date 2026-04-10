@@ -19,14 +19,18 @@ export default function QuickOnboarding() {
   const [selectedIntent, setSelectedIntent] = useState<string | null>(null);
 
   const utils = trpc.useUtils();
-  const saveMutation = trpc.onboarding.saveSeedIntent.useMutation({
-    onSuccess: async () => {
-      toast.success("Your journey begins ✦");
-      await utils.auth.me.invalidate();
-      navigate("/home");
-    },
-    onError: () => toast.error("Something went wrong. Please try again."),
-  });
+  // TODO: Re-enable after seedIntent column is added to database
+  // const saveMutation = trpc.onboarding.saveSeedIntent.useMutation({
+  //   onSuccess: async () => {
+  //     toast.success("Your journey begins ✦");
+  //     await utils.auth.me.invalidate();
+  //     navigate("/home");
+  //   },
+  //   onError: () => toast.error("Something went wrong. Please try again."),
+  // });
+  
+  // Temporary: Skip to home directly
+  const saveMutation = { mutate: () => navigate("/home"), isPending: false };
 
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate("/");
@@ -38,18 +42,33 @@ export default function QuickOnboarding() {
 
   const handleSelectIntent = (intentId: string) => {
     setSelectedIntent(intentId);
-    saveMutation.mutate({ seedIntent: intentId });
+    // TODO: Re-enable after seedIntent column is added
+    // saveMutation.mutate({ seedIntent: intentId });
+    navigate("/home"); // Temporary: Skip to home
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-aurora via-white to-aurora flex items-center justify-center">
-        <div className="animate-pulse">
-          <div className="h-12 w-12 bg-violet-300 rounded-full"></div>
-        </div>
-      </div>
-    );
+  if (loading || !isAuthenticated) {
+    // Temporary: Skip QuickOnboarding, redirect to home
+    useEffect(() => {
+      if (!loading && isAuthenticated) navigate("/home");
+    }, [isAuthenticated, loading]);
+    return null;
   }
+
+  if (false) { // Disabled temporarily
+    return null; // Temporary: Disabled
+  /*
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-aurora via-white to-aurora flex items-center justify-center p-4">       <div className="animate-pulse">
+          <div className="h-12 w-12 bg-violet-300 rounded-full"></div>
+      </div>
+    </div>
+  );
+  */
+}
+  
+  // Temporary: Return null to skip QuickOnboarding
+  return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-aurora via-white to-aurora flex flex-col max-w-[480px] mx-auto px-6 py-12">

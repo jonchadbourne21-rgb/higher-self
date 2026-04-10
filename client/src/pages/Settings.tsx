@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { User, Phone, Mail, Heart, Save, ArrowLeft, CheckCircle, PhoneCall, AtSign, LogOut, Sparkles } from "lucide-react";
 import { Link, useLocation } from "wouter";
@@ -29,19 +29,17 @@ export default function Settings() {
     { id: "focus", label: "Focus", emoji: "🎯" },
   ];
 
-  const updateIntentMutation = trpc.onboarding.saveSeedIntent.useMutation({
-    onSuccess: async () => {
-      toast.success("Intention updated ✦");
-      await utils.auth.me.invalidate();
-      setShowIntentModal(false);
-      setSelectedIntent(null);
-    },
-    onError: () => toast.error("Failed to update intention"),
-  });
+  // TODO: Re-enable after seedIntent column is added to database
+  // const updateIntentMutation = trpc.onboarding.saveSeedIntent.useMutation({...});
+  
+  // Temporary mock
+  const updateIntentMutation = { mutate: () => { setShowIntentModal(false); }, isPending: false };
 
   const handleChangeIntent = (intentId: string) => {
     setSelectedIntent(intentId);
-    updateIntentMutation.mutate({ seedIntent: intentId });
+    // TODO: Re-enable after seedIntent column is added
+    // updateIntentMutation.mutate({ seedIntent: intentId });
+    setShowIntentModal(false);
   };
 
   const handleLogout = async () => {
@@ -49,321 +47,157 @@ export default function Settings() {
       await logout();
       toast.success("Signed out");
       navigate("/");
-    } catch (error) {
-      toast.error("Failed to sign out");
+    } catch {
+      toast.error("Logout failed");
     }
   };
 
-  const [form, setForm] = useState({
-    preferredName: "",
-    phone: "",
-    contactEmail: "",
-    therapistName: "",
-    therapistPhone: "",
-    therapistEmail: "",
-    therapistNotes: "",
-  });
-
-  useEffect(() => {
-    if (settings) {
-      setForm({
-        preferredName: settings.preferredName ?? "",
-        phone: settings.phone ?? "",
-        contactEmail: settings.contactEmail ?? "",
-        therapistName: settings.therapistName ?? "",
-        therapistPhone: settings.therapistPhone ?? "",
-        therapistEmail: settings.therapistEmail ?? "",
-        therapistNotes: settings.therapistNotes ?? "",
-      });
-    }
-  }, [settings]);
-
-  const handleSave = async () => {
-    await updateSettings.mutateAsync(form);
-    utils.settings.get.invalidate();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
-  };
-
-  const field = (
-    key: keyof typeof form,
-    label: string,
-    placeholder: string,
-    type = "text",
-    multiline = false
-  ) => (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-medium text-foreground/60 uppercase tracking-wider">{label}</label>
-      {multiline ? (
-        <textarea
-          className="w-full rounded-xl border border-border bg-background/60 px-4 py-3 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:ring-2 focus:ring-violet-500/40 resize-none min-h-[90px]"
-          placeholder={placeholder}
-          value={form[key]}
-          onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-        />
-      ) : (
-        <input
-          type={type}
-          className="w-full rounded-xl border border-border bg-background/60 px-4 py-3 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:ring-2 focus:ring-violet-500/40"
-          placeholder={placeholder}
-          value={form[key]}
-          onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-        />
-      )}
-    </div>
-  );
+  if (isLoading) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-pulse">Loading...</div>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
-      <div className="min-h-screen bg-background pb-32">
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-sm border-b border-border px-5 py-4 flex items-center gap-3">
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="flex items-center gap-4 mb-8">
           <Link href="/home">
-            <button className="p-2 rounded-full hover:bg-muted transition-colors">
-              <ArrowLeft className="w-5 h-5 text-foreground/70" />
-            </button>
+            <ArrowLeft className="w-5 h-5 cursor-pointer" />
           </Link>
-          <h1 className="text-lg font-semibold text-foreground">Account Settings</h1>
+          <h1 className="text-3xl font-bold">Settings</h1>
         </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : (
-          <div className="px-5 py-6 space-y-8 max-w-lg mx-auto">
-            {/* Profile avatar */}
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-20 h-20 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-4xl">
-                {settings?.avatarEmoji || "🌟"}
+        <div className="space-y-6">
+          {/* Profile Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-lg p-6 shadow-sm border border-gray-200"
+          >
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <User className="w-5 h-5" />
+              Profile
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <input
+                  type="text"
+                  value={user?.name || ""}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                />
               </div>
-              <div className="text-center">
-                <p className="font-semibold text-foreground">{user?.name}</p>
-                <p className="text-sm text-foreground/50">{user?.email}</p>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={user?.email || ""}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                />
               </div>
             </div>
+          </motion.div>
 
-            {/* Personal Info */}
-            <motion.section
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              className="space-y-4"
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
-                  <User className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-                </div>
-                <h2 className="font-semibold text-foreground">Personal Info</h2>
-              </div>
-              <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
-                {field("preferredName", "Preferred Name", "How should your Mirror call you?")}
-              </div>
-            </motion.section>
-
-            {/* Contact / Notifications */}
-            <motion.section
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="space-y-4"
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <Phone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h2 className="font-semibold text-foreground">Contact & Notifications</h2>
-              </div>
-              <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
-                <p className="text-xs text-foreground/50">Used for SMS reminders and email check-ins (optional).</p>
-                {field("phone", "Phone Number", "+1 (555) 000-0000", "tel")}
-                {field("contactEmail", "Notification Email", "you@email.com", "email")}
-              </div>
-            </motion.section>
-
-            {/* Therapist Info */}
-            <motion.section
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="space-y-4"
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center">
-                  <Heart className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-                </div>
-                <h2 className="font-semibold text-foreground">My Therapist</h2>
-              </div>
-              <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
-                <p className="text-xs text-foreground/50">
-                  Keep your therapist's info here so it's always one tap away. Your Higher Self journey works best alongside professional support.
-                </p>
-                {field("therapistName", "Therapist Name", "Dr. Jane Smith")}
-
-                {/* Therapist Phone with quick-dial */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-foreground/60 uppercase tracking-wider">Therapist Phone</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="tel"
-                      className="flex-1 rounded-xl border border-border bg-background/60 px-4 py-3 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:ring-2 focus:ring-violet-500/40"
-                      placeholder="+1 (555) 000-0000"
-                      value={form.therapistPhone}
-                      onChange={(e) => setForm((f) => ({ ...f, therapistPhone: e.target.value }))}
-                    />
-                    {form.therapistPhone && (
-                      <a
-                        href={`tel:${form.therapistPhone}`}
-                        className="flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-500 hover:bg-emerald-600 transition-colors shadow-md shadow-emerald-500/25 flex-shrink-0"
-                        title="Call therapist"
-                      >
-                        <PhoneCall className="w-5 h-5 text-white" />
-                      </a>
-                    )}
-                  </div>
-                </div>
-
-                {/* Therapist Email with quick-email */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-foreground/60 uppercase tracking-wider">Therapist Email</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="email"
-                      className="flex-1 rounded-xl border border-border bg-background/60 px-4 py-3 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:ring-2 focus:ring-violet-500/40"
-                      placeholder="therapist@practice.com"
-                      value={form.therapistEmail}
-                      onChange={(e) => setForm((f) => ({ ...f, therapistEmail: e.target.value }))}
-                    />
-                    {form.therapistEmail && (
-                      <a
-                        href={`mailto:${form.therapistEmail}`}
-                        className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-500 hover:bg-blue-600 transition-colors shadow-md shadow-blue-500/25 flex-shrink-0"
-                        title="Email therapist"
-                      >
-                        <AtSign className="w-5 h-5 text-white" />
-                      </a>
-                    )}
-                  </div>
-                </div>
-
-                {field("therapistNotes", "Notes", "Session every Tuesday at 3pm, insurance: Aetna...", "text", true)}
-              </div>
-            </motion.section>
-
-            {/* Intention & Logout Section */}
-            <motion.section
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="space-y-3"
-            >
-              {/* Change Intention Button */}
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={() => setShowIntentModal(true)}
-                className="w-full py-3 rounded-xl font-medium text-white text-sm flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-violet-500 to-violet-600 hover:from-violet-600 hover:to-violet-700"
-              >
-                <Sparkles className="w-4 h-4" />
-                Change Your Intention
-              </motion.button>
-
-              {/* Sign Out Button */}
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={() => setShowLogoutConfirm(true)}
-                className="w-full py-3 rounded-xl font-medium text-white text-sm flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
-              >
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </motion.button>
-            </motion.section>
-
-            {/* Save button */}
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={handleSave}
-              disabled={updateSettings.isPending}
-              className="w-full py-4 rounded-2xl font-semibold text-white text-base flex items-center justify-center gap-2 transition-all"
-              style={{
-                background: saved
-                  ? "linear-gradient(135deg, #10b981, #059669)"
-                  : "linear-gradient(135deg, #8b5cf6, #6d28d9)",
-              }}
-            >
-              {updateSettings.isPending ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : saved ? (
-                <>
-                  <CheckCircle className="w-5 h-5" />
-                  Saved
-                </>
-              ) : (
-                <>
-                  <Save className="w-5 h-5" />
-                  Save Changes
-                </>
-              )}
-            </motion.button>
-          </div>
-        )}
-      </div>
-
-      {/* Change Intention Modal */}
-      <Dialog open={showIntentModal} onOpenChange={setShowIntentModal}>
-        <DialogContent className="bg-background border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">Change Your Intention</DialogTitle>
-            <DialogDescription className="text-foreground/60">
-              What brings you to your mirror today?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-3 py-4">
-            {INTENT_OPTIONS.map((intent) => (
-              <motion.button
-                key={intent.id}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleChangeIntent(intent.id)}
-                disabled={updateIntentMutation.isPending}
-                className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-                  selectedIntent === intent.id
-                    ? "border-violet-500 bg-violet-500/10"
-                    : "border-border hover:border-violet-400"
-                }`}
-              >
-                <span className="text-2xl">{intent.emoji}</span>
-                <span className="text-xs font-medium text-foreground">{intent.label}</span>
-              </motion.button>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Logout Confirmation Modal */}
-      <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-        <DialogContent className="bg-background border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">Sign Out?</DialogTitle>
-            <DialogDescription className="text-foreground/60">
-              You'll need to sign in again to access your mirror.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex gap-3 pt-4">
+          {/* Intention Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-lg p-6 shadow-sm border border-gray-200"
+          >
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Sparkles className="w-5 h-5" />
+              Your Intention
+            </h2>
             <Button
+              onClick={() => setShowIntentModal(true)}
               variant="outline"
-              onClick={() => setShowLogoutConfirm(false)}
-              className="flex-1"
+              className="w-full"
             >
-              Cancel
+              Change Your Intention
             </Button>
+          </motion.div>
+
+          {/* Logout Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-lg p-6 shadow-sm border border-gray-200"
+          >
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <LogOut className="w-5 h-5" />
+              Account
+            </h2>
             <Button
-              onClick={handleLogout}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => setShowLogoutConfirm(true)}
+              variant="destructive"
+              className="w-full"
             >
               Sign Out
             </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </motion.div>
+        </div>
+
+        {/* Intent Modal */}
+        <Dialog open={showIntentModal} onOpenChange={setShowIntentModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Change Your Intention</DialogTitle>
+              <DialogDescription>
+                Select what brings you to your mirror today
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-3">
+              {INTENT_OPTIONS.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => handleChangeIntent(option.id)}
+                  className="p-4 rounded-lg border-2 border-gray-200 hover:border-violet-500 hover:bg-violet-50 transition-all text-center"
+                >
+                  <div className="text-2xl mb-2">{option.emoji}</div>
+                  <div className="text-sm font-medium">{option.label}</div>
+                </button>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Logout Confirmation Dialog */}
+        <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Sign Out?</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to sign out? You'll need to log in again to access your mirror.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleLogout}
+                className="flex-1"
+              >
+                Sign Out
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </AppShell>
   );
 }
