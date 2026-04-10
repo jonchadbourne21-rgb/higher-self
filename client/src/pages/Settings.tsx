@@ -1,18 +1,59 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { User, Phone, Mail, Heart, Save, ArrowLeft, CheckCircle, PhoneCall, AtSign } from "lucide-react";
-import { Link } from "wouter";
+import { User, Phone, Mail, Heart, Save, ArrowLeft, CheckCircle, PhoneCall, AtSign, LogOut, Sparkles } from "lucide-react";
+import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import AppShell from "@/components/AppShell";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function Settings() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const [, navigate] = useLocation();
   const { data: settings, isLoading } = trpc.settings.get.useQuery();
   const updateSettings = trpc.settings.update.useMutation();
   const utils = trpc.useUtils();
 
   const [saved, setSaved] = useState(false);
+  const [showIntentModal, setShowIntentModal] = useState(false);
+  const [selectedIntent, setSelectedIntent] = useState<string | null>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const INTENT_OPTIONS = [
+    { id: "inner-peace", label: "Inner Peace", emoji: "🧘" },
+    { id: "clarity", label: "Clarity", emoji: "🔮" },
+    { id: "confidence", label: "Confidence", emoji: "⚡" },
+    { id: "healing", label: "Healing", emoji: "🌿" },
+    { id: "focus", label: "Focus", emoji: "🎯" },
+  ];
+
+  const updateIntentMutation = trpc.onboarding.saveSeedIntent.useMutation({
+    onSuccess: async () => {
+      toast.success("Intention updated ✦");
+      await utils.auth.me.invalidate();
+      setShowIntentModal(false);
+      setSelectedIntent(null);
+    },
+    onError: () => toast.error("Failed to update intention"),
+  });
+
+  const handleChangeIntent = (intentId: string) => {
+    setSelectedIntent(intentId);
+    updateIntentMutation.mutate({ seedIntent: intentId });
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("Signed out");
+      navigate("/");
+    } catch (error) {
+      toast.error("Failed to sign out");
+    }
+  };
+
   const [form, setForm] = useState({
     preferredName: "",
     phone: "",
@@ -209,6 +250,34 @@ export default function Settings() {
               </div>
             </motion.section>
 
+            {/* Intention & Logout Section */}
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="space-y-3"
+            >
+              {/* Change Intention Button */}
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setShowIntentModal(true)}
+                className="w-full py-3 rounded-xl font-medium text-white text-sm flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-violet-500 to-violet-600 hover:from-violet-600 hover:to-violet-700"
+              >
+                <Sparkles className="w-4 h-4" />
+                Change Your Intention
+              </motion.button>
+
+              {/* Sign Out Button */}
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setShowLogoutConfirm(true)}
+                className="w-full py-3 rounded-xl font-medium text-white text-sm flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </motion.button>
+            </motion.section>
+
             {/* Save button */}
             <motion.button
               whileTap={{ scale: 0.97 }}
@@ -238,6 +307,63 @@ export default function Settings() {
           </div>
         )}
       </div>
+
+      {/* Change Intention Modal */}
+      <Dialog open={showIntentModal} onOpenChange={setShowIntentModal}>
+        <DialogContent className="bg-background border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Change Your Intention</DialogTitle>
+            <DialogDescription className="text-foreground/60">
+              What brings you to your mirror today?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3 py-4">
+            {INTENT_OPTIONS.map((intent) => (
+              <motion.button
+                key={intent.id}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleChangeIntent(intent.id)}
+                disabled={updateIntentMutation.isPending}
+                className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+                  selectedIntent === intent.id
+                    ? "border-violet-500 bg-violet-500/10"
+                    : "border-border hover:border-violet-400"
+                }`}
+              >
+                <span className="text-2xl">{intent.emoji}</span>
+                <span className="text-xs font-medium text-foreground">{intent.label}</span>
+              </motion.button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Logout Confirmation Modal */}
+      <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <DialogContent className="bg-background border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Sign Out?</DialogTitle>
+            <DialogDescription className="text-foreground/60">
+              You'll need to sign in again to access your mirror.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowLogoutConfirm(false)}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleLogout}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+            >
+              Sign Out
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }

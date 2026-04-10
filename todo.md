@@ -277,3 +277,10 @@
 - [ ] Execute database migration: ALTER TABLE users ADD seedIntent varchar(100)
 - [ ] Test onboarding flow: signup → QuickOnboarding → Chat with personalized responses
 - [ ] Add vitest tests for seedIntent personalization in system prompt
+
+
+## Settings Enhancements (Apr 10)
+- [x] Add "Change your intention" modal to Settings page
+- [x] Add sign-out button to Settings page
+- [x] Add logout confirmation dialog
+- [ ] Test Settings features with both buttons functional
