@@ -43,13 +43,13 @@ import {
 } from "./db";
 import { sendPushNotification } from "./pushNotifications";
 import { retrieveContextForChat, upsertJournalEmbedding } from "./rag/embeddings";
+import { buildIntentSpecificPrompt } from "./intentPrompts";
 // ─── Helperss ──────────────────────────────────────────────────────────────────
 
 async function buildHigherSelfSystemPrompt(userId: number, seedIntent?: string): Promise<string> {
   const profile = await getUserProfile(userId);
   const recentCheckIns = await getRecentCheckIns(userId, 7);
   const domainScores = await getLatestDomainScores(userId);
-
 
   const valuesStr = profile?.coreValues?.join(", ") || "not yet defined";
   const goalsStr = profile?.shortTermGoals || "not yet set";
@@ -66,33 +66,16 @@ async function buildHigherSelfSystemPrompt(userId: number, seedIntent?: string):
     .map((d) => `${d!.domain}: ${d!.score}/10`)
     .join(", ");
 
-  return `You are ${name}'s Higher Self — the most evolved, emotionally intelligent version of them. Not a therapist, not a coach, not a chatbot. You ARE them, but the version that's already figured it out.
-
-You talk the way ${name} talks. You match their energy — casual when they're casual, deep when they go deep. You don't use formal greetings like "my dear" or "dearest." You talk like a best friend who also happens to be the wisest, most self-aware person they know. Direct. Real. No fluff.
-
-WHAT YOU KNOW ABOUT ${name.toUpperCase()}:
-- Core Values: ${valuesStr}
-- Short-term Goals: ${goalsStr}
-- Long-term Vision: ${visionStr}
-- Beliefs they hold: ${beliefsStr}
-- Average mood this week: ${avgMood}/10
-- Life domain scores: ${domainStr || "not yet assessed"}${seedIntent ? `
-- What brought them to the mirror today: ${seedIntent}` : ""}
-
-HOW YOU COMMUNICATE:
-- Talk like them — match their tone, their vocabulary, their vibe
-- Use "I" and "we" naturally — you're not separate from them
-- Be direct and honest, not preachy or overly poetic
-- Call out patterns they might not see — gently but clearly
-- Ask one sharp question when it matters, not a list of questions
-- Keep it tight — say more with less
-- Acknowledge the hard stuff without sugarcoating it
-- Celebrate wins like a real friend would — genuinely, not generically
-- No toxic positivity. No hollow affirmations. Real talk only.
-
-YOUR ONLY JOB:${seedIntent ? `
-Today they came seeking ${seedIntent}. Honor that intention while helping them become the most whole, grounded, authentic version of themselves — through honest reflection, not performance.` : `
-Help them become the most whole, grounded, authentic version of themselves — through honest reflection, not performance.`}`;
+  // Use intent-specific prompts if seedIntent is provided
+  return buildIntentSpecificPrompt(seedIntent, {
+    name,
+    valuesStr,
+    goalsStr,
+    visionStr,
+    beliefsStr,
+    avgMood,
+    domainStr: domainStr || "not yet assessed",
+  });
 }
 
 // ─── Routers ──────────────────────────────────────────────────────────────────
@@ -111,7 +94,7 @@ export const appRouter = router({
 
   // ─── Onboarding / Profile ────────────────────────────────────────────────
 
-onboarding: router({
+  onboarding: router({
     saveSeedIntent: protectedProcedure
       .input(z.object({ seedIntent: z.string().min(1).max(100) }))
       .mutation(async ({ ctx, input }) => {

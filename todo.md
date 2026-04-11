@@ -312,3 +312,10 @@
 - [x] Integrate Step 2 routing: after Step 1 completion → Step 2 questionnaire → mark onboardingCompleted = true
 - [ ] Test end-to-end onboarding flow: Step 1 → Step 2 → Chat with personalized responses
 - [x] Write vitest tests for Step 2 form submission and data persistence (8 tests passing)
+
+
+## Intent-Specific System Prompts (Apr 11)
+- [x] Design intent-specific system prompt templates for each of the 5 intentions
+- [x] Implement intent-specific prompts in chat router
+- [x] Write vitest tests for intent-specific prompts (12 tests passing)
+- [ ] Test end-to-end: select intent → chat → verify tone/style matches intention
