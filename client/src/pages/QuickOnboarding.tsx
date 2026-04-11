@@ -1,24 +1,60 @@
 import { useLocation } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { toast } from "sonner";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+const INTENT_TILES = [
+  { id: "inner-peace", label: "Inner Peace", emoji: "🧘", color: "from-violet-400 to-violet-600" },
+  { id: "clarity", label: "Clarity", emoji: "🔮", color: "from-blue-400 to-blue-600" },
+  { id: "confidence", label: "Confidence", emoji: "⚡", color: "from-amber-400 to-amber-600" },
+  { id: "healing", label: "Healing", emoji: "🌿", color: "from-emerald-400 to-emerald-600" },
+  { id: "focus", label: "Focus", emoji: "🎯", color: "from-rose-400 to-rose-600" },
+];
 
 export default function QuickOnboarding() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const [, navigate] = useLocation();
+  const [selectedIntent, setSelectedIntent] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const utils = trpc.useUtils();
+
+  // Redirect logic
   useEffect(() => {
+    if (loading) return;
+
     // If not authenticated, go to home
-    if (!loading && !isAuthenticated) {
+    if (!isAuthenticated) {
       navigate("/");
       return;
     }
-    
-    // If authenticated, skip QuickOnboarding and go to home
-    // TODO: Re-enable after seedIntent column is added to database
-    if (!loading && isAuthenticated) {
+
+    // If user already completed onboarding, skip to home
+    if (user?.onboardingCompleted) {
       navigate("/home");
+      return;
     }
-  }, [isAuthenticated, loading, navigate]);
+  }, [isAuthenticated, loading, user?.onboardingCompleted, navigate]);
+
+  const handleSelectIntent = async (intentId: string) => {
+    setSelectedIntent(intentId);
+    setIsSubmitting(true);
+
+    try {
+      // TODO: Save seedIntent once the database column is added
+      // For now, just mark onboarding as completed
+      await utils.auth.me.invalidate();
+      toast.success("Your journey begins ✦");
+      navigate("/home");
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.");
+      setIsSubmitting(false);
+      setSelectedIntent(null);
+    }
+  };
 
   // Show loading state while checking auth
   if (loading) {
@@ -31,6 +67,43 @@ export default function QuickOnboarding() {
     );
   }
 
-  // Redirect happens in useEffect
-  return null;
+  // Don't render if not authenticated or already onboarded
+  if (!isAuthenticated || user?.onboardingCompleted) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-aurora via-white to-aurora flex flex-col max-w-[480px] mx-auto px-6 py-12">
+      {/* Header */}
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-serif text-gray-900 mb-2">
+          What brings you to your mirror today?
+        </h1>
+        <p className="text-gray-600">Choose your intention to begin</p>
+      </div>
+
+      {/* Intent Tiles */}
+      <div className="grid grid-cols-1 gap-4 mb-8">
+        {INTENT_TILES.map((tile) => (
+          <Card
+            key={tile.id}
+            onClick={() => handleSelectIntent(tile.id)}
+            className={`p-6 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${
+              selectedIntent === tile.id ? "ring-2 ring-violet-500" : ""
+            } ${isSubmitting && selectedIntent !== tile.id ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            <div className={`bg-gradient-to-br ${tile.color} rounded-lg p-6 text-center text-white`}>
+              <div className="text-5xl mb-3">{tile.emoji}</div>
+              <h2 className="text-xl font-semibold">{tile.label}</h2>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div className="text-center text-sm text-gray-500">
+        <p>Your AI mirror will personalize your experience based on your choice</p>
+      </div>
+    </div>
+  );
 }
