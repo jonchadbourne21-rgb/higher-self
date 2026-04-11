@@ -294,3 +294,9 @@
 - [x] Integrate seedIntent into buildHigherSelfSystemPrompt() for personalized AI responses
 - [ ] Test end-to-end: select intent → save to DB → AI responds with personalization (after migration)
 - [ ] Write vitest tests for seedIntent personalization (after migration)
+
+
+## Progress Indicator for QuickOnboarding (Apr 11)
+- [x] Add progress bar component showing "Step 1 of 2: Choose your intention"
+- [x] Style progress indicator with visual bar (50% filled)
+- [x] Test progress indicator displays correctly on QuickOnboarding page

@@ -82,6 +82,18 @@ export default function QuickOnboarding() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-aurora via-white to-aurora flex flex-col max-w-[480px] mx-auto px-6 py-12">
+      {/* Progress Indicator */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm font-semibold text-violet-600">Step 1 of 2</span>
+          <span className="text-sm text-gray-500">50%</span>
+        </div>
+        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-full w-1/2 bg-gradient-to-r from-violet-400 to-violet-600 rounded-full transition-all duration-300"></div>
+        </div>
+        <p className="text-xs text-gray-500 mt-2">Choose your intention</p>
+      </div>
+
       {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-4xl font-serif text-gray-900 mb-2">
