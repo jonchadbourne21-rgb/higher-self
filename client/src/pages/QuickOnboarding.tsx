@@ -21,6 +21,7 @@ export default function QuickOnboarding() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const utils = trpc.useUtils();
+  const saveSeedIntentMutation = trpc.onboarding.saveSeedIntent.useMutation();
 
   // Redirect logic
   useEffect(() => {
@@ -44,12 +45,19 @@ export default function QuickOnboarding() {
     setIsSubmitting(true);
 
     try {
-      // TODO: Save seedIntent once the database column is added
-      // For now, just mark onboarding as completed
+      // Find the label for the selected intent
+      const intentLabel = INTENT_TILES.find((t) => t.id === intentId)?.label || intentId;
+      
+      // Save the seedIntent to the database
+      await saveSeedIntentMutation.mutateAsync({ seedIntent: intentLabel });
+      
+      // Invalidate auth cache to refresh user data
       await utils.auth.me.invalidate();
+      
       toast.success("Your journey begins ✦");
       navigate("/home");
     } catch (error) {
+      console.error("Failed to save intent:", error);
       toast.error("Something went wrong. Please try again.");
       setIsSubmitting(false);
       setSelectedIntent(null);

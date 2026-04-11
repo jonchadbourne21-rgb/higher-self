@@ -31,7 +31,7 @@ import {
   getUserProfile,
   markOnboardingComplete,
   saveChatMessage,
-  // saveSeedIntent, // TODO: Re-enable after seedIntent column is added
+  saveSeedIntent,
   saveWeeklyInsight,
   toggleHabitCompletion,
   updateCheckInAiResponse,
@@ -44,19 +44,16 @@ import { sendPushNotification } from "./pushNotifications";
 import { retrieveContextForChat, upsertJournalEmbedding } from "./rag/embeddings";
 // ─── Helperss ──────────────────────────────────────────────────────────────────
 
-async function buildHigherSelfSystemPrompt(userId: number): Promise<string> {
+async function buildHigherSelfSystemPrompt(userId: number, seedIntent?: string): Promise<string> {
   const profile = await getUserProfile(userId);
   const recentCheckIns = await getRecentCheckIns(userId, 7);
   const domainScores = await getLatestDomainScores(userId);
-  
-  // TODO: Re-enable seedIntent personalization after column is added to database
-  // const seedIntent = userRecord?.seedIntent || null;
+
 
   const valuesStr = profile?.coreValues?.join(", ") || "not yet defined";
   const goalsStr = profile?.shortTermGoals || "not yet set";
   const visionStr = profile?.longTermVision || "not yet defined";
   const beliefsStr = profile?.beliefs || "not yet shared";
-  const seedIntent = null; // TODO: Re-enable after seedIntent column is added
   const name = profile?.preferredName || "friend";
 
   const avgMood =
@@ -113,15 +110,14 @@ export const appRouter = router({
 
   // ─── Onboarding / Profile ────────────────────────────────────────────────
 
-  // TODO: Re-enable onboarding router after seedIntent column is added
-    // onboarding, // TODO: Re-enable after seedIntent column is added to database: router({
-  //   saveSeedIntent: protectedProcedure
-  //     .input(z.object({ seedIntent: z.string().min(1).max(100) }))
-  //     .mutation(async ({ ctx, input }) => {
-  //       await saveSeedIntent(ctx.user.id, input.seedIntent);
-  //       return { success: true };
-  //     }),
-  // }),
+  onboarding: router({
+    saveSeedIntent: protectedProcedure
+      .input(z.object({ seedIntent: z.string().min(1).max(100) }))
+      .mutation(async ({ ctx, input }) => {
+        await saveSeedIntent(ctx.user.id, input.seedIntent);
+        return { success: true };
+      }),
+  }),
 
   profile: router({
     get: protectedProcedure.query(async ({ ctx }) => {
@@ -232,7 +228,7 @@ export const appRouter = router({
 
         // Generate AI response
         try {
-          const systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id);
+          const systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id, ctx.user.seedIntent || undefined);
           const userMessage = `Today's check-in:
 Mood: ${input.mood}/10
 Energy: ${input.energy}/10
@@ -540,7 +536,7 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
         const history = await getChatHistory(ctx.user.id, 20);
         const recentMessages = history.reverse().slice(-10);
 
-        let systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id);
+        let systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id, ctx.user.seedIntent || undefined);
         systemPrompt += ragContextSection;
 
         const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [

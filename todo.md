@@ -284,3 +284,13 @@
 - [x] Add sign-out button to Settings page
 - [x] Add logout confirmation dialog
 - [ ] Test Settings features with both buttons functional
+
+
+## SeedIntent Integration (Apr 11)
+- [x] Re-enable seedIntent in drizzle/schema.ts
+- [ ] Generate and execute database migration for seedIntent column (user action required)
+- [x] Create onboarding.saveSeedIntent tRPC procedure
+- [x] Update QuickOnboarding component to call saveSeedIntent on tile click
+- [x] Integrate seedIntent into buildHigherSelfSystemPrompt() for personalized AI responses
+- [ ] Test end-to-end: select intent → save to DB → AI responds with personalization (after migration)
+- [ ] Write vitest tests for seedIntent personalization (after migration)
