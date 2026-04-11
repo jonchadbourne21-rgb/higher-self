@@ -32,6 +32,7 @@ import {
   markOnboardingComplete,
   saveChatMessage,
   saveSeedIntent,
+  saveFullOnboarding,
   saveWeeklyInsight,
   toggleHabitCompletion,
   updateCheckInAiResponse,
@@ -110,11 +111,27 @@ export const appRouter = router({
 
   // ─── Onboarding / Profile ────────────────────────────────────────────────
 
-  onboarding: router({
+onboarding: router({
     saveSeedIntent: protectedProcedure
       .input(z.object({ seedIntent: z.string().min(1).max(100) }))
       .mutation(async ({ ctx, input }) => {
         await saveSeedIntent(ctx.user.id, input.seedIntent);
+        return { success: true };
+      }),
+
+    saveFullOnboarding: protectedProcedure
+      .input(
+        z.object({
+          coreValues: z.array(z.string()),
+          shortTermGoals: z.string(),
+          longTermVision: z.string(),
+          personalityNotes: z.string(),
+          beliefs: z.string(),
+          preferredName: z.string(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        await saveFullOnboarding(ctx.user.id, input);
         return { success: true };
       }),
   }),

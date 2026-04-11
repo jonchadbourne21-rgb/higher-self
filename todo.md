@@ -300,3 +300,15 @@
 - [x] Add progress bar component showing "Step 1 of 2: Choose your intention"
 - [x] Style progress indicator with visual bar (50% filled)
 - [x] Test progress indicator displays correctly on QuickOnboarding page
+
+
+## Step 2 Onboarding Questionnaire (Apr 11)
+- [x] Review user_profiles schema to understand available fields
+- [x] Create FullOnboarding.tsx component with multi-section form
+- [x] Add life domains selection (Mindset, Relationships, Work, Health, Finance, Creativity, Spirituality, Personal Growth)
+- [x] Add goals capture field (text input or predefined options)
+- [x] Add current challenges capture field (multi-select or text)
+- [x] Create tRPC procedure to save onboarding responses to user_profiles
+- [x] Integrate Step 2 routing: after Step 1 completion → Step 2 questionnaire → mark onboardingCompleted = true
+- [ ] Test end-to-end onboarding flow: Step 1 → Step 2 → Chat with personalized responses
+- [x] Write vitest tests for Step 2 form submission and data persistence (8 tests passing)

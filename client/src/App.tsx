@@ -20,6 +20,7 @@ import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import Calendar from "./pages/Calendar";
 import QuickOnboarding from "./pages/QuickOnboarding";
+import FullOnboarding from "./pages/FullOnboarding";
 import { useRef } from "react";
 
 // Tab order — used to determine slide direction
@@ -79,6 +80,7 @@ function AnimatedRouter() {
             <Route path="/" component={Landing} />
             <Route path="/onboarding" component={Onboarding} />
             <Route path="/quick-onboarding" component={QuickOnboarding} />
+            <Route path="/full-onboarding" component={FullOnboarding} />
             <Route path="/home" component={Home} />
             <Route path="/checkin" component={CheckIn} />
             <Route path="/chat" component={Chat} />

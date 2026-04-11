@@ -726,3 +726,33 @@ export async function deleteCalendarEvent(userId: number, id: number) {
     .delete(calendarEvents)
     .where(and(eq(calendarEvents.id, id), eq(calendarEvents.userId, userId)));
 }
+
+// ─── Full Onboarding ──────────────────────────────────────────────────────
+
+export async function saveFullOnboarding(
+  userId: number,
+  data: {
+    coreValues: string[];
+    shortTermGoals: string;
+    longTermVision: string;
+    personalityNotes: string;
+    beliefs: string;
+    preferredName: string;
+  }
+) {
+  const db = await getDb();
+  if (!db) return;
+
+  // Save to user_profiles
+  await upsertUserProfile(userId, {
+    coreValues: data.coreValues,
+    shortTermGoals: data.shortTermGoals,
+    longTermVision: data.longTermVision,
+    personalityNotes: data.personalityNotes,
+    beliefs: data.beliefs,
+    preferredName: data.preferredName,
+  });
+
+  // Mark onboarding as completed in users table
+  await db.update(users).set({ onboardingCompleted: true }).where(eq(users.id, userId));
+}
