@@ -31,7 +31,7 @@ import {
   getUserProfile,
   markOnboardingComplete,
   saveChatMessage,
-  saveSeedIntent,
+  // saveSeedIntent, // TEMPORARILY DISABLED: seedIntent column not yet migrated
   saveFullOnboarding,
   saveWeeklyInsight,
   toggleHabitCompletion,
@@ -95,12 +95,13 @@ export const appRouter = router({
   // ─── Onboarding / Profile ────────────────────────────────────────────────
 
   onboarding: router({
-    saveSeedIntent: protectedProcedure
-      .input(z.object({ seedIntent: z.string().min(1).max(100) }))
-      .mutation(async ({ ctx, input }) => {
-        await saveSeedIntent(ctx.user.id, input.seedIntent);
-        return { success: true };
-      }),
+    // TEMPORARILY DISABLED: seedIntent column not yet migrated to database
+    // saveSeedIntent: protectedProcedure
+    //   .input(z.object({ seedIntent: z.string().min(1).max(100) }))
+    //   .mutation(async ({ ctx, input }) => {
+    //     await saveSeedIntent(ctx.user.id, input.seedIntent);
+    //     return { success: true };
+    //   }),
 
     saveFullOnboarding: protectedProcedure
       .input(
@@ -228,7 +229,8 @@ export const appRouter = router({
 
         // Generate AI response
         try {
-          const systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id, ctx.user.seedIntent || undefined);
+          // TEMPORARILY DISABLED: seedIntent column not yet migrated to database
+          const systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id, undefined);
           const userMessage = `Today's check-in:
 Mood: ${input.mood}/10
 Energy: ${input.energy}/10
@@ -536,7 +538,8 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
         const history = await getChatHistory(ctx.user.id, 20);
         const recentMessages = history.reverse().slice(-10);
 
-        let systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id, ctx.user.seedIntent || undefined);
+        // TEMPORARILY DISABLED: seedIntent column not yet migrated to database
+        let systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id, undefined);
         systemPrompt += ragContextSection;
 
         const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [

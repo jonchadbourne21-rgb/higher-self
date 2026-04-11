@@ -21,7 +21,8 @@ export default function QuickOnboarding() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const utils = trpc.useUtils();
-  const saveSeedIntentMutation = trpc.onboarding.saveSeedIntent.useMutation();
+  // TEMPORARILY DISABLED: seedIntent column not yet migrated to database
+  // const saveSeedIntentMutation = trpc.onboarding.saveSeedIntent.useMutation();
 
   // Redirect logic
   useEffect(() => {
@@ -48,8 +49,9 @@ export default function QuickOnboarding() {
       // Find the label for the selected intent
       const intentLabel = INTENT_TILES.find((t) => t.id === intentId)?.label || intentId;
       
+      // TEMPORARILY DISABLED: seedIntent column not yet migrated to database
       // Save the seedIntent to the database
-      await saveSeedIntentMutation.mutateAsync({ seedIntent: intentLabel });
+      // await saveSeedIntentMutation.mutateAsync({ seedIntent: intentLabel });
       
       // Invalidate auth cache to refresh user data
       await utils.auth.me.invalidate();

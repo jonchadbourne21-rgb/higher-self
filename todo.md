@@ -319,3 +319,11 @@
 - [x] Implement intent-specific prompts in chat router
 - [x] Write vitest tests for intent-specific prompts (12 tests passing)
 - [ ] Test end-to-end: select intent → chat → verify tone/style matches intention
+- [x] CRITICAL FIX: Fixed OAuth login failure by temporarily disabling seedIntent field (database migration pending)
+
+## Database Migration - seedIntent Column (PENDING)
+- [ ] Execute migration: ALTER TABLE `users` ADD COLUMN `seedIntent` varchar(100);
+- [ ] Re-enable saveSeedIntent function in server/db.ts
+- [ ] Re-enable saveSeedIntent procedure in server/routers.ts
+- [ ] Re-enable saveSeedIntentMutation in client/src/pages/QuickOnboarding.tsx
+- [ ] Re-enable seedIntent field in drizzle/schema.ts
