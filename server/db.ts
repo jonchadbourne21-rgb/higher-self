@@ -85,12 +85,11 @@ export async function markOnboardingComplete(userId: number) {
   await db.update(users).set({ onboardingCompleted: true }).where(eq(users.id, userId));
 }
 
-// TEMPORARILY DISABLED: seedIntent column not yet migrated to database
-// export async function saveSeedIntent(userId: number, seedIntent: string) {
-//   const db = await getDb();
-//   if (!db) return;
-//   await db.update(users).set({ seedIntent }).where(eq(users.id, userId));
-// }
+export async function saveSeedIntent(userId: number, seedIntent: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({ seedIntent }).where(eq(users.id, userId));
+}
 
 // ─── User Profiles ────────────────────────────────────────────────────────────
 

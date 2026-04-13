@@ -20,8 +20,7 @@ export const users = mysqlTable("users", {
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   onboardingCompleted: boolean("onboardingCompleted").default(false).notNull(),
-  // TEMPORARILY DISABLED: seedIntent column not yet migrated to database
-  // seedIntent: varchar("seedIntent", { length: 100 }),
+  seedIntent: varchar("seedIntent", { length: 100 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),

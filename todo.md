@@ -321,9 +321,10 @@
 - [ ] Test end-to-end: select intent → chat → verify tone/style matches intention
 - [x] CRITICAL FIX: Fixed OAuth login failure by temporarily disabling seedIntent field (database migration pending)
 
-## Database Migration - seedIntent Column (PENDING)
-- [ ] Execute migration: ALTER TABLE `users` ADD COLUMN `seedIntent` varchar(100);
-- [ ] Re-enable saveSeedIntent function in server/db.ts
-- [ ] Re-enable saveSeedIntent procedure in server/routers.ts
-- [ ] Re-enable saveSeedIntentMutation in client/src/pages/QuickOnboarding.tsx
-- [ ] Re-enable seedIntent field in drizzle/schema.ts
+## Database Migration - seedIntent Column (COMPLETE)
+- [x] Execute migration: ALTER TABLE `users` ADD COLUMN `seedIntent` varchar(100);
+- [x] Re-enable saveSeedIntent function in server/db.ts
+- [x] Re-enable saveSeedIntent procedure in server/routers.ts
+- [x] Re-enable saveSeedIntentMutation in client/src/pages/QuickOnboarding.tsx
+- [x] Re-enable seedIntent field in drizzle/schema.ts
+- [x] Restart dev server and verify login works
