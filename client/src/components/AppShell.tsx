@@ -10,6 +10,7 @@ import {
 import { useLocation, Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { useRef, useCallback, useState } from "react";
+import CrisisDisclaimerFooter from "./CrisisDisclaimerFooter";
 
 const navItems = [
   { path: "/home", icon: Home, label: "Home" },
@@ -113,6 +114,7 @@ export default function AppShell({ children }: AppShellProps) {
         onScroll={handleScroll}
       >
         {children}
+        <CrisisDisclaimerFooter />
       </main>
 
       {/* Floating pill nav — auto-hides on scroll down */}

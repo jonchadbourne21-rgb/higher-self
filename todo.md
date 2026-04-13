@@ -336,3 +336,11 @@
 - [x] Fixed: Removed seedIntent routing logic from Home.tsx useEffect
 - [x] Result: Existing users now see full home dashboard instead of blank page
 - [x] Note: QuickOnboarding is only shown to new users during initial onboarding
+
+
+## Disclaimer Footer (Apr 13) - COMPLETE
+- [x] Search git history for previous disclaimer content
+- [x] Create CrisisDisclaimerFooter component with Synapset info and emergency contacts
+- [x] Integrate disclaimer footer into AppShell layout (displays on all pages)
+- [x] Styled with clean, organized layout (3 sections: What Synapset Is, What It's NOT, Crisis Help)
+- [x] Emergency numbers: 988, 1-800-273-8255, 911 (clickable tel: links)
