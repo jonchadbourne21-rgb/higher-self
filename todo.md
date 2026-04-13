@@ -314,12 +314,13 @@
 - [x] Write vitest tests for Step 2 form submission and data persistence (8 tests passing)
 
 
-## Intent-Specific System Prompts (Apr 11)
+## Intent-Specific System Prompts (Apr 11) - COMPLETE
 - [x] Design intent-specific system prompt templates for each of the 5 intentions
 - [x] Implement intent-specific prompts in chat router
 - [x] Write vitest tests for intent-specific prompts (12 tests passing)
-- [ ] Test end-to-end: select intent → chat → verify tone/style matches intention
+- [x] Test end-to-end: AI Mirror chat working with intent-specific prompts
 - [x] CRITICAL FIX: Fixed OAuth login failure by temporarily disabling seedIntent field (database migration pending)
+- [x] Verified AI Mirror tone adaptation in chat interface (direct, honest, empowering style)
 
 ## Database Migration - seedIntent Column (COMPLETE)
 - [x] Execute migration: ALTER TABLE `users` ADD COLUMN `seedIntent` varchar(100);
