@@ -329,3 +329,10 @@
 - [x] Re-enable saveSeedIntentMutation in client/src/pages/QuickOnboarding.tsx
 - [x] Re-enable seedIntent field in drizzle/schema.ts
 - [x] Restart dev server and verify login works
+
+
+## Blank Page After Login - FIXED (Apr 13)
+- [x] Diagnosed: Existing users redirected to QuickOnboarding because seedIntent was undefined
+- [x] Fixed: Removed seedIntent routing logic from Home.tsx useEffect
+- [x] Result: Existing users now see full home dashboard instead of blank page
+- [x] Note: QuickOnboarding is only shown to new users during initial onboarding
