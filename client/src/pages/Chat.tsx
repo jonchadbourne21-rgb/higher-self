@@ -1,10 +1,10 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Send } from "lucide-react";
+import { Send, Heart, Star, BookOpen } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
 
@@ -21,6 +21,7 @@ type ChatMessage = {
   content: string;
   id: string;
   createdAt?: Date;
+  dbId?: number; // the database ID for assistant messages
 };
 
 /** Returns true if currentMsg was sent 60+ minutes after prevMsg */
@@ -75,6 +76,7 @@ export default function Chat() {
           content: data.response,
           id: Date.now().toString(),
           createdAt: new Date(),
+          dbId: data.messageId,
         },
       ]);
     },
@@ -83,6 +85,31 @@ export default function Chat() {
       toast.error("Your mirror is momentarily quiet. Try again.");
     },
   });
+
+  const saveInsightMutation = trpc.savedInsights.save.useMutation({
+    onSuccess: (_, vars) => {
+      const emoji = vars.reactionType === "heart" ? "💜" : "⭐";
+      toast.success(`${emoji} Saved to your insights`);
+    },
+    onError: () => toast.error("Couldn't save insight. Try again."),
+  });
+
+  // Track which messages have been reacted to (msgId -> reactionType)
+  const [reactions, setReactions] = useState<Record<string, "heart" | "star">>({}); 
+
+  const handleReaction = (msg: ChatMessage, type: "heart" | "star") => {
+    // Toggle off if same reaction
+    if (reactions[msg.id] === type) {
+      setReactions((prev) => { const n = { ...prev }; delete n[msg.id]; return n; });
+      return;
+    }
+    setReactions((prev) => ({ ...prev, [msg.id]: type }));
+    saveInsightMutation.mutate({
+      chatMessageId: msg.dbId,
+      content: msg.content,
+      reactionType: type,
+    });
+  };
 
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate("/");
@@ -112,6 +139,7 @@ export default function Chat() {
       ...m,
       id: m.id.toString(),
       createdAt: new Date(m.createdAt),
+      dbId: m.id,
     })),
     ...localMessages.filter(
       (lm) =>
@@ -154,14 +182,24 @@ export default function Chat() {
     <AppShell>
       <div className="flex flex-col h-screen max-h-screen">
         {/* Header */}
-        <div className="px-5 pt-8 pb-4 flex items-center gap-3 border-b border-border/30">
-          <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center glow-gold">
-            <span className="text-lg">✦</span>
+        <div className="px-5 pt-8 pb-4 flex items-center justify-between border-b border-border/30">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center glow-gold">
+              <span className="text-lg">✦</span>
+            </div>
+            <div>
+              <h1 className="text-base font-medium text-foreground">Your Higher Self</h1>
+              <p className="text-xs text-muted-foreground">Always present, always honest</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-base font-medium text-foreground">Your Higher Self</h1>
-            <p className="text-xs text-muted-foreground">Always present, always honest</p>
-          </div>
+          <button
+            onClick={() => navigate("/saved-insights")}
+            title="View saved insights"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-muted-foreground border border-border/40 hover:border-primary/30 hover:text-primary transition-all"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            Saved
+          </button>
         </div>
 
         {/* Messages */}
@@ -207,26 +245,63 @@ export default function Chat() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} group`}
               >
                 {msg.role === "assistant" && (
                   <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mr-2 mt-1 flex-shrink-0">
                     <span className="text-xs">✦</span>
                   </div>
                 )}
-                <div
-                  className={`max-w-[80%] rounded-3xl px-4 py-3 ${
-                    msg.role === "user"
-                      ? "bg-primary text-primary-foreground rounded-br-lg"
-                      : "glass rounded-bl-lg"
-                  }`}
-                >
-                  {msg.role === "assistant" ? (
-                    <div className="streamdown-content text-sm leading-relaxed">
-                      <Streamdown>{msg.content}</Streamdown>
-                    </div>
-                  ) : (
-                    <p className="text-sm leading-relaxed">{msg.content}</p>
+                <div className="flex flex-col gap-1 max-w-[80%]">
+                  <div
+                    className={`rounded-3xl px-4 py-3 ${
+                      msg.role === "user"
+                        ? "bg-primary text-primary-foreground rounded-br-lg"
+                        : "glass rounded-bl-lg"
+                    }`}
+                  >
+                    {msg.role === "assistant" ? (
+                      <div className="streamdown-content text-sm leading-relaxed">
+                        <Streamdown>{msg.content}</Streamdown>
+                      </div>
+                    ) : (
+                      <p className="text-sm leading-relaxed">{msg.content}</p>
+                    )}
+                  </div>
+                  {/* Reaction buttons — only for assistant messages */}
+                  {msg.role === "assistant" && (
+                    <AnimatePresence>
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex gap-1 pl-1"
+                      >
+                        <button
+                          onClick={() => handleReaction(msg, "heart")}
+                          title="Save as emotional insight"
+                          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-all ${
+                            reactions[msg.id] === "heart"
+                              ? "bg-pink-500/20 text-pink-400 border border-pink-400/40"
+                              : "text-muted-foreground/50 hover:text-pink-400 hover:bg-pink-500/10"
+                          }`}
+                        >
+                          <Heart className="w-3 h-3" fill={reactions[msg.id] === "heart" ? "currentColor" : "none"} />
+                          {reactions[msg.id] === "heart" && <span>Saved</span>}
+                        </button>
+                        <button
+                          onClick={() => handleReaction(msg, "star")}
+                          title="Save as actionable insight"
+                          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-all ${
+                            reactions[msg.id] === "star"
+                              ? "bg-amber-500/20 text-amber-400 border border-amber-400/40"
+                              : "text-muted-foreground/50 hover:text-amber-400 hover:bg-amber-500/10"
+                          }`}
+                        >
+                          <Star className="w-3 h-3" fill={reactions[msg.id] === "star" ? "currentColor" : "none"} />
+                          {reactions[msg.id] === "star" && <span>Saved</span>}
+                        </button>
+                      </motion.div>
+                    </AnimatePresence>
                   )}
                 </div>
               </motion.div>

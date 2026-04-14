@@ -377,3 +377,22 @@ export const calendarEvents = mysqlTable("calendar_events", {
 
 export type CalendarEvent = typeof calendarEvents.$inferSelect;
 export type InsertCalendarEvent = typeof calendarEvents.$inferInsert;
+
+// ─── Saved Insights (reactions from chat) ────────────────────────────────────
+
+export const savedInsights = mysqlTable("saved_insights", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // The chat message ID this insight was saved from
+  chatMessageId: int("chatMessageId"),
+  // The AI response text that was saved
+  content: text("content").notNull(),
+  // Reaction type: heart = emotional resonance, star = actionable insight
+  reactionType: mysqlEnum("reactionType", ["heart", "star"]).notNull(),
+  // Optional user note added when saving
+  note: text("note"),
+  savedAt: timestamp("savedAt").defaultNow().notNull(),
+});
+
+export type SavedInsight = typeof savedInsights.$inferSelect;
+export type InsertSavedInsight = typeof savedInsights.$inferInsert;

@@ -353,3 +353,14 @@
 - [x] Style date/time stamps (centered pill, subtle muted color)
 - [x] Format: today = time only, yesterday = 'Yesterday · time', older = 'Apr 13 · time'
 - [x] 9 vitest tests passing for timestamp logic
+
+## Message Reactions & Saved Insights (Apr 13) - COMPLETE
+- [x] Add savedInsights table to drizzle/schema.ts (heart/star reactionType)
+- [x] Generate and execute migration SQL (saved_insights table created)
+- [x] Add saveInsight, listInsights, deleteInsight DB helpers in server/db.ts
+- [x] Add savedInsights.save, savedInsights.list, savedInsights.delete tRPC procedures
+- [x] Add heart/star reaction buttons to AI messages in Chat UI
+- [x] Reaction toggle: same type = remove, different type = replace
+- [x] Create Saved Insights journal page with All/Emotional/Actionable filter tabs
+- [x] Add 'Saved' button in Chat header linking to Saved Insights page
+- [x] 14 vitest tests passing for savedInsights logic

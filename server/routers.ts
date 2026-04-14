@@ -12,6 +12,7 @@ import {
   createMilestone,
   deactivatePushSubscription,
   deleteHabit,
+  deleteInsight,
   getAllInsights,
   getActivePushSubscription,
   getChatHistory,
@@ -30,6 +31,8 @@ import {
   getUserHabits,
   getUserProfile,
   markOnboardingComplete,
+  saveInsight,
+  listInsights,
   saveChatMessage,
   saveSeedIntent,
   saveFullOnboarding,
@@ -495,7 +498,7 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
       .input(z.object({ message: z.string().min(1) }))
       .mutation(async ({ ctx, input }) => {
         // Save user message
-        await saveChatMessage({
+        const savedMsgId = await saveChatMessage({
           userId: ctx.user.id,
           role: "user",
           content: input.message,
@@ -552,7 +555,7 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
         const aiContent = typeof rawAiContent === 'string' ? rawAiContent : "I'm here with you.";
 
         // Save AI response with context snapshot
-        await saveChatMessage({
+        const aiMsgId = await saveChatMessage({
           userId: ctx.user.id,
           role: "assistant",
           content: aiContent,
@@ -562,7 +565,7 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
           },
         });
 
-        return { response: aiContent };
+        return { response: aiContent, messageId: aiMsgId };
       }),
   }),
 
@@ -862,11 +865,33 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
         await deleteCalendarEvent(ctx.user.id, input.id);
         return { success: true };
       }),
+  }),  // ─── Saved Insights (chat reactions) ────────────────────────────────────────────────────────────────────────────────────
+  savedInsights: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      return listInsights(ctx.user.id);
+    }),
+    save: protectedProcedure
+      .input(
+        z.object({
+          chatMessageId: z.number().optional(),
+          content: z.string().min(1),
+          reactionType: z.enum(["heart", "star"]),
+          note: z.string().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        await saveInsight(ctx.user.id, input);
+        return { success: true };
+      }),
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await deleteInsight(ctx.user.id, input.id);
+        return { success: true };
+      }),
   }),
-
-  // ─── Timeline / Milestones ────────────────────────────────────────────────────────────────────────────────
-
-  timeline: router({
+  // ─── Timeline / Milestones ────────────────────────────────────────────────────────────────────────────────────
+  timeline:router({
     milestones: protectedProcedure.query(async ({ ctx }) => {
       return getMilestones(ctx.user.id);
     }),

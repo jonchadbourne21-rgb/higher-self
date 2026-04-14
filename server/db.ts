@@ -14,6 +14,7 @@ import {
   lifeDomainScores,
   notificationPreferences,
   pushSubscriptions,
+  savedInsights,
   userProfiles,
   users,
   weeklyInsights,
@@ -441,10 +442,11 @@ export async function getChatHistory(userId: number, limit = 50) {
     .limit(limit);
 }
 
-export async function saveChatMessage(data: typeof chatMessages.$inferInsert) {
+export async function saveChatMessage(data: typeof chatMessages.$inferInsert): Promise<number | undefined> {
   const db = await getDb();
-  if (!db) return;
-  await db.insert(chatMessages).values(data);
+  if (!db) return undefined;
+  const [result] = await db.insert(chatMessages).values(data);
+  return (result as any).insertId as number;
 }
 
 // ─── Weekly Insights ──────────────────────────────────────────────────────────
@@ -755,4 +757,40 @@ export async function saveFullOnboarding(
 
   // Mark onboarding as completed in users table
   await db.update(users).set({ onboardingCompleted: true }).where(eq(users.id, userId));
+}
+
+// ─── Saved Insights ────────────────────────────────────────────────────────────────────────────────
+
+export async function saveInsight(
+  userId: number,
+  data: { chatMessageId?: number; content: string; reactionType: "heart" | "star"; note?: string }
+) {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.insert(savedInsights).values({
+    userId,
+    chatMessageId: data.chatMessageId ?? null,
+    content: data.content,
+    reactionType: data.reactionType,
+    note: data.note ?? null,
+  });
+  return result;
+}
+
+export async function listInsights(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(savedInsights)
+    .where(eq(savedInsights.userId, userId))
+    .orderBy(savedInsights.savedAt);
+}
+
+export async function deleteInsight(userId: number, insightId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .delete(savedInsights)
+    .where(and(eq(savedInsights.id, insightId), eq(savedInsights.userId, userId)));
 }
