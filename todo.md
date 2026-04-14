@@ -409,3 +409,7 @@
 - [x] Update index.css CSS variables to relaxing teal palette (soft mint bg, deep teal primary)
 - [x] Update hardcoded oklch colors in Chat.tsx to match teal theme
 - [x] Update hardcoded oklch colors in AppShell.tsx, App.tsx, Home.tsx, Landing.tsx, Onboarding.tsx, Domains.tsx, Dashboard.tsx
+
+## Home Screen Cleanup (Apr 14) - COMPLETE
+- [x] Remove redundant Daily Check-in card from "Your Space" grid (3 cards remain: Mirror, Journal, Life Domains)
+- [x] Add user's name to time-based greeting — "Good morning, JonnyDonny" with animated reveal

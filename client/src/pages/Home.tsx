@@ -51,15 +51,6 @@ export default function Home() {
 
   const quickActions = [
     {
-      icon: "✦",
-      label: "Daily Check-in",
-      path: "/checkin",
-      done: !!todayCheckIn,
-      bg: "bg-violet-50",
-      iconColor: "text-violet-600",
-      border: "border-violet-100",
-    },
-    {
       icon: "🪞",
       label: "Talk to Mirror",
       path: "/chat",
@@ -127,7 +118,7 @@ export default function Home() {
               {greeting},
             </motion.span>
             <br />
-            <AnimatedName name={name} />
+            <AnimatedName name={profile?.preferredName || user?.name?.split(" ")[0] || ""} />
           </h1>
         </motion.div>
 
