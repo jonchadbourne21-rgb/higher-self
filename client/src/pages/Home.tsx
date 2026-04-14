@@ -144,7 +144,7 @@ export default function Home() {
               style={{
                 background: "linear-gradient(135deg, oklch(0.96 0.04 295), oklch(0.98 0.02 80))",
                 border: "1px solid oklch(0.88 0.06 295 / 0.6)",
-                boxShadow: "0 4px 20px oklch(0.46 0.20 295 / 0.08)",
+                boxShadow: "0 4px 20px oklch(0.46 0.14 185 / 0.08)",
               }}
             >
               <div className="flex items-center justify-between">
@@ -178,8 +178,8 @@ export default function Home() {
                 whileTap={{ scale: 0.98 }}
                 className="rounded-3xl p-5 cursor-pointer"
                 style={{
-                  background: "linear-gradient(135deg, oklch(0.46 0.20 295), oklch(0.55 0.18 320))",
-                  boxShadow: "0 6px 28px oklch(0.46 0.20 295 / 0.22)",
+                  background: "linear-gradient(135deg, oklch(0.46 0.14 185), oklch(0.52 0.14 200))",
+                  boxShadow: "0 6px 28px oklch(0.46 0.14 185 / 0.22)",
                 }}
               >
                 <div className="flex items-center justify-between">
@@ -237,7 +237,7 @@ export default function Home() {
                 style={{
                   background: "linear-gradient(145deg, oklch(0.97 0.03 60), oklch(0.99 0.01 80))",
                   border: "1px solid oklch(0.88 0.06 60 / 0.6)",
-                  boxShadow: "0 2px 16px oklch(0.72 0.18 60 / 0.08)",
+                  boxShadow: "0 2px 16px oklch(0.62 0.14 155 / 0.08)",
                 }}
               >
                 <div className="flex items-center justify-between">

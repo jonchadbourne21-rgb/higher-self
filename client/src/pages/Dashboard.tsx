@@ -78,10 +78,10 @@ export default function Dashboard() {
             >
               <div className="relative w-20 h-20">
                 <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
-                  <circle cx="40" cy="40" r="32" fill="none" stroke="oklch(0.22 0.025 260)" strokeWidth="6" />
+                  <circle cx="40" cy="40" r="32" fill="none" stroke="oklch(0.22 0.03 200)" strokeWidth="6" />
                   <circle
                     cx="40" cy="40" r="32" fill="none"
-                    stroke="oklch(0.78 0.12 75)" strokeWidth="6"
+                    stroke="oklch(0.62 0.14 155)" strokeWidth="6"
                     strokeLinecap="round"
                     strokeDasharray={`${(avgScore / 100) * 201} 201`}
                   />
@@ -117,16 +117,16 @@ export default function Dashboard() {
                 <div className="h-56">
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart data={radarData}>
-                      <PolarGrid stroke="oklch(0.22 0.025 260)" />
+                      <PolarGrid stroke="oklch(0.22 0.03 200)" />
                       <PolarAngleAxis
                         dataKey="domain"
-                        tick={{ fill: "oklch(0.55 0.02 80)", fontSize: 11 }}
+                        tick={{ fill: "oklch(0.50 0.04 185)", fontSize: 11 }}
                       />
                       <Radar
                         name="Score"
                         dataKey="score"
-                        stroke="oklch(0.78 0.12 75)"
-                        fill="oklch(0.78 0.12 75)"
+                        stroke="oklch(0.62 0.14 155)"
+                        fill="oklch(0.62 0.14 155)"
                         fillOpacity={0.15}
                         strokeWidth={2}
                       />
@@ -148,31 +148,31 @@ export default function Dashboard() {
                 <div className="h-48">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={moodData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.22 0.025 260)" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.22 0.03 200)" />
                       <XAxis
                         dataKey="date"
-                        tick={{ fill: "oklch(0.55 0.02 80)", fontSize: 10 }}
+                        tick={{ fill: "oklch(0.50 0.04 185)", fontSize: 10 }}
                         axisLine={false}
                         tickLine={false}
                       />
                       <YAxis
                         domain={[0, 10]}
-                        tick={{ fill: "oklch(0.55 0.02 80)", fontSize: 10 }}
+                        tick={{ fill: "oklch(0.50 0.04 185)", fontSize: 10 }}
                         axisLine={false}
                         tickLine={false}
                         width={20}
                       />
                       <Tooltip
                         contentStyle={{
-                          background: "oklch(0.14 0.025 260)",
-                          border: "1px solid oklch(0.22 0.025 260)",
+                          background: "oklch(0.16 0.03 200)",
+                          border: "1px solid oklch(0.22 0.03 200)",
                           borderRadius: "12px",
                           color: "oklch(0.95 0.01 80)",
                           fontSize: "12px",
                         }}
                       />
                       <Line
-                        type="monotone" dataKey="mood" stroke="oklch(0.78 0.12 75)"
+                        type="monotone" dataKey="mood" stroke="oklch(0.62 0.14 155)"
                         strokeWidth={2} dot={false} name="Mood"
                       />
                       <Line
@@ -216,7 +216,7 @@ export default function Dashboard() {
                           className="h-full rounded-full transition-all duration-1000"
                           style={{
                             width: `${(d?.score || 0) * 10}%`,
-                            background: DOMAIN_COLORS[d?.domain as keyof typeof DOMAIN_COLORS] || "oklch(0.78 0.12 75)",
+                            background: DOMAIN_COLORS[d?.domain as keyof typeof DOMAIN_COLORS] || "oklch(0.62 0.14 155)",
                           }}
                         />
                       </div>

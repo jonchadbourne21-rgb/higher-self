@@ -15,7 +15,7 @@ const DOMAIN_INFO = {
     label: "Mindset",
     emoji: "🧠",
     colorClass: "domain-mindset",
-    barColor: "oklch(0.46 0.20 295)",   // violet
+    barColor: "oklch(0.46 0.14 185)",   // violet
     cardBg: "oklch(0.97 0.03 295 / 0.5)",
     cardBorder: "oklch(0.85 0.06 295 / 0.5)",
     desc: "Mental clarity, emotional regulation, peace",
@@ -33,7 +33,7 @@ const DOMAIN_INFO = {
     label: "Work & Purpose",
     emoji: "⚡",
     colorClass: "domain-work",
-    barColor: "oklch(0.72 0.18 60)",    // amber
+    barColor: "oklch(0.62 0.14 155)",    // amber
     cardBg: "oklch(0.97 0.04 60 / 0.5)",
     cardBorder: "oklch(0.85 0.08 60 / 0.5)",
     desc: "Career, creativity, contribution",

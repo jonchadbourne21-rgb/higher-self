@@ -404,3 +404,8 @@
 - [x] Update Past Conversations panel: show custom title if set, fallback to date label
 - [x] Inline edit: pencil icon on hover → inline input field → save with Enter or checkmark
 - [x] Write vitest tests for session title logic (18 tests passing)
+
+## Teal Retheme (Apr 14) - COMPLETE
+- [x] Update index.css CSS variables to relaxing teal palette (soft mint bg, deep teal primary)
+- [x] Update hardcoded oklch colors in Chat.tsx to match teal theme
+- [x] Update hardcoded oklch colors in AppShell.tsx, App.tsx, Home.tsx, Landing.tsx, Onboarding.tsx, Domains.tsx, Dashboard.tsx

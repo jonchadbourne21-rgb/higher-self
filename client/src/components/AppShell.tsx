@@ -123,7 +123,7 @@ export default function AppShell({ children, noScroll }: AppShellProps) {
       <button
         onClick={() => setDisclaimerOpen(true)}
         className="fixed bottom-20 right-4 z-40 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-opacity opacity-40 hover:opacity-80"
-        style={{ background: "oklch(0.46 0.20 295 / 0.15)", border: "1px solid oklch(0.46 0.20 295 / 0.3)" }}
+        style={{ background: "oklch(0.46 0.14 185 / 0.15)", border: "1px solid oklch(0.46 0.14 185 / 0.3)" }}
         aria-label="Safety information"
       >
         <Info size={14} className="text-primary" />
@@ -186,10 +186,10 @@ export default function AppShell({ children, noScroll }: AppShellProps) {
         <div
           className="pointer-events-auto flex items-center justify-around rounded-2xl px-2 py-1.5"
           style={{
-            background: "oklch(1.00 0.00 0 / 0.94)",
+            background: "oklch(0.98 0.014 185 / 0.96)",
             backdropFilter: "blur(24px)",
             WebkitBackdropFilter: "blur(24px)",
-            border: "1px solid oklch(0.88 0.02 80 / 0.7)",
+            border: "1px solid oklch(0.86 0.03 185 / 0.7)",
             boxShadow:
               "0 4px 24px oklch(0.18 0.02 270 / 0.08), 0 1px 4px oklch(0.18 0.02 270 / 0.04)",
           }}
@@ -214,7 +214,7 @@ export default function AppShell({ children, noScroll }: AppShellProps) {
                     <motion.div
                       layoutId="nav-pill"
                       className="absolute inset-0 rounded-xl"
-                      style={{ background: "oklch(0.46 0.20 295 / 0.09)" }}
+                      style={{ background: "oklch(0.46 0.14 185 / 0.09)" }}
                       transition={{ type: "spring", stiffness: 500, damping: 35 }}
                     />
                   )}

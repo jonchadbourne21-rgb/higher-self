@@ -42,99 +42,98 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* ─── Light theme (default) ─────────────────────────────────────────────────
-   Palette rationale (color psychology for engagement & wellbeing):
-   • Warm cream background  → paper-like warmth, reduces anxiety vs cold white
-   • Deep violet primary    → wisdom, transformation, aspirational growth
-   • Amber accent           → energy, optimism, action — pairs with violet
-   • Charcoal foreground    → high contrast, readable, grounded
-   • Soft rose/teal domain  → emotional range without overwhelming saturation
+/* ─── Teal theme (default) ──────────────────────────────────────────────────
+   Palette rationale (calm, clarity, healing):
+   • Soft teal-mint background  → spacious, breath-like calm; reduces anxiety
+   • Deep teal primary          → trust, clarity, emotional balance
+   • Soft aqua accent           → refreshing, open, meditative
+   • Deep teal-slate foreground → readable, grounded, not harsh
    ─────────────────────────────────────────────────────────────────────────── */
 :root {
-  /* Base surfaces */
-  --background: oklch(0.98 0.008 80);          /* warm cream #FDFAF5 */
-  --foreground: oklch(0.18 0.02 270);          /* deep charcoal #1A1A2E */
-  --card: oklch(1.00 0.00 0);                  /* pure white cards */
-  --card-foreground: oklch(0.18 0.02 270);
-  --popover: oklch(1.00 0.00 0);
-  --popover-foreground: oklch(0.18 0.02 270);
+  /* Base surfaces — soft teal-mint wash */
+  --background: oklch(0.96 0.022 185);          /* very soft mint-teal */
+  --foreground: oklch(0.18 0.04 200);           /* deep teal-slate */
+  --card: oklch(0.98 0.014 185);                /* near-white with teal tint */
+  --card-foreground: oklch(0.18 0.04 200);
+  --popover: oklch(0.98 0.014 185);
+  --popover-foreground: oklch(0.18 0.04 200);
 
-  /* Primary: deep violet → the "Higher Self" color */
-  --primary: oklch(0.46 0.20 295);             /* #6B3FA0 rich violet */
-  --primary-foreground: oklch(0.99 0.00 0);    /* white text on violet */
+  /* Primary: deep teal — the "Higher Self" color */
+  --primary: oklch(0.46 0.14 185);              /* deep calming teal */
+  --primary-foreground: oklch(0.99 0.00 0);     /* white text on teal */
 
-  /* Secondary: warm lavender tint */
-  --secondary: oklch(0.94 0.04 295);           /* soft lavender bg */
-  --secondary-foreground: oklch(0.35 0.15 295);
+  /* Secondary: light teal tint */
+  --secondary: oklch(0.92 0.05 185);            /* soft teal bg */
+  --secondary-foreground: oklch(0.32 0.12 185);
 
-  /* Muted: warm grey-beige */
-  --muted: oklch(0.94 0.01 80);               /* warm off-white */
-  --muted-foreground: oklch(0.52 0.03 80);    /* warm grey text */
+  /* Muted: teal-grey */
+  --muted: oklch(0.92 0.018 185);              /* soft teal-grey */
+  --muted-foreground: oklch(0.50 0.04 185);    /* medium teal-grey text */
 
-  /* Accent: amber — energy, action, warmth */
-  --accent: oklch(0.95 0.06 75);              /* soft amber bg */
-  --accent-foreground: oklch(0.50 0.15 60);   /* deep amber text */
+  /* Accent: aqua-teal — refreshing, open */
+  --accent: oklch(0.90 0.06 185);              /* soft aqua bg */
+  --accent-foreground: oklch(0.36 0.12 185);   /* deep teal text */
 
   /* Semantic */
   --destructive: oklch(0.55 0.20 25);
   --destructive-foreground: oklch(0.99 0.00 0);
-  --border: oklch(0.88 0.02 80);              /* warm light border */
-  --input: oklch(0.96 0.01 80);
-  --ring: oklch(0.46 0.20 295);              /* violet focus ring */
+  --border: oklch(0.86 0.03 185);              /* soft teal border */
+  --input: oklch(0.94 0.02 185);               /* teal-tinted input bg */
+  --ring: oklch(0.46 0.14 185);               /* teal focus ring */
   --radius: 0.875rem;
 
   /* Charts */
-  --chart-1: oklch(0.55 0.18 295);           /* violet */
-  --chart-2: oklch(0.72 0.14 60);            /* amber */
-  --chart-3: oklch(0.58 0.14 155);           /* teal */
-  --chart-4: oklch(0.62 0.14 15);            /* coral */
-  --chart-5: oklch(0.60 0.12 230);           /* sky */
+  --chart-1: oklch(0.50 0.14 185);            /* deep teal */
+  --chart-2: oklch(0.62 0.14 155);            /* sage green */
+  --chart-3: oklch(0.60 0.12 210);            /* sky blue */
+  --chart-4: oklch(0.65 0.12 160);            /* mint */
+  --chart-5: oklch(0.58 0.10 230);            /* slate blue */
 
   /* Sidebar */
-  --sidebar: oklch(0.98 0.008 80);
-  --sidebar-foreground: oklch(0.18 0.02 270);
-  --sidebar-primary: oklch(0.46 0.20 295);
+  --sidebar: oklch(0.96 0.022 185);
+  --sidebar-foreground: oklch(0.18 0.04 200);
+  --sidebar-primary: oklch(0.46 0.14 185);
   --sidebar-primary-foreground: oklch(0.99 0.00 0);
-  --sidebar-accent: oklch(0.94 0.04 295);
-  --sidebar-accent-foreground: oklch(0.35 0.15 295);
-  --sidebar-border: oklch(0.88 0.02 80);
-  --sidebar-ring: oklch(0.46 0.20 295);
+  --sidebar-accent: oklch(0.92 0.05 185);
+  --sidebar-accent-foreground: oklch(0.32 0.12 185);
+  --sidebar-border: oklch(0.86 0.03 185);
+  --sidebar-ring: oklch(0.46 0.14 185);
 }
 
-/* Dark mode override — keep available but not default */
+/* Dark mode — deep teal-slate */
 .dark {
-  --background: oklch(0.12 0.025 270);
-  --foreground: oklch(0.95 0.01 80);
-  --card: oklch(0.16 0.025 270);
-  --card-foreground: oklch(0.95 0.01 80);
-  --popover: oklch(0.14 0.025 270);
-  --popover-foreground: oklch(0.95 0.01 80);
-  --primary: oklch(0.72 0.16 295);
-  --primary-foreground: oklch(0.12 0.02 270);
-  --secondary: oklch(0.20 0.04 270);
-  --secondary-foreground: oklch(0.85 0.01 80);
-  --muted: oklch(0.20 0.02 270);
-  --muted-foreground: oklch(0.55 0.02 80);
-  --accent: oklch(0.24 0.05 270);
-  --accent-foreground: oklch(0.90 0.01 80);
+  --background: oklch(0.14 0.03 200);
+  --foreground: oklch(0.93 0.02 185);
+  --card: oklch(0.18 0.03 200);
+  --card-foreground: oklch(0.93 0.02 185);
+  --popover: oklch(0.16 0.03 200);
+  --popover-foreground: oklch(0.93 0.02 185);
+  --primary: oklch(0.65 0.14 185);
+  --primary-foreground: oklch(0.12 0.03 200);
+  --secondary: oklch(0.22 0.05 200);
+  --secondary-foreground: oklch(0.85 0.02 185);
+  --muted: oklch(0.22 0.025 200);
+  --muted-foreground: oklch(0.55 0.03 185);
+  --accent: oklch(0.26 0.06 200);
+  --accent-foreground: oklch(0.90 0.02 185);
   --destructive: oklch(0.55 0.18 25);
-  --destructive-foreground: oklch(0.98 0.01 80);
-  --border: oklch(0.24 0.025 270);
-  --input: oklch(0.20 0.025 270);
-  --ring: oklch(0.72 0.16 295);
-  --chart-1: oklch(0.70 0.16 295);
-  --chart-2: oklch(0.72 0.14 60);
-  --chart-3: oklch(0.65 0.12 155);
-  --chart-4: oklch(0.68 0.14 15);
-  --chart-5: oklch(0.65 0.12 230);
-  --sidebar: oklch(0.12 0.025 270);
-  --sidebar-foreground: oklch(0.85 0.01 80);
-  --sidebar-primary: oklch(0.72 0.16 295);
-  --sidebar-primary-foreground: oklch(0.12 0.02 270);
-  --sidebar-accent: oklch(0.20 0.04 270);
-  --sidebar-accent-foreground: oklch(0.85 0.01 80);
-  --sidebar-border: oklch(0.22 0.025 270);
-  --sidebar-ring: oklch(0.72 0.16 295);
+  --destructive-foreground: oklch(0.98 0.01 185);
+  --border: oklch(0.26 0.03 200);
+  --input: oklch(0.22 0.03 200);
+  --ring: oklch(0.65 0.14 185);
+  --chart-1: oklch(0.65 0.14 185);
+  --chart-2: oklch(0.65 0.12 155);
+  --chart-3: oklch(0.62 0.12 210);
+  --chart-4: oklch(0.68 0.12 160);
+  --chart-5: oklch(0.62 0.10 230);
+  --sidebar: oklch(0.14 0.03 200);
+  --sidebar-foreground: oklch(0.85 0.02 185);
+  --sidebar-primary: oklch(0.65 0.14 185);
+  --sidebar-primary-foreground: oklch(0.12 0.03 200);
+  --sidebar-accent: oklch(0.22 0.05 200);
+  --sidebar-accent-foreground: oklch(0.85 0.02 185);
+  --sidebar-border: oklch(0.24 0.03 200);
+  --sidebar-ring: oklch(0.65 0.14 185);
 }
 
 @layer base {
@@ -167,28 +166,28 @@
 @layer utilities {
   /* ── Card / glass surfaces ─────────────────────────────────────────────── */
   .glass {
-    background: oklch(1.00 0.00 0 / 0.85);
+    background: oklch(0.98 0.014 185 / 0.88);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid oklch(0.88 0.02 80 / 0.8);
-    box-shadow: 0 2px 12px oklch(0.18 0.02 270 / 0.06);
+    border: 1px solid oklch(0.86 0.03 185 / 0.8);
+    box-shadow: 0 2px 12px oklch(0.18 0.04 200 / 0.06);
   }
   .glass-light {
-    background: oklch(1.00 0.00 0 / 0.6);
+    background: oklch(0.98 0.014 185 / 0.6);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid oklch(0.88 0.02 80 / 0.5);
+    border: 1px solid oklch(0.86 0.03 185 / 0.5);
   }
 
   /* ── Text gradients ────────────────────────────────────────────────────── */
   .text-gold-gradient {
-    background: linear-gradient(135deg, oklch(0.46 0.20 295), oklch(0.72 0.18 60));
+    background: linear-gradient(135deg, oklch(0.46 0.14 185), oklch(0.62 0.14 155));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
   .text-violet-gradient {
-    background: linear-gradient(135deg, oklch(0.46 0.20 295), oklch(0.60 0.18 320));
+    background: linear-gradient(135deg, oklch(0.46 0.14 185), oklch(0.58 0.12 210));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -196,28 +195,28 @@
 
   /* ── Glow effects ──────────────────────────────────────────────────────── */
   .glow-gold {
-    box-shadow: 0 4px 24px oklch(0.46 0.20 295 / 0.18), 0 1px 4px oklch(0.46 0.20 295 / 0.10);
+    box-shadow: 0 4px 24px oklch(0.46 0.14 185 / 0.22), 0 1px 4px oklch(0.46 0.14 185 / 0.12);
   }
   .glow-amber {
-    box-shadow: 0 4px 24px oklch(0.72 0.18 60 / 0.25), 0 1px 4px oklch(0.72 0.18 60 / 0.12);
+    box-shadow: 0 4px 24px oklch(0.62 0.14 155 / 0.25), 0 1px 4px oklch(0.62 0.14 155 / 0.12);
   }
 
   /* ── Background textures ───────────────────────────────────────────────── */
   .bg-aurora {
     background:
-      radial-gradient(ellipse at 15% 0%, oklch(0.46 0.20 295 / 0.07) 0%, transparent 45%),
-      radial-gradient(ellipse at 85% 10%, oklch(0.72 0.18 60 / 0.06) 0%, transparent 45%),
-      radial-gradient(ellipse at 50% 90%, oklch(0.58 0.14 155 / 0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 15% 0%, oklch(0.46 0.14 185 / 0.10) 0%, transparent 45%),
+      radial-gradient(ellipse at 85% 10%, oklch(0.62 0.14 155 / 0.07) 0%, transparent 45%),
+      radial-gradient(ellipse at 50% 90%, oklch(0.60 0.12 210 / 0.05) 0%, transparent 50%),
       var(--background);
   }
 
   /* ── Domain color chips ────────────────────────────────────────────────── */
-  .domain-mindset      { background: oklch(0.92 0.06 295 / 0.8); color: oklch(0.40 0.18 295); border-color: oklch(0.80 0.08 295); }
-  .domain-relationships{ background: oklch(0.94 0.06 15 / 0.8);  color: oklch(0.45 0.18 15);  border-color: oklch(0.82 0.08 15); }
-  .domain-work         { background: oklch(0.94 0.06 60 / 0.8);  color: oklch(0.48 0.18 60);  border-color: oklch(0.82 0.10 60); }
-  .domain-health       { background: oklch(0.92 0.06 155 / 0.8); color: oklch(0.40 0.16 155); border-color: oklch(0.80 0.08 155); }
-  .domain-spirituality { background: oklch(0.93 0.05 230 / 0.8); color: oklch(0.42 0.16 230); border-color: oklch(0.80 0.08 230); }
-  .domain-finances     { background: oklch(0.92 0.06 165 / 0.8); color: oklch(0.40 0.16 165); border-color: oklch(0.80 0.08 165); }
+  .domain-mindset      { background: oklch(0.90 0.06 185 / 0.8); color: oklch(0.38 0.14 185); border-color: oklch(0.78 0.08 185); }
+  .domain-relationships{ background: oklch(0.92 0.06 15 / 0.8);  color: oklch(0.45 0.18 15);  border-color: oklch(0.82 0.08 15); }
+  .domain-work         { background: oklch(0.92 0.06 155 / 0.8); color: oklch(0.42 0.14 155); border-color: oklch(0.80 0.08 155); }
+  .domain-health       { background: oklch(0.90 0.06 160 / 0.8); color: oklch(0.38 0.14 160); border-color: oklch(0.78 0.08 160); }
+  .domain-spirituality { background: oklch(0.91 0.05 210 / 0.8); color: oklch(0.40 0.12 210); border-color: oklch(0.78 0.08 210); }
+  .domain-finances     { background: oklch(0.90 0.06 165 / 0.8); color: oklch(0.38 0.14 165); border-color: oklch(0.78 0.08 165); }
 
   /* ── Typography ────────────────────────────────────────────────────────── */
   .font-serif {
@@ -236,24 +235,24 @@
 
   /* ── Gradient button ───────────────────────────────────────────────────── */
   .btn-gradient {
-    background: linear-gradient(135deg, oklch(0.46 0.20 295), oklch(0.55 0.18 320));
+    background: linear-gradient(135deg, oklch(0.46 0.14 185), oklch(0.52 0.14 200));
     color: white;
     border: none;
   }
   .btn-gradient:hover {
-    background: linear-gradient(135deg, oklch(0.42 0.22 295), oklch(0.50 0.20 320));
+    background: linear-gradient(135deg, oklch(0.40 0.16 185), oklch(0.46 0.14 200));
   }
 
-  /* ── Warm card variant ─────────────────────────────────────────────────── */
+  /* ── Teal card variant ─────────────────────────────────────────────────── */
   .card-warm {
-    background: linear-gradient(145deg, oklch(1.00 0.00 0), oklch(0.97 0.02 80));
-    border: 1px solid oklch(0.88 0.02 80);
-    box-shadow: 0 2px 16px oklch(0.18 0.02 270 / 0.06);
+    background: linear-gradient(145deg, oklch(0.98 0.014 185), oklch(0.95 0.025 185));
+    border: 1px solid oklch(0.86 0.03 185);
+    box-shadow: 0 2px 16px oklch(0.18 0.04 200 / 0.06);
   }
 
   /* ── Highlight strip ───────────────────────────────────────────────────── */
   .highlight-violet {
-    border-left: 3px solid oklch(0.46 0.20 295);
+    border-left: 3px solid oklch(0.46 0.14 185);
     padding-left: 0.75rem;
   }
 }
@@ -261,12 +260,12 @@
 /* ── Scrollbar ──────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: oklch(0.82 0.04 80); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: oklch(0.80 0.04 185); border-radius: 2px; }
 
 /* ── Streamdown markdown rendering ─────────────────────────────────────── */
-.streamdown-content p { margin-bottom: 0.75rem; line-height: 1.7; color: oklch(0.30 0.02 270); }
-.streamdown-content strong { color: oklch(0.46 0.20 295); font-weight: 600; }
-.streamdown-content em { color: oklch(0.45 0.05 80); }
+.streamdown-content p { margin-bottom: 0.75rem; line-height: 1.7; color: oklch(0.28 0.04 200); }
+.streamdown-content strong { color: oklch(0.40 0.14 185); font-weight: 600; }
+.streamdown-content em { color: oklch(0.44 0.06 185); }
 
 @layer components {
   /**

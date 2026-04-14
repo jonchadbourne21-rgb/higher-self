@@ -113,8 +113,8 @@ function App() {
             theme="light"
             toastOptions={{
               style: {
-                background: "oklch(1.00 0.00 0)",
-                border: "1px solid oklch(0.88 0.02 80)",
+                background: "oklch(0.98 0.014 185)",
+                border: "1px solid oklch(0.86 0.03 185)",
                 color: "oklch(0.18 0.02 270)",
               },
             }}

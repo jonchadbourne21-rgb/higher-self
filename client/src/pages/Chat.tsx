@@ -388,7 +388,7 @@ export default function Chat() {
               className="overflow-hidden flex-shrink-0"
             >
               <div className="px-4 py-2 flex items-center justify-between"
-                style={{ background: "oklch(0.46 0.20 295 / 0.08)", borderBottom: "1px solid oklch(0.46 0.20 295 / 0.15)" }}>
+                style={{ background: "oklch(0.46 0.14 185 / 0.08)", borderBottom: "1px solid oklch(0.46 0.14 185 / 0.15)" }}>
                 <span className="text-xs text-primary/80 font-medium">
                   📖 Viewing past conversation (read-only)
                 </span>
@@ -547,7 +547,7 @@ export default function Chat() {
                                     </span>
                                     {isCurrentSession && (
                                       <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
-                                        style={{ background: "oklch(0.46 0.20 295 / 0.12)", color: "oklch(0.46 0.20 295)" }}>
+                                        style={{ background: "oklch(0.46 0.14 185 / 0.12)", color: "oklch(0.46 0.14 185)" }}>
                                         Current
                                       </span>
                                     )}

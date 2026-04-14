@@ -59,8 +59,8 @@ export default function Landing() {
       className="h-dvh flex flex-col items-center justify-between px-6 py-12 max-w-[480px] mx-auto overflow-y-auto"
       style={{
         background:
-          "radial-gradient(ellipse at 20% 0%, oklch(0.46 0.20 295 / 0.07) 0%, transparent 50%), " +
-          "radial-gradient(ellipse at 80% 15%, oklch(0.72 0.18 60 / 0.07) 0%, transparent 50%), " +
+          "radial-gradient(ellipse at 20% 0%, oklch(0.46 0.14 185 / 0.07) 0%, transparent 50%), " +
+          "radial-gradient(ellipse at 80% 15%, oklch(0.62 0.14 155 / 0.07) 0%, transparent 50%), " +
           "oklch(0.98 0.008 80)",
       }}
     >
@@ -75,9 +75,9 @@ export default function Landing() {
           <div
             className="w-16 h-16 rounded-full flex items-center justify-center"
             style={{
-              background: "linear-gradient(135deg, oklch(0.46 0.20 295 / 0.15), oklch(0.72 0.18 60 / 0.12))",
-              border: "1.5px solid oklch(0.46 0.20 295 / 0.25)",
-              boxShadow: "0 4px 24px oklch(0.46 0.20 295 / 0.15)",
+              background: "linear-gradient(135deg, oklch(0.46 0.14 185 / 0.15), oklch(0.62 0.14 155 / 0.12))",
+              border: "1.5px solid oklch(0.46 0.14 185 / 0.25)",
+              boxShadow: "0 4px 24px oklch(0.46 0.14 185 / 0.15)",
             }}
           >
             <span className="text-3xl text-violet-gradient">✦</span>
@@ -86,7 +86,7 @@ export default function Landing() {
             animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.1, 0.4] }}
             transition={{ repeat: Infinity, duration: 3 }}
             className="absolute -inset-3 rounded-full"
-            style={{ border: "1px solid oklch(0.46 0.20 295 / 0.2)" }}
+            style={{ border: "1px solid oklch(0.46 0.14 185 / 0.2)" }}
           />
         </div>
         <p className="text-xs tracking-[0.35em] text-violet-500 uppercase font-medium">Higher Self</p>
@@ -116,8 +116,8 @@ export default function Landing() {
             href={getLoginUrl()}
             className="w-full py-4 rounded-2xl font-semibold text-base tracking-wide text-center text-white transition-all duration-200 active:scale-95"
             style={{
-              background: "linear-gradient(135deg, oklch(0.46 0.20 295), oklch(0.55 0.18 320))",
-              boxShadow: "0 6px 28px oklch(0.46 0.20 295 / 0.30)",
+              background: "linear-gradient(135deg, oklch(0.46 0.14 185), oklch(0.52 0.14 200))",
+              boxShadow: "0 6px 28px oklch(0.46 0.14 185 / 0.30)",
             }}
           >
             Begin Your Journey
