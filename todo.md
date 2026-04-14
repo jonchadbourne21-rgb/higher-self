@@ -344,3 +344,12 @@
 - [x] Integrate disclaimer footer into AppShell layout (displays on all pages)
 - [x] Styled with clean, organized layout (3 sections: What Synapset Is, What It's NOT, Crisis Help)
 - [x] Emergency numbers: 988, 1-800-273-8255, 911 (clickable tel: links)
+
+
+## Chat UX Improvements (Apr 13) - COMPLETE
+- [x] Auto-scroll to latest message when chat page loads (instant scroll on history load)
+- [x] Smooth-scroll to bottom when new messages arrive
+- [x] Implement date/time stamp logic for messages 1+ hour apart
+- [x] Style date/time stamps (centered pill, subtle muted color)
+- [x] Format: today = time only, yesterday = 'Yesterday · time', older = 'Apr 13 · time'
+- [x] 9 vitest tests passing for timestamp logic

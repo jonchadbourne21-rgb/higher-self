@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Send, ChevronLeft } from "lucide-react";
+import { Send } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
 
@@ -16,16 +16,52 @@ const STARTER_PROMPTS = [
   "Help me understand a difficult emotion I'm feeling",
 ];
 
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+  id: string;
+  createdAt?: Date;
+};
+
+/** Returns true if currentMsg was sent 60+ minutes after prevMsg */
+function shouldShowTimestamp(prev: ChatMessage, current: ChatMessage): boolean {
+  if (!prev.createdAt || !current.createdAt) return false;
+  const diffMs = current.createdAt.getTime() - prev.createdAt.getTime();
+  return diffMs >= 60 * 60 * 1000; // 1 hour in ms
+}
+
+/** Formats a Date for display in the timestamp pill */
+function formatTimestamp(date: Date): string {
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  const isYesterday =
+    new Date(now.getTime() - 86_400_000).toDateString() === date.toDateString();
+
+  const time = date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  if (isToday) return time;
+  if (isYesterday) return `Yesterday · ${time}`;
+  return (
+    date.toLocaleDateString("en-US", { month: "short", day: "numeric" }) +
+    ` · ${time}`
+  );
+}
+
 export default function Chat() {
   const { isAuthenticated, loading } = useAuth();
   const [, navigate] = useLocation();
   const [input, setInput] = useState("");
-  const [localMessages, setLocalMessages] = useState<{ role: "user" | "assistant"; content: string; id: string }[]>([]);
+  const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const hasScrolledOnLoad = useRef(false);
 
-  const { data: history, refetch } = trpc.chat.history.useQuery(undefined, {
+  const { data: history } = trpc.chat.history.useQuery(undefined, {
     enabled: isAuthenticated,
   });
 
@@ -34,7 +70,12 @@ export default function Chat() {
       setIsThinking(false);
       setLocalMessages((prev) => [
         ...prev,
-        { role: "assistant", content: data.response, id: Date.now().toString() },
+        {
+          role: "assistant",
+          content: data.response,
+          id: Date.now().toString(),
+          createdAt: new Date(),
+        },
       ]);
     },
     onError: () => {
@@ -47,15 +88,36 @@ export default function Chat() {
     if (!loading && !isAuthenticated) navigate("/");
   }, [isAuthenticated, loading]);
 
+  // Auto-scroll to bottom on initial history load (instant, not animated)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (history && history.length > 0 && !hasScrolledOnLoad.current) {
+      hasScrolledOnLoad.current = true;
+      // Use a short timeout to allow the DOM to render before scrolling
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+      }, 80);
+    }
+  }, [history]);
+
+  // Smooth-scroll to bottom whenever new messages or thinking state changes
+  useEffect(() => {
+    if (hasScrolledOnLoad.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [localMessages, isThinking]);
 
-  // Merge history with local messages
-  const allMessages = [
-    ...(history || []).map((m) => ({ ...m, id: m.id.toString() })),
+  // Merge history with local messages (deduplicate)
+  const allMessages: ChatMessage[] = [
+    ...(history || []).map((m) => ({
+      ...m,
+      id: m.id.toString(),
+      createdAt: new Date(m.createdAt),
+    })),
     ...localMessages.filter(
-      (lm) => !(history || []).some((hm) => hm.content === lm.content && hm.role === lm.role)
+      (lm) =>
+        !(history || []).some(
+          (hm) => hm.content === lm.content && hm.role === lm.role
+        )
     ),
   ];
 
@@ -65,7 +127,12 @@ export default function Chat() {
     setInput("");
     setLocalMessages((prev) => [
       ...prev,
-      { role: "user", content: msg, id: Date.now().toString() },
+      {
+        role: "user",
+        content: msg,
+        id: Date.now().toString(),
+        createdAt: new Date(),
+      },
     ]);
     setIsThinking(true);
     sendMutation.mutate({ message: msg });
@@ -125,35 +192,45 @@ export default function Chat() {
             </div>
           )}
 
-          {allMessages.map((msg) => (
-            <motion.div
-              key={msg.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-            >
-              {msg.role === "assistant" && (
-                <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mr-2 mt-1 flex-shrink-0">
-                  <span className="text-xs">✦</span>
+          {allMessages.map((msg, index) => (
+            <div key={msg.id}>
+              {/* Timestamp pill — shown when 1+ hour gap from previous message */}
+              {index > 0 && shouldShowTimestamp(allMessages[index - 1], msg) && (
+                <div className="flex justify-center my-3">
+                  <span className="text-[11px] text-muted-foreground/60 bg-muted/30 px-3 py-1 rounded-full tracking-wide">
+                    {formatTimestamp(msg.createdAt!)}
+                  </span>
                 </div>
               )}
-              <div
-                className={`max-w-[80%] rounded-3xl px-4 py-3 ${
-                  msg.role === "user"
-                    ? "bg-primary text-primary-foreground rounded-br-lg"
-                    : "glass rounded-bl-lg"
-                }`}
+
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                {msg.role === "assistant" ? (
-                  <div className="streamdown-content text-sm leading-relaxed">
-                    <Streamdown>{msg.content}</Streamdown>
+                {msg.role === "assistant" && (
+                  <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mr-2 mt-1 flex-shrink-0">
+                    <span className="text-xs">✦</span>
                   </div>
-                ) : (
-                  <p className="text-sm leading-relaxed">{msg.content}</p>
                 )}
-              </div>
-            </motion.div>
+                <div
+                  className={`max-w-[80%] rounded-3xl px-4 py-3 ${
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground rounded-br-lg"
+                      : "glass rounded-bl-lg"
+                  }`}
+                >
+                  {msg.role === "assistant" ? (
+                    <div className="streamdown-content text-sm leading-relaxed">
+                      <Streamdown>{msg.content}</Streamdown>
+                    </div>
+                  ) : (
+                    <p className="text-sm leading-relaxed">{msg.content}</p>
+                  )}
+                </div>
+              </motion.div>
+            </div>
           ))}
 
           {isThinking && (
