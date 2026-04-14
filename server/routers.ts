@@ -16,6 +16,7 @@ import {
   getAllInsights,
   getActivePushSubscription,
   getChatHistory,
+  getCurrentSessionId,
   getDomainScoreHistory,
   getHabitStreaks,
   getJournalEntries,
@@ -489,21 +490,32 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
   // ─── AI Mirror Chat ───────────────────────────────────────────────────────
 
   chat: router({
-    history: protectedProcedure.query(async ({ ctx }) => {
-      const messages = await getChatHistory(ctx.user.id, 50);
-      return messages.reverse();
+    history: protectedProcedure
+      .input(z.object({ sessionId: z.string().nullable().optional() }).optional())
+      .query(async ({ ctx, input }) => {
+        const sid = input?.sessionId !== undefined
+          ? input.sessionId
+          : await getCurrentSessionId(ctx.user.id);
+        return getChatHistory(ctx.user.id, sid);
+      }),
+
+    clearConversation: protectedProcedure.mutation(async () => {
+      const { randomUUID } = await import("crypto");
+      const newSessionId = randomUUID();
+      return { newSessionId };
     }),
 
     send: protectedProcedure
-      .input(z.object({ message: z.string().min(1) }))
+      .input(z.object({ message: z.string().min(1), sessionId: z.string().nullable().optional() }))
       .mutation(async ({ ctx, input }) => {
+        const sessionId = input.sessionId ?? null;
         // Save user message
         const savedMsgId = await saveChatMessage({
           userId: ctx.user.id,
           role: "user",
           content: input.message,
+          sessionId,
         });
-
         // RAG: Retrieve similar journal entries
         console.log(`[Chat] Retrieving RAG context for user ${ctx.user.id}`);
         let ragContextSection = "";
@@ -514,7 +526,6 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
             input.message,
             3
           );
-
           if (contextEntries.length > 0) {
             ragEntriesCount = contextEntries.length;
             ragContextSection = `\n\nRELEVANT PAST ENTRIES (from your journal):\n`;
@@ -524,7 +535,6 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
                   `[${entry.createdAt.toDateString()}] "${entry.title || "Untitled"}"\n${entry.content.substring(0, 300)}${entry.content.length > 300 ? "..." : ""}\n(similarity: ${(entry.score * 100).toFixed(0)}%)`
               )
               .join("\n\n---\n\n");
-
             console.log(
               `[Chat] Injecting ${contextEntries.length} context entries into system prompt`
             );
@@ -534,14 +544,11 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
         } catch (error) {
           console.error("[Chat] RAG context retrieval failed, continuing without context:", error);
         }
-
-        // Get recent chat history for context
-        const history = await getChatHistory(ctx.user.id, 20);
-        const recentMessages = history.reverse().slice(-10);
-
+        // Get recent chat history for current session (for context)
+        const history = await getChatHistory(ctx.user.id, sessionId, 20);
+        const recentMessages = history.slice(-10);
         let systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id, ctx.user.seedIntent || undefined);
         systemPrompt += ragContextSection;
-
         const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
           { role: "system", content: systemPrompt },
           ...recentMessages.map((m) => ({
@@ -549,22 +556,20 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
             content: m.content,
           })),
         ];
-
         const aiRes = await invokeLLM({ messages });
         const rawAiContent = aiRes.choices[0]?.message?.content;
         const aiContent = typeof rawAiContent === 'string' ? rawAiContent : "I'm here with you.";
-
         // Save AI response with context snapshot
         const aiMsgId = await saveChatMessage({
           userId: ctx.user.id,
           role: "assistant",
           content: aiContent,
+          sessionId,
           contextSnapshot: {
             ragContextUsed: ragEntriesCount > 0,
             ragEntriesCount,
           },
         });
-
         return { response: aiContent, messageId: aiMsgId };
       }),
   }),

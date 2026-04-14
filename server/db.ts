@@ -431,15 +431,42 @@ export async function deleteJournalCategory(id: number, userId: number) {
 
 // ─── Chat Messages ────────────────────────────────────────────────────────────
 
-export async function getChatHistory(userId: number, limit = 50) {
+/**
+ * Get the current session ID for a user.
+ * Returns the sessionId of the most recent message, or null if no messages exist.
+ * NULL sessionId = legacy messages (shown in the first/default session).
+ */
+export async function getCurrentSessionId(userId: number): Promise<string | null> {
   const db = await getDb();
-  if (!db) return [];
-  return db
-    .select()
+  if (!db) return null;
+  const result = await db
+    .select({ sessionId: chatMessages.sessionId })
     .from(chatMessages)
     .where(eq(chatMessages.userId, userId))
     .orderBy(desc(chatMessages.createdAt))
+    .limit(1);
+  if (result.length === 0) return null;
+  return result[0].sessionId ?? null;
+}
+
+/**
+ * Get chat history for a specific session.
+ * If sessionId is null, returns messages where sessionId IS NULL (legacy messages).
+ */
+export async function getChatHistory(userId: number, sessionId?: string | null, limit = 100) {
+  const db = await getDb();
+  if (!db) return [];
+  const { isNull } = await import("drizzle-orm");
+  const condition = sessionId != null
+    ? and(eq(chatMessages.userId, userId), eq(chatMessages.sessionId, sessionId))
+    : and(eq(chatMessages.userId, userId), isNull(chatMessages.sessionId));
+  const rows = await db
+    .select()
+    .from(chatMessages)
+    .where(condition)
+    .orderBy(desc(chatMessages.createdAt))
     .limit(limit);
+  return rows.reverse();
 }
 
 export async function saveChatMessage(data: typeof chatMessages.$inferInsert): Promise<number | undefined> {

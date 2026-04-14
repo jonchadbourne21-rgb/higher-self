@@ -191,6 +191,9 @@ export const chatMessages = mysqlTable("chat_messages", {
   content: text("content").notNull(),
   // Context snapshot used for this message (JSON)
   contextSnapshot: json("contextSnapshot").$type<Record<string, unknown>>(),
+  // Session ID — groups messages into conversations. When user clears, a new session UUID is created.
+  // NULL means legacy messages before sessions were introduced (shown in the first session).
+  sessionId: varchar("sessionId", { length: 36 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

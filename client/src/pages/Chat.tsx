@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Send, Heart, Star, BookOpen } from "lucide-react";
+import { Send, Heart, Star, BookOpen, RefreshCw, X } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
 
@@ -21,14 +21,14 @@ type ChatMessage = {
   content: string;
   id: string;
   createdAt?: Date;
-  dbId?: number; // the database ID for assistant messages
+  dbId?: number;
 };
 
 /** Returns true if currentMsg was sent 60+ minutes after prevMsg */
 function shouldShowTimestamp(prev: ChatMessage, current: ChatMessage): boolean {
   if (!prev.createdAt || !current.createdAt) return false;
   const diffMs = current.createdAt.getTime() - prev.createdAt.getTime();
-  return diffMs >= 60 * 60 * 1000; // 1 hour in ms
+  return diffMs >= 60 * 60 * 1000;
 }
 
 /** Formats a Date for display in the timestamp pill */
@@ -58,12 +58,30 @@ export default function Chat() {
   const [input, setInput] = useState("");
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  // sessionId: null = legacy/first session, string = new session after clear
+  const [sessionId, setSessionId] = useState<string | null | undefined>(undefined);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const hasScrolledOnLoad = useRef(false);
 
-  const { data: history } = trpc.chat.history.useQuery(undefined, {
-    enabled: isAuthenticated,
+  const utils = trpc.useUtils();
+
+  const { data: history } = trpc.chat.history.useQuery(
+    sessionId !== undefined ? { sessionId } : undefined,
+    { enabled: isAuthenticated && sessionId !== undefined }
+  );
+
+  const clearMutation = trpc.chat.clearConversation.useMutation({
+    onSuccess: (data) => {
+      setSessionId(data.newSessionId);
+      setLocalMessages([]);
+      hasScrolledOnLoad.current = false;
+      utils.chat.history.invalidate();
+      setShowClearConfirm(false);
+      toast.success("Fresh start — your history is still saved.");
+    },
+    onError: () => toast.error("Couldn't clear conversation. Try again."),
   });
 
   const sendMutation = trpc.chat.send.useMutation({
@@ -94,11 +112,9 @@ export default function Chat() {
     onError: () => toast.error("Couldn't save insight. Try again."),
   });
 
-  // Track which messages have been reacted to (msgId -> reactionType)
-  const [reactions, setReactions] = useState<Record<string, "heart" | "star">>({}); 
+  const [reactions, setReactions] = useState<Record<string, "heart" | "star">>({});
 
   const handleReaction = (msg: ChatMessage, type: "heart" | "star") => {
-    // Toggle off if same reaction
     if (reactions[msg.id] === type) {
       setReactions((prev) => { const n = { ...prev }; delete n[msg.id]; return n; });
       return;
@@ -115,11 +131,18 @@ export default function Chat() {
     if (!loading && !isAuthenticated) navigate("/");
   }, [isAuthenticated, loading]);
 
-  // Auto-scroll to bottom on initial history load (instant, not animated)
+  // On first load, determine the current session from history
+  useEffect(() => {
+    if (sessionId === undefined && isAuthenticated) {
+      // Start with null to load legacy/first session
+      setSessionId(null);
+    }
+  }, [isAuthenticated, sessionId]);
+
+  // Auto-scroll to bottom on initial history load (instant)
   useEffect(() => {
     if (history && history.length > 0 && !hasScrolledOnLoad.current) {
       hasScrolledOnLoad.current = true;
-      // Use a short timeout to allow the DOM to render before scrolling
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
       }, 80);
@@ -163,7 +186,7 @@ export default function Chat() {
       },
     ]);
     setIsThinking(true);
-    sendMutation.mutate({ message: msg });
+    sendMutation.mutate({ message: msg, sessionId });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -192,15 +215,74 @@ export default function Chat() {
               <p className="text-xs text-muted-foreground">Always present, always honest</p>
             </div>
           </div>
-          <button
-            onClick={() => navigate("/saved-insights")}
-            title="View saved insights"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-muted-foreground border border-border/40 hover:border-primary/30 hover:text-primary transition-all"
-          >
-            <BookOpen className="w-3.5 h-3.5" />
-            Saved
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              title="Start a fresh conversation"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-muted-foreground border border-border/40 hover:border-primary/30 hover:text-primary transition-all"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              New
+            </button>
+            <button
+              onClick={() => navigate("/saved-insights")}
+              title="View saved insights"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-muted-foreground border border-border/40 hover:border-primary/30 hover:text-primary transition-all"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              Saved
+            </button>
+          </div>
         </div>
+
+        {/* Clear Conversation Confirmation Dialog */}
+        <AnimatePresence>
+          {showClearConfirm && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm px-6"
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="glass rounded-3xl p-6 w-full max-w-sm space-y-4"
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-base font-semibold text-foreground">Start fresh?</h3>
+                    <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                      Your previous conversation will be preserved — this just opens a clean slate for a new session.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowClearConfirm(false)}
+                    className="text-muted-foreground hover:text-foreground ml-3 flex-shrink-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowClearConfirm(false)}
+                    className="flex-1 py-2.5 rounded-2xl border border-border/40 text-sm text-muted-foreground hover:text-foreground transition-all"
+                  >
+                    Keep going
+                  </button>
+                  <button
+                    onClick={() => clearMutation.mutate()}
+                    disabled={clearMutation.isPending}
+                    className="flex-1 py-2.5 rounded-2xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all disabled:opacity-60 glow-gold"
+                  >
+                    {clearMutation.isPending ? "Starting..." : "Start fresh ✦"}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-hide pb-4">

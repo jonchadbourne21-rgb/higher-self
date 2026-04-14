@@ -364,3 +364,13 @@
 - [x] Create Saved Insights journal page with All/Emotional/Actionable filter tabs
 - [x] Add 'Saved' button in Chat header linking to Saved Insights page
 - [x] 14 vitest tests passing for savedInsights logic
+
+## Clear Conversation Feature (Apr 14) - COMPLETE
+- [x] Add sessionId column to chat_messages table (to group messages by session)
+- [x] Generate and execute migration for sessionId column
+- [x] Add chat.clearConversation tRPC procedure (creates new session UUID, preserves old messages)
+- [x] Update chat.history procedure to filter by sessionId
+- [x] Update chat.send procedure to pass sessionId with new messages
+- [x] Add "New" button in Chat header with confirmation dialog ("Start fresh ✦")
+- [x] Confirmation modal: "Your previous conversation will be preserved"
+- [x] 8 vitest tests passing for session isolation and UUID generation logic
