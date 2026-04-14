@@ -396,3 +396,11 @@
 - [x] Add Saved Insights tab to bottom navigation bar — permanent 5th tab with Bookmark icon
 - [x] Build Past Conversations viewer in chat header — slide-up sheet with session list, read-only view, "Back to live" CTA
 - [x] Write vitest tests for past conversations logic (13 tests passing: intent config, date formatting, session shape)
+
+## Session Naming / Title (Apr 14) - COMPLETE
+- [x] Add chat_sessions table with sessionId + title columns (migration applied)
+- [x] Add getChatSessionTitles and updateSessionTitle DB helpers in server/db.ts
+- [x] Add chat.getSessionTitles and chat.updateSessionTitle tRPC procedures
+- [x] Update Past Conversations panel: show custom title if set, fallback to date label
+- [x] Inline edit: pencil icon on hover → inline input field → save with Enter or checkmark
+- [x] Write vitest tests for session title logic (18 tests passing)

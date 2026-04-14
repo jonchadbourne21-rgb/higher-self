@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Send, Heart, Star, RefreshCw, X, History, ChevronRight } from "lucide-react";
+import { Send, Heart, Star, RefreshCw, X, History, ChevronRight, Pencil, Check } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
 
@@ -95,6 +95,11 @@ export default function Chat() {
   const [viewingSessionId, setViewingSessionId] = useState<string | null | undefined>(undefined);
   const isViewingPast = viewingSessionId !== undefined;
 
+  // Session title editing state
+  const [editingSessionId, setEditingSessionId] = useState<string | null | undefined>(undefined);
+  const [editingTitle, setEditingTitle] = useState("");
+  const titleInputRef = useRef<HTMLInputElement>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const hasScrolledOnLoad = useRef(false);
@@ -115,6 +120,11 @@ export default function Chat() {
 
   // Fetch all sessions for history panel
   const { data: sessions } = trpc.chat.sessions.useQuery(undefined, {
+    enabled: isAuthenticated && showHistory,
+  });
+
+  // Fetch session titles map
+  const { data: sessionTitles } = trpc.chat.getSessionTitles.useQuery(undefined, {
     enabled: isAuthenticated && showHistory,
   });
 
@@ -163,6 +173,16 @@ export default function Chat() {
     onError: () => toast.error("Couldn't save insight. Try again."),
   });
 
+  const updateTitleMutation = trpc.chat.updateSessionTitle.useMutation({
+    onSuccess: () => {
+      utils.chat.getSessionTitles.invalidate();
+      setEditingSessionId(undefined);
+      setEditingTitle("");
+      toast.success("Conversation named ✦");
+    },
+    onError: () => toast.error("Couldn't save title. Try again."),
+  });
+
   const [reactions, setReactions] = useState<Record<string, "heart" | "star">>({});
 
   const handleReaction = (msg: ChatMessage, type: "heart" | "star") => {
@@ -205,6 +225,13 @@ export default function Chat() {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [localMessages, isThinking]);
+
+  // Focus title input when editing starts
+  useEffect(() => {
+    if (editingSessionId !== undefined) {
+      setTimeout(() => titleInputRef.current?.focus(), 50);
+    }
+  }, [editingSessionId]);
 
   // Merge history with local messages (deduplicate)
   const allMessages: ChatMessage[] = useMemo(() => {
@@ -273,6 +300,34 @@ export default function Chat() {
   const handleBackToLive = () => {
     setViewingSessionId(undefined);
     hasScrolledOnLoad.current = false;
+  };
+
+  const handleStartEditTitle = (e: React.MouseEvent, sid: string | null) => {
+    e.stopPropagation();
+    const key = sid ?? "__legacy__";
+    const currentTitle = sessionTitles?.[key] ?? "";
+    setEditingSessionId(sid);
+    setEditingTitle(currentTitle);
+  };
+
+  const handleSaveTitle = (e: React.MouseEvent | React.KeyboardEvent, sid: string | null) => {
+    e.stopPropagation();
+    updateTitleMutation.mutate({ sessionId: sid, title: editingTitle });
+  };
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent, sid: string | null) => {
+    if (e.key === "Enter") handleSaveTitle(e, sid);
+    if (e.key === "Escape") {
+      e.stopPropagation();
+      setEditingSessionId(undefined);
+      setEditingTitle("");
+    }
+  };
+
+  /** Returns the display name for a session: custom title > date fallback */
+  const getSessionDisplayName = (sid: string | null, lastMessage: Date | null): string => {
+    const key = sid ?? "__legacy__";
+    return sessionTitles?.[key] || formatSessionDate(lastMessage);
   };
 
   return (
@@ -406,7 +461,7 @@ export default function Chat() {
               exit={{ opacity: 0 }}
               className="absolute inset-0 z-50 flex items-end justify-center"
               style={{ background: "oklch(0.18 0.02 270 / 0.5)" }}
-              onClick={() => setShowHistory(false)}
+              onClick={() => { setShowHistory(false); setEditingSessionId(undefined); }}
             >
               <motion.div
                 initial={{ y: 80, opacity: 0 }}
@@ -421,10 +476,10 @@ export default function Chat() {
                 <div className="px-5 pt-5 pb-3 flex items-center justify-between border-b border-border/20">
                   <div>
                     <h2 className="text-base font-semibold text-foreground">Past Conversations</h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">Tap a session to read it</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Tap to read · Pencil to name</p>
                   </div>
                   <button
-                    onClick={() => setShowHistory(false)}
+                    onClick={() => { setShowHistory(false); setEditingSessionId(undefined); }}
                     className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-all"
                   >
                     <X size={16} className="text-muted-foreground" />
@@ -439,37 +494,94 @@ export default function Chat() {
                     <div className="px-5 py-8 text-center text-sm text-muted-foreground">No conversations yet.</div>
                   ) : (
                     <div className="py-2">
-                      {sessions.map((s, i) => {
+                      {sessions.map((s) => {
                         const isCurrentSession = s.sessionId === sessionId;
+                        const isEditing = editingSessionId !== undefined && editingSessionId === s.sessionId;
+                        const displayName = getSessionDisplayName(s.sessionId, s.lastMessage);
+                        const hasCustomTitle = !!(sessionTitles?.[s.sessionId ?? "__legacy__"]);
+
                         return (
-                          <button
+                          <div
                             key={s.sessionId ?? "legacy"}
-                            onClick={() => handleSelectSession(s.sessionId)}
-                            className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-muted/40 transition-all text-left"
+                            className="px-5 py-3.5 flex items-center gap-2 hover:bg-muted/40 transition-all group"
                           >
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium text-foreground truncate">
-                                  {formatSessionDate(s.lastMessage)}
-                                </span>
-                                {isCurrentSession && (
-                                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
-                                    style={{ background: "oklch(0.46 0.20 295 / 0.12)", color: "oklch(0.46 0.20 295)" }}>
-                                    Current
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {s.messageCount} message{s.messageCount !== 1 ? "s" : ""}
-                                {s.firstMessage && s.lastMessage && s.firstMessage.toDateString() !== s.lastMessage.toDateString()
-                                  ? ` · ${formatSessionDate(s.firstMessage)} – ${formatSessionDate(s.lastMessage)}`
-                                  : s.firstMessage
-                                  ? ` · ${s.firstMessage.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}`
-                                  : ""}
-                              </p>
-                            </div>
-                            <ChevronRight size={16} className="text-muted-foreground/50 flex-shrink-0 ml-2" />
-                          </button>
+                            {/* Main tap area */}
+                            <button
+                              onClick={() => !isEditing && handleSelectSession(s.sessionId)}
+                              className="flex-1 min-w-0 text-left"
+                            >
+                              {isEditing ? (
+                                /* Inline title editor */
+                                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                  <input
+                                    ref={titleInputRef}
+                                    value={editingTitle}
+                                    onChange={(e) => setEditingTitle(e.target.value)}
+                                    onKeyDown={(e) => handleTitleKeyDown(e, s.sessionId)}
+                                    placeholder="Name this conversation..."
+                                    maxLength={200}
+                                    className="flex-1 min-w-0 bg-input border border-primary/40 rounded-xl px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                  />
+                                  <button
+                                    onClick={(e) => handleSaveTitle(e, s.sessionId)}
+                                    disabled={updateTitleMutation.isPending}
+                                    className="w-7 h-7 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary hover:bg-primary/20 transition-all flex-shrink-0 disabled:opacity-50"
+                                    title="Save title"
+                                  >
+                                    <Check size={13} />
+                                  </button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setEditingSessionId(undefined); setEditingTitle(""); }}
+                                    className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-all flex-shrink-0"
+                                    title="Cancel"
+                                  >
+                                    <X size={13} />
+                                  </button>
+                                </div>
+                              ) : (
+                                /* Normal display */
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-sm font-medium truncate ${hasCustomTitle ? "text-foreground" : "text-muted-foreground"}`}>
+                                      {displayName}
+                                    </span>
+                                    {isCurrentSession && (
+                                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                                        style={{ background: "oklch(0.46 0.20 295 / 0.12)", color: "oklch(0.46 0.20 295)" }}>
+                                        Current
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                    {s.messageCount} message{s.messageCount !== 1 ? "s" : ""}
+                                    {hasCustomTitle && s.lastMessage
+                                      ? ` · ${formatSessionDate(s.lastMessage)}`
+                                      : s.firstMessage && s.lastMessage && s.firstMessage.toDateString() !== s.lastMessage.toDateString()
+                                      ? ` · ${formatSessionDate(s.firstMessage)} – ${formatSessionDate(s.lastMessage)}`
+                                      : s.firstMessage
+                                      ? ` · ${s.firstMessage.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}`
+                                      : ""}
+                                  </p>
+                                </div>
+                              )}
+                            </button>
+
+                            {/* Pencil icon — visible on hover, hidden when editing */}
+                            {!isEditing && (
+                              <button
+                                onClick={(e) => handleStartEditTitle(e, s.sessionId)}
+                                title="Name this conversation"
+                                className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/40 hover:text-primary hover:bg-primary/10 transition-all flex-shrink-0 opacity-0 group-hover:opacity-100"
+                              >
+                                <Pencil size={13} />
+                              </button>
+                            )}
+
+                            {/* Chevron — hidden when editing */}
+                            {!isEditing && (
+                              <ChevronRight size={16} className="text-muted-foreground/50 flex-shrink-0" />
+                            )}
+                          </div>
                         );
                       })}
                     </div>
@@ -530,7 +642,7 @@ export default function Chat() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} group`}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 {msg.role === "assistant" && (
                   <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mr-2 mt-1 flex-shrink-0">

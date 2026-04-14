@@ -399,3 +399,19 @@ export const savedInsights = mysqlTable("saved_insights", {
 
 export type SavedInsight = typeof savedInsights.$inferSelect;
 export type InsertSavedInsight = typeof savedInsights.$inferInsert;
+
+// ─── Chat Sessions (metadata per conversation session) ───────────────────────
+
+export const chatSessions = mysqlTable("chat_sessions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // The session UUID that groups chat_messages. NULL = legacy first session.
+  sessionId: varchar("sessionId", { length: 36 }),
+  // User-defined title for this conversation (e.g., "The breakthrough talk")
+  title: varchar("title", { length: 200 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ChatSession = typeof chatSessions.$inferSelect;
+export type InsertChatSession = typeof chatSessions.$inferInsert;

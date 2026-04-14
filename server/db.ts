@@ -5,6 +5,7 @@ import {
   InsertUser,
   calendarEvents,
   chatMessages,
+  chatSessions,
   dailyCheckIns,
   growthMilestones,
   habitCompletions,
@@ -852,4 +853,65 @@ export async function getChatSessions(userId: number) {
     lastMessage: r.lastMessage ? new Date(r.lastMessage) : null,
     messageCount: Number(r.messageCount),
   }));
+}
+
+// ─── Chat Session Titles ──────────────────────────────────────────────────────
+
+/** Get the title for a specific session (null if not set or session not found) */
+export async function getChatSessionTitle(userId: number, sessionId: string | null): Promise<string | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db
+    .select({ title: chatSessions.title })
+    .from(chatSessions)
+    .where(
+      and(
+        eq(chatSessions.userId, userId),
+        sessionId === null ? sql`${chatSessions.sessionId} IS NULL` : eq(chatSessions.sessionId, sessionId)
+      )
+    )
+    .limit(1);
+  return rows[0]?.title ?? null;
+}
+
+/** Get all session titles for a user as a map of sessionId → title */
+export async function getChatSessionTitles(userId: number): Promise<Record<string, string>> {
+  const db = await getDb();
+  if (!db) return {};
+  const rows = await db
+    .select({ sessionId: chatSessions.sessionId, title: chatSessions.title })
+    .from(chatSessions)
+    .where(eq(chatSessions.userId, userId));
+  const map: Record<string, string> = {};
+  for (const row of rows) {
+    if (row.title) {
+      map[row.sessionId ?? "__legacy__"] = row.title;
+    }
+  }
+  return map;
+}
+
+/** Upsert a title for a session (insert if no row exists, update if it does) */
+export async function updateSessionTitle(userId: number, sessionId: string | null, title: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  // Check if a row exists for this session
+  const existing = await db
+    .select({ id: chatSessions.id })
+    .from(chatSessions)
+    .where(
+      and(
+        eq(chatSessions.userId, userId),
+        sessionId === null ? sql`${chatSessions.sessionId} IS NULL` : eq(chatSessions.sessionId, sessionId)
+      )
+    )
+    .limit(1);
+  if (existing.length > 0) {
+    await db
+      .update(chatSessions)
+      .set({ title: title.trim() || null })
+      .where(eq(chatSessions.id, existing[0].id));
+  } else {
+    await db.insert(chatSessions).values({ userId, sessionId, title: title.trim() || null });
+  }
 }

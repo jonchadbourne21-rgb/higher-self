@@ -42,6 +42,8 @@ import {
   toggleHabitCompletion,
   updateCheckInAiResponse,
   updateJournalEntryAi,
+  updateSessionTitle,
+  getChatSessionTitles,
   upsertNotificationPreferences,
   upsertPushSubscription,
   upsertUserProfile,
@@ -503,6 +505,18 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
     sessions: protectedProcedure.query(async ({ ctx }) => {
       return getChatSessions(ctx.user.id);
     }),
+    getSessionTitles: protectedProcedure.query(async ({ ctx }) => {
+      return getChatSessionTitles(ctx.user.id);
+    }),
+    updateSessionTitle: protectedProcedure
+      .input(z.object({
+        sessionId: z.string().nullable(),
+        title: z.string().max(200),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await updateSessionTitle(ctx.user.id, input.sessionId, input.title);
+        return { success: true };
+      }),
     clearConversation: protectedProcedure.mutation(async () => {
       const { randomUUID } = await import("crypto");
       const newSessionId = randomUUID();
