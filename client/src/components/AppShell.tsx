@@ -1,12 +1,11 @@
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  BookOpen,
+  Bookmark,
   CalendarDays,
-  Compass,
   Home,
   Info,
   MessageCircle,
-  Sparkles,
+  Settings,
   X,
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
@@ -15,11 +14,10 @@ import { useRef, useCallback, useState } from "react";
 
 const navItems = [
   { path: "/home", icon: Home, label: "Home" },
-  { path: "/domains", icon: Compass, label: "Domains" },
   { path: "/chat", icon: MessageCircle, label: "Mirror" },
-  { path: "/journal", icon: BookOpen, label: "Journal" },
-  { path: "/calendar", icon: CalendarDays, label: "Calendar" },
-  { path: "/dashboard", icon: Sparkles, label: "Growth" },
+  { path: "/saved-insights", icon: Bookmark, label: "Insights" },
+  { path: "/calendar", icon: CalendarDays, label: "Habits" },
+  { path: "/settings", icon: Settings, label: "Settings" },
 ];
 
 /** Fire a short haptic pulse if the device supports it (Android Chrome) */

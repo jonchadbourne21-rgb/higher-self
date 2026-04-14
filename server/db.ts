@@ -821,3 +821,35 @@ export async function deleteInsight(userId: number, insightId: number) {
     .delete(savedInsights)
     .where(and(eq(savedInsights.id, insightId), eq(savedInsights.userId, userId)));
 }
+
+// ─── Chat Sessions ────────────────────────────────────────────────────────────
+
+/**
+ * Returns a list of distinct chat sessions for a user, ordered by most recent first.
+ * Each entry includes the sessionId (null = legacy), the first message timestamp,
+ * the last message timestamp, and the total message count.
+ */
+export async function getChatSessions(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const { isNull: _isNull, count, min, max } = await import("drizzle-orm");
+
+  const rows = await db
+    .select({
+      sessionId: chatMessages.sessionId,
+      firstMessage: min(chatMessages.createdAt),
+      lastMessage: max(chatMessages.createdAt),
+      messageCount: count(chatMessages.id),
+    })
+    .from(chatMessages)
+    .where(eq(chatMessages.userId, userId))
+    .groupBy(chatMessages.sessionId)
+    .orderBy(desc(max(chatMessages.createdAt)));
+
+  return rows.map((r) => ({
+    sessionId: r.sessionId ?? null,
+    firstMessage: r.firstMessage ? new Date(r.firstMessage) : null,
+    lastMessage: r.lastMessage ? new Date(r.lastMessage) : null,
+    messageCount: Number(r.messageCount),
+  }));
+}

@@ -16,6 +16,7 @@ import {
   getAllInsights,
   getActivePushSubscription,
   getChatHistory,
+  getChatSessions,
   getCurrentSessionId,
   getDomainScoreHistory,
   getHabitStreaks,
@@ -499,6 +500,9 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
         return getChatHistory(ctx.user.id, sid);
       }),
 
+    sessions: protectedProcedure.query(async ({ ctx }) => {
+      return getChatSessions(ctx.user.id);
+    }),
     clearConversation: protectedProcedure.mutation(async () => {
       const { randomUUID } = await import("crypto");
       const newSessionId = randomUUID();

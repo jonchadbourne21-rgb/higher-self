@@ -390,3 +390,9 @@
 - [x] Fix FullOnboarding page: h-dvh instead of min-h-screen
 - [x] Fix getTodayCheckIn: return null instead of undefined (fixes React Query error)
 - [x] TypeScript: 0 errors after all changes
+
+## Chat Enhancements Sprint (Apr 14) - COMPLETE
+- [x] Show current intention mode in chat header (e.g., "Clarity Mode ✦") — badge reads "✦ Clarity Mode" with intent-specific color
+- [x] Add Saved Insights tab to bottom navigation bar — permanent 5th tab with Bookmark icon
+- [x] Build Past Conversations viewer in chat header — slide-up sheet with session list, read-only view, "Back to live" CTA
+- [x] Write vitest tests for past conversations logic (13 tests passing: intent config, date formatting, session shape)
