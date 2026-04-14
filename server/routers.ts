@@ -44,6 +44,8 @@ import {
   updateJournalEntryAi,
   updateSessionTitle,
   getChatSessionTitles,
+  getSessionMessagesForTitle,
+  sessionHasTitle,
   upsertNotificationPreferences,
   upsertPushSubscription,
   upsertUserProfile,
@@ -517,6 +519,49 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
         await updateSessionTitle(ctx.user.id, input.sessionId, input.title);
         return { success: true };
       }),
+    generateTitle: protectedProcedure
+      .input(z.object({ sessionId: z.string().nullable() }))
+      .mutation(async ({ ctx, input }) => {
+        // Skip if session already has a manually-set title
+        const alreadyTitled = await sessionHasTitle(ctx.user.id, input.sessionId);
+        if (alreadyTitled) return { title: null, skipped: true };
+
+        const messages = await getSessionMessagesForTitle(ctx.user.id, input.sessionId);
+        if (messages.length < 2) return { title: null, skipped: true };
+
+        // Build a compact transcript (max 1500 chars to keep prompt small)
+        const transcript = messages
+          .map((m) => `${m.role === "user" ? "User" : "Mirror"}: ${m.content.slice(0, 200)}`)
+          .join("\n")
+          .slice(0, 1500);
+
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a concise labeler for personal growth conversations. " +
+                "Given a conversation transcript, return ONLY a short title (3-7 words, no quotes, no punctuation at end). " +
+                "The title should capture the emotional core or main theme. " +
+                "Examples: Facing the fear of failure, Finding clarity in chaos, Letting go of perfectionism",
+            },
+            {
+              role: "user",
+              content: `Label this conversation with a short title:\n\n${transcript}`,
+            },
+          ],
+        });
+
+        const rawContent = response?.choices?.[0]?.message?.content;
+        const raw = typeof rawContent === "string" ? rawContent.trim() : "";
+        // Strip surrounding quotes if LLM added them
+        const title = raw.replace(/^["']|["']$/g, "").trim().slice(0, 120);
+        if (!title) return { title: null, skipped: true };
+
+        await updateSessionTitle(ctx.user.id, input.sessionId, title);
+        return { title, skipped: false };
+      }),
+
     clearConversation: protectedProcedure.mutation(async () => {
       const { randomUUID } = await import("crypto");
       const newSessionId = randomUUID();

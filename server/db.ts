@@ -915,3 +915,46 @@ export async function updateSessionTitle(userId: number, sessionId: string | nul
     await db.insert(chatSessions).values({ userId, sessionId, title: title.trim() || null });
   }
 }
+
+// ─── Session Title Generation ─────────────────────────────────────────────────
+/** Fetch up to 20 messages of a session for use in AI title generation */
+export async function getSessionMessagesForTitle(
+  userId: number,
+  sessionId: string | null
+): Promise<Array<{ role: "user" | "assistant"; content: string }>> {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db
+    .select({ role: chatMessages.role, content: chatMessages.content })
+    .from(chatMessages)
+    .where(
+      and(
+        eq(chatMessages.userId, userId),
+        sessionId === null
+          ? sql`${chatMessages.sessionId} IS NULL`
+          : eq(chatMessages.sessionId, sessionId)
+      )
+    )
+    .orderBy(chatMessages.createdAt)
+    .limit(20);
+  return rows as Array<{ role: "user" | "assistant"; content: string }>;
+}
+
+/** Returns true if a session already has a non-empty title */
+export async function sessionHasTitle(userId: number, sessionId: string | null): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  const rows = await db
+    .select({ title: chatSessions.title })
+    .from(chatSessions)
+    .where(
+      and(
+        eq(chatSessions.userId, userId),
+        sessionId === null
+          ? sql`${chatSessions.sessionId} IS NULL`
+          : eq(chatSessions.sessionId, sessionId)
+      )
+    )
+    .limit(1);
+  return rows.length > 0 && rows[0].title !== null && rows[0].title !== "";
+}

@@ -132,8 +132,22 @@ export default function Chat() {
   const seedIntent = (user as User | null)?.seedIntent;
   const intentInfo = seedIntent ? INTENT_CONFIG[seedIntent] : null;
 
+  const generateTitleMutation = trpc.chat.generateTitle.useMutation({
+    onSuccess: (data) => {
+      if (data.title) {
+        utils.chat.getSessionTitles.invalidate();
+        utils.chat.sessions.invalidate();
+      }
+    },
+    // Silent failure — title generation is best-effort
+  });
+
   const clearMutation = trpc.chat.clearConversation.useMutation({
     onSuccess: (data) => {
+      // Auto-generate a title for the session we're leaving (best-effort, silent)
+      const leavingSessionId = sessionId !== undefined ? sessionId : null;
+      generateTitleMutation.mutate({ sessionId: leavingSessionId ?? null });
+
       setSessionId(data.newSessionId);
       setLocalMessages([]);
       hasScrolledOnLoad.current = false;

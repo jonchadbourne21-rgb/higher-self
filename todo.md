@@ -413,3 +413,10 @@
 ## Home Screen Cleanup (Apr 14) - COMPLETE
 - [x] Remove redundant Daily Check-in card from "Your Space" grid (3 cards remain: Mirror, Journal, Life Domains)
 - [x] Add user's name to time-based greeting — "Good morning, JonnyDonny" with animated reveal
+
+## AI-Suggested Session Titles (Apr 14) - COMPLETE
+- [x] Add getSessionMessagesForTitle and sessionHasTitle helpers in server/db.ts
+- [x] Add chat.generateTitle tRPC procedure: calls LLM with compact transcript, stores result in chat_sessions
+- [x] Trigger auto-title in Chat.tsx when user taps "Start fresh" (skips if already titled, silent failure)
+- [x] Title appears in history panel after invalidation (no placeholder needed — instant cache update)
+- [x] Write 19 vitest tests: skip conditions, transcript building, title sanitization, real-world examples
