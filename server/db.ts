@@ -290,7 +290,7 @@ export async function getHabitStreaks(userId: number) {
 
 export async function getTodayCheckIn(userId: number) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
   const result = await db
@@ -299,7 +299,7 @@ export async function getTodayCheckIn(userId: number) {
     .where(and(eq(dailyCheckIns.userId, userId), gte(dailyCheckIns.createdAt, startOfDay)))
     .orderBy(desc(dailyCheckIns.createdAt))
     .limit(1);
-  return result[0];
+  return result[0] ?? null;
 }
 
 export async function createCheckIn(data: typeof dailyCheckIns.$inferInsert) {

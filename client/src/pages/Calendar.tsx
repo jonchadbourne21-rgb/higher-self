@@ -171,7 +171,7 @@ export default function Calendar() {
 
   return (
     <AppShell>
-      <div className="min-h-screen bg-background pb-32">
+      <div className="pb-32">
 
         {/* Header */}
         <div className="px-5 pt-6 pb-4 flex items-center justify-between">

@@ -374,3 +374,19 @@
 - [x] Add "New" button in Chat header with confirmation dialog ("Start fresh ✦")
 - [x] Confirmation modal: "Your previous conversation will be preserved"
 - [x] 8 vitest tests passing for session isolation and UUID generation logic
+
+## Viewport-Locked App Layout (Apr 14) - COMPLETE
+- [x] Fix AppShell: set html/body/root to h-dvh overflow-hidden, main content area scrolls internally
+- [x] Add noScroll prop to AppShell for pages that manage their own scroll (Chat)
+- [x] Fix Chat page: h-full flex column, messages scroll internally, input pinned at bottom
+- [x] Fix Calendar page: removed min-h-screen (AppShell handles height)
+- [x] Fix CheckIn page: removed min-h-screen
+- [x] Fix SavedInsights page: removed min-h-screen
+- [x] Fix Settings page: removed min-h-screen
+- [x] Fix Landing page: h-dvh instead of min-h-screen
+- [x] Fix NotFound page: h-dvh instead of min-h-screen
+- [x] Fix Onboarding page: h-dvh instead of min-h-screen
+- [x] Fix QuickOnboarding page: h-dvh instead of min-h-screen
+- [x] Fix FullOnboarding page: h-dvh instead of min-h-screen
+- [x] Fix getTodayCheckIn: return null instead of undefined (fixes React Query error)
+- [x] TypeScript: 0 errors after all changes

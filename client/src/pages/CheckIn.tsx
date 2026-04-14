@@ -151,7 +151,7 @@ export default function CheckIn() {
 
   return (
     <AppShell>
-      <div className="px-5 pt-8 pb-4 flex flex-col min-h-screen">
+      <div className="px-5 pt-8 pb-4 flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <button onClick={() => navigate("/home")} className="text-muted-foreground">

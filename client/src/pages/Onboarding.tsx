@@ -115,7 +115,7 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-aurora flex flex-col max-w-[480px] mx-auto">
+    <div className="h-dvh bg-aurora flex flex-col max-w-[480px] mx-auto overflow-hidden">
       {/* Progress bar */}
       <div className="h-1.5 bg-violet-100">
         <motion.div

@@ -1,16 +1,17 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen,
   CalendarDays,
   Compass,
   Home,
+  Info,
   MessageCircle,
   Sparkles,
+  X,
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { useRef, useCallback, useState } from "react";
-import CrisisDisclaimerFooter from "./CrisisDisclaimerFooter";
 
 const navItems = [
   { path: "/home", icon: Home, label: "Home" },
@@ -32,9 +33,11 @@ function haptic(ms = 8) {
 
 interface AppShellProps {
   children: React.ReactNode;
+  /** When true, the main area does not scroll — the child manages its own scroll */
+  noScroll?: boolean;
 }
 
-export default function AppShell({ children }: AppShellProps) {
+export default function AppShell({ children, noScroll }: AppShellProps) {
   const [location, navigate] = useLocation();
   const [navVisible, setNavVisible] = useState(true);
 
@@ -102,20 +105,79 @@ export default function AppShell({ children }: AppShellProps) {
     [currentIndex, navigate]
   );
 
+  const [disclaimerOpen, setDisclaimerOpen] = useState(false);
+
   return (
     <div
-      className="min-h-screen bg-aurora flex flex-col max-w-[480px] mx-auto relative"
+      className="h-dvh bg-aurora flex flex-col max-w-[480px] mx-auto relative overflow-hidden"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Main content */}
+      {/* Main content — inner scroll only */}
       <main
-        className="flex-1 overflow-y-auto pb-24 scrollbar-hide"
-        onScroll={handleScroll}
+        className={noScroll ? "flex-1 overflow-hidden" : "flex-1 overflow-y-auto pb-24 scrollbar-hide"}
+        onScroll={noScroll ? undefined : handleScroll}
       >
         {children}
-        <CrisisDisclaimerFooter />
       </main>
+
+      {/* Crisis info button — fixed bottom-right above nav */}
+      <button
+        onClick={() => setDisclaimerOpen(true)}
+        className="fixed bottom-20 right-4 z-40 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-opacity opacity-40 hover:opacity-80"
+        style={{ background: "oklch(0.46 0.20 295 / 0.15)", border: "1px solid oklch(0.46 0.20 295 / 0.3)" }}
+        aria-label="Safety information"
+      >
+        <Info size={14} className="text-primary" />
+      </button>
+
+      {/* Crisis disclaimer modal */}
+      <AnimatePresence>
+        {disclaimerOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-end justify-center"
+            style={{ background: "oklch(0.18 0.02 270 / 0.5)" }}
+            onClick={() => setDisclaimerOpen(false)}
+          >
+            <motion.div
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 60, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 32 }}
+              className="w-full max-w-[480px] bg-background rounded-t-2xl p-6 pb-10 overflow-y-auto max-h-[80dvh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-foreground">About Synapset</h2>
+                <button onClick={() => setDisclaimerOpen(false)} className="p-1 rounded-full hover:bg-muted">
+                  <X size={18} className="text-muted-foreground" />
+                </button>
+              </div>
+              <div className="space-y-4 text-sm text-muted-foreground">
+                <div>
+                  <p className="font-semibold text-foreground mb-1">What Synapset Is</p>
+                  <p>Synapset is an AI-powered self-reflection tool designed to support personal growth, emotional awareness, and mindfulness. It offers guided journaling, mood tracking, and AI-assisted insights to help you understand yourself better.</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground mb-1">What Synapset Is NOT</p>
+                  <p>Synapset is <strong>not</strong> a licensed therapist, psychologist, medical doctor, or crisis counselor. It does not provide medical advice, diagnosis, or treatment. It is not a substitute for professional mental health care.</p>
+                </div>
+                <div className="rounded-xl p-4" style={{ background: "oklch(0.95 0.04 15 / 0.5)", border: "1px solid oklch(0.85 0.06 15 / 0.4)" }}>
+                  <p className="font-semibold text-red-700 mb-2">🆘 In Crisis? Get Help Now</p>
+                  <div className="space-y-1">
+                    <p><a href="tel:988" className="font-semibold text-red-700 underline">988</a> — Suicide &amp; Crisis Lifeline (call or text)</p>
+                    <p><a href="tel:18002738255" className="font-semibold text-red-700 underline">1-800-273-8255</a> — National Suicide Prevention Lifeline</p>
+                    <p><a href="tel:911" className="font-semibold text-red-700 underline">911</a> — Emergency Services</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Floating pill nav — auto-hides on scroll down */}
       <motion.nav

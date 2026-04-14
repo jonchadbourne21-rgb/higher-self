@@ -42,7 +42,7 @@ export default function Landing() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-aurora flex items-center justify-center">
+      <div className="h-dvh bg-aurora flex items-center justify-center">
         <motion.div
           animate={{ opacity: [0.3, 1, 0.3], scale: [0.95, 1.05, 0.95] }}
           transition={{ repeat: Infinity, duration: 2.2 }}
@@ -56,7 +56,7 @@ export default function Landing() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-between px-6 py-12 max-w-[480px] mx-auto"
+      className="h-dvh flex flex-col items-center justify-between px-6 py-12 max-w-[480px] mx-auto overflow-y-auto"
       style={{
         background:
           "radial-gradient(ellipse at 20% 0%, oklch(0.46 0.20 295 / 0.07) 0%, transparent 50%), " +

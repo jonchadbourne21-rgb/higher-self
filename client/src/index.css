@@ -141,6 +141,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html, body, #root {
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+  }
   body {
     @apply bg-background text-foreground antialiased;
     font-family: "Inter", system-ui, sans-serif;

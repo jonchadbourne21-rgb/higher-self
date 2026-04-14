@@ -37,7 +37,7 @@ export default function SavedInsights() {
 
   return (
     <AppShell>
-      <div className="flex flex-col min-h-screen pb-24">
+      <div className="flex flex-col pb-24">
         {/* Header */}
         <div className="px-5 pt-8 pb-4 border-b border-border/30">
           <div className="flex items-center gap-3 mb-4">

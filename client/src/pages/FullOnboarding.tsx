@@ -98,7 +98,7 @@ export default function FullOnboarding() {
   // Show loading state while checking auth
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-aurora via-white to-aurora flex items-center justify-center">
+      <div className="h-dvh bg-gradient-to-br from-aurora via-white to-aurora flex items-center justify-center">
         <div className="animate-pulse">
           <div className="h-12 w-12 bg-violet-300 rounded-full"></div>
         </div>
@@ -112,7 +112,7 @@ export default function FullOnboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-aurora via-white to-aurora flex flex-col max-w-[480px] mx-auto px-6 py-12">
+    <div className="h-dvh bg-gradient-to-br from-aurora via-white to-aurora flex flex-col max-w-[480px] mx-auto px-6 py-12 overflow-y-auto">
       {/* Progress Indicator */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-3">

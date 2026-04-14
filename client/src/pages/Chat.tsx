@@ -202,8 +202,8 @@ export default function Chat() {
   };
 
   return (
-    <AppShell>
-      <div className="flex flex-col h-screen max-h-screen">
+    <AppShell noScroll>
+      <div className="flex flex-col h-full">
         {/* Header */}
         <div className="px-5 pt-8 pb-4 flex items-center justify-between border-b border-border/30">
           <div className="flex items-center gap-3">
@@ -417,8 +417,8 @@ export default function Chat() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input */}
-        <div className="px-4 pb-24 pt-2 border-t border-border/30">
+        {/* Input — stays pinned at bottom; pb-24 clears the floating nav */}
+        <div className="px-4 pb-24 pt-2 border-t border-border/30 flex-shrink-0">
           <div className="flex gap-2 items-end">
             <textarea
               ref={inputRef}

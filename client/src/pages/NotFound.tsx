@@ -17,7 +17,7 @@ export default function NotFound() {
 
   if (loading || isAuthenticated) {
     return (
-      <div className="min-h-screen bg-aurora flex items-center justify-center">
+      <div className="h-dvh bg-aurora flex items-center justify-center">
         <div className="text-primary text-4xl font-serif animate-pulse">✦</div>
       </div>
     );
