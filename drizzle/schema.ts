@@ -415,3 +415,18 @@ export const chatSessions = mysqlTable("chat_sessions", {
 
 export type ChatSession = typeof chatSessions.$inferSelect;
 export type InsertChatSession = typeof chatSessions.$inferInsert;
+
+// ─── Weekly Reflections (LLM-generated weekly summaries) ──────────────────────
+export const weeklyReflections = mysqlTable("weekly_reflections", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // ISO 8601 date string for the Monday of that week (e.g., "2026-04-13")
+  weekStart: varchar("weekStart", { length: 10 }).notNull(),
+  // LLM-generated summary of the week's Mirror sessions
+  summary: text("summary").notNull(),
+  // Number of sessions that week
+  sessionCount: int("sessionCount").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type WeeklyReflection = typeof weeklyReflections.$inferSelect;
+export type InsertWeeklyReflection = typeof weeklyReflections.$inferInsert;

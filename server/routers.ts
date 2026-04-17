@@ -46,6 +46,8 @@ import {
   getChatSessionTitles,
   getSessionMessagesForTitle,
   sessionHasTitle,
+  getLatestWeeklyReflection,
+  getWeekStart,
   upsertNotificationPreferences,
   upsertPushSubscription,
   upsertUserProfile,
@@ -978,8 +980,23 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
       .mutation(async ({ ctx, input }) => {
         await createMilestone({ userId: ctx.user.id, ...input });
         return { success: true };
-      }),
+       }),
+  }),
+
+  // ─── Home Screen ──────────────────────────────────────────────────────────
+
+  home: router({
+    getLatestDigest: protectedProcedure.query(async ({ ctx }) => {
+      const digest = await getLatestWeeklyReflection(ctx.user.id);
+      if (!digest) return null;
+      // Check if digest is from the current week
+      const weekStart = getWeekStart();
+      const isCurrentWeek = digest.weekStart === weekStart;
+      return {
+        ...digest,
+        isCurrentWeek,
+      };
+    }),
   }),
 });
-
 export type AppRouter = typeof appRouter;

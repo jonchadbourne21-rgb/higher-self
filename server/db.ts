@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, like, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, like, lt, lte, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2";
 import {
@@ -19,6 +19,7 @@ import {
   userProfiles,
   users,
   weeklyInsights,
+  weeklyReflections,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -957,4 +958,146 @@ export async function sessionHasTitle(userId: number, sessionId: string | null):
     )
     .limit(1);
   return rows.length > 0 && rows[0].title !== null && rows[0].title !== "";
+}
+
+// ─── Weekly Reflections ───────────────────────────────────────────────────────
+/** Get the Monday ISO date string for a given date */
+export function getWeekStart(date: Date = new Date()): string {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
+  d.setDate(diff);
+  return d.toISOString().split("T")[0];
+}
+
+/** Fetch all chat sessions from the past 7 days for a user */
+export async function getWeekSessionsForDigest(userId: number, weekStart: string): Promise<
+  Array<{ sessionId: string | null; title: string | null; messageCount: number; content: string }>
+> {
+  const db = await getDb();
+  if (!db) return [];
+
+  const weekStartDate = new Date(weekStart);
+  const weekEndDate = new Date(weekStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  // Get sessions for the week
+  const { isNull: _isNull, count, min, max } = await import("drizzle-orm");
+  const sessionRows = await db
+    .select({
+      sessionId: chatMessages.sessionId,
+      messageCount: count(chatMessages.id),
+      firstMessage: min(chatMessages.createdAt),
+      lastMessage: max(chatMessages.createdAt),
+    })
+    .from(chatMessages)
+    .where(
+      and(
+        eq(chatMessages.userId, userId),
+        gte(chatMessages.createdAt, weekStartDate),
+        lt(chatMessages.createdAt, weekEndDate)
+      )
+    )
+    .groupBy(chatMessages.sessionId)
+    .orderBy(desc(max(chatMessages.createdAt)));
+
+  // Fetch titles for these sessions
+  const sessionIds = sessionRows.map((r) => r.sessionId).filter((id) => id !== null) as string[];
+  const titleMap: Record<string, string | null> = {};
+  if (sessionIds.length > 0) {
+    const titleRows = await db
+      .select({ sessionId: chatSessions.sessionId, title: chatSessions.title })
+      .from(chatSessions)
+      .where(
+        and(
+          eq(chatSessions.userId, userId),
+          inArray(chatSessions.sessionId, sessionIds)
+        )
+      );
+    titleRows.forEach((row) => {
+      if (row.sessionId) titleMap[row.sessionId] = row.title || null;
+    });
+  }
+
+  // Fetch message content for each session (up to 10 user messages per session)
+  const result = await Promise.all(
+    sessionRows.map(async (row) => {
+      const msgs = await db
+        .select({ role: chatMessages.role, content: chatMessages.content })
+        .from(chatMessages)
+        .where(
+          and(
+            eq(chatMessages.userId, userId),
+            row.sessionId === null
+              ? sql`${chatMessages.sessionId} IS NULL`
+              : eq(chatMessages.sessionId, row.sessionId)
+          )
+        )
+        .orderBy(chatMessages.createdAt)
+        .limit(10);
+      const content = msgs.map((m) => `${m.role}: ${m.content}`).join("\n");
+      const sessionIdKey = row.sessionId || "";
+      return {
+        sessionId: row.sessionId ?? null,
+        title: (row.sessionId && titleMap[row.sessionId]) || null,
+        messageCount: Number(row.messageCount),
+        content,
+      };
+    })
+  );
+
+  return result;
+}
+
+/** Save a weekly reflection digest to the database */
+export async function saveWeeklyReflection(
+  userId: number,
+  weekStart: string,
+  summary: string,
+  sessionCount: number
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(weeklyReflections).values({
+    userId,
+    weekStart,
+    summary,
+    sessionCount,
+  });
+}
+
+/** Get the latest weekly reflection for a user */
+export async function getLatestWeeklyReflection(userId: number): Promise<{
+  weekStart: string;
+  summary: string;
+  sessionCount: number;
+  createdAt: Date;
+} | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db
+    .select()
+    .from(weeklyReflections)
+    .where(eq(weeklyReflections.userId, userId))
+    .orderBy(desc(weeklyReflections.createdAt))
+    .limit(1);
+  return rows[0] || null;
+}
+
+/** Check if a digest already exists for a given week */
+export async function weeklyReflectionExists(userId: number, weekStart: string): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  const rows = await db
+    .select({ id: weeklyReflections.id })
+    .from(weeklyReflections)
+    .where(and(eq(weeklyReflections.userId, userId), eq(weeklyReflections.weekStart, weekStart)))
+    .limit(1);
+  return rows.length > 0;
+}
+
+/** Get all users in the system (for scheduled jobs) */
+export async function getAllUsers(): Promise<Array<{ id: number; name: string | null }>> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({ id: users.id, name: users.name }).from(users);
 }

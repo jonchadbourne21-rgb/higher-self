@@ -34,6 +34,7 @@ export default function Home() {
   const { data: profile } = trpc.profile.get.useQuery(undefined, { enabled: isAuthenticated });
   const { data: todayCheckIn } = trpc.checkIn.today.useQuery(undefined, { enabled: isAuthenticated });
   const { data: latestInsight } = trpc.insights.latest.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: weeklyDigest } = trpc.home.getLatestDigest.useQuery(undefined, { enabled: isAuthenticated });
 
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate("/");
@@ -266,7 +267,38 @@ export default function Home() {
             </Link>
           )}
         </motion.div>
-
+        {/* ── Weekly reflection digest ────────────────────────────────────── */}
+        {weeklyDigest && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.28 }}
+          >
+            <Link href="/insights">
+              <div
+                className="rounded-3xl p-5 space-y-3 cursor-pointer transition-all hover:shadow-md"
+                style={{
+                  background: "linear-gradient(145deg, oklch(0.95 0.05 185), oklch(0.97 0.03 200))",
+                  border: "1px solid oklch(0.82 0.08 185 / 0.6)",
+                  boxShadow: "0 2px 16px oklch(0.46 0.14 185 / 0.08)",
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-teal-700 uppercase tracking-widest font-medium">✦ Your week in reflection</span>
+                  </div>
+                  <ChevronRight size={14} className="text-muted-foreground" />
+                </div>
+                <p className="text-sm text-foreground leading-relaxed line-clamp-3">
+                  {weeklyDigest.summary}
+                </p>
+                <p className="text-xs text-teal-600 font-medium">
+                  {weeklyDigest.sessionCount} Mirror sessions this week
+                </p>
+              </div>
+            </Link>
+          </motion.div>
+        )}
         {/* ── Growth dashboard link ───────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}

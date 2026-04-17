@@ -8,6 +8,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { startDailyReminderScheduler } from "../pushNotifications";
+import { startWeeklyDigestScheduler } from "../jobs/weeklyDigestScheduler";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -71,6 +72,8 @@ async function startServer() {
     console.log(`Server running on http://localhost:${port}/`);
     // Start the daily 6am push notification scheduler
     startDailyReminderScheduler();
+    // Start the weekly digest scheduler (Sunday 8 AM UTC)
+    startWeeklyDigestScheduler();
   });
 }
 

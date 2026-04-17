@@ -420,3 +420,12 @@
 - [x] Trigger auto-title in Chat.tsx when user taps "Start fresh" (skips if already titled, silent failure)
 - [x] Title appears in history panel after invalidation (no placeholder needed — instant cache update)
 - [x] Write 19 vitest tests: skip conditions, transcript building, title sanitization, real-world examples
+
+## Weekly Reflection Digest (Apr 14) - COMPLETE
+- [x] Add weekly_reflections table to schema (userId, weekStart, summary, sessionCount, createdAt) — migration applied
+- [x] Add getWeekSessionsForDigest, saveWeeklyReflection, getLatestWeeklyReflection, getAllUsers helpers in db.ts
+- [x] Add buildWeeklyDigest logic: fetch week's sessions, build transcript, summarize with LLM, save to DB
+- [x] Add scheduled job (weeklyDigestScheduler.ts) to run every Sunday at 8 AM UTC
+- [x] Add home.getLatestDigest tRPC procedure to fetch latest digest for current user
+- [x] Add "✦ Your week in reflection" card to Home.tsx with session count and digest summary
+- [x] Write 18 vitest tests for digest generation, week start calculation, transcript building, edge cases
