@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Bookmark,
+  BookOpen,
   CalendarDays,
   Home,
   Info,
@@ -15,7 +15,7 @@ import { useRef, useCallback, useState } from "react";
 const navItems = [
   { path: "/home", icon: Home, label: "Home" },
   { path: "/chat", icon: MessageCircle, label: "Mirror" },
-  { path: "/saved-insights", icon: Bookmark, label: "Insights" },
+  { path: "/journal", icon: BookOpen, label: "Journal" },
   { path: "/calendar", icon: CalendarDays, label: "Habits" },
   { path: "/settings", icon: Settings, label: "Settings" },
 ];

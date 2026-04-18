@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Send, Heart, Star, RefreshCw, X, History, ChevronRight, Pencil, Check } from "lucide-react";
+import { Send, Heart, Star, RefreshCw, X, History, ChevronRight, Pencil, Check, Bookmark, MessageCircle } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
 
@@ -98,6 +98,8 @@ export default function Chat() {
   // Session title editing state
   const [editingSessionId, setEditingSessionId] = useState<string | null | undefined>(undefined);
   const [editingTitle, setEditingTitle] = useState("");
+  // Tab state: "chat" | "history" | "insights"
+  const [activeTab, setActiveTab] = useState<"chat" | "history" | "insights">("chat");
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -125,7 +127,12 @@ export default function Chat() {
 
   // Fetch session titles map
   const { data: sessionTitles } = trpc.chat.getSessionTitles.useQuery(undefined, {
-    enabled: isAuthenticated && showHistory,
+    enabled: isAuthenticated && (showHistory || activeTab === "history"),
+  });
+
+  // Fetch saved insights
+  const { data: insights } = trpc.savedInsights.list.useQuery(undefined, {
+    enabled: isAuthenticated && activeTab === "insights",
   });
 
   // Get user's seedIntent for the intention badge
@@ -347,52 +354,72 @@ export default function Chat() {
   return (
     <AppShell noScroll>
       <div className="flex flex-col h-full">
-        {/* Header */}
-        <div className="px-5 pt-8 pb-3 flex items-center justify-between border-b border-border/30 flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center glow-gold flex-shrink-0">
-              <span className="text-lg">✦</span>
+        {/* Header with tabs */}
+        <div className="flex flex-col border-b border-border/30 flex-shrink-0">
+          {/* Title bar */}
+          <div className="px-5 pt-8 pb-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center glow-gold flex-shrink-0">
+                <span className="text-lg">✦</span>
+              </div>
+              <div>
+                <h1 className="text-base font-medium text-foreground">Your Mirror</h1>
+                {intentInfo ? (
+                  <span
+                    className="text-[11px] font-semibold px-2 py-0.5 rounded-full inline-block mt-0.5"
+                    style={{
+                      background: `${intentInfo.color}22`,
+                      color: intentInfo.color,
+                      border: `1px solid ${intentInfo.color}44`,
+                    }}
+                  >
+                    ✦ {intentInfo.label} Mode
+                  </span>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Always present, always honest</p>
+                )}
+              </div>
             </div>
-            <div>
-              <h1 className="text-base font-medium text-foreground">Your Mirror</h1>
-              {intentInfo ? (
-                <span
-                  className="text-[11px] font-semibold px-2 py-0.5 rounded-full inline-block mt-0.5"
-                  style={{
-                    background: `${intentInfo.color}22`,
-                    color: intentInfo.color,
-                    border: `1px solid ${intentInfo.color}44`,
-                  }}
-                >
-                  ✦ {intentInfo.label} Mode
-                </span>
-              ) : (
-                <p className="text-xs text-muted-foreground">Always present, always honest</p>
-              )}
+            <div className="flex items-center gap-1.5">
+              {/* New conversation button */}
+              <button
+                onClick={() => setShowClearConfirm(true)}
+                title="Start a fresh conversation"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-muted-foreground border border-border/40 hover:border-primary/30 hover:text-primary transition-all"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                New
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            {/* Past conversations button */}
-            <button
-              onClick={() => setShowHistory(true)}
-              title="Past conversations"
-              className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground border border-border/40 hover:border-primary/30 hover:text-primary transition-all"
-            >
-              <History className="w-3.5 h-3.5" />
-            </button>
-            {/* New conversation button */}
-            <button
-              onClick={() => setShowClearConfirm(true)}
-              title="Start a fresh conversation"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-muted-foreground border border-border/40 hover:border-primary/30 hover:text-primary transition-all"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              New
-            </button>
+
+          {/* Tab navigation */}
+          <div className="px-4 flex items-center gap-1 border-t border-border/20">
+            {[
+              { id: "chat", label: "Chat", icon: MessageCircle },
+              { id: "history", label: "History", icon: History },
+              { id: "insights", label: "Insights", icon: Bookmark },
+            ].map((tab) => {
+              const isActive = activeTab === tab.id;
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as "chat" | "history" | "insights")}
+                  className={`flex items-center gap-2 px-3 py-2.5 text-xs font-medium rounded-t-lg border-b-2 transition-all ${
+                    isActive
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Past session banner */}
         <AnimatePresence>
           {isViewingPast && (
             <motion.div
@@ -606,7 +633,8 @@ export default function Chat() {
           )}
         </AnimatePresence>
 
-        {/* Messages */}
+        {/* Content area — switches based on activeTab */}
+        {activeTab === "chat" && (
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-hide pb-4">
           {allMessages.length === 0 && !isThinking && !isViewingPast && (
             <div className="space-y-6 pt-4">
@@ -745,6 +773,125 @@ export default function Chat() {
 
           <div ref={messagesEndRef} />
         </div>
+        )}
+
+        {/* History Tab */}
+        {activeTab === "history" && (
+        <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-hide pb-24">
+          {!sessions ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">Loading...</div>
+          ) : sessions.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">No conversations yet.</div>
+          ) : (
+            <div className="space-y-2">
+              {sessions.map((s) => {
+                const isCurrentSession = s.sessionId === sessionId;
+                const isEditing = editingSessionId !== undefined && editingSessionId === s.sessionId;
+                const displayName = getSessionDisplayName(s.sessionId, s.lastMessage);
+                const hasCustomTitle = !!(sessionTitles?.[s.sessionId ?? "__legacy__"]);
+
+                return (
+                  <div
+                    key={s.sessionId ?? "legacy"}
+                    className="px-4 py-3 flex items-center gap-2 hover:bg-muted/40 transition-all group rounded-xl border border-border/20"
+                  >
+                    {/* Main tap area */}
+                    <button
+                      onClick={() => !isEditing && handleSelectSession(s.sessionId)}
+                      className="flex-1 min-w-0 text-left"
+                    >
+                      {isEditing ? (
+                        /* Inline title editor */
+                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            ref={titleInputRef}
+                            value={editingTitle}
+                            onChange={(e) => setEditingTitle(e.target.value)}
+                            onKeyDown={(e) => handleTitleKeyDown(e, s.sessionId)}
+                            placeholder="Name this conversation..."
+                            maxLength={200}
+                            className="flex-1 min-w-0 bg-input border border-primary/40 rounded-xl px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                          />
+                          <button
+                            onClick={(e) => handleSaveTitle(e, s.sessionId)}
+                            disabled={updateTitleMutation.isPending}
+                            className="w-7 h-7 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary hover:bg-primary/20 transition-all flex-shrink-0 disabled:opacity-50"
+                            title="Save title"
+                          >
+                            <Check size={13} />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setEditingSessionId(undefined); setEditingTitle(""); }}
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-all flex-shrink-0"
+                            title="Cancel"
+                          >
+                            <X size={13} />
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <p className={`text-sm font-medium ${hasCustomTitle ? "text-foreground" : "text-muted-foreground"}`}>
+                            {displayName}
+                          </p>
+                          <p className="text-xs text-muted-foreground/60">
+                            {s.messageCount} messages
+                          </p>
+                        </>
+                      )}
+                    </button>
+
+                    {/* Edit button — appears on hover */}
+                    {!isEditing && (
+                      <button
+                        onClick={(e) => handleStartEditTitle(e, s.sessionId)}
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/40 hover:text-primary hover:bg-primary/10 transition-all flex-shrink-0 opacity-0 group-hover:opacity-100"
+                        title="Rename conversation"
+                      >
+                        <Pencil size={13} />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        )}
+
+        {/* Insights Tab */}
+        {activeTab === "insights" && (
+        <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-hide pb-24">
+          {!insights ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">Loading...</div>
+          ) : insights.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              <p className="mb-2">No saved insights yet.</p>
+              <p className="text-xs">Heart or star messages in Chat to save them here.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {insights.map((insight) => (
+                <div
+                  key={insight.id}
+                  className="glass rounded-2xl p-4 border border-border/20"
+                >
+                  <div className="flex items-start gap-2 mb-2">
+                    {insight.reactionType === "heart" ? (
+                      <Heart className="w-4 h-4 text-pink-400 flex-shrink-0 mt-0.5" fill="currentColor" />
+                    ) : (
+                      <Star className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" fill="currentColor" />
+                    )}
+                    <p className="text-xs text-muted-foreground/60">
+                      {new Date(insight.savedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </p>
+                  </div>
+                  <p className="text-sm text-foreground leading-relaxed">{insight.content}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        )}
 
         {/* Input — stays pinned at bottom; pb-24 clears the floating nav */}
         <div className="px-4 pb-24 pt-2 border-t border-border/30 flex-shrink-0">

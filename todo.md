@@ -429,3 +429,9 @@
 - [x] Add home.getLatestDigest tRPC procedure to fetch latest digest for current user
 - [x] Add "✦ Your week in reflection" card to Home.tsx with session count and digest summary
 - [x] Write 18 vitest tests for digest generation, week start calculation, transcript building, edge cases
+
+## Navigation Restructure (Apr 17) - COMPLETE
+- [x] Update AppShell: replaced Insights tab with Journal tab in bottom nav (BookOpen icon)
+- [x] Add Insights tab to Chat.tsx (Mirror page) as third tab alongside Chat and History
+- [x] Update App.tsx routing: removed standalone /saved-insights route
+- [x] Verify all internal links work: Home card, Chat reactions, tab navigation
