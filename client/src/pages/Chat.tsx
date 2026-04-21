@@ -100,6 +100,8 @@ export default function Chat() {
   const [editingTitle, setEditingTitle] = useState("");
   // Tab state: "chat" | "history" | "insights"
   const [activeTab, setActiveTab] = useState<"chat" | "history" | "insights">("chat");
+  // History search state
+  const [historySearchQuery, setHistorySearchQuery] = useState("");
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -350,6 +352,17 @@ export default function Chat() {
     const key = sid ?? "__legacy__";
     return sessionTitles?.[key] || formatSessionDate(lastMessage);
   };
+
+  // Filter sessions by search query (title or message count)
+  const filteredSessions = useMemo(() => {
+    if (!sessions || !historySearchQuery.trim()) return sessions;
+    const query = historySearchQuery.toLowerCase();
+    return sessions.filter((s) => {
+      const displayName = getSessionDisplayName(s.sessionId, s.lastMessage).toLowerCase();
+      const messageCountStr = s.messageCount.toString();
+      return displayName.includes(query) || messageCountStr.includes(query);
+    });
+  }, [sessions, historySearchQuery, sessionTitles]);
 
   return (
     <AppShell noScroll>
@@ -777,14 +790,40 @@ export default function Chat() {
 
         {/* History Tab */}
         {activeTab === "history" && (
-        <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-hide pb-24">
-          {!sessions ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">Loading...</div>
-          ) : sessions.length === 0 ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">No conversations yet.</div>
-          ) : (
-            <div className="space-y-2">
-              {sessions.map((s) => {
+        <div className="flex-1 flex flex-col overflow-hidden pb-24">
+          {/* Search bar */}
+          <div className="px-4 py-3 border-b border-border/20 flex-shrink-0">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search conversations..."
+                value={historySearchQuery}
+                onChange={(e) => setHistorySearchQuery(e.target.value)}
+                className="w-full bg-input border border-border/40 rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              {historySearchQuery && (
+                <button
+                  onClick={() => setHistorySearchQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all"
+                  title="Clear search"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Sessions list */}
+          <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-hide">
+            {!sessions ? (
+              <div className="py-8 text-center text-sm text-muted-foreground">Loading...</div>
+            ) : sessions.length === 0 ? (
+              <div className="py-8 text-center text-sm text-muted-foreground">No conversations yet.</div>
+            ) : (filteredSessions ?? []).length === 0 ? (
+              <div className="py-8 text-center text-sm text-muted-foreground">No conversations match "{historySearchQuery}".</div>
+            ) : (
+              <div className="space-y-2">
+                {(filteredSessions ?? []).map((s) => {
                 const isCurrentSession = s.sessionId === sessionId;
                 const isEditing = editingSessionId !== undefined && editingSessionId === s.sessionId;
                 const displayName = getSessionDisplayName(s.sessionId, s.lastMessage);
@@ -852,12 +891,12 @@ export default function Chat() {
                     )}
                   </div>
                 );
-              })}
-            </div>
-          )}
+               })}
+              </div>
+            )}
+          </div>
         </div>
         )}
-
         {/* Insights Tab */}
         {activeTab === "insights" && (
         <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-hide pb-24">

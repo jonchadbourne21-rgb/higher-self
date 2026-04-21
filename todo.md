@@ -435,3 +435,9 @@
 - [x] Add Insights tab to Chat.tsx (Mirror page) as third tab alongside Chat and History
 - [x] Update App.tsx routing: removed standalone /saved-insights route
 - [x] Verify all internal links work: Home card, Chat reactions, tab navigation
+
+## History Tab Search (Apr 18) - COMPLETE
+- [x] Add historySearchQuery state to Chat.tsx
+- [x] Add filtering logic: match session title or message count against search query (useMemo)
+- [x] Add search bar UI with clear button (X icon) in History tab
+- [x] Write 14 vitest tests for search filtering logic (title match, message count, edge cases)
