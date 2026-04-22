@@ -78,6 +78,15 @@ export default function Home() {
       iconColor: "text-emerald-600",
       border: "border-emerald-100",
     },
+    {
+      icon: "📅",
+      label: "Calendar",
+      path: "/calendar",
+      done: false,
+      bg: "bg-rose-50",
+      iconColor: "text-rose-600",
+      border: "border-rose-100",
+    },
   ];
 
   return (
@@ -196,7 +205,7 @@ export default function Home() {
           className="space-y-3"
         >
           <h2 className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Your Space</h2>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 auto-rows-max">
             {quickActions.map((action) => (
               <Link key={action.path} href={action.path}>
                 <motion.div
