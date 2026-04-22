@@ -102,6 +102,9 @@ export default function Chat() {
   const [activeTab, setActiveTab] = useState<"chat" | "history" | "insights">("chat");
   // History search state
   const [historySearchQuery, setHistorySearchQuery] = useState("");
+  // Resume/new chat modal state
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [hasShownResumeModal, setHasShownResumeModal] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -136,9 +139,12 @@ export default function Chat() {
   const { data: insights } = trpc.savedInsights.list.useQuery(undefined, {
     enabled: isAuthenticated && activeTab === "insights",
   });
-
+  // Fetch last session for resume modal
+  const { data: lastSession } = trpc.chat.getLastSession.useQuery(undefined, {
+    enabled: isAuthenticated && !hasShownResumeModal,
+  });
   // Get user's seedIntent for the intention badge
-  const seedIntent = (user as User | null)?.seedIntent;
+  const seedIntent = (user as User | null)?.seedIntent;;
   const intentInfo = seedIntent ? INTENT_CONFIG[seedIntent] : null;
 
   const generateTitleMutation = trpc.chat.generateTitle.useMutation({
@@ -225,6 +231,13 @@ export default function Chat() {
     if (!loading && !isAuthenticated) navigate("/");
   }, [isAuthenticated, loading]);
 
+  // Show resume modal on first load if there's a last session
+  useEffect(() => {
+    if (isAuthenticated && !hasShownResumeModal && lastSession) {
+      setShowResumeModal(true);
+      setHasShownResumeModal(true);
+    }
+  }, [isAuthenticated, hasShownResumeModal, lastSession]);
   // On first load, determine the current session from history
   useEffect(() => {
     if (sessionId === undefined && isAuthenticated) {
@@ -967,6 +980,41 @@ export default function Chat() {
           )}
         </div>
       </div>
+      {/* Resume/New Chat Modal */}
+      {showResumeModal && lastSession && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background border border-border rounded-2xl p-8 max-w-sm mx-4 shadow-2xl">
+            <h2 className="text-xl font-bold text-foreground mb-2">Welcome back, {user?.name}! ✦</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              You have a previous conversation with {lastSession.messageCount} messages.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setSessionId(lastSession.sessionId);
+                  setShowResumeModal(false);
+                  // Scroll to bottom after loading
+                  setTimeout(() => {
+                    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+                  }, 100);
+                }}
+                className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
+              >
+                Continue
+              </button>
+              <button
+                onClick={() => {
+                  setShowResumeModal(false);
+                  clearMutation.mutate();
+                }}
+                className="flex-1 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/90 transition-colors"
+              >
+                Start Fresh
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

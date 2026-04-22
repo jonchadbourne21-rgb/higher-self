@@ -51,6 +51,8 @@ import {
   upsertNotificationPreferences,
   upsertPushSubscription,
   upsertUserProfile,
+  getLastSessionId,
+  updateLastSessionId,
 } from "./db";
 import { sendPushNotification } from "./pushNotifications";
 import { retrieveContextForChat, upsertJournalEmbedding } from "./rag/embeddings";
@@ -564,9 +566,17 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
         return { title, skipped: false };
       }),
 
-    clearConversation: protectedProcedure.mutation(async () => {
+    getLastSession: protectedProcedure.query(async ({ ctx }) => {
+      const lastSessionId = await getLastSessionId(ctx.user.id);
+      if (!lastSessionId) return null;
+      const messages = await getChatHistory(ctx.user.id, lastSessionId);
+      return { sessionId: lastSessionId, messageCount: messages.length };
+    }),
+    clearConversation: protectedProcedure.mutation(async ({ ctx }) => {
       const { randomUUID } = await import("crypto");
       const newSessionId = randomUUID();
+      // Update user's lastSessionId to the new session
+      await updateLastSessionId(ctx.user.id, newSessionId);
       return { newSessionId };
     }),
 

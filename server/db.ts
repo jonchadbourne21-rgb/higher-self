@@ -1101,3 +1101,23 @@ export async function getAllUsers(): Promise<Array<{ id: number; name: string | 
   if (!db) return [];
   return db.select({ id: users.id, name: users.name }).from(users);
 }
+
+
+/** Get the user's last session ID */
+export async function getLastSessionId(userId: number): Promise<string | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db
+    .select({ lastSessionId: users.lastSessionId })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return rows[0]?.lastSessionId || null;
+}
+
+/** Update the user's last session ID */
+export async function updateLastSessionId(userId: number, sessionId: string | null): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({ lastSessionId: sessionId }).where(eq(users.id, userId));
+}

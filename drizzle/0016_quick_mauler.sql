@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `lastSessionId` varchar(36);

@@ -21,6 +21,7 @@ export const users = mysqlTable("users", {
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   onboardingCompleted: boolean("onboardingCompleted").default(false).notNull(),
   seedIntent: varchar("seedIntent", { length: 100 }),
+  lastSessionId: varchar("lastSessionId", { length: 36 }), // UUID of last chat session
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),

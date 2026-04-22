@@ -441,3 +441,21 @@
 - [x] Add filtering logic: match session title or message count against search query (useMemo)
 - [x] Add search bar UI with clear button (X icon) in History tab
 - [x] Write 14 vitest tests for search filtering logic (title match, message count, edge cases)
+
+## Resume/New Chat Prompt (Apr 21)
+- [ ] Add lastSessionId column to users table
+- [ ] Add chat.getLastSession tRPC procedure
+- [ ] Add resume/new chat modal to Chat.tsx (shows on first load)
+- [ ] Auto-load last session and scroll to bottom if user chooses resume
+- [ ] Write vitest tests for resume logic
+
+
+## Resume/New Chat Prompt (Apr 21) - COMPLETE
+- [x] Add lastSessionId column to users table (migration applied)
+- [x] Add getLastSessionId and updateLastSessionId DB helpers
+- [x] Add chat.getLastSession tRPC procedure to fetch last session with message count
+- [x] Update clearConversation to set new session ID in lastSessionId
+- [x] Add resume/new chat modal that shows on first load if lastSession exists
+- [x] Implement "Continue" button to load last session and scroll to bottom
+- [x] Implement "Start Fresh" button to generate new session and clear modal
+- [x] Write 22 vitest tests for resume logic, edge cases, and modal behavior
