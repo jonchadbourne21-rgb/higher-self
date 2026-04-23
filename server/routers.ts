@@ -945,6 +945,12 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
         await deleteCalendarEvent(ctx.user.id, input.id);
         return { success: true };
       }),
+
+    upcoming: protectedProcedure
+      .query(async ({ ctx }) => {
+        const { getUpcomingEvents } = await import("./db");
+        return getUpcomingEvents(ctx.user.id, 3);
+      }),
   }),  // ─── Saved Insights (chat reactions) ────────────────────────────────────────────────────────────────────────────────────
   savedInsights: router({
     list: protectedProcedure.query(async ({ ctx }) => {

@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, like, lt, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, like, lt, lte, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2";
 import {
@@ -1120,4 +1120,35 @@ export async function updateLastSessionId(userId: number, sessionId: string | nu
   const db = await getDb();
   if (!db) return;
   await db.update(users).set({ lastSessionId: sessionId }).where(eq(users.id, userId));
+}
+
+// ─── Calendar Events ──────────────────────────────────────────────────────
+/** Get the next 3 upcoming events for a user (starting from now) */
+export async function getUpcomingEvents(
+  userId: number,
+  limit: number = 3
+): Promise<Array<{ id: number; title: string; eventDate: Date; type: string }>> {
+  const db = await getDb();
+  if (!db) return [];
+
+  const now = new Date();
+
+  const rows = await db
+    .select({
+      id: calendarEvents.id,
+      title: calendarEvents.title,
+      eventDate: calendarEvents.eventDate,
+      type: calendarEvents.type,
+    })
+    .from(calendarEvents)
+    .where(
+      and(
+        eq(calendarEvents.userId, userId),
+        gte(calendarEvents.eventDate, now)
+      )
+    )
+    .orderBy(asc(calendarEvents.eventDate))
+    .limit(limit);
+
+  return rows;
 }

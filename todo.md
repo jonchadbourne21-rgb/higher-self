@@ -459,3 +459,9 @@
 - [x] Implement "Continue" button to load last session and scroll to bottom
 - [x] Implement "Start Fresh" button to generate new session and clear modal
 - [x] Write 22 vitest tests for resume logic, edge cases, and modal behavior
+
+## Upcoming Events Preview on Calendar Card (Apr 22) - COMPLETE
+- [x] Add calendar.upcoming tRPC procedure to fetch next 3 events (getUpcomingEvents helper)
+- [x] Update Calendar card in Home.tsx to display upcoming events with dates/times (top 2 + "+N more" if >2)
+- [x] Show "No upcoming events" fallback when there are no events
+- [x] Write 10 vitest tests for upcoming events logic (sorting, limits, types, edge cases)

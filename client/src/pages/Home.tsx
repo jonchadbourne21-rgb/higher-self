@@ -35,6 +35,7 @@ export default function Home() {
   const { data: todayCheckIn } = trpc.checkIn.today.useQuery(undefined, { enabled: isAuthenticated });
   const { data: latestInsight } = trpc.insights.latest.useQuery(undefined, { enabled: isAuthenticated });
   const { data: weeklyDigest } = trpc.home.getLatestDigest.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: upcomingEvents } = trpc.calendar.upcoming.useQuery(undefined, { enabled: isAuthenticated });
 
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate("/");
@@ -206,7 +207,7 @@ export default function Home() {
         >
           <h2 className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Your Space</h2>
           <div className="grid grid-cols-2 gap-3 auto-rows-max">
-            {quickActions.map((action) => (
+            {quickActions.slice(0, 3).map((action) => (
               <Link key={action.path} href={action.path}>
                 <motion.div
                   whileTap={{ scale: 0.96 }}
@@ -222,6 +223,35 @@ export default function Home() {
                 </motion.div>
               </Link>
             ))}
+            {/* Calendar card with upcoming events preview */}
+            <Link href="/calendar">
+              <motion.div
+                whileTap={{ scale: 0.96 }}
+                className="rounded-2xl p-4 space-y-3 cursor-pointer border transition-all hover:shadow-sm bg-rose-50 border-rose-100"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl">📅</span>
+                </div>
+                <p className="text-sm font-semibold text-foreground">Calendar</p>
+                {upcomingEvents && upcomingEvents.length > 0 ? (
+                  <div className="space-y-1.5 text-xs">
+                    {upcomingEvents.slice(0, 2).map((event) => (
+                      <div key={event.id} className="text-rose-700 line-clamp-1">
+                        <span className="font-medium">{event.title}</span>
+                        <span className="text-rose-600 ml-1">
+                          {format(new Date(event.eventDate), "MMM d")}
+                        </span>
+                      </div>
+                    ))}
+                    {upcomingEvents.length > 2 && (
+                      <p className="text-rose-600 font-medium">+{upcomingEvents.length - 2} more</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-rose-600">No upcoming events</p>
+                )}
+              </motion.div>
+            </Link>
           </div>
         </motion.div>
 
