@@ -35,7 +35,13 @@ export default function CheckIn() {
   const submitMutation = trpc.checkIn.submit.useMutation({
     onSuccess: (data) => {
       setAiResponse(data.aiResponse);
-      setDone(true);
+      if (data.aiResponse) {
+        // Store insight in session storage and navigate to insight page
+        sessionStorage.setItem("checkInInsight", data.aiResponse);
+        navigate("/check-in-insight");
+      } else {
+        setDone(true);
+      }
     },
     onError: () => toast.error("Failed to save check-in"),
   });

@@ -465,3 +465,10 @@
 - [x] Update Calendar card in Home.tsx to display upcoming events with dates/times (top 2 + "+N more" if >2)
 - [x] Show "No upcoming events" fallback when there are no events
 - [x] Write 10 vitest tests for upcoming events logic (sorting, limits, types, edge cases)
+
+## Check-In Insight Page (Apr 23) - COMPLETE
+- [x] Create CheckInInsight.tsx page to display full AI insight with teal styling
+- [x] Add checkIn.saveWeeklyInsight tRPC procedure to save insight for the week
+- [x] Update CheckIn.tsx to navigate to insight page after submission (via sessionStorage)
+- [x] Add /check-in-insight route to App.tsx
+- [x] Write 20 vitest tests for check-in insight logic (formatting, validation, edge cases)

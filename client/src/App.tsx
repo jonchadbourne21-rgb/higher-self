@@ -9,6 +9,7 @@ import Landing from "./pages/Landing";
 import Onboarding from "./pages/Onboarding";
 import Home from "./pages/Home";
 import CheckIn from "./pages/CheckIn";
+import CheckInInsight from "./pages/CheckInInsight";
 import Chat from "./pages/Chat";
 import Journal from "./pages/Journal";
 import JournalEntry from "./pages/JournalEntry";
@@ -83,6 +84,7 @@ function AnimatedRouter() {
             <Route path="/full-onboarding" component={FullOnboarding} />
             <Route path="/home" component={Home} />
             <Route path="/checkin" component={CheckIn} />
+            <Route path="/check-in-insight" component={CheckInInsight} />
             <Route path="/chat" component={Chat} />
             <Route path="/journal" component={Journal} />
             <Route path="/journal/:id" component={JournalEntry} />

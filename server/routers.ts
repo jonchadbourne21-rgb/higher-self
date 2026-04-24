@@ -268,6 +268,17 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
           return { success: true, aiResponse: null };
         }
       }),
+
+    saveWeeklyInsight: protectedProcedure
+      .input(z.object({ insight: z.string().min(1) }))
+      .mutation(async ({ ctx, input }) => {
+        await saveWeeklyInsight({
+          userId: ctx.user.id,
+          insightText: input.insight,
+          weekStart: new Date(),
+        });
+        return { success: true };
+      }),
   }),
 
   // ─── Habits ──────────────────────────────────────────────────────────────
