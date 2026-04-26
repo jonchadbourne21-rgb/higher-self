@@ -7,6 +7,7 @@ import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
 import { Plus, X, Check, Trash2, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
+import { HabitCompletionAnimation } from "@/components/HabitCompletionAnimation";
 
 // Each domain has its own identity: color class, accent hex for the progress bar,
 // and a subtle tinted background for the card.
@@ -84,11 +85,29 @@ export default function Domains() {
   const [calGoalDate, setCalGoalDate] = useState("");
   const [calRecurrence, setCalRecurrence] = useState<"none" | "weekly" | "monthly">("weekly");
 
+  // Animation state
+  const [completingHabitId, setCompletingHabitId] = useState<number | null>(null);
+  const [milestoneStreak, setMilestoneStreak] = useState<number | null>(null);
+
   const { data: domainScores, refetch: refetchScores } = trpc.domains.scores.useQuery(undefined, { enabled: isAuthenticated });
   const { data: habits, refetch: refetchHabits } = trpc.habits.list.useQuery(undefined, { enabled: isAuthenticated });
 
   const toggleMutation = trpc.habits.toggle.useMutation({
-    onSuccess: () => refetchHabits(),
+    onSuccess: (_, vars) => {
+      // Trigger animation
+      setCompletingHabitId(vars.habitId);
+      
+      // Check if this is a milestone streak
+      const habit = habits?.find((h) => h.id === vars.habitId);
+      if (habit) {
+        const newStreak = habit.streak + 1;
+        if ([7, 14, 30, 100].includes(newStreak)) {
+          setMilestoneStreak(newStreak);
+        }
+      }
+      
+      refetchHabits();
+    },
   });
 
   const createCalendarEvent = trpc.calendar.create.useMutation({
@@ -138,7 +157,18 @@ export default function Domains() {
 
   return (
     <>
-    <AppShell>
+      {/* Habit completion animation overlay */}
+      <HabitCompletionAnimation
+        isCompleting={completingHabitId !== null}
+        isMilestone={milestoneStreak !== null}
+        milestoneDay={milestoneStreak || 0}
+        onAnimationComplete={() => {
+          setCompletingHabitId(null);
+          setMilestoneStreak(null);
+        }}
+      />
+
+      <AppShell>
       <div className="px-5 pt-8 pb-4 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

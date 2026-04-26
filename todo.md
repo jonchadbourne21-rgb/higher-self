@@ -486,3 +486,10 @@
 - [x] Add habits.currentStreak tRPC procedure to expose streak data to frontend
 - [x] Update Life Domains card on Home.tsx to display "🔥 X day" badge when streak > 0
 - [x] Write 14 vitest tests for streak calculation logic (edge cases, gap handling, 365-day limits)
+
+## Habit Completion Animations (Apr 26) - COMPLETE
+- [x] Create HabitCompletionAnimation component with pulse/sparkle effects (pulse rings, sparkle burst, success checkmark)
+- [x] Integrate animations into Domains page habit toggle flow with state management
+- [x] Add milestone detection (7, 14, 30, 100 day streaks) for enhanced animations (16 sparkles vs 8, 1200ms vs 800ms)
+- [x] Write 40+ vitest tests for animation triggers and milestone logic (all passing)
+- [x] Test animations in browser and verify UX (dev server running)
