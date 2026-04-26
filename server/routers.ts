@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { invokeLLM } from "./_core/llm";
 import { systemRouter } from "./_core/systemRouter";
+import { weeklyInsightRouter } from "./routers/weeklyInsight";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import {
   createCheckIn,
@@ -1025,5 +1026,6 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
       };
     }),
   }),
+  weeklyInsight: weeklyInsightRouter,
 });
 export type AppRouter = typeof appRouter;

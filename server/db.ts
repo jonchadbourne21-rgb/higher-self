@@ -1152,3 +1152,166 @@ export async function getUpcomingEvents(
 
   return rows;
 }
+
+
+// ─── Weekly Insights ──────────────────────────────────────────────────────
+/** Get all Mirror sessions for a specific week */
+export async function getWeekMirrorSessions(userId: number, weekStart: Date) {
+  const db = await getDb();
+  if (!db) return [];
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 7);
+  
+  const rows = await db
+    .select({
+      id: chatSessions.id,
+      sessionId: chatSessions.sessionId,
+      title: chatSessions.title,
+      createdAt: chatSessions.createdAt,
+    })
+    .from(chatSessions)
+    .where(
+      and(
+        eq(chatSessions.userId, userId),
+        gte(chatSessions.createdAt, weekStart),
+        lt(chatSessions.createdAt, weekEnd)
+      )
+    )
+    .orderBy(desc(chatSessions.createdAt));
+  
+  return rows;
+}
+
+/** Get message count for a session */
+export async function getSessionMessageCount(sessionId: string): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  const result = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(chatMessages)
+    .where(eq(chatMessages.sessionId, sessionId));
+  
+  return result[0]?.count || 0;
+}
+
+/** Get all journal entries for a specific week */
+export async function getWeekJournalEntries(userId: number, weekStart: Date) {
+  const db = await getDb();
+  if (!db) return [];
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 7);
+  
+  const rows = await db
+    .select({
+      id: journalEntries.id,
+      title: journalEntries.title,
+      content: journalEntries.content,
+      moodTag: journalEntries.moodTag,
+      themes: journalEntries.themes,
+      createdAt: journalEntries.createdAt,
+    })
+    .from(journalEntries)
+    .where(
+      and(
+        eq(journalEntries.userId, userId),
+        gte(journalEntries.createdAt, weekStart),
+        lt(journalEntries.createdAt, weekEnd)
+      )
+    )
+    .orderBy(desc(journalEntries.createdAt));
+  
+  return rows;
+}
+
+/** Get all habit completions for a specific week */
+export async function getWeekHabitCompletions(userId: number, weekStart: Date) {
+  const db = await getDb();
+  if (!db) return [];
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 7);
+  
+  const rows = await db
+    .select({
+      id: habitCompletions.id,
+      habitId: habitCompletions.habitId,
+      completedAt: habitCompletions.completedAt,
+      habitName: habits.name,
+      habitDomain: habits.domain,
+      habitEmoji: habits.emoji,
+    })
+    .from(habitCompletions)
+    .innerJoin(habits, eq(habitCompletions.habitId, habits.id))
+    .where(
+      and(
+        eq(habitCompletions.userId, userId),
+        gte(habitCompletions.completedAt, weekStart),
+        lt(habitCompletions.completedAt, weekEnd)
+      )
+    )
+    .orderBy(desc(habitCompletions.completedAt));
+  
+  return rows;
+}
+
+/** Get daily check-ins for a specific week */
+export async function getWeekCheckIns(userId: number, weekStart: Date) {
+  const db = await getDb();
+  if (!db) return [];
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 7);
+  
+  const rows = await db
+    .select({
+      id: dailyCheckIns.id,
+      mood: dailyCheckIns.mood,
+      energy: dailyCheckIns.energy,
+      stress: dailyCheckIns.stress,
+      gratitude: dailyCheckIns.gratitude,
+      reflection: dailyCheckIns.reflection,
+      createdAt: dailyCheckIns.createdAt,
+    })
+    .from(dailyCheckIns)
+    .where(
+      and(
+        eq(dailyCheckIns.userId, userId),
+        gte(dailyCheckIns.createdAt, weekStart),
+        lt(dailyCheckIns.createdAt, weekEnd)
+      )
+    )
+    .orderBy(asc(dailyCheckIns.createdAt));
+  
+  return rows;
+}
+
+/** Calculate growth score based on weekly activity */
+export async function calculateWeeklyGrowthScore(userId: number, weekStart: Date): Promise<number> {
+  const [sessions, journals, habits, checkIns] = await Promise.all([
+    getWeekMirrorSessions(userId, weekStart),
+    getWeekJournalEntries(userId, weekStart),
+    getWeekHabitCompletions(userId, weekStart),
+    getWeekCheckIns(userId, weekStart),
+  ]);
+
+  let score = 0;
+
+  // Mirror sessions: 20 points per session (max 100)
+  score += Math.min(sessions.length * 20, 100);
+
+  // Journal entries: 15 points per entry (max 60)
+  score += Math.min(journals.length * 15, 60);
+
+  // Habit completions: 10 points per completion (max 100)
+  score += Math.min(habits.length * 10, 100);
+
+  // Daily check-ins: 5 points per check-in (max 35)
+  score += Math.min(checkIns.length * 5, 35);
+
+  // Consistency bonus: if they did all 7 days of check-ins
+  if (checkIns.length === 7) score += 20;
+
+  // Cap at 100
+  return Math.min(score, 100);
+}
+
+/** Save weekly insight */

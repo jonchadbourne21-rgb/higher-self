@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, TrendingUp } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -15,7 +15,9 @@ export default function CheckInInsight() {
   const [isSaving, setIsSaving] = useState(false);
 
   // Get the insight from location state
-  const [insight, setInsight] = useState<string | null>(null);
+  const [dailyInsight, setDailyInsight] = useState<string | null>(null);
+  const [weeklyInsight, setWeeklyInsight] = useState<any>(null);
+  const [isLoadingWeekly, setIsLoadingWeekly] = useState(true);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate("/");
@@ -25,12 +27,29 @@ export default function CheckInInsight() {
     // Get insight from session storage or navigate back if not found
     const storedInsight = sessionStorage.getItem("checkInInsight");
     if (storedInsight) {
-      setInsight(storedInsight);
+      setDailyInsight(storedInsight);
       sessionStorage.removeItem("checkInInsight");
     } else {
       navigate("/check-in");
     }
   }, [navigate]);
+
+  // Fetch weekly insight
+  const generateWeeklyMutation = trpc.weeklyInsight.generateWeeklyInsight.useMutation({
+    onSuccess: (data: any) => {
+      setWeeklyInsight(data.insight);
+      setIsLoadingWeekly(false);
+    },
+    onError: () => {
+      setIsLoadingWeekly(false);
+    },
+  });
+
+  useEffect(() => {
+    if (dailyInsight && isLoadingWeekly) {
+      generateWeeklyMutation.mutate();
+    }
+  }, [dailyInsight, isLoadingWeekly]);
 
   const saveWeeklyInsightMutation = trpc.checkIn.saveWeeklyInsight.useMutation({
     onSuccess: () => {
@@ -44,14 +63,16 @@ export default function CheckInInsight() {
   });
 
   const handleSaveAndContinue = async () => {
-    if (!insight) return;
+    if (!dailyInsight) return;
     setIsSaving(true);
-    saveWeeklyInsightMutation.mutate({ insight });
+    saveWeeklyInsightMutation.mutate({ insight: dailyInsight });
   };
+
+  const isToday = new Date().getDay() === 0; // Sunday
 
   return (
     <AppShell>
-      <div className="px-5 pt-6 pb-20 max-w-2xl mx-auto">
+      <div className="px-5 pt-6 pb-20 max-w-3xl mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -8 }}
@@ -66,27 +87,103 @@ export default function CheckInInsight() {
             <ArrowLeft size={20} className="text-muted-foreground" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Today's Insight</h1>
-            <p className="text-sm text-muted-foreground">From your check-in</p>
+            <h1 className="text-2xl font-bold text-foreground">Your Insight</h1>
+            <p className="text-sm text-muted-foreground">
+              {isToday ? "Weekly reflection & today's check-in" : "Today's check-in & weekly patterns"}
+            </p>
           </div>
         </motion.div>
 
-        {/* Insight Card */}
+        {/* Daily Insight Card */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.1 }}
-          className="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-950/30 dark:to-cyan-950/30 rounded-2xl p-6 border border-teal-200 dark:border-teal-800 mb-8 min-h-[300px] flex flex-col justify-center"
+          className="mb-6"
         >
-          {insight ? (
+          <h2 className="text-lg font-semibold text-foreground mb-3">Today's Check-In</h2>
+          <div className="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-950/30 dark:to-cyan-950/30 rounded-2xl p-6 border border-teal-200 dark:border-teal-800 min-h-[200px] flex flex-col justify-center">
+            {dailyInsight ? (
+              <div className="space-y-4">
+                <Streamdown className="text-foreground leading-relaxed text-sm">
+                  {dailyInsight}
+                </Streamdown>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-32">
+                <Loader2 size={32} className="animate-spin text-teal-600" />
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Weekly Insight Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.2 }}
+          className="mb-8"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp size={20} className="text-teal-600" />
+            <h2 className="text-lg font-semibold text-foreground">
+              {isToday ? "Last Week's Reflection" : "This Week's Patterns"}
+            </h2>
+          </div>
+
+          {isLoadingWeekly ? (
+            <div className="bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30 rounded-2xl p-6 border border-rose-200 dark:border-rose-800 min-h-[250px] flex items-center justify-center">
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 size={32} className="animate-spin text-rose-600" />
+                <p className="text-sm text-muted-foreground">Analyzing your week...</p>
+              </div>
+            </div>
+          ) : weeklyInsight ? (
             <div className="space-y-4">
-              <Streamdown className="text-foreground leading-relaxed">
-                {insight}
-              </Streamdown>
+              {/* Growth Score */}
+              {weeklyInsight.growthScore !== undefined && (
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
+                  <p className="text-sm text-muted-foreground mb-1">Growth Score</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-bold text-amber-600">{weeklyInsight.growthScore}</span>
+                    <span className="text-sm text-muted-foreground">/100</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Patterns */}
+              {weeklyInsight.patterns && (
+                <div className="bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30 rounded-2xl p-6 border border-rose-200 dark:border-rose-800">
+                  <h3 className="font-semibold text-foreground mb-3">Patterns Detected</h3>
+                  <Streamdown className="text-foreground leading-relaxed text-sm">
+                    {weeklyInsight.patterns}
+                  </Streamdown>
+                </div>
+              )}
+
+              {/* Insight Text */}
+              {weeklyInsight.insightText && (
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-2xl p-6 border border-indigo-200 dark:border-indigo-800">
+                  <h3 className="font-semibold text-foreground mb-3">Weekly Insight</h3>
+                  <Streamdown className="text-foreground leading-relaxed text-sm">
+                    {weeklyInsight.insightText}
+                  </Streamdown>
+                </div>
+              )}
+
+              {/* Actionable Steps */}
+              {weeklyInsight.actionableSteps && (
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-2xl p-6 border border-green-200 dark:border-green-800">
+                  <h3 className="font-semibold text-foreground mb-3">Next Steps for Growth</h3>
+                  <Streamdown className="text-foreground leading-relaxed text-sm">
+                    {weeklyInsight.actionableSteps}
+                  </Streamdown>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-64">
-              <Loader2 size={32} className="animate-spin text-teal-600" />
+            <div className="bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30 rounded-2xl p-6 border border-rose-200 dark:border-rose-800 text-center">
+              <p className="text-sm text-muted-foreground">Weekly insights will appear here as you complete check-ins</p>
             </div>
           )}
         </motion.div>
@@ -95,12 +192,12 @@ export default function CheckInInsight() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.2 }}
+          transition={{ duration: 0.45, delay: 0.3 }}
           className="space-y-3"
         >
           <Button
             onClick={handleSaveAndContinue}
-            disabled={!insight || isSaving}
+            disabled={!dailyInsight || isSaving}
             className="w-full bg-teal-600 hover:bg-teal-700 text-white h-12 rounded-xl font-semibold transition-all"
           >
             {isSaving ? (
@@ -125,10 +222,10 @@ export default function CheckInInsight() {
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.45, delay: 0.3 }}
+          transition={{ duration: 0.45, delay: 0.4 }}
           className="text-xs text-muted-foreground text-center mt-6"
         >
-          This insight will be saved to your weekly reflection digest
+          Your insights highlight patterns and growth across all your Mirror sessions, journals, and habits
         </motion.p>
       </div>
     </AppShell>

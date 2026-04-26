@@ -472,3 +472,11 @@
 - [x] Update CheckIn.tsx to navigate to insight page after submission (via sessionStorage)
 - [x] Add /check-in-insight route to App.tsx
 - [x] Write 20 vitest tests for check-in insight logic (formatting, validation, edge cases)
+
+## Comprehensive Weekly Insight System (Apr 24) - COMPLETE
+- [x] Add DB helpers: getWeekMirrorSessions, getWeekJournalEntries, getWeekHabits, calculateGrowthScore
+- [x] Create modular weeklyInsightRouter with generateWeeklyInsight procedure (LLM analysis of all weekly data)
+- [x] Mount weeklyInsightRouter in appRouter for tRPC access
+- [x] Update CheckInInsight.tsx to display both daily + weekly insights side-by-side with color-coded cards
+- [x] Implement Sunday reflection logic (previous week review + next week preview with day 0 detection)
+- [x] Write 36 vitest tests for comprehensive weekly insight logic (growth score, patterns, personalization, edge cases)
