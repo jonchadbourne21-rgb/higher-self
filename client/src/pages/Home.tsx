@@ -36,6 +36,7 @@ export default function Home() {
   const { data: latestInsight } = trpc.insights.latest.useQuery(undefined, { enabled: isAuthenticated });
   const { data: weeklyDigest } = trpc.home.getLatestDigest.useQuery(undefined, { enabled: isAuthenticated });
   const { data: upcomingEvents } = trpc.calendar.upcoming.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: habitStreak } = trpc.habits.currentStreak.useQuery(undefined, { enabled: isAuthenticated });
 
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate("/");
@@ -207,7 +208,7 @@ export default function Home() {
         >
           <h2 className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Your Space</h2>
           <div className="grid grid-cols-2 gap-3 auto-rows-max">
-            {quickActions.slice(0, 3).map((action) => (
+            {quickActions.slice(0, 2).map((action) => (
               <Link key={action.path} href={action.path}>
                 <motion.div
                   whileTap={{ scale: 0.96 }}
@@ -223,6 +224,21 @@ export default function Home() {
                 </motion.div>
               </Link>
             ))}
+            {/* Life Domains card with streak badge */}
+            <Link href="/domains">
+              <motion.div
+                whileTap={{ scale: 0.96 }}
+                className="rounded-2xl p-4 space-y-3 cursor-pointer border transition-all hover:shadow-sm bg-emerald-50 border-emerald-100"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl">🧭</span>
+                  {habitStreak && habitStreak.streak > 0 && (
+                    <span className="text-xs text-emerald-700 bg-emerald-200 px-2.5 py-1 rounded-full font-semibold">🔥 {habitStreak.streak} day</span>
+                  )}
+                </div>
+                <p className="text-sm font-semibold text-foreground">Life Domains</p>
+              </motion.div>
+            </Link>
             {/* Calendar card with upcoming events preview */}
             <Link href="/calendar">
               <motion.div

@@ -288,6 +288,55 @@ export async function getHabitStreaks(userId: number) {
   return streaks;
 }
 
+/**
+ * Calculate the longest consecutive daily streak across all active habits.
+ * Returns the maximum streak count (0 if no habits or no completions).
+ */
+export async function getCurrentStreak(userId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  const userHabits = await getUserHabits(userId);
+  if (userHabits.length === 0) return 0;
+
+  let maxStreak = 0;
+  let checkDate = new Date();
+  checkDate.setHours(0, 0, 0, 0);
+
+  // Check consecutive days starting from today
+  for (let dayOffset = 0; dayOffset < 365; dayOffset++) {
+    const start = new Date(checkDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(checkDate);
+    end.setHours(23, 59, 59, 999);
+
+    // Check if ANY habit was completed on this day
+    const completions = await db
+      .select()
+      .from(habitCompletions)
+      .where(
+        and(
+          inArray(
+            habitCompletions.habitId,
+            userHabits.map((h) => h.id)
+          ),
+          eq(habitCompletions.userId, userId),
+          gte(habitCompletions.completedAt, start),
+          lte(habitCompletions.completedAt, end)
+        )
+      )
+      .limit(1);
+
+    if (completions.length > 0) {
+      maxStreak++;
+      checkDate = new Date(checkDate.getTime() - 24 * 60 * 60 * 1000);
+    } else {
+      break;
+    }
+  }
+
+  return maxStreak;
+}
+
 // ─── Daily Check-ins ──────────────────────────────────────────────────────────
 
 export async function getTodayCheckIn(userId: number) {

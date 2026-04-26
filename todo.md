@@ -480,3 +480,9 @@
 - [x] Update CheckInInsight.tsx to display both daily + weekly insights side-by-side with color-coded cards
 - [x] Implement Sunday reflection logic (previous week review + next week preview with day 0 detection)
 - [x] Write 36 vitest tests for comprehensive weekly insight logic (growth score, patterns, personalization, edge cases)
+
+## Habit Streak Badges (Apr 26) - COMPLETE
+- [x] Create getCurrentStreak() database helper to calculate longest consecutive daily streak across all habits
+- [x] Add habits.currentStreak tRPC procedure to expose streak data to frontend
+- [x] Update Life Domains card on Home.tsx to display "🔥 X day" badge when streak > 0
+- [x] Write 14 vitest tests for streak calculation logic (edge cases, gap handling, 365-day limits)

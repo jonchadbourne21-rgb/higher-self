@@ -19,6 +19,7 @@ import {
   getChatHistory,
   getChatSessions,
   getCurrentSessionId,
+  getCurrentStreak,
   getDomainScoreHistory,
   getHabitStreaks,
   getJournalEntries,
@@ -326,6 +327,11 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
         await deleteHabit(input.habitId, ctx.user.id);
         return { success: true };
       }),
+
+    currentStreak: protectedProcedure.query(async ({ ctx }) => {
+      const streak = await getCurrentStreak(ctx.user.id);
+      return { streak };
+    }),
   }),
 
   // ─── Life Domains ─────────────────────────────────────────────────────────
