@@ -45,6 +45,60 @@ async function startServer() {
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
 
+  // Sitemap endpoint
+  app.get("/sitemap.xml", (req, res) => {
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const routes = [
+      "/",
+      "/home",
+      "/chat",
+      "/journal",
+      "/domains",
+      "/calendar",
+      "/insights",
+      "/checkin",
+      "/settings",
+      "/notifications",
+    ];
+
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${routes
+  .map(
+    (route) => `  <url>
+    <loc>${baseUrl}${route}</loc>
+    <lastmod>${new Date().toISOString().split("T")[0]}</lastmod>
+    <changefreq>${route === "/" ? "weekly" : "daily"}</changefreq>
+    <priority>${route === "/" ? "1.0" : "0.8"}</priority>
+  </url>`
+  )
+  .join("\n")}
+</urlset>`;
+
+    res.header("Content-Type", "application/xml");
+    res.send(sitemap);
+  });
+
+  // Robots.txt endpoint
+  app.get("/robots.txt", (req, res) => {
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const robots = `User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+
+Sitemap: ${baseUrl}/sitemap.xml
+
+# Crawl delay (in seconds)
+Crawl-delay: 1
+
+# Request rate (pages per second)
+Request-rate: 1/1s`;
+
+    res.header("Content-Type", "text/plain");
+    res.send(robots);
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",

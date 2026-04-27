@@ -24,6 +24,7 @@ import QuickOnboarding from "./pages/QuickOnboarding";
 import FullOnboarding from "./pages/FullOnboarding";
 import { useRef, useEffect } from "react";
 import { usePageMetadata } from "@/lib/metadata";
+import { injectStructuredData } from "@/lib/structuredData";
 
 // Tab order — used to determine slide direction
 const TAB_ORDER = ["/home", "/domains", "/chat", "/journal", "/calendar", "/dashboard"];
@@ -111,6 +112,11 @@ function AnimatedRouter() {
 }
 
 function App() {
+  // Inject structured data on mount
+  useEffect(() => {
+    injectStructuredData();
+  }, []);
+
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">

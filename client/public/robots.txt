@@ -1,0 +1,28 @@
+# Robots.txt for Higher Self
+# This file guides search engine crawlers on how to interact with the site
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /.well-known/
+Disallow: /private/
+
+# Specific rules for Googlebot (more aggressive crawling allowed)
+User-agent: Googlebot
+Allow: /
+
+# Specific rules for Bingbot
+User-agent: Bingbot
+Allow: /
+
+# Crawl delay (in seconds) - be respectful to server resources
+Crawl-delay: 1
+
+# Request rate (pages per second)
+Request-rate: 1/1s
+
+# Sitemap location
+Sitemap: https://higherself.cloud/sitemap.xml
+Sitemap: https://higherself-lqwmd5t8.manus.space/sitemap.xml
+Sitemap: https://synapset.manus.space/sitemap.xml
