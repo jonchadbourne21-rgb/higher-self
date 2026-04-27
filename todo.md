@@ -493,3 +493,6 @@
 - [x] Add milestone detection (7, 14, 30, 100 day streaks) for enhanced animations (16 sparkles vs 8, 1200ms vs 800ms)
 - [x] Write 40+ vitest tests for animation triggers and milestone logic (all passing)
 - [x] Test animations in browser and verify UX (dev server running)
+
+## SEO Fix — Home Page H2 Headings (Apr 26) - COMPLETE
+- [x] Add H2 headings to Home page sections for proper SEO structure ("Your Space" and "Your Insights")

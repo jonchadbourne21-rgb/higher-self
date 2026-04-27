@@ -206,7 +206,8 @@ export default function Home() {
           transition={{ duration: 0.45, delay: 0.16 }}
           className="space-y-3"
         >
-          <h2 className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Your Space</h2>
+          <h2 className="text-sm font-semibold text-foreground mb-4">Your Space</h2>
+          <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Quick Access</p>
           <div className="grid grid-cols-2 gap-3 auto-rows-max">
             {quickActions.slice(0, 2).map((action) => (
               <Link key={action.path} href={action.path}>
@@ -271,7 +272,8 @@ export default function Home() {
           </div>
         </motion.div>
 
-        {/* ── Latest insight / generate prompt ───────────────────────────── */}
+        {/* ── Latest insight / generate prompt ──────────────────────────────────────── */}
+        <h2 className="text-sm font-semibold text-foreground mt-6 mb-3">Your Insights</h2>
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
