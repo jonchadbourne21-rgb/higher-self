@@ -22,7 +22,8 @@ import Settings from "./pages/Settings";
 import Calendar from "./pages/Calendar";
 import QuickOnboarding from "./pages/QuickOnboarding";
 import FullOnboarding from "./pages/FullOnboarding";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
+import { usePageMetadata } from "@/lib/metadata";
 
 // Tab order — used to determine slide direction
 const TAB_ORDER = ["/home", "/domains", "/chat", "/journal", "/calendar", "/dashboard"];
@@ -45,6 +46,11 @@ function makeVariants(direction: number) {
 
 function AnimatedRouter() {
   const [location] = useLocation();
+  
+  // Update meta tags on route change
+  useEffect(() => {
+    usePageMetadata(location);
+  }, [location]);
   const prevLocation = useRef(location);
   const directionRef = useRef(0);
 
