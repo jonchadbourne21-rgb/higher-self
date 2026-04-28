@@ -517,3 +517,8 @@
 - [x] Integrate Milestones section into Settings page (MilestonesSection component with achievement count)
 - [x] Write 24 vitest tests for milestone logic (all passing)
 - [x] Test milestones display in browser and verify UX (dev server running)
+
+## SEO Fixes — Title & Description Optimization (Apr 28) - COMPLETE
+- [x] Fix Home page title length (adjusted from 28 to 40 characters: "Higher Self — AI-Powered Personal Growth")
+- [x] Fix Home page meta description length (trimmed from 164 to 127 characters for optimal SERP display)
+- [x] Verify H2 headings present on Home page ("Your Space" and "Your Insights" sections)

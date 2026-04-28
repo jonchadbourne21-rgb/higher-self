@@ -16,9 +16,9 @@ export interface PageMetadata {
  */
 export const ROUTE_METADATA: Record<string, PageMetadata> = {
   "/": {
-    title: "Higher Self — Your AI Mirror",
+    title: "Higher Self — AI-Powered Personal Growth",
     description:
-      "Track your growth across 6 life domains with daily check-ins, AI-powered insights, and personalized guidance. Your journey to becoming your higher self starts here.",
+      "Track growth across 6 life domains with daily check-ins and AI insights. Your journey to becoming your higher self starts here.",
     ogType: "website",
   },
   "/chat": {
@@ -88,9 +88,9 @@ export function getMetadataForRoute(pathname: string): PageMetadata {
 
   // Default metadata for unknown routes
   return {
-    title: "Higher Self — Your AI Mirror",
+    title: "Higher Self — AI-Powered Personal Growth",
     description:
-      "Transform your life with daily check-ins, AI insights, and personalized guidance across 6 life domains.",
+      "Track growth across 6 life domains with daily check-ins and AI insights.",
     ogType: "website",
   };
 }
