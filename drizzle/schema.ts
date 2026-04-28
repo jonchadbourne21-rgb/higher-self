@@ -431,3 +431,19 @@ export const weeklyReflections = mysqlTable("weekly_reflections", {
 });
 export type WeeklyReflection = typeof weeklyReflections.$inferSelect;
 export type InsertWeeklyReflection = typeof weeklyReflections.$inferInsert;
+
+// ─── Milestone Achievements (streak milestones: 7, 14, 30, 100 days) ──────────
+
+export const milestoneAchievements = mysqlTable("milestone_achievements", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  habitId: int("habitId").notNull(),
+  // Milestone level: 7, 14, 30, 100 days
+  streakDays: int("streakDays").notNull(),
+  // When the milestone was achieved
+  achievedAt: timestamp("achievedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MilestoneAchievement = typeof milestoneAchievements.$inferSelect;
+export type InsertMilestoneAchievement = typeof milestoneAchievements.$inferInsert;

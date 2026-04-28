@@ -1,13 +1,41 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { User, Phone, Mail, Heart, Save, ArrowLeft, CheckCircle, PhoneCall, AtSign, LogOut, Sparkles } from "lucide-react";
+import { User, Phone, Mail, Heart, Save, ArrowLeft, CheckCircle, PhoneCall, AtSign, LogOut, Sparkles, Award } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import AppShell from "@/components/AppShell";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { MilestonesList } from "@/components/MilestoneCard";
 import { toast } from "sonner";
+
+function MilestonesSection() {
+  const { data: milestones, isLoading } = trpc.habits.milestones.useQuery();
+  const { data: milestoneCount } = trpc.habits.milestoneCount.useQuery();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.15 }}
+      className="bg-white rounded-lg p-6 shadow-sm border border-gray-200"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold flex items-center gap-2">
+          <Award className="w-5 h-5" />
+          Milestones
+        </h2>
+        {milestoneCount && milestoneCount.count > 0 && (
+          <span className="text-sm font-semibold text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
+            {milestoneCount.count} Achievement{milestoneCount.count !== 1 ? "s" : ""}
+          </span>
+        )}
+      </div>
+      <MilestonesList milestones={milestones || []} isLoading={isLoading} />
+    </motion.div>
+  );
+}
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -20,6 +48,7 @@ export default function Settings() {
   const [showIntentModal, setShowIntentModal] = useState(false);
   const [selectedIntent, setSelectedIntent] = useState<string | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showMilestones, setShowMilestones] = useState(false);
 
   const INTENT_OPTIONS = [
     { id: "inner-peace", label: "Inner Peace", emoji: "🧘" },
@@ -124,6 +153,9 @@ export default function Settings() {
               Change Your Intention
             </Button>
           </motion.div>
+
+          {/* Milestones Section */}
+          <MilestonesSection />
 
           {/* Logout Section */}
           <motion.div

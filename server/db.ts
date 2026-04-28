@@ -13,6 +13,7 @@ import {
   journalCategories,
   journalEntries,
   lifeDomainScores,
+  milestoneAchievements,
   notificationPreferences,
   pushSubscriptions,
   savedInsights,
@@ -1364,3 +1365,92 @@ export async function calculateWeeklyGrowthScore(userId: number, weekStart: Date
 }
 
 /** Save weekly insight */
+
+// ─── Milestone Achievements ───────────────────────────────────────────────────
+
+/** Record a milestone achievement when a habit reaches 7, 14, 30, or 100 days */
+export async function recordMilestoneAchievement(
+  userId: number,
+  habitId: number,
+  streakDays: number
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  // Only record milestones at specific thresholds
+  const milestoneThresholds = [7, 14, 30, 100];
+  if (!milestoneThresholds.includes(streakDays)) return;
+
+  // Check if this milestone already exists
+  const existing = await db
+    .select()
+    .from(milestoneAchievements)
+    .where(
+      and(
+        eq(milestoneAchievements.userId, userId),
+        eq(milestoneAchievements.habitId, habitId),
+        eq(milestoneAchievements.streakDays, streakDays)
+      )
+    );
+
+  // Only insert if it doesn't already exist
+  if (existing.length === 0) {
+    await db.insert(milestoneAchievements).values({
+      userId,
+      habitId,
+      streakDays,
+      achievedAt: new Date(),
+    });
+  }
+}
+
+/** Get all milestone achievements for a user */
+export async function getUserMilestones(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const rows = await db
+    .select({
+      id: milestoneAchievements.id,
+      habitId: milestoneAchievements.habitId,
+      habitName: habits.name,
+      habitEmoji: habits.emoji,
+      habitDomain: habits.domain,
+      streakDays: milestoneAchievements.streakDays,
+      achievedAt: milestoneAchievements.achievedAt,
+    })
+    .from(milestoneAchievements)
+    .innerJoin(habits, eq(milestoneAchievements.habitId, habits.id))
+    .where(eq(milestoneAchievements.userId, userId))
+    .orderBy(desc(milestoneAchievements.achievedAt));
+
+  return rows;
+}
+
+/** Get milestone achievements grouped by streak level */
+export async function getUserMilestonesByLevel(userId: number) {
+  const db = await getDb();
+  if (!db) return { 7: [], 14: [], 30: [], 100: [] };
+
+  const milestones = await getUserMilestones(userId);
+
+  return {
+    7: milestones.filter((m) => m.streakDays === 7),
+    14: milestones.filter((m) => m.streakDays === 14),
+    30: milestones.filter((m) => m.streakDays === 30),
+    100: milestones.filter((m) => m.streakDays === 100),
+  };
+}
+
+/** Get total milestone count for a user */
+export async function getUserMilestoneCount(userId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+
+  const result = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(milestoneAchievements)
+    .where(eq(milestoneAchievements.userId, userId));
+
+  return result[0]?.count || 0;
+}

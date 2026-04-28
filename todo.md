@@ -508,3 +508,12 @@
 - [x] Implement server-side sitemap.xml endpoint (10 routes, dynamic lastmod, priority levels)
 - [x] Create robots.txt file in public directory (crawl-delay, request-rate, multi-domain support)
 - [x] Test all SEO implementations and verify functionality (all endpoints working correctly)
+
+## Milestone Tracking & Achievement Badges (Apr 28) - COMPLETE
+- [x] Add milestone tracking to database schema and create migration (milestone_achievements table)
+- [x] Create database helpers to track and retrieve milestone achievements (recordMilestoneAchievement, getUserMilestones, getUserMilestonesByLevel, getUserMilestoneCount)
+- [x] Add tRPC procedures to expose milestone data (habits.milestones, habits.milestonesByLevel, habits.milestoneCount)
+- [x] Create MilestoneCard component with achievement badges (7/14/30/100 day streaks with emoji and color coding)
+- [x] Integrate Milestones section into Settings page (MilestonesSection component with achievement count)
+- [x] Write 24 vitest tests for milestone logic (all passing)
+- [x] Test milestones display in browser and verify UX (dev server running)
