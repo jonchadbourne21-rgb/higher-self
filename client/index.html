@@ -31,7 +31,11 @@
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- SEO fallback content for crawlers before React hydration -->
+      <h2>Your Space</h2>
+      <h2>Your Insights</h2>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
     <script
       defer
