@@ -62,6 +62,7 @@ import {
 import { sendPushNotification } from "./pushNotifications";
 import { retrieveContextForChat, upsertJournalEmbedding } from "./rag/embeddings";
 import { buildIntentSpecificPrompt } from "./intentPrompts";
+import { detectCrisisKeywords, getCrisisResourceMessage } from "./crisisProtocol";
 // ─── Helperss ──────────────────────────────────────────────────────────────────
 
 async function buildHigherSelfSystemPrompt(userId: number, seedIntent?: string): Promise<string> {
@@ -623,6 +624,36 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
       .input(z.object({ message: z.string().min(1), sessionId: z.string().nullable().optional() }))
       .mutation(async ({ ctx, input }) => {
         const sessionId = input.sessionId ?? null;
+        
+        // CRITICAL: Crisis intervention kill switch
+        // Check for self-harm, suicide ideation, or crisis language BEFORE processing
+        if (detectCrisisKeywords(input.message)) {
+          console.error(
+            `[CRISIS PROTOCOL] Crisis detected from user ${ctx.user.id}. Returning crisis resources only.`
+          );
+          // Save user message for record
+          await saveChatMessage({
+            userId: ctx.user.id,
+            role: "user",
+            content: input.message,
+            sessionId,
+          });
+          // Save crisis response
+          const crisisResponse = getCrisisResourceMessage();
+          const aiMsgId = await saveChatMessage({
+            userId: ctx.user.id,
+            role: "assistant",
+            content: crisisResponse,
+            sessionId,
+            contextSnapshot: {
+              crisisInterventionTriggered: true,
+              ragContextUsed: false,
+              ragEntriesCount: 0,
+            },
+          });
+          return { response: crisisResponse, messageId: aiMsgId };
+        }
+        
         // Save user message
         const savedMsgId = await saveChatMessage({
           userId: ctx.user.id,
