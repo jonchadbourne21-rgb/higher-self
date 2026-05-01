@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { invokeLLM } from "./_core/llm";
+import { detectCrisisKeywords, SAFETY_KILL_SWITCH_RESPONSE, logSafetyBreach } from "./_core/safety";
 import { systemRouter } from "./_core/systemRouter";
 import { weeklyInsightRouter } from "./routers/weeklyInsight";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
@@ -62,7 +63,7 @@ import {
 import { sendPushNotification } from "./pushNotifications";
 import { retrieveContextForChat, upsertJournalEmbedding } from "./rag/embeddings";
 import { buildIntentSpecificPrompt } from "./intentPrompts";
-import { detectCrisisKeywords, getCrisisResourceMessage } from "./crisisProtocol";
+
 // ─── Helperss ──────────────────────────────────────────────────────────────────
 
 async function buildHigherSelfSystemPrompt(userId: number, seedIntent?: string): Promise<string> {
@@ -625,33 +626,24 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
       .mutation(async ({ ctx, input }) => {
         const sessionId = input.sessionId ?? null;
         
-        // CRITICAL: Crisis intervention kill switch
-        // Check for self-harm, suicide ideation, or crisis language BEFORE processing
+        // SAFETY CHECK: Detect crisis keywords (TRAIGA-2026 COMPLIANCE)
         if (detectCrisisKeywords(input.message)) {
-          console.error(
-            `[CRISIS PROTOCOL] Crisis detected from user ${ctx.user.id}. Returning crisis resources only.`
-          );
-          // Save user message for record
+          await logSafetyBreach(ctx.user.id.toString(), input.message, "Crisis keyword detected");
+          // Save user message for audit
           await saveChatMessage({
             userId: ctx.user.id,
             role: "user",
             content: input.message,
             sessionId,
           });
-          // Save crisis response
-          const crisisResponse = getCrisisResourceMessage();
-          const aiMsgId = await saveChatMessage({
+          // Save kill-switch response
+          await saveChatMessage({
             userId: ctx.user.id,
             role: "assistant",
-            content: crisisResponse,
+            content: SAFETY_KILL_SWITCH_RESPONSE,
             sessionId,
-            contextSnapshot: {
-              crisisInterventionTriggered: true,
-              ragContextUsed: false,
-              ragEntriesCount: 0,
-            },
           });
-          return { response: crisisResponse, messageId: aiMsgId };
+          return { response: SAFETY_KILL_SWITCH_RESPONSE };
         }
         
         // Save user message
