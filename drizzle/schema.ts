@@ -447,3 +447,84 @@ export const milestoneAchievements = mysqlTable("milestone_achievements", {
 
 export type MilestoneAchievement = typeof milestoneAchievements.$inferSelect;
 export type InsertMilestoneAchievement = typeof milestoneAchievements.$inferInsert;
+
+
+// ─── Crisis Incidents (safety audit trail for crisis keyword detection) ──────
+export const crisisIncidents = mysqlTable("crisis_incidents", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // The exact user message that triggered the crisis detection
+  userMessage: text("userMessage").notNull(),
+  // The crisis keyword(s) detected (e.g., "suicide", "self-harm")
+  detectedKeywords: json("detectedKeywords").$type<string[]>().notNull(),
+  // The automated kill-switch response sent to user
+  killSwitchResponse: text("killSwitchResponse").notNull(),
+  // Whether the user acknowledged/dismissed the crisis message
+  userAcknowledged: boolean("userAcknowledged").default(false).notNull(),
+  // Optional: timestamp when user acknowledged
+  acknowledgedAt: timestamp("acknowledgedAt"),
+  // Optional: user follow-up message after crisis (if any)
+  followUpMessage: text("followUpMessage"),
+  // Crisis severity: low (keywords only), medium (repeated), high (explicit threat)
+  severity: mysqlEnum("severity", ["low", "medium", "high"]).default("low").notNull(),
+  // Whether escalation was triggered (emergency contact notified)
+  escalationTriggered: boolean("escalationTriggered").default(false).notNull(),
+  // Optional: escalation details (who was notified, when)
+  escalationDetails: json("escalationDetails").$type<{ contactId: number; notifiedAt: string }>(),
+  // Incident timestamp
+  incidentAt: timestamp("incidentAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type CrisisIncident = typeof crisisIncidents.$inferSelect;
+export type InsertCrisisIncident = typeof crisisIncidents.$inferInsert;
+
+// ─── Emergency Contacts (for crisis escalation) ──────────────────────────────
+export const emergencyContacts = mysqlTable("emergency_contacts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // Contact name (e.g., "Mom", "Therapist")
+  name: varchar("name", { length: 100 }).notNull(),
+  // Contact type: family, friend, therapist, counselor, other
+  type: mysqlEnum("type", ["family", "friend", "therapist", "counselor", "other"]).notNull(),
+  // Phone number for SMS/call
+  phone: varchar("phone", { length: 20 }),
+  // Email for email notification
+  email: varchar("email", { length: 320 }),
+  // Whether this contact should be notified on crisis
+  notifyOnCrisis: boolean("notifyOnCrisis").default(false).notNull(),
+  // Notification method: sms, email, both
+  notificationMethod: mysqlEnum("notificationMethod", ["sms", "email", "both"]).default("email").notNull(),
+  // Whether contact has given consent to be notified
+  consentGiven: boolean("consentGiven").default(false).notNull(),
+  // When consent was given
+  consentGivenAt: timestamp("consentGivenAt"),
+  // Whether this contact is currently active
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EmergencyContact = typeof emergencyContacts.$inferSelect;
+export type InsertEmergencyContact = typeof emergencyContacts.$inferInsert;
+
+// ─── Crisis Notifications (log of notifications sent to emergency contacts) ──
+export const crisisNotifications = mysqlTable("crisis_notifications", {
+  id: int("id").autoincrement().primaryKey(),
+  crisisIncidentId: int("crisisIncidentId").notNull(),
+  emergencyContactId: int("emergencyContactId").notNull(),
+  // Notification method used: sms, email
+  method: mysqlEnum("method", ["sms", "email"]).notNull(),
+  // Notification status: pending, sent, failed, delivered
+  status: mysqlEnum("status", ["pending", "sent", "failed", "delivered"]).default("pending").notNull(),
+  // The message sent to the emergency contact
+  message: text("message").notNull(),
+  // Optional error message if notification failed
+  errorMessage: text("errorMessage"),
+  // When the notification was sent
+  sentAt: timestamp("sentAt"),
+  // When the notification was delivered (if tracked)
+  deliveredAt: timestamp("deliveredAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CrisisNotification = typeof crisisNotifications.$inferSelect;
+export type InsertCrisisNotification = typeof crisisNotifications.$inferInsert;
