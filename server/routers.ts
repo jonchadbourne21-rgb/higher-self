@@ -339,19 +339,16 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
     }),
 
     milestones: protectedProcedure.query(async ({ ctx }) => {
-      const { getUserMilestones } = await import("./db");
       const milestones = await getUserMilestones(ctx.user.id);
       return milestones;
     }),
 
     milestonesByLevel: protectedProcedure.query(async ({ ctx }) => {
-      const { getUserMilestonesByLevel } = await import("./db");
       const milestones = await getUserMilestonesByLevel(ctx.user.id);
       return milestones;
     }),
 
     milestoneCount: protectedProcedure.query(async ({ ctx }) => {
-      const { getUserMilestoneCount } = await import("./db");
       const count = await getUserMilestoneCount(ctx.user.id);
       return { count };
     }),

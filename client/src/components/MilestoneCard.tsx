@@ -6,7 +6,7 @@ interface Milestone {
   id: number;
   habitId: number;
   habitName: string;
-  habitEmoji: string;
+  habitEmoji: string | null;
   habitDomain: string;
   streakDays: number;
   achievedAt: Date;
