@@ -531,3 +531,9 @@
 - [ ] Implement crisis notification system for emergency contacts
 - [ ] Write comprehensive tests for crisis features
 - [ ] Test all crisis scenarios end-to-end
+
+## Social Media Preview Image — Open Graph (May 3) - COMPLETE
+- [x] Generate custom Open Graph preview image (1200×630px) showing app home page (Synapset - Higher Self branding)
+- [x] Upload preview image to S3 and get public URL (webp format, 1200x630px)
+- [x] Update meta tags with og:image URL in index.html
+- [x] Test social media preview display (meta tags verified)
