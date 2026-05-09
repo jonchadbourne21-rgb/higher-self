@@ -537,9 +537,3 @@
 - [x] Upload preview image to S3 and get public URL (webp format, 1200x630px)
 - [x] Update meta tags with og:image URL in index.html
 - [x] Test social media preview display (meta tags verified)
-
-## CRITICAL WEBHOOK — Public Landing Page Routing (May 4) - COMPLETE
-- [x] Create public landing page component (Begin Your Journey) with hero, features, and CTA
-- [x] Configure routing to show landing page before login on all URLs (App.tsx line 89)
-- [x] Lock landing page routing as IMMUTABLE WEBHOOK (LANDING_PAGE_ROUTING_IMMUTABLE.md)
-- [x] Test all URLs and subdomains route to landing page (dev server verified)

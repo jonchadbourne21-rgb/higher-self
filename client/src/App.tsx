@@ -6,7 +6,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Landing from "./pages/Landing";
-import { LandingPage } from "./pages/LandingPage";
 import Onboarding from "./pages/Onboarding";
 import Home from "./pages/Home";
 import CheckIn from "./pages/CheckIn";
@@ -86,7 +85,7 @@ function AnimatedRouter() {
           style={{ willChange: "transform, opacity" }}
         >
           <Switch location={location}>
-            <Route path="/" component={LandingPage} />
+            <Route path="/" component={Landing} />
             <Route path="/onboarding" component={Onboarding} />
             <Route path="/quick-onboarding" component={QuickOnboarding} />
             <Route path="/full-onboarding" component={FullOnboarding} />
