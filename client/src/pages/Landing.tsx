@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
-import LandingFAQ from "@/components/LandingFAQ";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -57,7 +56,7 @@ export default function Landing() {
 
   return (
     <div
-      className="flex flex-col items-center min-h-screen overflow-y-auto"
+      className="h-dvh flex flex-col items-center justify-between px-6 py-12 max-w-[480px] mx-auto w-full"
       style={{
         background:
           "radial-gradient(ellipse at 20% 0%, oklch(0.46 0.14 185 / 0.07) 0%, transparent 50%), " +
@@ -65,8 +64,6 @@ export default function Landing() {
           "oklch(0.98 0.008 80)",
       }}
     >
-      {/* Hero section */}
-      <div className="min-h-dvh flex flex-col items-center justify-between px-6 py-12 max-w-[480px] mx-auto w-full">
       {/* ── Top logo mark ─────────────────────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, scale: 0.75 }}
@@ -152,11 +149,13 @@ export default function Landing() {
             </div>
           ))}
         </div>
+        <a
+          href="/faq"
+          className="text-xs text-violet-600 hover:text-violet-700 text-center transition-colors mt-2"
+        >
+          Questions? Read our FAQ →
+        </a>
       </motion.div>
-      </div>
-
-      {/* FAQ Section */}
-      <LandingFAQ />
     </div>
   );
 }
