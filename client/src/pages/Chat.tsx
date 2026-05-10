@@ -1,4 +1,4 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+
 import type { User } from "../../../drizzle/schema";
 import { trpc } from "@/lib/trpc";
 import { motion, AnimatePresence } from "framer-motion";
