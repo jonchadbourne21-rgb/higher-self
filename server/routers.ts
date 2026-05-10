@@ -451,6 +451,23 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
         })
       )
       .mutation(async ({ ctx, input }) => {
+        // TIER-GATING: Check weekly journal limit for free users
+        const { isProUser } = await import("../db/subscriptions");
+        const { hasReachedWeeklyJournalLimit, incrementJournalUsage } = await import("../db/usage");
+        const isPro = await isProUser(ctx.user.id);
+        
+        if (!isPro) {
+          const limitReached = await hasReachedWeeklyJournalLimit(ctx.user.id);
+          if (limitReached) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "Weekly journal limit reached. Upgrade to Pro for unlimited journals.",
+              cause: "JOURNAL_LIMIT_REACHED",
+            });
+          }
+          await incrementJournalUsage(ctx.user.id);
+        }
+        
         await createJournalEntry({ userId: ctx.user.id, ...input });
         const entries = await getJournalEntries(ctx.user.id, 1);
         const newEntry = entries[0];
@@ -623,6 +640,24 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
       .input(z.object({ message: z.string().min(1), sessionId: z.string().nullable().optional() }))
       .mutation(async ({ ctx, input }) => {
         const sessionId = input.sessionId ?? null;
+        
+        // TIER-GATING: Check daily chat limit for free users
+        const { isProUser } = await import("../db/subscriptions");
+        const { hasReachedDailyChatLimit, incrementChatUsage } = await import("../db/usage");
+        const isPro = await isProUser(ctx.user.id);
+        
+        if (!isPro) {
+          const limitReached = await hasReachedDailyChatLimit(ctx.user.id);
+          if (limitReached) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "Daily chat limit reached. Upgrade to Pro for unlimited chats.",
+              cause: "CHAT_LIMIT_REACHED",
+            });
+          }
+          // Increment usage for this chat
+          await incrementChatUsage(ctx.user.id);
+        }
         
         // SAFETY CHECK: Detect crisis keywords (TRAIGA-2026 COMPLIANCE)
         if (detectCrisisKeywords(input.message)) {

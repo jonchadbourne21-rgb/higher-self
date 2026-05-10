@@ -8,6 +8,8 @@ import AppShell from "@/components/AppShell";
 import { Send, Heart, Star, RefreshCw, X, History, ChevronRight, Pencil, Check, Bookmark, MessageCircle } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
+import { UpgradeModal } from "@/components/UpgradeModal";
+import { useAuth } from "@/hooks/useAuth";
 
 // ─── Intent display config ────────────────────────────────────────────────────
 
@@ -98,6 +100,7 @@ export default function Chat() {
   // Session title editing state
   const [editingSessionId, setEditingSessionId] = useState<string | null | undefined>(undefined);
   const [editingTitle, setEditingTitle] = useState("");
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   // Tab state: "chat" | "history" | "insights"
   const [activeTab, setActiveTab] = useState<"chat" | "history" | "insights">("chat");
   // History search state
@@ -188,9 +191,13 @@ export default function Chat() {
         },
       ]);
     },
-    onError: () => {
+    onError: (error) => {
       setIsThinking(false);
-      toast.error("Your mirror is momentarily quiet. Try again.");
+      if (error.message.includes("Daily chat limit reached")) {
+        setShowUpgradeModal(true);
+      } else {
+        toast.error("Your mirror is momentarily quiet. Try again.");
+      }
     },
   });
 
@@ -1015,6 +1022,11 @@ export default function Chat() {
           </div>
         </div>
       )}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        limitType="chat"
+      />
     </AppShell>
   );
 }

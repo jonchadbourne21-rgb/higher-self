@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { format, isToday, isYesterday, isThisWeek, isThisMonth } from "date-fns";
 import { toast } from "sonner";
+import { UpgradeModal } from "@/components/UpgradeModal";
 
 const MOOD_TAGS = ["Reflective", "Grateful", "Anxious", "Hopeful", "Sad", "Peaceful", "Confused", "Inspired", "Tired", "Joyful"];
 const CATEGORY_COLORS = [
@@ -70,6 +71,9 @@ export default function Journal() {
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [newCatColor, setNewCatColor] = useState(CATEGORY_COLORS[0]);
+  
+  // ── Upgrade modal state ──────────────────────────────────────────────────
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // ── Queries ──────────────────────────────────────────────────────────────
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -102,7 +106,13 @@ export default function Journal() {
       resetForm();
       refetch();
     },
-    onError: () => toast.error("Failed to save entry"),
+    onError: (error) => {
+      if (error.message.includes("Weekly journal limit reached")) {
+        setShowUpgradeModal(true);
+      } else {
+        toast.error("Failed to save entry");
+      }
+    },
   });
 
   const createCategoryMutation = trpc.journal.categories.create.useMutation({
@@ -735,6 +745,11 @@ export default function Journal() {
           </motion.div>
         )}
       </AnimatePresence>
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        limitType="journal"
+      />
     </>
   );
 }
