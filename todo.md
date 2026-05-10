@@ -537,3 +537,96 @@
 - [x] Upload preview image to S3 and get public URL (webp format, 1200x630px)
 - [x] Update meta tags with og:image URL in index.html
 - [x] Test social media preview display (meta tags verified)
+
+
+## Pro Tier Implementation (May 10)
+
+### Phase 1: Database Schema
+- [x] Create streaks table
+- [x] Create rewardPointsHistory table
+- [x] Create wheelSpins table
+- [x] Create chatUsageDaily table
+- [x] Create journalUsageWeekly table
+- [x] Create streakRewards table
+- [x] Add subscriptionTier, subscriptionStatus, subscriptionStartDate, subscriptionEndDate to users table
+- [x] Add stripeCustomerId, stripeSubscriptionId to users table
+- [x] Add rewardPoints to users table
+- [x] Verify all migrations applied successfully
+
+### Phase 2: Database Helpers
+- [x] Create server/db/subscriptions.ts with subscription helpers
+- [x] Create server/db/streaks.ts with streak tracking helpers
+- [x] Create server/db/rewards.ts with reward points helpers
+- [x] Create server/db/usage.ts with chat/journal usage helpers
+- [x] Test all database helpers with sample queries
+
+### Phase 3: Stripe Integration
+- [ ] Add Stripe feature via webdev_add_feature
+- [ ] Configure Stripe API keys
+- [ ] Create Stripe product and price objects for Pro tier
+- [ ] Create tRPC procedures for subscription management
+
+### Phase 4: tRPC Procedures
+- [ ] Create subscription.getStatus procedure
+- [ ] Create subscription.getCurrentUsage procedure
+- [ ] Create rewards.getPoints procedure
+- [ ] Create rewards.spinWheel procedure with weighted odds
+- [ ] Create rewards.getStreakStatus procedure
+- [ ] Create usage.checkChatLimit procedure
+- [ ] Create usage.checkJournalLimit procedure
+- [ ] Test all procedures return correct data
+
+### Phase 5: Usage Tracking
+- [ ] Add chat usage increment to Chat page (after successful chat)
+- [ ] Add journal usage increment to Journal page (after successful entry)
+- [ ] Add streak update logic after habits, journals, and chats
+- [ ] Verify usage tracking doesn't break existing features
+
+### Phase 6: Frontend Gating
+- [ ] Add chat limit check before allowing new chat
+- [ ] Add journal limit check before allowing new journal
+- [ ] Show upgrade modal when limits reached
+- [ ] Add Pro badge to growth/insights features
+- [ ] Test gating doesn't affect Pro users
+
+### Phase 7: Components
+- [ ] Create ProUpgradeModal.tsx component
+- [ ] Create RewardWheel.tsx component with weighted odds
+- [ ] Create StreakBadge.tsx component
+- [ ] Create UsageMeter.tsx component
+- [ ] Test all components render correctly
+
+### Phase 8: Pages
+- [ ] Create Pricing.tsx page with subscription options
+- [ ] Create Rewards.tsx dashboard page
+- [ ] Add routes to App.tsx
+- [ ] Test navigation to new pages
+
+### Phase 9: Streak Rewards
+- [ ] Implement 30-day streak → 2 months free Pro
+- [ ] Implement 100-day streak → 1 year free Pro
+- [ ] Implement 3-day consistency → Wheel spin
+- [ ] Test streak reward logic
+
+### Phase 10: Testing & Verification
+- [ ] Run full TypeScript check
+- [ ] Test landing page
+- [ ] Test login/onboarding
+- [ ] Test chat feature (free user)
+- [ ] Test chat limit enforcement
+- [ ] Test journal feature (free user)
+- [ ] Test journal limit enforcement
+- [ ] Test habits feature
+- [ ] Test calendar feature
+- [ ] Test dashboard
+- [ ] Test settings
+- [ ] Verify no console errors
+- [ ] Test Pro user access to all features
+- [ ] Test wheel spin functionality
+- [ ] Test streak tracking
+
+### Phase 11: Deployment
+- [ ] Create checkpoint with Pro tier system
+- [ ] Review all changes
+- [ ] Final regression testing
+- [ ] Deploy to production

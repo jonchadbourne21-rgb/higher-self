@@ -6,6 +6,7 @@ import { invokeLLM } from "./_core/llm";
 import { detectCrisisKeywords, SAFETY_KILL_SWITCH_RESPONSE, logSafetyBreach } from "./_core/safety";
 import { systemRouter } from "./_core/systemRouter";
 import { weeklyInsightRouter } from "./routers/weeklyInsight";
+import { subscriptionRouter } from "./routers/subscription";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import {
   createCheckIn,
@@ -1074,5 +1075,6 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
     }),
   }),
   weeklyInsight: weeklyInsightRouter,
+  subscription: subscriptionRouter,
 });
 export type AppRouter = typeof appRouter;

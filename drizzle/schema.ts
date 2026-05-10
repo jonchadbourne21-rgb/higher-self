@@ -1,5 +1,6 @@
 import {
   boolean,
+  date,
   float,
   int,
   json,
@@ -528,3 +529,98 @@ export const crisisNotifications = mysqlTable("crisis_notifications", {
 });
 export type CrisisNotification = typeof crisisNotifications.$inferSelect;
 export type InsertCrisisNotification = typeof crisisNotifications.$inferInsert;
+
+
+// ─── Pro Tier: Subscriptions ──────────────────────────────────────────────────
+export const subscriptions = mysqlTable("subscriptions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  tier: mysqlEnum("tier", ["free", "pro"]).default("free").notNull(),
+  status: mysqlEnum("status", ["active", "canceled", "expired"]).default("active").notNull(),
+  startDate: timestamp("startDate").defaultNow().notNull(),
+  endDate: timestamp("endDate"),
+  stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Subscription = typeof subscriptions.$inferSelect;
+export type InsertSubscription = typeof subscriptions.$inferInsert;
+
+// ─── Pro Tier: Streaks ────────────────────────────────────────────────────────
+export const streaks = mysqlTable("streaks", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  streakType: mysqlEnum("streakType", ["habit", "journal", "chat"]).notNull(),
+  currentStreak: int("currentStreak").default(0).notNull(),
+  longestStreak: int("longestStreak").default(0).notNull(),
+  lastActivityDate: timestamp("lastActivityDate"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Streak = typeof streaks.$inferSelect;
+export type InsertStreak = typeof streaks.$inferInsert;
+
+// ─── Pro Tier: Reward Points ──────────────────────────────────────────────────
+export const rewardPointsHistory = mysqlTable("reward_points_history", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  points: int("points").notNull(),
+  source: mysqlEnum("source", ["habit", "journal", "chat", "checkin"]).notNull(),
+  sourceId: varchar("sourceId", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type RewardPointsHistory = typeof rewardPointsHistory.$inferSelect;
+export type InsertRewardPointsHistory = typeof rewardPointsHistory.$inferInsert;
+
+// ─── Pro Tier: Wheel Spins ────────────────────────────────────────────────────
+export const wheelSpins = mysqlTable("wheel_spins", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  result: mysqlEnum("result", ["month_pro", "five_percent_off", "try_again", "week_trial", "reward_points"]).notNull(),
+  prizeValue: varchar("prizeValue", { length: 255 }),
+  spinnedAt: timestamp("spinnedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type WheelSpin = typeof wheelSpins.$inferSelect;
+export type InsertWheelSpin = typeof wheelSpins.$inferInsert;
+
+// ─── Pro Tier: Chat Usage Daily ────────────────────────────────────────────────
+export const chatUsageDaily = mysqlTable("chat_usage_daily", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  usageDate: date("usageDate").notNull(),
+  chatCount: int("chatCount").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ChatUsageDaily = typeof chatUsageDaily.$inferSelect;
+export type InsertChatUsageDaily = typeof chatUsageDaily.$inferInsert;
+
+// ─── Pro Tier: Journal Usage Weekly ────────────────────────────────────────────
+export const journalUsageWeekly = mysqlTable("journal_usage_weekly", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  weekStartDate: date("weekStartDate").notNull(),
+  journalCount: int("journalCount").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type JournalUsageWeekly = typeof journalUsageWeekly.$inferSelect;
+export type InsertJournalUsageWeekly = typeof journalUsageWeekly.$inferInsert;
+
+// ─── Pro Tier: Streak Rewards ─────────────────────────────────────────────────
+export const streakRewards = mysqlTable("streak_rewards", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  streakDays: int("streakDays").notNull(),
+  rewardType: mysqlEnum("rewardType", ["two_months_pro", "one_year_pro"]).notNull(),
+  rewardAppliedAt: timestamp("rewardAppliedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type StreakReward = typeof streakRewards.$inferSelect;
+export type InsertStreakReward = typeof streakRewards.$inferInsert;
+
+// ─── Pro Tier: Reward Points (user total) ─────────────────────────────────────
+// This is stored in users table as rewardPoints column
+// We'll add this column to the users table via migration
