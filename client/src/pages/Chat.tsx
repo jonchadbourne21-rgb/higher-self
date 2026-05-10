@@ -9,7 +9,7 @@ import { Send, Heart, Star, RefreshCw, X, History, ChevronRight, Pencil, Check, 
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 // ─── Intent display config ────────────────────────────────────────────────────
 
