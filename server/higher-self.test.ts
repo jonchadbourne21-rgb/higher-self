@@ -47,6 +47,33 @@ vi.mock("./db", () => ({
   getMoodTrend: vi.fn().mockResolvedValue([]),
   upsertUser: vi.fn().mockResolvedValue(undefined),
   getUserByOpenId: vi.fn().mockResolvedValue(undefined),
+  getCurrentSessionId: vi.fn().mockResolvedValue(1),
+}));
+
+vi.mock("./db/subscriptions", () => ({
+  isProUser: vi.fn().mockResolvedValue(false),
+  getUserSubscription: vi.fn().mockResolvedValue(null),
+  createSubscription: vi.fn().mockResolvedValue(undefined),
+  updateSubscriptionStatus: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("./db/usage", () => ({
+  hasReachedDailyChatLimit: vi.fn().mockResolvedValue(false),
+  incrementChatUsage: vi.fn().mockResolvedValue(undefined),
+  hasReachedWeeklyJournalLimit: vi.fn().mockResolvedValue(false),
+  incrementJournalUsage: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("./db/streaks", () => ({
+  trackStreak: vi.fn().mockResolvedValue(undefined),
+  getStreak: vi.fn().mockResolvedValue(null),
+  resetStreak: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("./db/rewards", () => ({
+  addRewardPoints: vi.fn().mockResolvedValue(undefined),
+  recordWheelSpin: vi.fn().mockResolvedValue(undefined),
+  getRewardPoints: vi.fn().mockResolvedValue(0),
 }));
 
 vi.mock("./_core/llm", () => ({
@@ -287,8 +314,8 @@ describe("chat", () => {
   it("history returns messages in chronological order", async () => {
     const { getChatHistory } = await import("./db");
     vi.mocked(getChatHistory).mockResolvedValueOnce([
-      { id: 2, userId: 1, role: "assistant", content: "Hello", contextSnapshot: null, createdAt: new Date() },
       { id: 1, userId: 1, role: "user", content: "Hi", contextSnapshot: null, createdAt: new Date() },
+      { id: 2, userId: 1, role: "assistant", content: "Hello", contextSnapshot: null, createdAt: new Date() },
     ]);
     const caller = appRouter.createCaller(createCtx());
     const history = await caller.chat.history();

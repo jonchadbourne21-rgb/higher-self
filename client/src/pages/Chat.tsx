@@ -9,6 +9,7 @@ import { Send, Heart, Star, RefreshCw, X, History, ChevronRight, Pencil, Check, 
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { RewardWheel } from "@/components/RewardWheel";
 import { useAuth } from "@/_core/hooks/useAuth";
 
 // ─── Intent display config ────────────────────────────────────────────────────
@@ -108,6 +109,8 @@ export default function Chat() {
   // Resume/new chat modal state
   const [showResumeModal, setShowResumeModal] = useState(false);
   const [hasShownResumeModal, setHasShownResumeModal] = useState(false);
+  const [showRewardWheel, setShowRewardWheel] = useState(false);
+  const [wheelPrize, setWheelPrize] = useState<string | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -1026,6 +1029,15 @@ export default function Chat() {
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
         limitType="chat"
+      />
+      <RewardWheel
+        isOpen={showRewardWheel}
+        onClose={() => setShowRewardWheel(false)}
+        onSpinComplete={(prize) => {
+          setWheelPrize(prize);
+          // Handle prize reward here
+          toast.success(`You won: ${prize}!`);
+        }}
       />
     </AppShell>
   );

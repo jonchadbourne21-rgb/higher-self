@@ -1,7 +1,38 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, vi } from "vitest";
 import { embedText } from "./rag/embeddings";
 
+// Mock the OpenAI client to avoid external API calls
+vi.mock("openai", () => {
+  return {
+    default: vi.fn(() => ({
+      embeddings: {
+        create: vi.fn(async (params) => {
+          // Generate consistent mock embeddings based on input
+          let hash = 0;
+          const input = typeof params.input === 'string' ? params.input : '';
+          
+          for (let i = 0; i < input.length; i++) {
+            const char = input.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+          }
+          
+          // Use hash to seed the random generator for consistency
+          const seededEmbedding = Array(1536).fill(0).map((_, i) => {
+            return Math.sin(hash + i) * 0.5 + 0.5; // Normalize to 0-1 range
+          });
+          
+          return {
+            data: [{ embedding: seededEmbedding }],
+          };
+        }),
+      },
+    })),
+  };
+});
+
 describe("RAG Integration", () => {
+  // Note: OpenAI client is mocked to avoid external API calls during tests
   describe("embedText", () => {
     it("should generate embeddings using OpenAI API", async () => {
       const text = "I'm feeling anxious about my upcoming presentation";

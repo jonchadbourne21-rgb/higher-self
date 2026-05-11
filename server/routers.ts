@@ -452,8 +452,8 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
       )
       .mutation(async ({ ctx, input }) => {
         // TIER-GATING: Check weekly journal limit for free users
-        const { isProUser } = await import("../db/subscriptions");
-        const { hasReachedWeeklyJournalLimit, incrementJournalUsage } = await import("../db/usage");
+        const { isProUser } = await import("./db/subscriptions");
+        const { hasReachedWeeklyJournalLimit, incrementJournalUsage } = await import("./db/usage");
         const isPro = await isProUser(ctx.user.id);
         
         if (!isPro) {
@@ -642,8 +642,8 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
         const sessionId = input.sessionId ?? null;
         
         // TIER-GATING: Check daily chat limit for free users
-        const { isProUser } = await import("../db/subscriptions");
-        const { hasReachedDailyChatLimit, incrementChatUsage } = await import("../db/usage");
+        const { isProUser } = await import("./db/subscriptions");
+        const { hasReachedDailyChatLimit, incrementChatUsage } = await import("./db/usage");
         const isPro = await isProUser(ctx.user.id);
         
         if (!isPro) {
