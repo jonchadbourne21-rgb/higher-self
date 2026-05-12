@@ -108,6 +108,11 @@ export default function Home() {
               <span>{today}</span>
             </div>
             <div className="flex items-center gap-1">
+              <Link href="/pricing">
+                <button className="px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors text-primary text-xs font-semibold">
+                  Upgrade
+                </button>
+              </Link>
               <Link href="/notifications">
                 <button className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground">
                   <Bell className="w-4 h-4" />

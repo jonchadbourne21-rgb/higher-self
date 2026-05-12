@@ -23,6 +23,7 @@ import Calendar from "./pages/Calendar";
 import QuickOnboarding from "./pages/QuickOnboarding";
 import FullOnboarding from "./pages/FullOnboarding";
 import FAQ from "./pages/FAQ";
+import Pricing from "./pages/Pricing";
 import { useRef, useEffect } from "react";
 import { usePageMetadata } from "@/lib/metadata";
 import { injectStructuredData } from "@/lib/structuredData";
@@ -103,6 +104,7 @@ function AnimatedRouter() {
             <Route path="/notifications" component={Notifications} />
             <Route path="/settings" component={Settings} />
             <Route path="/calendar" component={Calendar} />
+            <Route path="/pricing" component={Pricing} />
             <Route path="/faq" component={FAQ} />
             <Route path="/404" component={NotFound} />
             <Route component={NotFound} />

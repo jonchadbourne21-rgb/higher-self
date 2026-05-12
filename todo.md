@@ -633,8 +633,22 @@
 - [x] Test wheel spin functionality
 - [x] Test streak tracking across all flows
 
-### Phase 11: Deployment
-- [ ] Create checkpoint with Pro tier system
-- [ ] Review all changes
+### Phase 11: Stripe Webhook & Pricing Page - COMPLETE
+- [x] Create STRIPE_WEBHOOK_SETUP.md with registration guide
+- [x] Document webhook endpoint and event types
+- [x] Create Pricing.tsx page with tier comparison
+- [x] Integrate Stripe checkout link (https://buy.stripe.com/test_14A5kC1EB85s5SQe9fco000)
+- [x] Add milestone rewards section (30-day & 100-day streaks)
+- [x] Add FAQ section with 5 common questions
+- [x] Add "Upgrade" button to Home page header
+- [x] Add /pricing route to App.tsx
+- [x] Pricing page fully functional and tested in browser
+- [x] All 320 tests still passing
+- [x] TypeScript: 0 errors
+- [x] Dev server: Running and stable
+
+### Phase 12: Deployment
+- [ ] Create checkpoint with complete Pro tier system
+- [ ] Review all changes and features
 - [ ] Final regression testing
 - [ ] Deploy to production
