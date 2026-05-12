@@ -1,4 +1,3 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,6 +11,8 @@ import {
 import { format, isToday, isYesterday, isThisWeek, isThisMonth } from "date-fns";
 import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { RewardWheel } from "@/components/RewardWheel";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const MOOD_TAGS = ["Reflective", "Grateful", "Anxious", "Hopeful", "Sad", "Peaceful", "Confused", "Inspired", "Tired", "Joyful"];
 const CATEGORY_COLORS = [
@@ -45,7 +46,7 @@ function groupEntriesByDate(entries: any[]) {
 }
 
 export default function Journal() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const [, navigate] = useLocation();
 
   // ── Write state ──────────────────────────────────────────────────────────
@@ -74,6 +75,8 @@ export default function Journal() {
   
   // ── Upgrade modal state ──────────────────────────────────────────────────
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showRewardWheel, setShowRewardWheel] = useState(false);
+  const [wheelPrize, setWheelPrize] = useState<string | null>(null);
 
   // ── Queries ──────────────────────────────────────────────────────────────
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -203,7 +206,7 @@ export default function Journal() {
 
   return (
     <>
-    <AppShell>
+      <AppShell>
       <div className="px-5 pt-8 pb-24 space-y-5">
 
         {/* ── Header ─────────────────────────────────────────────────────── */}
@@ -473,7 +476,7 @@ export default function Journal() {
             ))}
           </div>
         )}
-      </div>    </AppShell>
+      </div>
 
       {/* ── New Entry Full-Screen Modal (outside AppShell so it covers the nav) ── */}
       <AnimatePresence>      {isCreating && (
@@ -750,6 +753,15 @@ export default function Journal() {
         onClose={() => setShowUpgradeModal(false)}
         limitType="journal"
       />
+      <RewardWheel
+        isOpen={showRewardWheel}
+        onClose={() => setShowRewardWheel(false)}
+        onSpinComplete={(prize) => {
+          setWheelPrize(prize);
+          toast.success(`You won: ${prize}!`);
+        }}
+      />
+    </AppShell>
     </>
   );
 }

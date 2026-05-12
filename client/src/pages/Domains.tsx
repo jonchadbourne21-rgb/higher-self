@@ -8,6 +8,7 @@ import AppShell from "@/components/AppShell";
 import { Plus, X, Check, Trash2, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 import { HabitCompletionAnimation } from "@/components/HabitCompletionAnimation";
+import { RewardWheel, WheelPrize } from "@/components/RewardWheel";
 
 // Each domain has its own identity: color class, accent hex for the progress bar,
 // and a subtle tinted background for the card.
@@ -88,6 +89,10 @@ export default function Domains() {
   // Animation state
   const [completingHabitId, setCompletingHabitId] = useState<number | null>(null);
   const [milestoneStreak, setMilestoneStreak] = useState<number | null>(null);
+  
+  // Reward wheel state
+  const [showRewardWheel, setShowRewardWheel] = useState(false);
+  const [milestoneReward, setMilestoneReward] = useState<{ type: "30day" | "100day"; streak: number } | null>(null);
 
   const { data: domainScores, refetch: refetchScores } = trpc.domains.scores.useQuery(undefined, { enabled: isAuthenticated });
   const { data: habits, refetch: refetchHabits } = trpc.habits.list.useQuery(undefined, { enabled: isAuthenticated });
@@ -103,6 +108,18 @@ export default function Domains() {
         const newStreak = habit.streak + 1;
         if ([7, 14, 30, 100].includes(newStreak)) {
           setMilestoneStreak(newStreak);
+          
+          // Show milestone reward modal
+          if (newStreak === 30) {
+            setMilestoneReward({ type: "30day", streak: newStreak });
+          } else if (newStreak === 100) {
+            setMilestoneReward({ type: "100day", streak: newStreak });
+          }
+        }
+        
+        // Show reward wheel on 3-day streak
+        if (newStreak === 3) {
+          setShowRewardWheel(true);
         }
       }
       
@@ -167,6 +184,53 @@ export default function Domains() {
           setMilestoneStreak(null);
         }}
       />
+      
+      {/* Reward Wheel Modal */}
+      <RewardWheel
+        isOpen={showRewardWheel}
+        onClose={() => setShowRewardWheel(false)}
+        onSpinComplete={(prize: WheelPrize) => {
+          toast.success(`You won: ${prize === "month_free" ? "1 Month Free" : prize === "discount_5pct" ? "5% Off Annual" : prize === "week_free" ? "1 Week Free" : prize === "reward_points" ? "5 Reward Points" : "Try Again!"}`);
+          setShowRewardWheel(false);
+        }}
+      />
+      
+      {/* Milestone Reward Modals */}
+      {milestoneReward && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[110] bg-background/90 backdrop-blur-sm flex items-center justify-center max-w-[480px] mx-auto"
+          onClick={() => setMilestoneReward(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            className="bg-white rounded-3xl p-8 text-center space-y-6 max-w-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-6xl">🎉</div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-serif font-semibold">
+                {milestoneReward.type === "30day" ? "30-Day Streak!" : "100-Day Streak!"}
+              </h2>
+              <p className="text-muted-foreground">
+                {milestoneReward.type === "30day" 
+                  ? "You've earned 2 months of free Pro access!" 
+                  : "You've earned 1 year of free Pro access!"}
+              </p>
+            </div>
+            <Button
+              onClick={() => setMilestoneReward(null)}
+              className="w-full rounded-2xl py-5"
+            >
+              Awesome!
+            </Button>
+          </motion.div>
+        </motion.div>
+      )}
 
       <AppShell>
       <div className="px-5 pt-8 pb-4 space-y-6">
