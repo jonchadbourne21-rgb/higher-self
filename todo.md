@@ -635,12 +635,15 @@
 
 ### Phase 11: Stripe Webhook & Pricing Page - COMPLETE
 - [x] Create STRIPE_WEBHOOK_SETUP.md with registration guide
+- [x] Create STRIPE_WEBHOOK_REGISTRATION_GUIDE.md with step-by-step instructions
 - [x] Document webhook endpoint and event types
 - [x] Create Pricing.tsx page with tier comparison
-- [x] Integrate Stripe checkout link (https://buy.stripe.com/test_14A5kC1EB85s5SQe9fco000)
+- [x] Integrate monthly Stripe checkout link
+- [x] Integrate yearly Stripe checkout link
+- [x] Add separate buttons for monthly and yearly upgrades
 - [x] Add milestone rewards section (30-day & 100-day streaks)
 - [x] Add FAQ section with 5 common questions
-- [x] Add "Upgrade" button to Home page header
+- [x] Add Upgrade button to Home page header
 - [x] Add /pricing route to App.tsx
 - [x] Pricing page fully functional and tested in browser
 - [x] All 320 tests still passing

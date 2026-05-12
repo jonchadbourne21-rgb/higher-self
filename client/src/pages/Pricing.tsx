@@ -6,7 +6,8 @@ import { useLocation } from "wouter";
 import { useEffect } from "react";
 import AppShell from "@/components/AppShell";
 
-const STRIPE_CHECKOUT_URL = "https://buy.stripe.com/test_14A5kC1EB85s5SQe9fco000";
+const STRIPE_CHECKOUT_MONTHLY = "https://buy.stripe.com/test_14A5kC1EB85s5SQe9fco000";
+const STRIPE_CHECKOUT_YEARLY = "https://buy.stripe.com/test_7sYdR8dnj71o1CA5CJco001";
 
 const PRICING_TIERS = [
   {
@@ -39,6 +40,8 @@ const PRICING_TIERS = [
     cta: "Upgrade to Pro",
     ctaVariant: "default" as const,
     highlight: true,
+    checkoutUrl: STRIPE_CHECKOUT_MONTHLY,
+    checkoutUrlAnnual: STRIPE_CHECKOUT_YEARLY,
     features: [
       { name: "Unlimited AI chats", included: true },
       { name: "Unlimited journal entries", included: true },
@@ -89,9 +92,10 @@ export default function Pricing() {
     );
   }
 
-  const handleUpgrade = () => {
+  const handleUpgrade = (billingPeriod: "monthly" | "yearly" = "monthly") => {
     // Open Stripe checkout in new tab
-    window.open(STRIPE_CHECKOUT_URL, "_blank");
+    const url = billingPeriod === "yearly" ? STRIPE_CHECKOUT_YEARLY : STRIPE_CHECKOUT_MONTHLY;
+    window.open(url, "_blank");
   };
 
   return (
@@ -149,14 +153,33 @@ export default function Pricing() {
               </div>
 
               {/* CTA Button */}
-              <Button
-                onClick={handleUpgrade}
-                variant={tier.ctaVariant}
-                className="w-full rounded-2xl py-5 text-base font-medium"
-                disabled={tier.name === "Free"}
-              >
-                {tier.cta}
-              </Button>
+              {tier.name === "Pro" ? (
+                <div className="space-y-2">
+                  <Button
+                    onClick={() => handleUpgrade("monthly")}
+                    variant={tier.ctaVariant}
+                    className="w-full rounded-2xl py-5 text-base font-medium"
+                  >
+                    {tier.cta} - Monthly
+                  </Button>
+                  <Button
+                    onClick={() => handleUpgrade("yearly")}
+                    variant="outline"
+                    className="w-full rounded-2xl py-5 text-base font-medium"
+                  >
+                    {tier.cta} - Yearly (Save 17%)
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  onClick={() => handleUpgrade()}
+                  variant={tier.ctaVariant}
+                  className="w-full rounded-2xl py-5 text-base font-medium"
+                  disabled={tier.name === "Free"}
+                >
+                  {tier.cta}
+                </Button>
+              )}
 
               {/* Features */}
               <div className="space-y-3 pt-6 border-t border-border/50">
@@ -290,7 +313,7 @@ export default function Pricing() {
             Start with free, upgrade anytime. No credit card required to get started.
           </p>
           <Button
-            onClick={handleUpgrade}
+            onClick={() => handleUpgrade("monthly")}
             size="lg"
             className="rounded-2xl px-8 py-6 text-base font-medium"
           >
