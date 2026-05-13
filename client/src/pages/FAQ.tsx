@@ -16,9 +16,9 @@ const faqItems = [
       "Yes. Your data is encrypted end-to-end and stored securely. We never sell your data or share it with third parties. You have full control over your information and can request deletion at any time.",
   },
   {
-    question: "Is Synapset a replacement for therapy?",
+    question: "Is Mentrove a replacement for therapy?",
     answer:
-      "No. Synapset is an AI-powered self-reflection tool designed to support your personal growth. It is not a licensed therapist, medical doctor, or crisis counselor. If you need professional mental health support, please consult a licensed healthcare provider.",
+      "No. Mentrove is an AI-powered self-reflection tool designed to support your personal growth. It is not a licensed therapist, medical doctor, or crisis counselor. If you need professional mental health support, please consult a licensed healthcare provider.",
   },
   {
     question: "What if I'm in crisis?",
@@ -26,9 +26,9 @@ const faqItems = [
       "If you're experiencing a mental health crisis, please reach out to a professional immediately. Call 988 (Suicide & Crisis Lifeline), 1-800-273-8255, or 911. These services are free, confidential, and available 24/7.",
   },
   {
-    question: "Can I use Synapset on mobile?",
+    question: "Can I use Mentrove on mobile?",
     answer:
-      "Yes! Synapset is fully responsive and works seamlessly on iOS, Android, and all modern browsers. Download our app or access it through your mobile browser for the same full experience.",
+      "Yes! Mentrove is fully responsive and works seamlessly on iOS, Android, and all modern browsers. Download our app or access it through your mobile browser for the same full experience.",
   },
 ];
 
@@ -70,7 +70,7 @@ export default function FAQ() {
           className="text-center mb-12"
         >
           <h2 className="text-3xl font-serif font-light text-foreground mb-2">Common Questions</h2>
-          <p className="text-sm text-muted-foreground">Everything you need to know about Synapset</p>
+          <p className="text-sm text-muted-foreground">Everything you need to know about Mentrove</p>
         </motion.div>
 
         {/* FAQ Items */}
@@ -128,7 +128,7 @@ export default function FAQ() {
         >
           <div className="rounded-2xl p-4" style={{ background: "oklch(0.95 0.04 15 / 0.5)", border: "1px solid oklch(0.85 0.06 15 / 0.4)" }}>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              <strong>Important:</strong> Synapset is an AI-powered self-reflection tool. It is not a licensed therapist, medical doctor, or crisis counselor. If you need professional mental health support, please consult a licensed healthcare provider. In crisis? Call{" "}
+              <strong>Important:</strong> Mentrove is an AI-powered self-reflection tool. It is not a licensed therapist, medical doctor, or crisis counselor. If you need professional mental health support, please consult a licensed healthcare provider. In crisis? Call{" "}
               <a href="tel:988" className="text-violet-600 hover:text-violet-700 transition-colors">
                 988
               </a>{" "}

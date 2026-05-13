@@ -149,19 +149,19 @@ export default function AppShell({ children, noScroll }: AppShellProps) {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-foreground">About Synapset</h2>
+                <h2 className="text-lg font-semibold text-foreground">About Mentrove</h2>
                 <button onClick={() => setDisclaimerOpen(false)} className="p-1 rounded-full hover:bg-muted">
                   <X size={18} className="text-muted-foreground" />
                 </button>
               </div>
               <div className="space-y-4 text-sm text-muted-foreground">
                 <div>
-                  <p className="font-semibold text-foreground mb-1">What Synapset Is</p>
-                  <p>Synapset is an AI-powered self-reflection tool designed to support personal growth, emotional awareness, and mindfulness. It offers guided journaling, mood tracking, and AI-assisted insights to help you understand yourself better.</p>
+                  <p className="font-semibold text-foreground mb-1">What Mentrove Is</p>
+                  <p>Mentrove is an AI-powered self-reflection tool designed to support personal growth, emotional awareness, and mindfulness. It offers guided journaling, mood tracking, and AI-assisted insights to help you understand yourself better.</p>
                 </div>
                 <div>
-                  <p className="font-semibold text-foreground mb-1">What Synapset Is NOT</p>
-                  <p>Synapset is <strong>not</strong> a licensed therapist, psychologist, medical doctor, or crisis counselor. It does not provide medical advice, diagnosis, or treatment. It is not a substitute for professional mental health care.</p>
+                  <p className="font-semibold text-foreground mb-1">What Mentrove Is NOT</p>
+                  <p>Mentrove is <strong>not</strong> a licensed therapist, psychologist, medical doctor, or crisis counselor. It does not provide medical advice, diagnosis, or treatment. It is not a substitute for professional mental health care.</p>
                 </div>
                 <div className="rounded-xl p-4" style={{ background: "oklch(0.95 0.04 15 / 0.5)", border: "1px solid oklch(0.85 0.06 15 / 0.4)" }}>
                   <p className="font-semibold text-red-700 mb-2">🆘 In Crisis? Get Help Now</p>

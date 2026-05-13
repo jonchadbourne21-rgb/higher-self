@@ -340,9 +340,9 @@
 
 ## Disclaimer Footer (Apr 13) - COMPLETE
 - [x] Search git history for previous disclaimer content
-- [x] Create CrisisDisclaimerFooter component with Synapset info and emergency contacts
+- [x] Create CrisisDisclaimerFooter component with Mentrove info and emergency contacts
 - [x] Integrate disclaimer footer into AppShell layout (displays on all pages)
-- [x] Styled with clean, organized layout (3 sections: What Synapset Is, What It's NOT, Crisis Help)
+- [x] Styled with clean, organized layout (3 sections: What Mentrove Is, What It's NOT, Crisis Help)
 - [x] Emergency numbers: 988, 1-800-273-8255, 911 (clickable tel: links)
 
 
@@ -533,7 +533,7 @@
 - [ ] Test all crisis scenarios end-to-end
 
 ## Social Media Preview Image — Open Graph (May 3) - COMPLETE
-- [x] Generate custom Open Graph preview image (1200×630px) showing app home page (Synapset - Higher Self branding)
+- [x] Generate custom Open Graph preview image (1200×630px) showing app home page (Mentrove - Higher Self branding)
 - [x] Upload preview image to S3 and get public URL (webp format, 1200x630px)
 - [x] Update meta tags with og:image URL in index.html
 - [x] Test social media preview display (meta tags verified)
@@ -655,3 +655,16 @@
 - [ ] Review all changes and features
 - [ ] Final regression testing
 - [ ] Deploy to production
+
+
+## App Rebranding: Synapset → Mentrove (May 13) - COMPLETE
+- [x] Audit all Synapset references in codebase
+- [x] Update frontend components (AppShell.tsx, CrisisDisclaimerFooter.tsx, LandingFAQ.tsx, FAQ.tsx)
+- [x] Update backend configuration (stripe-products.ts, embeddings.ts)
+- [x] Update documentation (todo.md, REBRANDING_WORKFLOW.md)
+- [x] Replace all "Synapset" with "Mentrove" in disclaimers and descriptions
+- [x] Update Stripe product name to "Mentrove Pro"
+- [x] Verify zero TypeScript errors
+- [x] Verify all 320 tests passing
+- [x] Dev server running and stable
+- [x] Create REBRANDING_WORKFLOW.md for future rebranding tasks

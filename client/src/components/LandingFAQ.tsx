@@ -19,11 +19,11 @@ const faqItems: FAQItem[] = [
       "Yes. Your data is encrypted and stored securely. We never sell your information. Your conversations, journals, and personal insights are yours alone. You can delete your account and all data at any time.",
   },
   {
-    question: "Is Synapset a replacement for therapy?",
+    question: "Is Mentrove a replacement for therapy?",
     answer: (
       <div className="space-y-2">
         <p>
-          <strong>No.</strong> Synapset is <strong>not</strong> a licensed therapist, psychologist, medical doctor, or crisis counselor. It does not provide medical advice, diagnosis, or treatment. It is not a substitute for professional mental health care.
+          <strong>No.</strong> Mentrove is <strong>not</strong> a licensed therapist, psychologist, medical doctor, or crisis counselor. It does not provide medical advice, diagnosis, or treatment. It is not a substitute for professional mental health care.
         </p>
         <p className="text-sm text-muted-foreground">
           If you need professional mental health support, please consult a licensed therapist or healthcare provider.
@@ -63,9 +63,9 @@ const faqItems: FAQItem[] = [
     ),
   },
   {
-    question: "Can I use Synapset on mobile?",
+    question: "Can I use Mentrove on mobile?",
     answer:
-      "Yes! Synapset is fully optimized for mobile devices. You can access all features—chat, journaling, habit tracking, and insights—from your phone or tablet.",
+      "Yes! Mentrove is fully optimized for mobile devices. You can access all features—chat, journaling, habit tracking, and insights—from your phone or tablet.",
   },
 ];
 
@@ -80,7 +80,7 @@ export default function LandingFAQ() {
           Common Questions
         </h2>
         <p className="text-sm text-muted-foreground">
-          Everything you need to know about Synapset
+          Everything you need to know about Mentrove
         </p>
       </div>
 
@@ -136,7 +136,7 @@ export default function LandingFAQ() {
       <div className="mt-10 pt-8 border-t border-border">
         <div className="rounded-2xl p-4" style={{ background: "oklch(0.95 0.04 15 / 0.5)", border: "1px solid oklch(0.85 0.06 15 / 0.4)" }}>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            <strong>Important:</strong> Synapset is an AI-powered self-reflection tool. It is not a licensed therapist, medical doctor, or crisis counselor. If you need professional mental health support, please consult a licensed healthcare provider. In crisis? Call 988 or 911.
+            <strong>Important:</strong> Mentrove is an AI-powered self-reflection tool. It is not a licensed therapist, medical doctor, or crisis counselor. If you need professional mental health support, please consult a licensed healthcare provider. In crisis? Call 988 or 911.
           </p>
         </div>
       </div>

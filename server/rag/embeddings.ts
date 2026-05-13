@@ -1,5 +1,5 @@
 /**
- * RAG Embeddings Utility for Synapset
+ * RAG Embeddings Utility for Mentrove
  * Handles embedding generation, Pinecone storage, and semantic search
  */
 

@@ -5,7 +5,7 @@
 
 export const STRIPE_PRODUCTS = {
   PRO_TIER: {
-    name: "Synapset Pro",
+    name: "Mentrove Pro",
     description: "Unlimited chats, journals, and growth insights",
   },
 };
