@@ -754,3 +754,8 @@
 - [x] Points can unlock Pro access or perks (redemption tiers)
 - [x] Add Rewards to app navigation
 - [x] Track welcome_spin_used flag in database
+
+## Spin Wheel UX Fixes
+- [x] Fix spin wheel animation to visually spin and land on the correct winning segment
+- [x] Auto-popup welcome spin as full-screen modal on Home page for new users after onboarding
+- [x] Remove need for user to navigate to Rewards page for first spin

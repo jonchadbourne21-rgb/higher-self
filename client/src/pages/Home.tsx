@@ -1,10 +1,11 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
 import AppShell from "@/components/AppShell";
 import { Sparkles, ChevronRight, Sun, Moon, Star, Bell, Gift } from "lucide-react";
+import WelcomeSpinModal from "@/components/WelcomeSpinModal";
 import { format } from "date-fns";
 
 // Staggered word-by-word animation for the greeting name
@@ -39,6 +40,16 @@ export default function Home() {
   const { data: habitStreak } = trpc.habits.currentStreak.useQuery(undefined, { enabled: isAuthenticated });
   const { data: rewardPoints } = trpc.rewards.points.useQuery(undefined, { enabled: isAuthenticated });
   const { data: welcomeSpin } = trpc.rewards.welcomeSpinAvailable.useQuery(undefined, { enabled: isAuthenticated });
+  const [showWelcomeSpin, setShowWelcomeSpin] = useState(false);
+
+  // Auto-show welcome spin modal for new users
+  useEffect(() => {
+    if (welcomeSpin?.available && isAuthenticated && !loading) {
+      // Small delay so the Home page renders first, then the modal overlays
+      const timer = setTimeout(() => setShowWelcomeSpin(true), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [welcomeSpin?.available, isAuthenticated, loading]);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate("/");
@@ -82,6 +93,7 @@ export default function Home() {
   ];
 
   return (
+    <>
     <AppShell>
       <div className="px-5 pt-4 pb-4 space-y-5">
 
@@ -440,5 +452,12 @@ export default function Home() {
 
       </div>
     </AppShell>
+
+    {/* Welcome spin modal - auto-pops for new users */}
+    <WelcomeSpinModal
+      open={showWelcomeSpin}
+      onClose={() => setShowWelcomeSpin(false)}
+    />
+    </>
   );
 }
