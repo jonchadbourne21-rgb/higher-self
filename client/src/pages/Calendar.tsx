@@ -362,7 +362,7 @@ export default function Calendar() {
                   onClick={() => setNewEvent(f => ({ ...f, isAllDay: !f.isAllDay }))}
                   className={`w-11 h-6 rounded-full transition-colors ${newEvent.isAllDay ? "bg-violet-600" : "bg-muted"}`}
                 >
-                  <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform mx-0.5 ${newEvent.isAllDay ? "translate-x-5" : "translate-x-0"}`} />
+                  <div className={`w-5 h-5 bg-foreground rounded-full shadow transition-transform mx-0.5 ${newEvent.isAllDay ? "translate-x-5" : "translate-x-0"}`} />
                 </button>
               </div>
 

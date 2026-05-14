@@ -123,15 +123,15 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light">
+      <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster
-            theme="light"
+            theme="dark"
             toastOptions={{
               style: {
-                background: "oklch(0.98 0.014 185)",
-                border: "1px solid oklch(0.86 0.03 185)",
-                color: "oklch(0.18 0.02 270)",
+                background: "oklch(0.17 0.04 280)",
+                border: "1px solid oklch(0.28 0.05 280)",
+                color: "oklch(0.93 0.01 270)",
               },
             }}
           />

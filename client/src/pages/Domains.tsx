@@ -17,9 +17,9 @@ const DOMAIN_INFO = {
     label: "Mindset",
     emoji: "🧠",
     colorClass: "domain-mindset",
-    barColor: "oklch(0.46 0.14 185)",   // violet
-    cardBg: "oklch(0.97 0.03 295 / 0.5)",
-    cardBorder: "oklch(0.85 0.06 295 / 0.5)",
+    barColor: "oklch(0.55 0.14 290)",   // purple
+    cardBg: "oklch(0.17 0.04 290 / 0.8)",
+    cardBorder: "oklch(0.30 0.08 290 / 0.5)",
     desc: "Mental clarity, emotional regulation, peace",
   },
   relationships: {
@@ -27,8 +27,8 @@ const DOMAIN_INFO = {
     emoji: "❤️",
     colorClass: "domain-relationships",
     barColor: "oklch(0.58 0.20 15)",    // rose
-    cardBg: "oklch(0.97 0.03 15 / 0.5)",
-    cardBorder: "oklch(0.85 0.06 15 / 0.5)",
+    cardBg: "oklch(0.17 0.04 15 / 0.6)",
+    cardBorder: "oklch(0.30 0.06 15 / 0.5)",
     desc: "Love, connection, communication",
   },
   work: {
@@ -36,17 +36,17 @@ const DOMAIN_INFO = {
     emoji: "⚡",
     colorClass: "domain-work",
     barColor: "oklch(0.62 0.14 155)",    // amber
-    cardBg: "oklch(0.97 0.04 60 / 0.5)",
-    cardBorder: "oklch(0.85 0.08 60 / 0.5)",
+    cardBg: "oklch(0.17 0.04 60 / 0.6)",
+    cardBorder: "oklch(0.30 0.08 60 / 0.5)",
     desc: "Career, creativity, contribution",
   },
   health: {
     label: "Health",
     emoji: "🌿",
     colorClass: "domain-health",
-    barColor: "oklch(0.55 0.18 155)",   // teal
-    cardBg: "oklch(0.97 0.03 155 / 0.5)",
-    cardBorder: "oklch(0.85 0.06 155 / 0.5)",
+    barColor: "oklch(0.65 0.16 185)",   // teal
+    cardBg: "oklch(0.17 0.04 185 / 0.6)",
+    cardBorder: "oklch(0.30 0.06 185 / 0.5)",
     desc: "Body, energy, sleep, nutrition",
   },
   spirituality: {
@@ -54,8 +54,8 @@ const DOMAIN_INFO = {
     emoji: "✨",
     colorClass: "domain-spirituality",
     barColor: "oklch(0.55 0.18 230)",   // sky blue
-    cardBg: "oklch(0.97 0.03 230 / 0.5)",
-    cardBorder: "oklch(0.85 0.06 230 / 0.5)",
+    cardBg: "oklch(0.17 0.04 230 / 0.6)",
+    cardBorder: "oklch(0.30 0.06 230 / 0.5)",
     desc: "Meaning, connection, transcendence",
   },
   finances: {
@@ -63,8 +63,8 @@ const DOMAIN_INFO = {
     emoji: "🌊",
     colorClass: "domain-finances",
     barColor: "oklch(0.55 0.16 165)",   // green
-    cardBg: "oklch(0.97 0.03 165 / 0.5)",
-    cardBorder: "oklch(0.85 0.06 165 / 0.5)",
+    cardBg: "oklch(0.17 0.04 165 / 0.6)",
+    cardBorder: "oklch(0.30 0.06 165 / 0.5)",
     desc: "Abundance, security, generosity",
   },
 };
@@ -208,7 +208,7 @@ export default function Domains() {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
-            className="bg-white rounded-3xl p-8 text-center space-y-6 max-w-sm"
+            className="rounded-3xl p-8 text-center space-y-6 max-w-sm" style={{ background: 'oklch(0.17 0.04 280)', border: '1px solid oklch(0.28 0.05 280)' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-6xl">🎉</div>

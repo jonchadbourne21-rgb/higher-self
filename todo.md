@@ -713,3 +713,21 @@
 - [x] FAQ header includes Mentrove logo and themed back navigation
 - [x] All 320 tests still passing
 - [x] TypeScript: 0 errors
+
+## UI Redesign: Match App Store Screenshots (May 14) - COMPLETE
+- [x] Update index.css with dark midnight purple theme (oklch color palette)
+- [x] Switch ThemeProvider to dark mode as default
+- [x] Create MentroveHeader component with serif wordmark and mandala O
+- [x] Rewrite AppShell with MENTROVE header and dark bottom navigation
+- [x] Rewrite Home.tsx with dark theme cards (teal gradient CTA, dark quick access cards)
+- [x] Update Domains.tsx card colors to dark theme (all 6 domains)
+- [x] Update Settings.tsx from bg-white to bg-card with dark borders
+- [x] Update Calendar.tsx toggle switches for dark theme
+- [x] Update Notifications.tsx toggle switches for dark theme
+- [x] Chat.tsx uses semantic colors (auto-adapted to dark theme)
+- [x] Journal.tsx uses semantic colors (auto-adapted to dark theme)
+- [x] Dashboard.tsx uses semantic colors (auto-adapted to dark theme)
+- [x] Bottom navigation: dark glass background, teal active state, 5 tabs
+- [x] All 320 tests still passing
+- [x] TypeScript: 0 errors
+- [x] Dev server: Running and stable

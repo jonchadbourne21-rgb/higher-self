@@ -19,7 +19,7 @@ function MilestonesSection() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.15 }}
-      className="bg-white rounded-lg p-6 shadow-sm border border-gray-200"
+      className="rounded-lg p-6 shadow-sm border border-border/30 bg-card"
     >
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -27,7 +27,7 @@ function MilestonesSection() {
           Milestones
         </h2>
         {milestoneCount && milestoneCount.count > 0 && (
-          <span className="text-sm font-semibold text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
+          <span className="text-sm font-semibold text-amber-400 bg-amber-500/20 px-3 py-1 rounded-full">
             {milestoneCount.count} Achievement{milestoneCount.count !== 1 ? "s" : ""}
           </span>
         )}
@@ -111,7 +111,7 @@ export default function Settings() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-lg p-6 shadow-sm border border-gray-200"
+            className="rounded-lg p-6 shadow-sm border border-border/30 bg-card"
           >
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <User className="w-5 h-5" />
@@ -119,21 +119,21 @@ export default function Settings() {
             </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Name</label>
                 <input
                   type="text"
                   value={user?.name || ""}
                   disabled
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                  className="w-full px-3 py-2 rounded-lg bg-muted border border-border/30 text-foreground"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Email</label>
                 <input
                   type="email"
                   value={user?.email || ""}
                   disabled
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                  className="w-full px-3 py-2 rounded-lg bg-muted border border-border/30 text-foreground"
                 />
               </div>
             </div>
@@ -144,7 +144,7 @@ export default function Settings() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-lg p-6 shadow-sm border border-gray-200"
+            className="rounded-lg p-6 shadow-sm border border-border/30 bg-card"
           >
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <Sparkles className="w-5 h-5" />
@@ -167,7 +167,7 @@ export default function Settings() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white rounded-lg p-6 shadow-sm border border-gray-200"
+            className="rounded-lg p-6 shadow-sm border border-border/30 bg-card"
           >
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <LogOut className="w-5 h-5" />
@@ -197,10 +197,10 @@ export default function Settings() {
                 <button
                   key={option.id}
                   onClick={() => handleChangeIntent(option.id)}
-                  className="p-4 rounded-lg border-2 border-gray-200 hover:border-violet-500 hover:bg-violet-50 transition-all text-center"
+                  className="p-4 rounded-lg border-2 border-border/30 hover:border-primary hover:bg-primary/10 transition-all text-center"
                 >
                   <div className="text-2xl mb-2">{option.emoji}</div>
-                  <div className="text-sm font-medium">{option.label}</div>
+                  <div className="text-sm font-medium text-foreground">{option.label}</div>
                 </button>
               ))}
             </div>

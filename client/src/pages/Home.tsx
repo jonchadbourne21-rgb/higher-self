@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Sparkles, ChevronRight, Sun, Moon, Star, Bell, Settings } from "lucide-react";
+import { Sparkles, ChevronRight, Sun, Moon, Star, Bell } from "lucide-react";
 import { format } from "date-fns";
 
 // Staggered word-by-word animation for the greeting name
@@ -46,8 +46,8 @@ export default function Home() {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const greetingIcon = hour < 17
-    ? <Sun size={15} className="text-amber-500" />
-    : <Moon size={15} className="text-violet-500" />;
+    ? <Sun size={15} className="text-amber-400" />
+    : <Moon size={15} className="text-violet-400" />;
 
   const name = profile?.preferredName || user?.name?.split(" ")[0] || "friend";
   const today = format(new Date(), "EEEE, MMMM d");
@@ -58,44 +58,32 @@ export default function Home() {
       label: "Talk to Mirror",
       path: "/chat",
       done: false,
-      bg: "bg-amber-50",
-      iconColor: "text-amber-600",
-      border: "border-amber-100",
     },
     {
       icon: "📝",
       label: "Journal",
       path: "/journal",
       done: false,
-      bg: "bg-sky-50",
-      iconColor: "text-sky-600",
-      border: "border-sky-100",
     },
     {
       icon: "🧭",
       label: "Life Domains",
       path: "/domains",
       done: false,
-      bg: "bg-emerald-50",
-      iconColor: "text-emerald-600",
-      border: "border-emerald-100",
     },
     {
       icon: "📅",
       label: "Calendar",
       path: "/calendar",
       done: false,
-      bg: "bg-rose-50",
-      iconColor: "text-rose-600",
-      border: "border-rose-100",
     },
   ];
 
   return (
     <AppShell>
-      <div className="px-5 pt-10 pb-4 space-y-6">
+      <div className="px-5 pt-4 pb-4 space-y-5">
 
-        {/* ── Header ─────────────────────────────────────────────────────── */}
+        {/* ── Greeting header ─────────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -103,20 +91,14 @@ export default function Home() {
           className="space-y-1"
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
-                alt="Mentrove"
-                className="w-7 h-7 rounded-full object-cover"
-              />
-              <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-medium">
-                {greetingIcon}
-                <span>{today}</span>
-              </div>
+            <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium">
+              {greetingIcon}
+              <span>{today}</span>
             </div>
             <div className="flex items-center gap-1">
               <Link href="/pricing">
-                <button className="px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors text-primary text-xs font-semibold">
+                <button className="px-3 py-1.5 rounded-full transition-colors text-xs font-semibold"
+                  style={{ background: "oklch(0.65 0.16 185 / 0.15)", color: "oklch(0.65 0.16 185)" }}>
                   Upgrade
                 </button>
               </Link>
@@ -125,14 +107,9 @@ export default function Home() {
                   <Bell className="w-4 h-4" />
                 </button>
               </Link>
-              <Link href="/settings">
-                <button className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground">
-                  <Settings className="w-4 h-4" />
-                </button>
-              </Link>
             </div>
           </div>
-          <h1 className="text-4xl font-serif font-light text-foreground leading-tight">
+          <h1 className="text-3xl font-serif font-light text-foreground leading-tight">
             <motion.span
               initial={{ opacity: 0, x: -6 }}
               animate={{ opacity: 1, x: 0 }}
@@ -146,25 +123,27 @@ export default function Home() {
           </h1>
         </motion.div>
 
-        {/* ── Check-in card ───────────────────────────────────────────────── */}
+        {/* ── Check-in card ───────────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.08 }}
         >
           {todayCheckIn ? (
-            /* Completed check-in — violet tinted card */
             <div
-              className="rounded-3xl p-5 space-y-3"
+              className="rounded-2xl p-5 space-y-3"
               style={{
-                background: "linear-gradient(135deg, oklch(0.96 0.04 295), oklch(0.98 0.02 80))",
-                border: "1px solid oklch(0.88 0.06 295 / 0.6)",
-                boxShadow: "0 4px 20px oklch(0.46 0.14 185 / 0.08)",
+                background: "oklch(0.17 0.04 280)",
+                border: "1px solid oklch(0.28 0.06 290 / 0.6)",
+                boxShadow: "0 4px 20px oklch(0.10 0.04 280 / 0.3)",
               }}
             >
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-violet-700">Today's Check-in</p>
-                <span className="text-xs text-violet-600 bg-violet-100 px-2.5 py-0.5 rounded-full font-medium">✓ Done</span>
+                <p className="text-sm font-semibold text-primary">Today's Check-in</p>
+                <span className="text-xs px-2.5 py-0.5 rounded-full font-medium"
+                  style={{ background: "oklch(0.65 0.16 185 / 0.15)", color: "oklch(0.65 0.16 185)" }}>
+                  ✓ Done
+                </span>
               </div>
               <div className="flex gap-4">
                 {[
@@ -173,28 +152,27 @@ export default function Home() {
                   { label: "Stress", value: todayCheckIn.stress },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex-1 text-center">
-                    <p className="text-2xl font-serif font-light text-violet-700">{value}</p>
+                    <p className="text-2xl font-serif font-light text-primary">{value}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
                   </div>
                 ))}
               </div>
               {todayCheckIn.aiResponse && (
-                <div className="border-t border-violet-200/60 pt-3">
-                  <p className="text-xs text-violet-800/70 leading-relaxed italic">
+                <div className="border-t pt-3" style={{ borderColor: "oklch(0.28 0.05 280)" }}>
+                  <p className="text-xs text-muted-foreground leading-relaxed italic">
                     "{todayCheckIn.aiResponse.slice(0, 130)}..."
                   </p>
                 </div>
               )}
             </div>
           ) : (
-            /* CTA to check in — amber gradient prompt */
             <Link href="/checkin">
               <motion.div
                 whileTap={{ scale: 0.98 }}
-                className="rounded-3xl p-5 cursor-pointer"
+                className="rounded-2xl p-5 cursor-pointer"
                 style={{
                   background: "linear-gradient(135deg, oklch(0.46 0.14 185), oklch(0.52 0.14 200))",
-                  boxShadow: "0 6px 28px oklch(0.46 0.14 185 / 0.22)",
+                  boxShadow: "0 6px 28px oklch(0.46 0.14 185 / 0.25)",
                 }}
               >
                 <div className="flex items-center justify-between">
@@ -211,26 +189,32 @@ export default function Home() {
           )}
         </motion.div>
 
-        {/* ── Quick actions grid ──────────────────────────────────────────── */}
+        {/* ── Quick actions grid ──────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.16 }}
           className="space-y-3"
         >
-          <h2 className="text-sm font-semibold text-foreground mb-4">Your Space</h2>
           <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Quick Access</p>
           <div className="grid grid-cols-2 gap-3 auto-rows-max">
             {quickActions.slice(0, 2).map((action) => (
               <Link key={action.path} href={action.path}>
                 <motion.div
                   whileTap={{ scale: 0.96 }}
-                  className={`rounded-2xl p-4 space-y-3 cursor-pointer border transition-all hover:shadow-sm ${action.bg} ${action.border}`}
+                  className="rounded-2xl p-4 space-y-3 cursor-pointer transition-all hover:shadow-md"
+                  style={{
+                    background: "oklch(0.17 0.04 280)",
+                    border: "1px solid oklch(0.28 0.05 280 / 0.6)",
+                  }}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-2xl">{action.icon}</span>
                     {action.done && (
-                      <span className="text-xs text-violet-600 bg-violet-100 px-2 py-0.5 rounded-full font-medium">✓</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                        style={{ background: "oklch(0.65 0.16 185 / 0.15)", color: "oklch(0.65 0.16 185)" }}>
+                        ✓
+                      </span>
                     )}
                   </div>
                   <p className="text-sm font-semibold text-foreground">{action.label}</p>
@@ -241,12 +225,19 @@ export default function Home() {
             <Link href="/domains">
               <motion.div
                 whileTap={{ scale: 0.96 }}
-                className="rounded-2xl p-4 space-y-3 cursor-pointer border transition-all hover:shadow-sm bg-emerald-50 border-emerald-100"
+                className="rounded-2xl p-4 space-y-3 cursor-pointer transition-all hover:shadow-md"
+                style={{
+                  background: "oklch(0.17 0.04 280)",
+                  border: "1px solid oklch(0.28 0.05 280 / 0.6)",
+                }}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-2xl">🧭</span>
                   {habitStreak && habitStreak.streak > 0 && (
-                    <span className="text-xs text-emerald-700 bg-emerald-200 px-2.5 py-1 rounded-full font-semibold">🔥 {habitStreak.streak} day</span>
+                    <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
+                      style={{ background: "oklch(0.55 0.14 290 / 0.2)", color: "oklch(0.70 0.14 290)" }}>
+                      🔥 {habitStreak.streak} day
+                    </span>
                   )}
                 </div>
                 <p className="text-sm font-semibold text-foreground">Life Domains</p>
@@ -256,7 +247,11 @@ export default function Home() {
             <Link href="/calendar">
               <motion.div
                 whileTap={{ scale: 0.96 }}
-                className="rounded-2xl p-4 space-y-3 cursor-pointer border transition-all hover:shadow-sm bg-rose-50 border-rose-100"
+                className="rounded-2xl p-4 space-y-3 cursor-pointer transition-all hover:shadow-md"
+                style={{
+                  background: "oklch(0.17 0.04 280)",
+                  border: "1px solid oklch(0.28 0.05 280 / 0.6)",
+                }}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-2xl">📅</span>
@@ -265,46 +260,46 @@ export default function Home() {
                 {upcomingEvents && upcomingEvents.length > 0 ? (
                   <div className="space-y-1.5 text-xs">
                     {upcomingEvents.slice(0, 2).map((event) => (
-                      <div key={event.id} className="text-rose-700 line-clamp-1">
+                      <div key={event.id} className="text-primary line-clamp-1">
                         <span className="font-medium">{event.title}</span>
-                        <span className="text-rose-600 ml-1">
+                        <span className="text-muted-foreground ml-1">
                           {format(new Date(event.eventDate), "MMM d")}
                         </span>
                       </div>
                     ))}
                     {upcomingEvents.length > 2 && (
-                      <p className="text-rose-600 font-medium">+{upcomingEvents.length - 2} more</p>
+                      <p className="text-primary font-medium">+{upcomingEvents.length - 2} more</p>
                     )}
                   </div>
                 ) : (
-                  <p className="text-xs text-rose-600">No upcoming events</p>
+                  <p className="text-xs text-muted-foreground">No upcoming events</p>
                 )}
               </motion.div>
             </Link>
           </div>
         </motion.div>
 
-        {/* ── Latest insight / generate prompt ──────────────────────────────────────── */}
-        <h2 className="text-sm font-semibold text-foreground mt-6 mb-3">Your Insights</h2>
+        {/* ── Latest insight / generate prompt ────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.24 }}
+          className="space-y-3"
         >
+          <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Your Insights</p>
           {latestInsight ? (
             <Link href="/insights">
               <div
-                className="rounded-3xl p-5 space-y-3 cursor-pointer transition-all hover:shadow-md"
+                className="rounded-2xl p-5 space-y-3 cursor-pointer transition-all hover:shadow-md"
                 style={{
-                  background: "linear-gradient(145deg, oklch(0.97 0.03 60), oklch(0.99 0.01 80))",
-                  border: "1px solid oklch(0.88 0.06 60 / 0.6)",
-                  boxShadow: "0 2px 16px oklch(0.62 0.14 155 / 0.08)",
+                  background: "oklch(0.17 0.04 280)",
+                  border: "1px solid oklch(0.28 0.05 280 / 0.6)",
                 }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <Star size={12} className="text-amber-500 fill-amber-500" />
-                    <p className="text-xs text-amber-700 uppercase tracking-widest font-medium">Latest Insight</p>
+                    <Star size={12} className="text-amber-400 fill-amber-400" />
+                    <p className="text-xs text-amber-400 uppercase tracking-widest font-medium">Latest Insight</p>
                   </div>
                   <ChevronRight size={14} className="text-muted-foreground" />
                 </div>
@@ -312,7 +307,7 @@ export default function Home() {
                   {latestInsight.insightText}
                 </p>
                 {Array.isArray(latestInsight.actionableSteps) && latestInsight.actionableSteps.length > 0 && (
-                  <span className="text-xs text-amber-600 font-medium">
+                  <span className="text-xs text-primary font-medium">
                     {latestInsight.actionableSteps.length} action steps →
                   </span>
                 )}
@@ -322,7 +317,8 @@ export default function Home() {
             <Link href="/insights">
               <motion.div
                 whileTap={{ scale: 0.98 }}
-                className="rounded-3xl p-5 cursor-pointer border-2 border-dashed border-violet-200 hover:border-violet-300 transition-all bg-violet-50/50"
+                className="rounded-2xl p-5 cursor-pointer border-2 border-dashed transition-all"
+                style={{ borderColor: "oklch(0.55 0.14 290 / 0.4)", background: "oklch(0.55 0.14 290 / 0.05)" }}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">🔮</span>
@@ -336,7 +332,8 @@ export default function Home() {
             </Link>
           )}
         </motion.div>
-        {/* ── Weekly reflection digest ────────────────────────────────────── */}
+
+        {/* ── Weekly reflection digest ────────────────────────────────── */}
         {weeklyDigest && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -345,30 +342,28 @@ export default function Home() {
           >
             <Link href="/insights">
               <div
-                className="rounded-3xl p-5 space-y-3 cursor-pointer transition-all hover:shadow-md"
+                className="rounded-2xl p-5 space-y-3 cursor-pointer transition-all hover:shadow-md"
                 style={{
-                  background: "linear-gradient(145deg, oklch(0.95 0.05 185), oklch(0.97 0.03 200))",
-                  border: "1px solid oklch(0.82 0.08 185 / 0.6)",
-                  boxShadow: "0 2px 16px oklch(0.46 0.14 185 / 0.08)",
+                  background: "oklch(0.17 0.04 280)",
+                  border: "1px solid oklch(0.65 0.16 185 / 0.25)",
                 }}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs text-teal-700 uppercase tracking-widest font-medium">✦ Your week in reflection</span>
-                  </div>
+                  <span className="text-xs text-primary uppercase tracking-widest font-medium">✦ Your week in reflection</span>
                   <ChevronRight size={14} className="text-muted-foreground" />
                 </div>
                 <p className="text-sm text-foreground leading-relaxed line-clamp-3">
                   {weeklyDigest.summary}
                 </p>
-                <p className="text-xs text-teal-600 font-medium">
+                <p className="text-xs text-primary font-medium">
                   {weeklyDigest.sessionCount} Mirror sessions this week
                 </p>
               </div>
             </Link>
           </motion.div>
         )}
-        {/* ── Growth dashboard link ───────────────────────────────────────── */}
+
+        {/* ── Growth dashboard link ───────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -376,18 +371,18 @@ export default function Home() {
         >
           <Link href="/dashboard">
             <div
-              className="rounded-3xl p-5 space-y-3 cursor-pointer transition-all hover:shadow-md"
+              className="rounded-2xl p-5 space-y-3 cursor-pointer transition-all hover:shadow-md"
               style={{
-                background: "linear-gradient(145deg, oklch(0.97 0.02 155), oklch(0.99 0.01 80))",
-                border: "1px solid oklch(0.86 0.06 155 / 0.6)",
+                background: "oklch(0.17 0.04 280)",
+                border: "1px solid oklch(0.28 0.05 280 / 0.6)",
               }}
             >
               <div className="flex items-center justify-between">
-                <p className="text-xs text-emerald-700 uppercase tracking-widest font-medium">Growth Dashboard</p>
+                <p className="text-xs text-primary uppercase tracking-widest font-medium">Growth Dashboard</p>
                 <ChevronRight size={14} className="text-muted-foreground" />
               </div>
               <div className="flex items-center gap-3">
-                <div className="text-3xl font-serif text-emerald-600">✦</div>
+                <div className="text-3xl font-serif text-primary">✦</div>
                 <p className="text-sm text-muted-foreground">View your evolution across all life domains</p>
               </div>
             </div>
