@@ -120,8 +120,20 @@ export default function Chat() {
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const hasScrolledOnLoad = useRef(false);
+
+  // Reliable scroll-to-bottom helper that uses both approaches
+  const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+    // Use requestAnimationFrame to ensure DOM has updated
+    requestAnimationFrame(() => {
+      if (chatContainerRef.current) {
+        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      }
+      messagesEndRef.current?.scrollIntoView({ behavior });
+    });
+  };
 
   const utils = trpc.useUtils();
 
@@ -272,7 +284,10 @@ export default function Chat() {
   // Smooth-scroll to bottom whenever new messages or thinking state changes
   useEffect(() => {
     if (hasScrolledOnLoad.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      scrollToBottom("smooth");
+      // Double-tap for long AI responses that render progressively
+      const timer = setTimeout(() => scrollToBottom("smooth"), 300);
+      return () => clearTimeout(timer);
     }
   }, [localMessages, isThinking]);
 
@@ -437,6 +452,8 @@ export default function Chat() {
     ]);
     setIsThinking(true);
     sendMutation.mutate({ message: msg, sessionId, voiceMode });
+    // Immediately scroll to show user's message + thinking indicator
+    setTimeout(() => scrollToBottom("smooth"), 50);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -787,7 +804,7 @@ export default function Chat() {
 
         {/* Content area — switches based on activeTab */}
         {activeTab === "chat" && (
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-hide pb-4 relative">
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-hide pb-4 relative">
           {/* Subtle mandala watermark */}
           <div className="pointer-events-none fixed inset-0 flex items-center justify-center opacity-[0.04] z-0">
             <svg width="320" height="320" viewBox="0 0 320 320" fill="none">
