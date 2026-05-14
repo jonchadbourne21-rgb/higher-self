@@ -133,20 +133,20 @@ export default function Home() {
       : "oklch(0.55 0.08 300)";
 
   // Tile accent styles
-  // Deep Amethyst / Dark Indigo — introspection, wisdom
+  // Darker Forest Green — deeper than Life Domains, grounding
   const TILE_MIRROR = {
+    background: "oklch(0.12 0.07 145)",
+    border: "1px solid oklch(0.32 0.13 145 / 0.55)",
+  };
+  // Deep Amethyst / Dark Indigo — introspection, wisdom (was Mirror)
+  const TILE_JOURNAL = {
     background: "oklch(0.15 0.06 290)",
     border: "1px solid oklch(0.40 0.14 290 / 0.55)",
   };
-  // Dark Slate Blue — calming, reduces cognitive load
-  const TILE_JOURNAL = {
+  // Dark Slate Blue — calming, structured (was Journal)
+  const TILE_DOMAINS = {
     background: "oklch(0.15 0.05 240)",
     border: "1px solid oklch(0.38 0.10 240 / 0.55)",
-  };
-  // Deep Teal / Cyan — exploration, matches main banner
-  const TILE_DOMAINS = {
-    background: "oklch(0.15 0.06 185)",
-    border: "1px solid oklch(0.38 0.12 185 / 0.55)",
   };
   // Dark Crimson Red — intensity, drive, achievement
   const TILE_PROGRAMS = {
