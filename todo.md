@@ -911,3 +911,9 @@
 - [x] Smooth animated transitions between steps (framer-motion slide)
 - [x] Completed view shows reflection prompt + answer + follow-up question + answer
 - [x] Streak spin logic still triggers after the new 3-step submit
+
+## Home Page Layout Fix (symmetry + no-scroll)
+- [x] Make all 4 Quick Access grid squares equal height using aspect-square (flex-col justify-between)
+- [x] Move Rewards card above Calendar card (inside Quick Access section)
+- [x] Reduce vertical spacing: px-4 pt-3 space-y-3, Quick Access space-y-2, greeting text-2xl, compact row cards py-3
+- [x] Growth Dashboard collapsed to compact single-line row to save space

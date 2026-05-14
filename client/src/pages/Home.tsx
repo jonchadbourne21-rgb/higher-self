@@ -97,7 +97,7 @@ export default function Home() {
   return (
     <>
     <AppShell>
-      <div className="px-5 pt-4 pb-4 space-y-5">
+      <div className="px-4 pt-3 pb-4 space-y-3">
 
         {/* ── Greeting header ─────────────────────────────────────────── */}
         <motion.div
@@ -138,7 +138,7 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          <h1 className="text-3xl font-serif font-light text-foreground leading-tight">
+          <h1 className="text-2xl font-serif font-light text-foreground leading-tight">
             <motion.span
               initial={{ opacity: 0, x: -6 }}
               animate={{ opacity: 1, x: 0 }}
@@ -223,17 +223,17 @@ export default function Home() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.16 }}
-          className="space-y-3"
+          className="space-y-2"
         >
           <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Quick Access</p>
 
-          {/* 2x2 grid: Mirror | Journal / Life Domains | Programs */}
+          {/* 2x2 grid: Mirror | Journal / Life Domains | Programs — all squares use aspect-square for perfect symmetry */}
           <div className="grid grid-cols-2 gap-3">
             {/* Mirror */}
-            <Link href="/chat">
+            <Link href="/chat" className="block">
               <motion.div
                 whileTap={{ scale: 0.96 }}
-                className="rounded-2xl p-4 space-y-3 cursor-pointer transition-all hover:shadow-md"
+                className="rounded-2xl p-4 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md aspect-square"
                 style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
               >
                 <span className="text-2xl">🪞</span>
@@ -242,10 +242,10 @@ export default function Home() {
             </Link>
 
             {/* Journal */}
-            <Link href="/journal">
+            <Link href="/journal" className="block">
               <motion.div
                 whileTap={{ scale: 0.96 }}
-                className="rounded-2xl p-4 space-y-3 cursor-pointer transition-all hover:shadow-md"
+                className="rounded-2xl p-4 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md aspect-square"
                 style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
               >
                 <span className="text-2xl">📝</span>
@@ -254,18 +254,18 @@ export default function Home() {
             </Link>
 
             {/* Life Domains with streak badge */}
-            <Link href="/domains">
+            <Link href="/domains" className="block">
               <motion.div
                 whileTap={{ scale: 0.96 }}
-                className="rounded-2xl p-4 space-y-3 cursor-pointer transition-all hover:shadow-md"
+                className="rounded-2xl p-4 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md aspect-square"
                 style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-start justify-between">
                   <span className="text-2xl">🧭</span>
                   {habitStreak && habitStreak.streak > 0 && (
-                    <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
+                    <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
                       style={{ background: "oklch(0.55 0.14 290 / 0.2)", color: "oklch(0.70 0.14 290)" }}>
-                      🔥 {habitStreak.streak} day
+                      🔥 {habitStreak.streak}
                     </span>
                   )}
                 </div>
@@ -274,10 +274,10 @@ export default function Home() {
             </Link>
 
             {/* Programs */}
-            <Link href="/programs">
+            <Link href="/programs" className="block">
               <motion.div
                 whileTap={{ scale: 0.96 }}
-                className="rounded-2xl p-4 space-y-3 cursor-pointer transition-all hover:shadow-md"
+                className="rounded-2xl p-4 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md aspect-square"
                 style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
               >
                 <span className="text-2xl">🎓</span>
@@ -286,49 +286,11 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Full-width Calendar row */}
-          <Link href="/calendar">
-            <motion.div
-              whileTap={{ scale: 0.98 }}
-              className="rounded-2xl p-4 cursor-pointer transition-all hover:shadow-md"
-              style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">📅</span>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Calendar</p>
-                    {upcomingEvents && upcomingEvents.length > 0 ? (
-                      <p className="text-xs text-primary mt-0.5">
-                        {upcomingEvents[0].title}
-                        <span className="text-muted-foreground ml-1">
-                          · {format(new Date(upcomingEvents[0].eventDate), "MMM d")}
-                        </span>
-                        {upcomingEvents.length > 1 && (
-                          <span className="text-muted-foreground"> +{upcomingEvents.length - 1} more</span>
-                        )}
-                      </p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground mt-0.5">No upcoming events</p>
-                    )}
-                  </div>
-                </div>
-                <ChevronRight size={16} className="text-muted-foreground" />
-              </div>
-            </motion.div>
-          </Link>
-        </motion.div>
-
-        {/* ── Rewards card ────────────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.20 }}
-        >
+          {/* Rewards row — moved above Calendar */}
           <Link href="/rewards">
             <motion.div
               whileTap={{ scale: 0.98 }}
-              className="rounded-2xl p-5 cursor-pointer"
+              className="rounded-2xl px-4 py-3 cursor-pointer"
               style={{
                 background: welcomeSpin?.available
                   ? "linear-gradient(135deg, oklch(0.55 0.18 290 / 0.2), oklch(0.65 0.16 185 / 0.2))"
@@ -344,9 +306,9 @@ export default function Home() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{ background: "oklch(0.65 0.16 185 / 0.15)" }}>
-                    <Gift size={20} className="text-primary" />
+                    <Gift size={16} className="text-primary" />
                   </div>
                   <div>
                     {welcomeSpin?.available ? (
@@ -375,35 +337,65 @@ export default function Home() {
               </div>
             </motion.div>
           </Link>
+
+          {/* Full-width Calendar row — below Rewards */}
+          <Link href="/calendar">
+            <motion.div
+              whileTap={{ scale: 0.98 }}
+              className="rounded-2xl px-4 py-3 cursor-pointer transition-all hover:shadow-md"
+              style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">📅</span>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Calendar</p>
+                    {upcomingEvents && upcomingEvents.length > 0 ? (
+                      <p className="text-xs text-primary mt-0.5">
+                        {upcomingEvents[0].title}
+                        <span className="text-muted-foreground ml-1">
+                          · {format(new Date(upcomingEvents[0].eventDate), "MMM d")}
+                        </span>
+                        {upcomingEvents.length > 1 && (
+                          <span className="text-muted-foreground"> +{upcomingEvents.length - 1} more</span>
+                        )}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground mt-0.5">No upcoming events</p>
+                    )}
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-muted-foreground" />
+              </div>
+            </motion.div>
+          </Link>
         </motion.div>
 
-        {/* ── Growth dashboard link ───────────────────────────────────── */}
+        {/* ── Growth dashboard link (compact row) ─────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.24 }}
         >
           <Link href="/dashboard">
-            <div
-              className="rounded-2xl p-5 space-y-3 cursor-pointer transition-all hover:shadow-md"
-              style={{
-                background: "oklch(0.17 0.04 280)",
-                border: "1px solid oklch(0.28 0.05 280 / 0.6)",
-              }}
+            <motion.div
+              whileTap={{ scale: 0.98 }}
+              className="rounded-2xl px-4 py-3 cursor-pointer transition-all hover:shadow-md"
+              style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
             >
               <div className="flex items-center justify-between">
-                <p className="text-xs text-primary uppercase tracking-widest font-medium">Growth Dashboard</p>
-                <ChevronRight size={14} className="text-muted-foreground" />
+                <div className="flex items-center gap-3">
+                  <span className="text-lg font-serif text-primary">✦</span>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Growth Dashboard</p>
+                    <p className="text-xs text-muted-foreground">Insights, reflections & your evolution</p>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-muted-foreground" />
               </div>
-              <div className="flex items-center gap-3">
-                <div className="text-3xl font-serif text-primary">✦</div>
-                <p className="text-sm text-muted-foreground">Insights, reflections & your evolution</p>
-              </div>
-            </div>
+            </motion.div>
           </Link>
-        </motion.div>
-
-      </div>
+        </motion.div> </div>
     </AppShell>
     {/* Welcome spin modal - auto-pops for new users */}
     <WelcomeSpinModal
