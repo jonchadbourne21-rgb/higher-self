@@ -1002,3 +1002,7 @@
 - [x] AuraSparkline component with SVG polyline
 - [x] Add sparkline below check-in card on Home.tsx
 - [x] CheckIn page: show full AI reflection when today's check-in is already completed
+
+## SEO Fixes (Landing Page /)
+- [x] Reduce meta keywords from 11 to 6 focused terms (AI mirror, personal growth, self-reflection, daily check-in, emotional clarity, mindfulness app)
+- [x] Add H1 + H2 SEO fallback headings in index.html for crawlers before React hydration
