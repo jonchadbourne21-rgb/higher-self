@@ -1,14 +1,13 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ArrowLeft, Phone, AlertTriangle } from "lucide-react";
 import { useState } from "react";
-import { AnimatePresence } from "framer-motion";
 
 const faqItems = [
   {
     question: "How does the AI Mirror work?",
     answer:
-      "The AI Mirror learns your patterns, values, and goals through daily check-ins, journaling, and conversations. It reflects back insights about your growth, celebrates wins, and suggests areas for development—acting as a compassionate guide toward your higher self.",
+      "The AI Mirror learns your patterns, values, and goals through daily check-ins, journaling, and conversations. It reflects back insights about your growth, celebrates wins, and suggests areas for development — acting as a compassionate guide toward your higher self.",
   },
   {
     question: "Is my data private and secure?",
@@ -18,17 +17,32 @@ const faqItems = [
   {
     question: "Is Mentrove a replacement for therapy?",
     answer:
-      "No. Mentrove is an AI-powered self-reflection tool designed to support your personal growth. It is not a licensed therapist, medical doctor, or crisis counselor. If you need professional mental health support, please consult a licensed healthcare provider.",
+      "No. Mentrove is an AI-powered self-reflection tool designed to support your personal growth journey. It is not a licensed therapist, medical doctor, or crisis counselor. If you need professional mental health support, please consult a licensed healthcare provider.",
   },
   {
     question: "What if I'm in crisis?",
     answer:
-      "If you're experiencing a mental health crisis, please reach out to a professional immediately. Call 988 (Suicide & Crisis Lifeline), 1-800-273-8255, or 911. These services are free, confidential, and available 24/7.",
+      "If you're experiencing a mental health crisis, please reach out to a professional immediately. Call 988 (Suicide & Crisis Lifeline), 1-800-273-8255, or 911. These services are free, confidential, and available 24/7. Mentrove is not equipped to handle crisis situations.",
   },
   {
     question: "Can I use Mentrove on mobile?",
     answer:
-      "Yes! Mentrove is fully responsive and works seamlessly on iOS, Android, and all modern browsers. Download our app or access it through your mobile browser for the same full experience.",
+      "Yes! Mentrove is fully responsive and works seamlessly on iOS, Android, and all modern browsers. Access it through your mobile browser for the same full experience.",
+  },
+  {
+    question: "How does the streak reward system work?",
+    answer:
+      "Consistency is rewarded. Maintain a 3-day streak across any activity (chat, journal, or habits) to earn a reward wheel spin. Reach a 30-day streak to unlock 2 months of free Pro, and a 100-day streak earns you 1 full year of Pro — free.",
+  },
+  {
+    question: "What's included in Mentrove Pro?",
+    answer:
+      "Pro unlocks unlimited AI chats, unlimited journal entries, advanced analytics and trends, priority support, and custom integrations. Free users get 5 AI chats per day and 4 journal entries per week.",
+  },
+  {
+    question: "How do I cancel my subscription?",
+    answer:
+      "You can cancel your Pro subscription at any time through your Stripe billing portal. Your Pro access continues until the end of the current billing period. No questions asked.",
   },
 ];
 
@@ -41,62 +55,211 @@ export default function FAQ() {
       className="min-h-screen w-full"
       style={{
         background:
-          "radial-gradient(ellipse at 20% 0%, oklch(0.46 0.14 185 / 0.07) 0%, transparent 50%), " +
-          "radial-gradient(ellipse at 80% 15%, oklch(0.62 0.14 155 / 0.07) 0%, transparent 50%), " +
-          "oklch(0.98 0.008 80)",
+          "radial-gradient(ellipse at 50% 0%, oklch(0.22 0.12 295 / 0.6) 0%, oklch(0.08 0.04 270) 50%, oklch(0.05 0.02 260) 100%)",
       }}
     >
       {/* Header */}
-      <div className="sticky top-0 z-10 backdrop-blur-sm bg-aurora/80 border-b border-border">
+      <div
+        className="sticky top-0 z-10 backdrop-blur-md border-b"
+        style={{
+          background: "oklch(0.08 0.04 270 / 0.85)",
+          borderColor: "oklch(0.35 0.1 295 / 0.3)",
+        }}
+      >
         <div className="max-w-[480px] mx-auto px-6 py-4 flex items-center justify-between">
           <button
-            onClick={() => navigate("/")}
-            className="text-sm text-violet-600 hover:text-violet-700 transition-colors flex items-center gap-1"
+            onClick={() => navigate(-1 as never)}
+            className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70"
+            style={{ color: "oklch(0.65 0.1 295)" }}
           >
-            ← Back
+            <ArrowLeft size={14} />
+            Back
           </button>
-          <h1 className="text-sm font-semibold text-foreground">Common Questions</h1>
+          <div className="flex items-center gap-2">
+            <img
+              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
+              alt="Mentrove"
+              className="w-6 h-6 rounded-full object-cover"
+            />
+            <span
+              className="text-sm font-light tracking-[0.2em] uppercase"
+              style={{ color: "oklch(0.85 0.04 80)" }}
+            >
+              Mentrove
+            </span>
+          </div>
           <div className="w-16" />
         </div>
       </div>
 
       {/* Content */}
       <div className="max-w-[480px] mx-auto px-6 py-12">
-        {/* Hero section */}
+        {/* Hero */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl font-serif font-light text-foreground mb-2">Common Questions</h2>
-          <p className="text-sm text-muted-foreground">Everything you need to know about Mentrove</p>
+          <h2
+            className="text-3xl font-light mb-2 tracking-wide"
+            style={{
+              color: "oklch(0.96 0.02 80)",
+              fontFamily: "'Georgia', serif",
+              textShadow: "0 0 20px oklch(0.55 0.18 295 / 0.3)",
+            }}
+          >
+            Safety & FAQ
+          </h2>
+          <div
+            className="h-px w-32 mx-auto mb-3"
+            style={{
+              background:
+                "linear-gradient(90deg, transparent, oklch(0.55 0.18 295 / 0.5), transparent)",
+            }}
+          />
+          <p className="text-sm" style={{ color: "oklch(0.65 0.08 295)" }}>
+            Everything you need to know about Mentrove
+          </p>
         </motion.div>
 
-        {/* FAQ Items */}
-        <div className="space-y-3 mb-12">
+        {/* ── Disclaimer (prominent, top) ───────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="rounded-2xl p-5 mb-8 space-y-4"
+          style={{
+            background: "oklch(0.12 0.06 295 / 0.7)",
+            border: "1px solid oklch(0.45 0.14 295 / 0.3)",
+            backdropFilter: "blur(12px)",
+          }}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <AlertTriangle size={16} style={{ color: "oklch(0.75 0.18 60)" }} />
+            <span
+              className="text-xs font-semibold tracking-widest uppercase"
+              style={{ color: "oklch(0.75 0.18 60)" }}
+            >
+              Important Disclaimer
+            </span>
+          </div>
+
+          <div className="space-y-3 text-sm" style={{ color: "oklch(0.72 0.06 295)" }}>
+            <div>
+              <p className="font-semibold mb-1" style={{ color: "oklch(0.88 0.04 80)" }}>
+                What Mentrove Is
+              </p>
+              <p className="leading-relaxed">
+                Mentrove is an AI-powered self-reflection tool designed to support personal growth,
+                emotional awareness, and mindfulness. It offers guided journaling, mood tracking, and
+                AI-assisted insights to help you understand yourself better.
+              </p>
+            </div>
+
+            <div>
+              <p className="font-semibold mb-1" style={{ color: "oklch(0.88 0.04 80)" }}>
+                What Mentrove Is NOT
+              </p>
+              <p className="leading-relaxed">
+                Mentrove is <strong style={{ color: "oklch(0.88 0.04 80)" }}>not</strong> a licensed
+                therapist, psychologist, medical doctor, or crisis counselor. It does not provide
+                medical advice, diagnosis, or treatment. It is not a substitute for professional
+                mental health care.
+              </p>
+            </div>
+          </div>
+
+          {/* Crisis box */}
+          <div
+            className="rounded-xl p-4 space-y-2"
+            style={{
+              background: "oklch(0.18 0.08 20 / 0.5)",
+              border: "1px solid oklch(0.5 0.15 20 / 0.4)",
+            }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Phone size={14} style={{ color: "oklch(0.7 0.18 20)" }} />
+              <p className="text-xs font-semibold tracking-wide uppercase" style={{ color: "oklch(0.7 0.18 20)" }}>
+                In Crisis? Get Help Now
+              </p>
+            </div>
+            <div className="space-y-1 text-sm" style={{ color: "oklch(0.75 0.1 20)" }}>
+              <p>
+                <a
+                  href="tel:988"
+                  className="font-bold underline"
+                  style={{ color: "oklch(0.72 0.18 20)" }}
+                >
+                  988
+                </a>{" "}
+                — Suicide &amp; Crisis Lifeline (call or text)
+              </p>
+              <p>
+                <a
+                  href="tel:18002738255"
+                  className="font-bold underline"
+                  style={{ color: "oklch(0.72 0.18 20)" }}
+                >
+                  1-800-273-8255
+                </a>{" "}
+                — National Suicide Prevention Lifeline
+              </p>
+              <p>
+                <a
+                  href="tel:911"
+                  className="font-bold underline"
+                  style={{ color: "oklch(0.72 0.18 20)" }}
+                >
+                  911
+                </a>{" "}
+                — Emergency Services
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ── FAQ accordion ─────────────────────────────────────────────────── */}
+        <div className="space-y-2 mb-12">
           {faqItems.map((item, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 8 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="rounded-2xl border border-border overflow-hidden"
+              transition={{ delay: index * 0.04 }}
+              className="rounded-2xl overflow-hidden"
               style={{
-                background: openIndex === index ? "oklch(0.96 0.01 185)" : "transparent",
+                background:
+                  openIndex === index
+                    ? "oklch(0.16 0.08 295 / 0.7)"
+                    : "oklch(0.12 0.05 295 / 0.5)",
+                border: `1px solid ${
+                  openIndex === index
+                    ? "oklch(0.45 0.14 295 / 0.4)"
+                    : "oklch(0.3 0.08 295 / 0.25)"
+                }`,
+                backdropFilter: "blur(8px)",
               }}
             >
               <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full px-5 py-4 flex items-center justify-between gap-3 hover:bg-muted/50 transition-colors text-left"
+                className="w-full px-5 py-4 flex items-center justify-between gap-3 text-left transition-opacity hover:opacity-80"
               >
-                <span className="font-medium text-foreground text-sm leading-snug">{item.question}</span>
+                <span
+                  className="font-medium text-sm leading-snug"
+                  style={{ color: "oklch(0.88 0.04 80)" }}
+                >
+                  {item.question}
+                </span>
                 <motion.div
                   animate={{ rotate: openIndex === index ? 180 : 0 }}
                   transition={{ duration: 0.2 }}
                   className="flex-shrink-0"
                 >
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  <ChevronDown
+                    className="w-4 h-4"
+                    style={{ color: "oklch(0.55 0.1 295)" }}
+                  />
                 </motion.div>
               </button>
 
@@ -109,7 +272,13 @@ export default function FAQ() {
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-5 pb-4 pt-0 text-sm text-muted-foreground leading-relaxed border-t border-border">
+                    <div
+                      className="px-5 pb-4 pt-0 text-sm leading-relaxed border-t"
+                      style={{
+                        color: "oklch(0.68 0.06 295)",
+                        borderColor: "oklch(0.35 0.1 295 / 0.2)",
+                      }}
+                    >
                       {item.answer}
                     </div>
                   </motion.div>
@@ -119,40 +288,19 @@ export default function FAQ() {
           ))}
         </div>
 
-        {/* Disclaimer Footer */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="pt-8 border-t border-border"
-        >
-          <div className="rounded-2xl p-4" style={{ background: "oklch(0.95 0.04 15 / 0.5)", border: "1px solid oklch(0.85 0.06 15 / 0.4)" }}>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              <strong>Important:</strong> Mentrove is an AI-powered self-reflection tool. It is not a licensed therapist, medical doctor, or crisis counselor. If you need professional mental health support, please consult a licensed healthcare provider. In crisis? Call{" "}
-              <a href="tel:988" className="text-violet-600 hover:text-violet-700 transition-colors">
-                988
-              </a>{" "}
-              or{" "}
-              <a href="tel:1-800-273-8255" className="text-violet-600 hover:text-violet-700 transition-colors">
-                1-800-273-8255
-              </a>{" "}
-              or 911.
-            </p>
-          </div>
-        </motion.div>
-
-        {/* Back to home link */}
+        {/* Back link */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-center mt-12 pb-8"
+          transition={{ duration: 0.5 }}
+          className="text-center pb-8"
         >
           <button
-            onClick={() => navigate("/")}
-            className="text-sm text-violet-600 hover:text-violet-700 transition-colors"
+            onClick={() => navigate(-1 as never)}
+            className="text-xs tracking-widest uppercase transition-opacity hover:opacity-70"
+            style={{ color: "oklch(0.55 0.1 295)", letterSpacing: "0.15em" }}
           >
-            ← Back to Home
+            ← Return
           </button>
         </motion.div>
       </div>

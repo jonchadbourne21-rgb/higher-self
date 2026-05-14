@@ -688,3 +688,17 @@
 - [x] TypeScript: 0 errors
 - [ ] Update VITE_APP_TITLE to Mentrove (requires Management UI > Settings > General)
 - [ ] Update VITE_APP_LOGO to new logo URL (requires Management UI > Settings > General)
+
+## Mentrove Onboarding Splash Screen (May 14) - COMPLETE
+- [x] Replace Step 0 welcome card in Onboarding.tsx with full-screen dark midnight splash
+- [x] Add sacred geometry mandala image to onboarding Step 0 (with pulsing glow rings)
+- [x] Add MENTROVE wordmark in serif font with purple glow shadow
+- [x] Add tagline 'Reflect. Grow. Become.' with decorative divider line
+- [x] Add 'Start My Journey →' CTA button (teal gradient, disabled until name entered)
+- [x] Add themed 'Safety & FAQ' link at bottom (matches dark theme)
+- [x] Update FAQ.tsx with full Mentrove disclaimer section and dark midnight theme
+- [x] FAQ includes crisis hotlines (988, 1-800-273-8255, 911) in red-themed box
+- [x] FAQ includes 8 questions including streak rewards and Pro subscription
+- [x] FAQ header includes Mentrove logo and themed back navigation
+- [x] All 320 tests still passing
+- [x] TypeScript: 0 errors
