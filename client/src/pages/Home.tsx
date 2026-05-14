@@ -77,13 +77,13 @@ export default function Home() {
     ? "linear-gradient(135deg, oklch(0.55 0.18 290 / 0.22), oklch(0.65 0.16 185 / 0.22))"
     : pendingSpins > 0
     ? "linear-gradient(135deg, oklch(0.60 0.18 50 / 0.18), oklch(0.55 0.18 290 / 0.14))"
-    // Muted Plum — subtle reward focal point (default state)
-    : "oklch(0.15 0.05 320)";
+    // Dark Blue — calm, trustworthy, reward depth (default state)
+    : "oklch(0.14 0.06 255)";
   const rewardsBorder = hasWelcomeSpin
     ? "1px solid oklch(0.65 0.16 185 / 0.35)"
     : pendingSpins > 0
     ? "1px solid oklch(0.60 0.18 50 / 0.4)"
-    : "1px solid oklch(0.38 0.10 320 / 0.55)";
+    : "1px solid oklch(0.36 0.11 255 / 0.55)";
 
   // Rewards label
   const rewardsLabel = hasWelcomeSpin
@@ -148,10 +148,10 @@ export default function Home() {
     background: "oklch(0.15 0.06 185)",
     border: "1px solid oklch(0.38 0.12 185 / 0.55)",
   };
-  // Dark Emerald Green — growth, learning, progress
+  // Dark Crimson Red — intensity, drive, achievement
   const TILE_PROGRAMS = {
-    background: "oklch(0.15 0.06 155)",
-    border: "1px solid oklch(0.38 0.12 155 / 0.55)",
+    background: "oklch(0.14 0.07 20)",
+    border: "1px solid oklch(0.36 0.14 20 / 0.55)",
   };
   // Midnight Navy — neutral, structured, utility
   const TILE_CALENDAR = {
