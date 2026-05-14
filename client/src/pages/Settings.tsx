@@ -13,7 +13,7 @@ import { toast } from "sonner";
 function MilestonesSection() {
   const { data: milestones, isLoading } = trpc.habits.milestones.useQuery();
   const { data: milestoneCount } = trpc.habits.milestoneCount.useQuery();
-
+  const { data: streakData } = trpc.habits.currentStreak.useQuery();
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -32,7 +32,11 @@ function MilestonesSection() {
           </span>
         )}
       </div>
-      <MilestonesList milestones={milestones || []} isLoading={isLoading} />
+      <MilestonesList
+        milestones={milestones || []}
+        isLoading={isLoading}
+        currentStreak={streakData?.streak ?? 0}
+      />
     </motion.div>
   );
 }

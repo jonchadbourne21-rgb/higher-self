@@ -1,11 +1,31 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
 import { Gift, Star, Zap, Trophy, ChevronRight, Sparkles, RotateCcw, Crown } from "lucide-react";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
+
+/** Fire a burst of confetti for premium prize wins */
+function firePremiumConfetti() {
+  const count = 200;
+  const defaults = { origin: { y: 0.6 } };
+  function fire(particleRatio: number, opts: confetti.Options) {
+    confetti({ ...defaults, ...opts, particleCount: Math.floor(count * particleRatio) });
+  }
+  fire(0.25, { spread: 26, startVelocity: 55, colors: ["#a855f7", "#7c3aed", "#c084fc"] });
+  fire(0.20, { spread: 60, colors: ["#f59e0b", "#fbbf24", "#fde68a"] });
+  fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8, colors: ["#a855f7", "#7c3aed", "#f59e0b"] });
+  fire(0.10, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2, colors: ["#fff", "#f0abfc"] });
+  fire(0.10, { spread: 120, startVelocity: 45, colors: ["#a855f7", "#f59e0b"] });
+  // Second burst after 400ms for sustained effect
+  setTimeout(() => {
+    confetti({ particleCount: 80, spread: 70, origin: { x: 0.2, y: 0.5 }, colors: ["#a855f7", "#f59e0b", "#fff"] });
+    confetti({ particleCount: 80, spread: 70, origin: { x: 0.8, y: 0.5 }, colors: ["#7c3aed", "#fbbf24", "#f0abfc"] });
+  }, 400);
+}
 
 // ── Wheel segments ──────────────────────────────────────────────────────────
 const SEGMENTS = [
@@ -28,17 +48,111 @@ const RESULT_TO_SEGMENT: Record<string, number> = {
   reward_points: 4,
 };
 
+// ── Wheel tick sound via Web Audio API ─────────────────────────────────────
+function useWheelSound() {
+  const ctxRef = useRef<AudioContext | null>(null);
+
+  const playTick = useCallback((pitch = 900, volume = 0.18) => {
+    try {
+      if (!ctxRef.current) ctxRef.current = new AudioContext();
+      const ctx = ctxRef.current;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "square";
+      osc.frequency.setValueAtTime(pitch, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(pitch * 0.5, ctx.currentTime + 0.04);
+      gain.gain.setValueAtTime(volume, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.07);
+    } catch {
+      // silently ignore — AudioContext may be blocked before user gesture
+    }
+  }, []);
+
+  const playWin = useCallback(() => {
+    try {
+      if (!ctxRef.current) ctxRef.current = new AudioContext();
+      const ctx = ctxRef.current;
+      // Three ascending tones for a satisfying win chime
+      [[523, 0], [659, 0.12], [784, 0.24], [1047, 0.38]].forEach(([freq, delay]) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+        gain.gain.setValueAtTime(0.25, ctx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.35);
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + 0.4);
+      });
+    } catch {
+      // silently ignore
+    }
+  }, []);
+
+  return { playTick, playWin };
+}
+
 // ── Spin Wheel Component ────────────────────────────────────────────────────
 function SpinWheel({
   onSpin,
   spinning,
   disabled,
+  onSpinComplete,
 }: {
   onSpin: () => void;
   spinning: boolean;
   disabled: boolean;
+  onSpinComplete?: () => void;
 }) {
   const [rotation, setRotation] = useState(0);
+  const { playTick, playWin } = useWheelSound();
+  const tickIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Simulate tick-tick-tick that slows down as the wheel decelerates
+  useEffect(() => {
+    if (spinning) {
+      // Start fast, slow down over 4 seconds matching the ease curve
+      let elapsed = 0;
+      const SPIN_DURATION = 4000;
+      let lastTickTime = 0;
+
+      const tick = () => {
+        elapsed += 16;
+        if (elapsed >= SPIN_DURATION) {
+          if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
+          tickIntervalRef.current = null;
+          playWin();
+          onSpinComplete?.();
+          return;
+        }
+        // Ease-out: interval grows from 60ms to 600ms
+        const progress = elapsed / SPIN_DURATION;
+        const easedProgress = 1 - Math.pow(1 - progress, 3); // cubic ease-out
+        const interval = 60 + easedProgress * 540;
+        if (elapsed - lastTickTime >= interval) {
+          const pitch = 900 - easedProgress * 300; // pitch drops as it slows
+          const vol = 0.18 - easedProgress * 0.08;
+          playTick(pitch, vol);
+          lastTickTime = elapsed;
+        }
+      };
+
+      tickIntervalRef.current = setInterval(tick, 16);
+    } else {
+      if (tickIntervalRef.current) {
+        clearInterval(tickIntervalRef.current);
+        tickIntervalRef.current = null;
+      }
+    }
+    return () => {
+      if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
+    };
+  }, [spinning, playTick, playWin, onSpinComplete]);
 
   return (
     <div className="relative flex flex-col items-center">
@@ -170,6 +284,16 @@ function PrizeModal({
   onClose: () => void;
 }) {
   const isProPrize = prizeLabel?.includes("Pro") || prizeLabel?.includes("Trial");
+
+  // Fire confetti when a premium prize modal opens
+  useEffect(() => {
+    if (open && isProPrize) {
+      // Small delay so the modal animation starts first
+      const t = setTimeout(() => firePremiumConfetti(), 250);
+      return () => clearTimeout(t);
+    }
+  }, [open, isProPrize]);
+
   return (
     <AnimatePresence>
       {open && (
@@ -508,7 +632,7 @@ export default function Rewards() {
               </motion.div>
             )}
 
-            <SpinWheel onSpin={handleSpin} spinning={spinning} disabled={!canSpin} />
+            <SpinWheel onSpin={handleSpin} spinning={spinning} disabled={!canSpin} onSpinComplete={() => {}} />
 
             {dashboard?.welcomeSpinUsed && !canSpin && (
               <div

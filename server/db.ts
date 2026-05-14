@@ -469,7 +469,12 @@ export async function getJournalEntries(
   if (filters?.search) {
     const term = `%${filters.search}%`;
     conditions.push(
-      sql`(${journalEntries.title} LIKE ${term} OR ${journalEntries.content} LIKE ${term})`
+      sql`(
+        ${journalEntries.title} LIKE ${term}
+        OR ${journalEntries.content} LIKE ${term}
+        OR ${journalEntries.aiPerspective} LIKE ${term}
+        OR ${journalEntries.themes} LIKE ${term}
+      )`
     );
   }
   if (filters?.categoryId !== undefined && filters.categoryId !== null) {

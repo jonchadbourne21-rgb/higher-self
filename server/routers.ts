@@ -8,6 +8,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { weeklyInsightRouter } from "./routers/weeklyInsight";
 import { subscriptionRouter } from "./routers/subscription";
 import { rewardsRouter } from "./routers/rewards";
+import { programsRouter } from "./routers/programs";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import {
   createCheckIn,
@@ -1200,5 +1201,6 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
   weeklyInsight: weeklyInsightRouter,
   subscription: subscriptionRouter,
   rewards: rewardsRouter,
+  programs: programsRouter,
 });
 export type AppRouter = typeof appRouter;

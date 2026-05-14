@@ -10,6 +10,7 @@ import {
   Settings,
   User,
   X,
+  GraduationCap,
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { cn } from "@/lib/utils";
@@ -21,7 +22,7 @@ const navItems = [
   { path: "/domains", icon: Flame, label: "Habits" },
   { path: "/chat", icon: Sparkles, label: "AI Coach" },
   { path: "/journal", icon: BookOpen, label: "Journal" },
-  { path: "/calendar", icon: Calendar, label: "Calendar" },
+  { path: "/programs", icon: GraduationCap, label: "Programs" },
 ];
 
 /** Fire a short haptic pulse if the device supports it (Android Chrome) */
@@ -42,6 +43,7 @@ function getSubtitle(path: string): string {
   if (path.startsWith("/calendar")) return "CALENDAR";
   if (path.startsWith("/settings")) return "PROFILE";
   if (path.startsWith("/rewards")) return "REWARDS";
+  if (path.startsWith("/programs")) return "GROWTH PROGRAMS";
   return "AI GUIDANCE. REAL GROWTH. INNER YOU.";
 }
 

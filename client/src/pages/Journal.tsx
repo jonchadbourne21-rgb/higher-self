@@ -261,7 +261,7 @@ export default function Journal() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search entries..."
+                placeholder="Search by title, emotion, theme, or AI insight..."
                 className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
               />
               {search && (

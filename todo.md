@@ -856,3 +856,39 @@
 - [x] Generate 3 distinct title options with different creative angles (metaphorical, raw/direct, transformational)
 - [x] Update frontend to show 3 title chips the user can pick from ("Pick a title:" UI)
 - [x] Backward-compatible: title field still returns first suggestion, titles[] returns all 3
+
+## Profile Milestones / Streak History
+- [x] Upgrade MilestoneCard to dark-theme-aware colors (oklch CSS variables)
+- [x] Add current streak banner with motivational nudge to MilestonesList
+- [x] Pass currentStreak from Settings page to MilestonesList
+- [x] Milestones section already wired to habits.milestones, habits.milestoneCount, habits.currentStreak
+
+## Journal Full-Text Search Upgrade
+- [x] Update DB getJournalEntries helper to include aiPerspective and themes in LIKE search
+- [x] Update Journal page search placeholder to hint at emotion/theme/AI perspective search
+
+## 7-Day Emotional Mastery Program
+- [x] Create DB tables: growth_programs, program_lessons, user_program_enrollments, user_lesson_responses
+- [x] Run DB migration for program tables
+- [x] Seed 7-day Emotional Mastery program with 7 lessons
+- [x] Build tRPC procedures: programs.list, programs.getById, programs.enroll, programs.getCurrentLesson, programs.submitLessonResponse, programs.getProgress, programs.myEnrollments
+- [x] Create Programs discovery page (/programs)
+- [x] Create Program detail + daily lesson page (/programs/:id)
+- [x] AI-powered lesson feedback using LLM (invokeLLM in submitLessonResponse)
+- [x] Add Programs to AppShell bottom nav (replaced Calendar tab)
+
+## Confetti on Premium Wheel Prizes
+- [x] Install canvas-confetti npm package
+- [x] Create firePremiumConfetti() with multi-burst purple/gold/white particles
+- [x] Trigger confetti in PrizeModal when isProPrize is true (250ms delay for modal animation)
+- [x] Fires for both "1 Month Free Pro" and "1 Week Free Trial" prizes
+- [x] Second burst at 400ms from left+right sides for sustained celebration
+
+## Spin Sound Effects (Web Audio API)
+- [x] Implement useWheelSound hook using Web Audio API (zero latency, no file loading)
+- [x] playTick(): square wave oscillator at 900Hz with exponential decay (40ms click)
+- [x] Tick rate accelerates/decelerates in sync with wheel speed (cubic ease-out, 60ms→600ms interval)
+- [x] Pitch drops from 900Hz to 600Hz as wheel slows for satisfying deceleration feel
+- [x] playWin(): ascending 4-note chime (C5-E5-G5-C6) when wheel stops
+- [x] Wire useWheelSound to SpinWheel component via useEffect on spinning state
+- Note: Used Web Audio API instead of Hume TTS (Hume is for voice narration; Web Audio gives zero-latency mechanical clicks)
