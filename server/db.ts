@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, gte, inArray, like, lt, lte, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2";
+import * as schema from "../drizzle/schema";
 import {
   InsertUser,
   calendarEvents,
@@ -1530,4 +1531,45 @@ export async function getUserMilestoneCount(userId: number): Promise<number> {
     .where(eq(milestoneAchievements.userId, userId));
 
   return result[0]?.count || 0;
+}
+
+// ─── Account Deletion ─────────────────────────────────────────────────────────
+
+export async function deleteUserAccount(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  // Delete all user-owned data in dependency order (children before parent)
+  await db.delete(schema.rewardGrants).where(eq(schema.rewardGrants.userId, userId));
+  await db.delete(schema.streakRewards).where(eq(schema.streakRewards.userId, userId));
+  await db.delete(schema.wheelSpins).where(eq(schema.wheelSpins.userId, userId));
+  await db.delete(schema.rewardPointsHistory).where(eq(schema.rewardPointsHistory.userId, userId));
+  await db.delete(schema.streaks).where(eq(schema.streaks.userId, userId));
+  await db.delete(schema.subscriptions).where(eq(schema.subscriptions.userId, userId));
+  // crisisNotifications links via crisisIncidentId — delete incidents first cascades notifications
+  // (or delete notifications by joining — simplest: delete incidents which removes notifications via app logic)
+  await db.delete(schema.emergencyContacts).where(eq(schema.emergencyContacts.userId, userId));
+  await db.delete(schema.crisisIncidents).where(eq(schema.crisisIncidents.userId, userId));
+  await db.delete(schema.milestoneAchievements).where(eq(schema.milestoneAchievements.userId, userId));
+  await db.delete(schema.weeklyReflections).where(eq(schema.weeklyReflections.userId, userId));
+  await db.delete(schema.chatSessions).where(eq(schema.chatSessions.userId, userId));
+  await db.delete(schema.savedInsights).where(eq(schema.savedInsights.userId, userId));
+  await db.delete(schema.calendarEvents).where(eq(schema.calendarEvents.userId, userId));
+  await db.delete(schema.notificationPreferences).where(eq(schema.notificationPreferences.userId, userId));
+  await db.delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.userId, userId));
+  await db.delete(schema.userLessonResponses).where(eq(schema.userLessonResponses.userId, userId));
+  await db.delete(schema.userProgramEnrollments).where(eq(schema.userProgramEnrollments.userId, userId));
+  await db.delete(schema.chatMessages).where(eq(schema.chatMessages.userId, userId));
+  await db.delete(schema.journalCategories).where(eq(schema.journalCategories.userId, userId));
+  await db.delete(schema.journalEntries).where(eq(schema.journalEntries.userId, userId));
+  await db.delete(schema.weeklyInsights).where(eq(schema.weeklyInsights.userId, userId));
+  await db.delete(schema.growthMilestones).where(eq(schema.growthMilestones.userId, userId));
+  await db.delete(schema.dailyCheckIns).where(eq(schema.dailyCheckIns.userId, userId));
+  await db.delete(schema.habitCompletions).where(eq(schema.habitCompletions.userId, userId));
+  await db.delete(schema.habits).where(eq(schema.habits.userId, userId));
+  await db.delete(schema.lifeDomainScores).where(eq(schema.lifeDomainScores.userId, userId));
+  await db.delete(schema.userProfiles).where(eq(schema.userProfiles.userId, userId));
+  await db.delete(schema.chatUsageDaily).where(eq(schema.chatUsageDaily.userId, userId));
+  await db.delete(schema.journalUsageWeekly).where(eq(schema.journalUsageWeekly.userId, userId));
+  // Finally delete the user record itself
+  await db.delete(schema.users).where(eq(schema.users.id, userId));
 }

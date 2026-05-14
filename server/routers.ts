@@ -10,6 +10,7 @@ import { subscriptionRouter } from "./routers/subscription";
 import { rewardsRouter } from "./routers/rewards";
 import { programsRouter } from "./routers/programs";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { deleteUserAccount } from "./db";
 import {
   createCheckIn,
   createHabit,
@@ -113,6 +114,12 @@ export const appRouter = router({
     me: publicProcedure.query((opts) => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      return { success: true } as const;
+    }),
+    deleteAccount: protectedProcedure.mutation(async ({ ctx }) => {
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      await deleteUserAccount(ctx.user.id);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),

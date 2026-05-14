@@ -50,6 +50,22 @@ export default function Home() {
   const { data: proStatus } = trpc.rewards.proStatus.useQuery(undefined, { enabled: isAuthenticated });
   const isPro = proStatus?.isPro ?? false;
   const [showWelcomeSpin, setShowWelcomeSpin] = useState(false);
+  const [showFaqPulse, setShowFaqPulse] = useState(false);
+
+  // Show FAQ pulse for new users (first 3 visits only)
+  useEffect(() => {
+    const key = "mentrove_faq_pulse_dismissed";
+    const dismissed = localStorage.getItem(key);
+    if (!dismissed) {
+      const count = parseInt(localStorage.getItem("mentrove_faq_pulse_count") || "0", 10);
+      if (count < 3) {
+        setShowFaqPulse(true);
+        localStorage.setItem("mentrove_faq_pulse_count", String(count + 1));
+      } else {
+        localStorage.setItem(key, "1");
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (welcomeSpin?.available && isAuthenticated && !loading) {
@@ -413,10 +429,20 @@ export default function Home() {
           >
             <Link href="/faq">
               <button
-                className="text-xs transition-opacity hover:opacity-70"
+                onClick={() => {
+                  setShowFaqPulse(false);
+                  localStorage.setItem("mentrove_faq_pulse_dismissed", "1");
+                }}
+                className="text-xs transition-opacity hover:opacity-70 relative"
                 style={{ color: "oklch(0.50 0.08 295)" }}
               >
                 About & FAQ
+                {showFaqPulse && (
+                  <span
+                    className="absolute -top-1 -right-2 w-2 h-2 rounded-full animate-ping"
+                    style={{ background: "oklch(0.65 0.16 185)", animationDuration: "1.4s" }}
+                  />
+                )}
               </button>
             </Link>
             <span className="text-[10px]" style={{ color: "oklch(0.35 0.04 295)" }}>·</span>

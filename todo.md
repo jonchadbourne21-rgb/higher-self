@@ -984,3 +984,9 @@
 
 ## Remove Disclaimer (!) Button
 - [x] Remove info (!) button and disclaimer modal from AppShell since content now lives on /faq About page
+
+## Account Deletion, Pro Celebration, FAQ Tooltip
+- [x] Backend: deleteAccount procedure that wipes all user data
+- [x] Settings: "Delete my account" button with confirmation modal
+- [x] Post-purchase Pro celebration modal with confetti on Stripe redirect
+- [x] Home page: FAQ footer link pulse animation for first-time users

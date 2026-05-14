@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { User, Phone, Mail, Heart, Save, ArrowLeft, CheckCircle, PhoneCall, AtSign, LogOut, Sparkles, Award } from "lucide-react";
+import { User, Phone, Mail, Heart, Save, ArrowLeft, CheckCircle, PhoneCall, AtSign, LogOut, Sparkles, Award, Crown } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { MilestonesList } from "@/components/MilestoneCard";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
 
 function MilestonesSection() {
   const { data: milestones, isLoading } = trpc.habits.milestones.useQuery();
@@ -53,6 +54,45 @@ export default function Settings() {
   const [selectedIntent, setSelectedIntent] = useState<string | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showMilestones, setShowMilestones] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [showProCelebration, setShowProCelebration] = useState(false);
+
+  // Detect Stripe success redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("subscription") === "success") {
+      setShowProCelebration(true);
+      // Remove query param without reload
+      window.history.replaceState({}, "", window.location.pathname);
+      // Fire confetti
+      const fire = () => {
+        confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 }, colors: ["#6d28d9", "#0d9488", "#f59e0b", "#10b981"] });
+        confetti({ particleCount: 60, spread: 120, origin: { y: 0.5 }, angle: 60, colors: ["#8b5cf6", "#34d399"] });
+        confetti({ particleCount: 60, spread: 120, origin: { y: 0.5 }, angle: 120, colors: ["#a78bfa", "#6ee7b7"] });
+      };
+      fire();
+      setTimeout(fire, 600);
+    }
+  }, []);
+
+  const deleteAccountMutation = trpc.auth.deleteAccount.useMutation({
+    onSuccess: () => {
+      toast.success("Account deleted");
+      navigate("/");
+    },
+    onError: () => {
+      toast.error("Failed to delete account. Please try again.");
+    },
+  });
+
+  const handleDeleteAccount = () => {
+    if (deleteConfirmText.trim().toLowerCase() !== "delete") {
+      toast.error('Type "delete" to confirm');
+      return;
+    }
+    deleteAccountMutation.mutate();
+  };
 
   const INTENT_OPTIONS = [
     { id: "inner-peace", label: "Inner Peace", emoji: "🧘" },
@@ -185,6 +225,24 @@ export default function Settings() {
               Sign Out
             </Button>
           </motion.div>
+
+          {/* Danger Zone */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="rounded-lg p-6 shadow-sm border border-red-900/40 bg-red-950/20"
+          >
+            <h2 className="text-xl font-semibold mb-1 text-red-400">Danger Zone</h2>
+            <p className="text-sm text-muted-foreground mb-4">Permanently delete your account and all data. This cannot be undone.</p>
+            <Button
+              onClick={() => { setDeleteConfirmText(""); setShowDeleteConfirm(true); }}
+              variant="outline"
+              className="w-full border-red-800/50 text-red-400 hover:bg-red-900/30 hover:text-red-300"
+            >
+              Delete My Account
+            </Button>
+          </motion.div>
         </div>
 
         {/* Intent Modal */}
@@ -207,6 +265,71 @@ export default function Settings() {
                   <div className="text-sm font-medium text-foreground">{option.label}</div>
                 </button>
               ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Pro Celebration Modal */}
+        <Dialog open={showProCelebration} onOpenChange={setShowProCelebration}>
+          <DialogContent className="text-center">
+            <DialogHeader>
+              <DialogTitle className="flex items-center justify-center gap-2 text-2xl">
+                <Crown className="w-6 h-6 text-amber-400" />
+                Welcome to Pro!
+              </DialogTitle>
+              <DialogDescription className="text-base">
+                You’re now a Mentrove Pro member. Your journey just leveled up.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="rounded-xl p-4 text-left space-y-2" style={{ background: "oklch(0.18 0.05 280)", border: "1px solid oklch(0.30 0.06 280)" }}>
+                <p className="text-sm font-semibold text-foreground">What’s unlocked:</p>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>✨ Full monthly &amp; yearly analytics</li>
+                  <li>📈 Growth Dashboard — 30d &amp; 1y trends</li>
+                  <li>🎯 Bonus free spins added to your Rewards</li>
+                  <li>🔓 Unlimited AI Mirror conversations</li>
+                </ul>
+              </div>
+              <Button onClick={() => setShowProCelebration(false)} className="w-full">
+                Let’s Go →
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Account Confirmation Dialog */}
+        <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-red-400">Delete Account?</DialogTitle>
+              <DialogDescription>
+                This will permanently erase all your journal entries, check-ins, chat history, habits, and profile data. This action <strong>cannot be undone</strong>.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">Type <strong className="text-foreground">delete</strong> to confirm:</p>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="delete"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm"
+                autoComplete="off"
+              />
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} className="flex-1">
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteAccount}
+                  disabled={deleteAccountMutation.isPending || deleteConfirmText.trim().toLowerCase() !== "delete"}
+                  className="flex-1"
+                >
+                  {deleteAccountMutation.isPending ? "Deleting…" : "Delete Forever"}
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
