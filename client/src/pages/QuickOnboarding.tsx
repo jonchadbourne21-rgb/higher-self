@@ -1,10 +1,12 @@
-import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { motion, AnimatePresence } from "framer-motion";
 
 const INTENT_TILES = [
   { id: "inner-peace", label: "Inner Peace", emoji: "🧘", color: "from-violet-400 to-violet-600" },
@@ -14,116 +16,189 @@ const INTENT_TILES = [
   { id: "focus", label: "Focus", emoji: "🎯", color: "from-rose-400 to-rose-600" },
 ];
 
+type Step = "name" | "intent";
+
 export default function QuickOnboarding() {
   const { isAuthenticated, loading, user } = useAuth();
   const [, navigate] = useLocation();
+  const [step, setStep] = useState<Step>("name");
+  const [preferredName, setPreferredName] = useState("");
   const [selectedIntent, setSelectedIntent] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const utils = trpc.useUtils();
+  const savePreferredNameMutation = trpc.onboarding.savePreferredName.useMutation();
   const saveSeedIntentMutation = trpc.onboarding.saveSeedIntent.useMutation();
 
   // Redirect logic
   useEffect(() => {
     if (loading) return;
-
-    // If not authenticated, go to home
     if (!isAuthenticated) {
       navigate("/");
       return;
     }
-
-    // If user already completed onboarding, skip to home
     if (user?.onboardingCompleted) {
       navigate("/home");
       return;
     }
   }, [isAuthenticated, loading, user?.onboardingCompleted, navigate]);
 
+  const handleNameSubmit = async () => {
+    const trimmed = preferredName.trim();
+    if (!trimmed) {
+      toast.error("Please enter your name so we can personalise your experience.");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await savePreferredNameMutation.mutateAsync({ preferredName: trimmed });
+      await utils.auth.me.invalidate();
+      setStep("intent");
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSelectIntent = async (intentId: string) => {
     setSelectedIntent(intentId);
     setIsSubmitting(true);
-
     try {
-      // Find the label for the selected intent
       const intentLabel = INTENT_TILES.find((t) => t.id === intentId)?.label || intentId;
-      
-      // Save the seedIntent to the database
       await saveSeedIntentMutation.mutateAsync({ seedIntent: intentLabel });
-      
-      // Invalidate auth cache to refresh user data
       await utils.auth.me.invalidate();
-      
       toast.success("Your journey begins ✦");
       navigate("/home");
-    } catch (error) {
-      console.error("Failed to save intent:", error);
+    } catch {
       toast.error("Something went wrong. Please try again.");
       setIsSubmitting(false);
       setSelectedIntent(null);
     }
   };
 
-  // Show loading state while checking auth
   if (loading) {
     return (
-      <div className="h-dvh bg-gradient-to-br from-aurora via-white to-aurora flex items-center justify-center">
+      <div className="h-dvh bg-background flex items-center justify-center">
         <div className="animate-pulse">
-          <div className="h-12 w-12 bg-violet-300 rounded-full"></div>
+          <div className="h-12 w-12 bg-primary/30 rounded-full" />
         </div>
       </div>
     );
   }
 
-  // Don't render if not authenticated or already onboarded
-  if (!isAuthenticated || user?.onboardingCompleted) {
-    return null;
-  }
+  if (!isAuthenticated || user?.onboardingCompleted) return null;
+
+  const stepIndex = step === "name" ? 0 : 1;
+  const totalSteps = 2;
+  const progressPct = ((stepIndex + 1) / (totalSteps + 1)) * 100; // +1 for full onboarding ahead
 
   return (
-    <div className="h-dvh bg-gradient-to-br from-aurora via-white to-aurora flex flex-col max-w-[480px] mx-auto px-6 py-12 overflow-y-auto">
-      {/* Progress Indicator */}
+    <div className="h-dvh bg-background flex flex-col max-w-[480px] mx-auto px-6 py-10 overflow-y-auto">
+      {/* Progress */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-semibold text-violet-600">Step 1 of 2</span>
-          <span className="text-sm text-gray-500">50%</span>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-semibold text-primary">
+            Step {stepIndex + 1} of {totalSteps}
+          </span>
+          <span className="text-sm text-muted-foreground">{Math.round(progressPct)}%</span>
         </div>
-        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-          <div className="h-full w-1/2 bg-gradient-to-r from-violet-400 to-violet-600 rounded-full transition-all duration-300"></div>
+        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-primary rounded-full"
+            initial={{ width: "0%" }}
+            animate={{ width: `${progressPct}%` }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          />
         </div>
-        <p className="text-xs text-gray-500 mt-2">Choose your intention</p>
       </div>
 
-      {/* Header */}
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-serif text-gray-900 mb-2">
-          What brings you to your mirror today?
-        </h1>
-        <p className="text-gray-600">Choose your intention to begin</p>
-      </div>
-
-      {/* Intent Tiles */}
-      <div className="grid grid-cols-1 gap-4 mb-8">
-        {INTENT_TILES.map((tile) => (
-          <Card
-            key={tile.id}
-            onClick={() => handleSelectIntent(tile.id)}
-            className={`p-6 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${
-              selectedIntent === tile.id ? "ring-2 ring-violet-500" : ""
-            } ${isSubmitting && selectedIntent !== tile.id ? "opacity-50 cursor-not-allowed" : ""}`}
+      <AnimatePresence mode="wait">
+        {/* ── Step 1: Name ─────────────────────────────────────────── */}
+        {step === "name" && (
+          <motion.div
+            key="name"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
+            transition={{ duration: 0.3 }}
+            className="flex flex-col flex-1"
           >
-            <div className={`bg-gradient-to-br ${tile.color} rounded-lg p-6 text-center text-white`}>
-              <div className="text-5xl mb-3">{tile.emoji}</div>
-              <h2 className="text-xl font-semibold">{tile.label}</h2>
+            <div className="text-center mb-10">
+              <div className="text-5xl mb-4">👋</div>
+              <h1 className="text-3xl font-serif text-foreground mb-2">
+                What should we call you?
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                Your AI mirror will use this to make every conversation feel personal.
+              </p>
             </div>
-          </Card>
-        ))}
-      </div>
 
-      {/* Footer */}
-      <div className="text-center text-sm text-gray-500">
-        <p>Your AI mirror will personalize your experience based on your choice</p>
-      </div>
+            <div className="space-y-4">
+              <Input
+                placeholder="Your first name or nickname"
+                value={preferredName}
+                onChange={(e) => setPreferredName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleNameSubmit()}
+                className="text-center text-lg h-14 bg-card border-border"
+                autoFocus
+                maxLength={50}
+              />
+              <Button
+                onClick={handleNameSubmit}
+                disabled={isSubmitting || !preferredName.trim()}
+                className="w-full h-12 text-base font-semibold"
+              >
+                {isSubmitting ? "Saving…" : "Continue →"}
+              </Button>
+            </div>
+
+            <p className="text-center text-xs text-muted-foreground mt-6">
+              You can always change this later in Settings.
+            </p>
+          </motion.div>
+        )}
+
+        {/* ── Step 2: Intent ───────────────────────────────────────── */}
+        {step === "intent" && (
+          <motion.div
+            key="intent"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
+            transition={{ duration: 0.3 }}
+            className="flex flex-col flex-1"
+          >
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-serif text-foreground mb-2">
+                What brings you to your mirror today?
+              </h1>
+              <p className="text-muted-foreground text-sm">Choose your intention to begin</p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 mb-6">
+              {INTENT_TILES.map((tile) => (
+                <Card
+                  key={tile.id}
+                  onClick={() => !isSubmitting && handleSelectIntent(tile.id)}
+                  className={`p-4 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] ${
+                    selectedIntent === tile.id ? "ring-2 ring-primary" : ""
+                  } ${isSubmitting && selectedIntent !== tile.id ? "opacity-40 cursor-not-allowed" : ""}`}
+                >
+                  <div className={`bg-gradient-to-br ${tile.color} rounded-lg px-5 py-4 flex items-center gap-4 text-white`}>
+                    <span className="text-3xl">{tile.emoji}</span>
+                    <h2 className="text-lg font-semibold">{tile.label}</h2>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            <p className="text-center text-xs text-muted-foreground">
+              Your AI mirror will personalise your experience based on your choice.
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

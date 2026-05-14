@@ -121,6 +121,13 @@ export const appRouter = router({
   // ─── Onboarding / Profile ────────────────────────────────────────────────
 
   onboarding: router({
+    savePreferredName: protectedProcedure
+      .input(z.object({ preferredName: z.string().min(1).max(100) }))
+      .mutation(async ({ ctx, input }) => {
+        await upsertUserProfile(ctx.user.id, { preferredName: input.preferredName });
+        return { success: true };
+      }),
+
     saveSeedIntent: protectedProcedure
       .input(z.object({ seedIntent: z.string().min(1).max(100) }))
       .mutation(async ({ ctx, input }) => {

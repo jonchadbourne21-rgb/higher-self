@@ -925,3 +925,11 @@
 - [x] Rewards and Calendar rows compressed to py-2 px-3 compact rows
 - [x] Growth Dashboard collapsed to single-line row with no subtitle
 - [x] Greeting heading reduced to text-xl, Quick Access label to text-[10px]
+
+## Onboarding: Preferred Name First Question
+- [x] Add "What should we call you?" as Step 1 of QuickOnboarding (before intent selection)
+- [x] Add onboarding.savePreferredName tRPC procedure (calls upsertUserProfile)
+- [x] Save answer to preferredName immediately via savePreferredName mutation
+- [x] Progress bar shows Step 1 of 2 / Step 2 of 2 with animated fill
+- [x] Animated slide transitions between steps (framer-motion AnimatePresence)
+- [x] Greeting on Home page uses preferredName from day one (already wired to profile.preferredName)
