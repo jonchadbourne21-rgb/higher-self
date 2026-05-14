@@ -166,15 +166,7 @@ export default function Onboarding() {
                 textShadow: "0 0 30px oklch(0.55 0.18 295 / 0.4)",
               }}
             >
-              MENTR
-              <svg width="42" height="42" viewBox="0 0 24 24" className="inline-block align-middle -mt-1" fill="none" aria-hidden="true">
-                <circle cx="12" cy="12" r="11" stroke="oklch(0.70 0.12 290)" strokeWidth="0.3" opacity="0.4" />
-                <circle cx="12" cy="12" r="10" stroke="oklch(0.85 0.04 270)" strokeWidth="1.8" />
-                <circle cx="12" cy="12" r="6.5" stroke="oklch(0.70 0.10 290)" strokeWidth="0.8" />
-                <path d="M12 7 L12.8 11.2 L17 12 L12.8 12.8 L12 17 L11.2 12.8 L7 12 L11.2 11.2 Z" fill="oklch(0.90 0.05 270)" opacity="0.9" />
-                <circle cx="12" cy="12" r="1.2" fill="oklch(0.95 0.02 270)" />
-              </svg>
-              VE
+              MENTROVE
             </h1>
             <div
               className="h-px w-48 mx-auto"
