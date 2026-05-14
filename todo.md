@@ -917,3 +917,11 @@
 - [x] Move Rewards card above Calendar card (inside Quick Access section)
 - [x] Reduce vertical spacing: px-4 pt-3 space-y-3, Quick Access space-y-2, greeting text-2xl, compact row cards py-3
 - [x] Growth Dashboard collapsed to compact single-line row to save space
+
+## Home Page Compact Redesign (single-screen fit)
+- [x] Compress check-in card to a single compact row (inline M/E/S scores + Done badge)
+- [x] Shrink Quick Access tiles to h-20 fixed height with gap-2 (was aspect-square with gap-3)
+- [x] Tighten all gaps: space-y-2, pt-2, gap-2, smaller text (text-xs/text-[10px])
+- [x] Rewards and Calendar rows compressed to py-2 px-3 compact rows
+- [x] Growth Dashboard collapsed to single-line row with no subtitle
+- [x] Greeting heading reduced to text-xl, Quick Access label to text-[10px]

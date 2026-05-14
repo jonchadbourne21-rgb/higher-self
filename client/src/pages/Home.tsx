@@ -97,7 +97,7 @@ export default function Home() {
   return (
     <>
     <AppShell>
-      <div className="px-4 pt-3 pb-4 space-y-3">
+      <div className="px-4 pt-2 pb-2 space-y-2">
 
         {/* ── Greeting header ─────────────────────────────────────────── */}
         <motion.div
@@ -138,7 +138,7 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          <h1 className="text-2xl font-serif font-light text-foreground leading-tight">
+          <h1 className="text-xl font-serif font-light text-foreground leading-tight">
             <motion.span
               initial={{ opacity: 0, x: -6 }}
               animate={{ opacity: 1, x: 0 }}
@@ -160,58 +160,50 @@ export default function Home() {
         >
           {todayCheckIn ? (
             <div
-              className="rounded-2xl p-5 space-y-3"
+              className="rounded-xl px-4 py-2.5"
               style={{
                 background: "oklch(0.17 0.04 280)",
                 border: "1px solid oklch(0.28 0.06 290 / 0.6)",
-                boxShadow: "0 4px 20px oklch(0.10 0.04 280 / 0.3)",
               }}
             >
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-primary">Today's Check-in</p>
-                <span className="text-xs px-2.5 py-0.5 rounded-full font-medium"
+                <div className="flex items-center gap-3">
+                  <p className="text-xs font-semibold text-primary">Today's Check-in</p>
+                  <div className="flex items-center gap-2">
+                    {[
+                      { label: "M", value: todayCheckIn.mood },
+                      { label: "E", value: todayCheckIn.energy },
+                      { label: "S", value: todayCheckIn.stress },
+                    ].map(({ label, value }) => (
+                      <span key={label} className="text-xs text-muted-foreground">
+                        <span className="font-semibold text-foreground">{value}</span>
+                        <span className="ml-0.5">{label}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium"
                   style={{ background: "oklch(0.65 0.16 185 / 0.15)", color: "oklch(0.65 0.16 185)" }}>
                   ✓ Done
                 </span>
               </div>
-              <div className="flex gap-4">
-                {[
-                  { label: "Mood", value: todayCheckIn.mood },
-                  { label: "Energy", value: todayCheckIn.energy },
-                  { label: "Stress", value: todayCheckIn.stress },
-                ].map(({ label, value }) => (
-                  <div key={label} className="flex-1 text-center">
-                    <p className="text-2xl font-serif font-light text-primary">{value}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
-                  </div>
-                ))}
-              </div>
-              {todayCheckIn.aiResponse && (
-                <div className="border-t pt-3" style={{ borderColor: "oklch(0.28 0.05 280)" }}>
-                  <p className="text-xs text-muted-foreground leading-relaxed italic">
-                    "{todayCheckIn.aiResponse.slice(0, 130)}..."
-                  </p>
-                </div>
-              )}
             </div>
           ) : (
             <Link href="/checkin">
               <motion.div
                 whileTap={{ scale: 0.98 }}
-                className="rounded-2xl p-5 cursor-pointer"
+                className="rounded-xl px-4 py-2.5 cursor-pointer flex items-center justify-between"
                 style={{
                   background: "linear-gradient(135deg, oklch(0.46 0.14 185), oklch(0.52 0.14 200))",
-                  boxShadow: "0 6px 28px oklch(0.46 0.14 185 / 0.25)",
+                  boxShadow: "0 4px 16px oklch(0.46 0.14 185 / 0.22)",
                 }}
               >
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-base font-semibold text-white">How are you today?</p>
-                    <p className="text-xs text-white/70">Complete your daily check-in</p>
-                  </div>
-                  <div className="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center">
-                    <Sparkles size={20} className="text-white" />
-                  </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">How are you today?</p>
+                  <p className="text-xs text-white/70">Complete your daily check-in</p>
+                </div>
+                <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <Sparkles size={16} className="text-white" />
                 </div>
               </motion.div>
             </Link>
@@ -225,19 +217,19 @@ export default function Home() {
           transition={{ duration: 0.45, delay: 0.16 }}
           className="space-y-2"
         >
-          <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Quick Access</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">Quick Access</p>
 
-          {/* 2x2 grid: Mirror | Journal / Life Domains | Programs — all squares use aspect-square for perfect symmetry */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* 2x2 grid — fixed height tiles, not aspect-square, to keep them compact */}
+          <div className="grid grid-cols-2 gap-2">
             {/* Mirror */}
             <Link href="/chat" className="block">
               <motion.div
                 whileTap={{ scale: 0.96 }}
-                className="rounded-2xl p-4 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md aspect-square"
+                className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
                 style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
               >
-                <span className="text-2xl">🪞</span>
-                <p className="text-sm font-semibold text-foreground">Talk to Mirror</p>
+                <span className="text-xl">🪞</span>
+                <p className="text-xs font-semibold text-foreground">Talk to Mirror</p>
               </motion.div>
             </Link>
 
@@ -245,11 +237,11 @@ export default function Home() {
             <Link href="/journal" className="block">
               <motion.div
                 whileTap={{ scale: 0.96 }}
-                className="rounded-2xl p-4 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md aspect-square"
+                className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
                 style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
               >
-                <span className="text-2xl">📝</span>
-                <p className="text-sm font-semibold text-foreground">Journal</p>
+                <span className="text-xl">📝</span>
+                <p className="text-xs font-semibold text-foreground">Journal</p>
               </motion.div>
             </Link>
 
@@ -257,11 +249,11 @@ export default function Home() {
             <Link href="/domains" className="block">
               <motion.div
                 whileTap={{ scale: 0.96 }}
-                className="rounded-2xl p-4 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md aspect-square"
+                className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
                 style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
               >
                 <div className="flex items-start justify-between">
-                  <span className="text-2xl">🧭</span>
+                  <span className="text-xl">🧭</span>
                   {habitStreak && habitStreak.streak > 0 && (
                     <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
                       style={{ background: "oklch(0.55 0.14 290 / 0.2)", color: "oklch(0.70 0.14 290)" }}>
@@ -269,7 +261,7 @@ export default function Home() {
                     </span>
                   )}
                 </div>
-                <p className="text-sm font-semibold text-foreground">Life Domains</p>
+                <p className="text-xs font-semibold text-foreground">Life Domains</p>
               </motion.div>
             </Link>
 
@@ -277,20 +269,20 @@ export default function Home() {
             <Link href="/programs" className="block">
               <motion.div
                 whileTap={{ scale: 0.96 }}
-                className="rounded-2xl p-4 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md aspect-square"
+                className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
                 style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
               >
-                <span className="text-2xl">🎓</span>
-                <p className="text-sm font-semibold text-foreground">Programs</p>
+                <span className="text-xl">🎓</span>
+                <p className="text-xs font-semibold text-foreground">Programs</p>
               </motion.div>
             </Link>
           </div>
 
-          {/* Rewards row — moved above Calendar */}
+          {/* Rewards row */}
           <Link href="/rewards">
             <motion.div
               whileTap={{ scale: 0.98 }}
-              className="rounded-2xl px-4 py-3 cursor-pointer"
+              className="rounded-xl px-3 py-2 cursor-pointer"
               style={{
                 background: welcomeSpin?.available
                   ? "linear-gradient(135deg, oklch(0.55 0.18 290 / 0.2), oklch(0.65 0.16 185 / 0.2))"
@@ -306,30 +298,21 @@ export default function Home() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                     style={{ background: "oklch(0.65 0.16 185 / 0.15)" }}>
-                    <Gift size={16} className="text-primary" />
+                    <Gift size={14} className="text-primary" />
                   </div>
                   <div>
                     {welcomeSpin?.available ? (
-                      <>
-                        <p className="text-sm font-semibold text-primary">🎁 Free Welcome Spin!</p>
-                        <p className="text-xs text-muted-foreground">Try your luck on the reward wheel</p>
-                      </>
+                      <p className="text-xs font-semibold text-primary">🎁 Free Welcome Spin!</p>
                     ) : (rewardsDashboard?.pendingStreakSpins ?? 0) > 0 ? (
-                      <>
-                        <p className="text-sm font-semibold" style={{ color: "oklch(0.75 0.16 55)" }}>
-                          🎡 {rewardsDashboard?.pendingStreakSpins} Free Spin{(rewardsDashboard?.pendingStreakSpins ?? 0) > 1 ? "s" : ""} Ready!
-                        </p>
-                        <p className="text-xs text-muted-foreground">Earned from your check-in streak</p>
-                      </>
+                      <p className="text-xs font-semibold" style={{ color: "oklch(0.75 0.16 55)" }}>
+                        🎡 {rewardsDashboard?.pendingStreakSpins} Free Spin{(rewardsDashboard?.pendingStreakSpins ?? 0) > 1 ? "s" : ""} Ready!
+                      </p>
                     ) : (
-                      <>
-                        <p className="text-sm font-semibold text-foreground">Rewards</p>
-                        <p className="text-xs text-muted-foreground">
-                          <span className="text-primary font-semibold">{rewardPoints?.total ?? 0}</span> points earned
-                        </p>
-                      </>
+                      <p className="text-xs font-semibold text-foreground">
+                        Rewards · <span className="text-primary">{rewardPoints?.total ?? 0} pts</span>
+                      </p>
                     )}
                   </div>
                 </div>
@@ -338,20 +321,20 @@ export default function Home() {
             </motion.div>
           </Link>
 
-          {/* Full-width Calendar row — below Rewards */}
+          {/* Full-width Calendar row */}
           <Link href="/calendar">
             <motion.div
               whileTap={{ scale: 0.98 }}
-              className="rounded-2xl px-4 py-3 cursor-pointer transition-all hover:shadow-md"
+              className="rounded-xl px-3 py-2 cursor-pointer transition-all hover:shadow-md"
               style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">📅</span>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-base">📅</span>
                   <div>
-                    <p className="text-sm font-semibold text-foreground">Calendar</p>
+                    <p className="text-xs font-semibold text-foreground">Calendar</p>
                     {upcomingEvents && upcomingEvents.length > 0 ? (
-                      <p className="text-xs text-primary mt-0.5">
+                      <p className="text-[10px] text-primary mt-0">
                         {upcomingEvents[0].title}
                         <span className="text-muted-foreground ml-1">
                           · {format(new Date(upcomingEvents[0].eventDate), "MMM d")}
@@ -361,7 +344,7 @@ export default function Home() {
                         )}
                       </p>
                     ) : (
-                      <p className="text-xs text-muted-foreground mt-0.5">No upcoming events</p>
+                      <p className="text-[10px] text-muted-foreground">No upcoming events</p>
                     )}
                   </div>
                 </div>
@@ -380,18 +363,15 @@ export default function Home() {
           <Link href="/dashboard">
             <motion.div
               whileTap={{ scale: 0.98 }}
-              className="rounded-2xl px-4 py-3 cursor-pointer transition-all hover:shadow-md"
+              className="rounded-xl px-3 py-2 cursor-pointer transition-all hover:shadow-md"
               style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-lg font-serif text-primary">✦</span>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Growth Dashboard</p>
-                    <p className="text-xs text-muted-foreground">Insights, reflections & your evolution</p>
-                  </div>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-sm font-serif text-primary">✦</span>
+                  <p className="text-xs font-semibold text-foreground">Growth Dashboard</p>
                 </div>
-                <ChevronRight size={16} className="text-muted-foreground" />
+                <ChevronRight size={14} className="text-muted-foreground" />
               </div>
             </motion.div>
           </Link>
