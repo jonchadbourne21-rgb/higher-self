@@ -217,7 +217,7 @@ export default function Home() {
           transition={{ duration: 0.45, delay: 0.16 }}
           className="space-y-2"
         >
-          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">Quick Access</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">Journey Access</p>
 
           {/* 2x2 grid — fixed height tiles, not aspect-square, to keep them compact */}
           <div className="grid grid-cols-2 gap-2">
@@ -354,28 +354,7 @@ export default function Home() {
           </Link>
         </motion.div>
 
-        {/* ── Growth dashboard link (compact row) ─────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.24 }}
-        >
-          <Link href="/dashboard">
-            <motion.div
-              whileTap={{ scale: 0.98 }}
-              className="rounded-xl px-3 py-2 cursor-pointer transition-all hover:shadow-md"
-              style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-sm font-serif text-primary">✦</span>
-                  <p className="text-xs font-semibold text-foreground">Growth Dashboard</p>
-                </div>
-                <ChevronRight size={14} className="text-muted-foreground" />
-              </div>
-            </motion.div>
-          </Link>
-        </motion.div> </div>
+        </div>
     </AppShell>
     {/* Welcome spin modal - auto-pops for new users */}
     <WelcomeSpinModal
