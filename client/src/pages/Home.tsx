@@ -39,6 +39,8 @@ export default function Home() {
   const { data: habitStreak } = trpc.habits.currentStreak.useQuery(undefined, { enabled: isAuthenticated });
   const { data: rewardPoints } = trpc.rewards.points.useQuery(undefined, { enabled: isAuthenticated });
   const { data: welcomeSpin } = trpc.rewards.welcomeSpinAvailable.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: proStatus } = trpc.rewards.proStatus.useQuery(undefined, { enabled: isAuthenticated });
+  const isPro = proStatus?.isPro ?? false;
   const [showWelcomeSpin, setShowWelcomeSpin] = useState(false);
 
   // Auto-show welcome spin modal for new users
@@ -121,8 +123,16 @@ export default function Home() {
                 </button>
               </Link>
               <Link href="/settings">
-                <button className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground">
+                <button className="relative p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground">
                   <User className="w-4 h-4" />
+                  {isPro && (
+                    <span
+                      className="absolute -top-0.5 -right-0.5 text-[8px] font-bold leading-none px-1 py-0.5 rounded-full"
+                      style={{ background: "oklch(0.65 0.16 185)", color: "oklch(0.10 0.02 280)" }}
+                    >
+                      PRO
+                    </span>
+                  )}
                 </button>
               </Link>
             </div>

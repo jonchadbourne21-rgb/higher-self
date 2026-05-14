@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen,
   Calendar,
-  CalendarDays,
+  Flame,
   Home,
   Info,
   MessageCircle,
@@ -18,7 +18,7 @@ import MentroveHeader from "./MentroveHeader";
 
 const navItems = [
   { path: "/home", icon: Home, label: "Dashboard" },
-  { path: "/domains", icon: CalendarDays, label: "Habits" },
+  { path: "/domains", icon: Flame, label: "Habits" },
   { path: "/chat", icon: Sparkles, label: "AI Coach" },
   { path: "/journal", icon: BookOpen, label: "Journal" },
   { path: "/calendar", icon: Calendar, label: "Calendar" },

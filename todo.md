@@ -805,3 +805,7 @@
 - [x] Move Calendar tab to bottom nav where Profile tab currently is
 - [x] Remove Profile tab from bottom nav
 - [x] Add Profile link at the top of the app (near settings/header area)
+
+## UI Polish
+- [x] Add Pro badge next to user icon at top right for Pro users
+- [x] Change Habits icon from CalendarDays to Flame in bottom nav
