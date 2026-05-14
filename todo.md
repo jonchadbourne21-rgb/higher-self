@@ -1006,3 +1006,8 @@
 ## SEO Fixes (Landing Page /)
 - [x] Reduce meta keywords from 11 to 6 focused terms (AI mirror, personal growth, self-reflection, daily check-in, emotional clarity, mindfulness app)
 - [x] Add H1 + H2 SEO fallback headings in index.html for crawlers before React hydration
+
+## OG & Twitter Card Meta Tags
+- [x] Add og:locale, og:image:secure_url, og:image:alt to Open Graph tags
+- [x] Add twitter:site, twitter:creator, twitter:image:alt to Twitter card tags
+- [x] Add meta name="author" and meta name="robots" content="index, follow"
