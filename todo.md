@@ -668,3 +668,23 @@
 - [x] Verify all 320 tests passing
 - [x] Dev server running and stable
 - [x] Create REBRANDING_WORKFLOW.md for future rebranding tasks
+
+## Mentrove Logo & Branding Implementation (May 13) - IN PROGRESS
+- [x] Design 4 logo concepts for Mentrove
+- [x] User selected Concept 4 (Sacred Geometry Mandala, deep purple/silver)
+- [x] Generate final high-res logo (transparent background, icon-only version)
+- [x] Generate favicon (32x32, 16x16, 48x48, 64x64) from logo icon
+- [x] Generate app icon (512x512) for App Store
+- [x] Generate Open Graph preview image (1200x630) with Mentrove branding
+- [x] Generate full brand lockup (icon + wordmark + tagline)
+- [x] Assets uploaded to CDN (CloudFront)
+- [x] Update index.html meta tags (title, og:title, og:site_name, og:image, favicon)
+- [x] Create PWA manifest.json with Mentrove branding
+- [x] Add logo to Landing page (replaces ✦ placeholder)
+- [x] Add logo to Home page header
+- [x] Add logo to Settings page header
+- [x] Add logo to Pricing page header
+- [x] All 320 tests still passing
+- [x] TypeScript: 0 errors
+- [ ] Update VITE_APP_TITLE to Mentrove (requires Management UI > Settings > General)
+- [ ] Update VITE_APP_LOGO to new logo URL (requires Management UI > Settings > General)

@@ -103,9 +103,16 @@ export default function Home() {
           className="space-y-1"
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-medium">
-              {greetingIcon}
-              <span>{today}</span>
+            <div className="flex items-center gap-2">
+              <img
+                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
+                alt="Mentrove"
+                className="w-7 h-7 rounded-full object-cover"
+              />
+              <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-medium">
+                {greetingIcon}
+                <span>{today}</span>
+              </div>
             </div>
             <div className="flex items-center gap-1">
               <Link href="/pricing">

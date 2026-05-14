@@ -98,6 +98,11 @@ export default function Settings() {
           <Link href="/home">
             <ArrowLeft className="w-5 h-5 cursor-pointer" />
           </Link>
+          <img
+            src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
+            alt="Mentrove"
+            className="w-8 h-8 rounded-full object-cover"
+          />
           <h1 className="text-3xl font-bold">Settings</h1>
         </div>
 

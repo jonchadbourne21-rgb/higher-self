@@ -19,7 +19,7 @@ export default function Landing() {
   const [, navigate] = useLocation();
 
   useEffect(() => {
-    document.title = "Higher Self — Your AI Mirror for Personal Growth";
+    document.title = "Mentrove — Your AI Mirror for Personal Growth";
   }, []);
 
   useEffect(() => {
@@ -72,24 +72,20 @@ export default function Landing() {
         className="flex flex-col items-center gap-3"
       >
         <div className="relative">
-          <div
-            className="w-16 h-16 rounded-full flex items-center justify-center"
-            style={{
-              background: "linear-gradient(135deg, oklch(0.46 0.14 185 / 0.15), oklch(0.62 0.14 155 / 0.12))",
-              border: "1.5px solid oklch(0.46 0.14 185 / 0.25)",
-              boxShadow: "0 4px 24px oklch(0.46 0.14 185 / 0.15)",
-            }}
-          >
-            <span className="text-3xl text-violet-gradient">✦</span>
-          </div>
+          <motion.img
+            src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
+            alt="Mentrove"
+            className="w-20 h-20 rounded-full object-cover"
+            style={{ boxShadow: "0 0 32px oklch(0.46 0.14 295 / 0.35)" }}
+          />
           <motion.div
             animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.1, 0.4] }}
             transition={{ repeat: Infinity, duration: 3 }}
             className="absolute -inset-3 rounded-full"
-            style={{ border: "1px solid oklch(0.46 0.14 185 / 0.2)" }}
+            style={{ border: "1px solid oklch(0.46 0.14 295 / 0.3)" }}
           />
         </div>
-        <p className="text-xs tracking-[0.35em] text-violet-500 uppercase font-medium">Higher Self</p>
+        <p className="text-xs tracking-[0.35em] text-violet-500 uppercase font-medium">Mentrove</p>
       </motion.div>
 
       {/* ── Main content ──────────────────────────────────────────────────── */}

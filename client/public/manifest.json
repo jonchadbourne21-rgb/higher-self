@@ -1,0 +1,20 @@
+{
+  "name": "Mentrove",
+  "short_name": "Mentrove",
+  "description": "Your AI Mirror for Personal Growth — Reflect. Grow. Evolve.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F0A2E",
+  "theme_color": "#0F0A2E",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "lifestyle", "productivity"],
+  "lang": "en"
+}

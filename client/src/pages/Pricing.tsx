@@ -107,6 +107,14 @@ export default function Pricing() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-3"
         >
+          <div className="flex justify-center mb-2">
+            <img
+              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
+              alt="Mentrove"
+              className="w-16 h-16 rounded-full object-cover"
+              style={{ boxShadow: "0 0 24px oklch(0.46 0.14 295 / 0.3)" }}
+            />
+          </div>
           <h1 className="text-4xl font-serif font-light">Simple, Transparent Pricing</h1>
           <p className="text-muted-foreground text-lg">
             Choose the plan that fits your growth journey
