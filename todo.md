@@ -1022,3 +1022,14 @@
 - [x] Dare streak bonus: award +10 points after every 3 consecutive dare results; show toast notification
 - [x] Pro button swap: "Upgrade" button on Home header becomes "👑 Pro ✓" (gold) when user has active Pro access; links to /rewards
 - [x] Spin History tab: 4th tab in Rewards page showing last 10 spins with emoji icons, prize labels, dates, and color-coded result chips
+
+## 21-Day Program — One-Per-Day Gate & Completion Reward
+- [x] Backend: enforce one lesson submission per calendar day (return alreadySubmittedToday flag)
+- [x] Backend: gate next-day lesson unlock — Day N only accessible after Day N-1 is submitted
+- [x] Backend: on Day 21 completion, award 25 points + 1 month Pro grant
+- [x] Frontend: lesson page shows saved reflection + AI insight after submit (no submit button)
+- [x] Frontend: redirect to /programs/[id]/insight/[day] after submission
+- [x] Frontend: Insight page — AI insight, user's reflection, next-day lesson preview + encouragement
+- [x] Frontend: Day 21 completion screen with confetti, 25 pts badge, and 1 Month Pro celebration
+- [x] Vitest: test one-per-day gate procedure
+- [x] Vitest: test Day 21 completion reward procedure

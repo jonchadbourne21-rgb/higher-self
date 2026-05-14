@@ -15,6 +15,18 @@ import {
   saveLessonResponse,
 } from "../db/programs";
 import { invokeLLM } from "../_core/llm";
+import { addRewardPoints } from "../db/rewards";
+import { createRewardGrant } from "../db/rewardGrants";
+
+/** Returns true if the user has already submitted a lesson for today (UTC date) */
+function submittedToday(completedAt: Date): boolean {
+  const now = new Date();
+  return (
+    completedAt.getUTCFullYear() === now.getUTCFullYear() &&
+    completedAt.getUTCMonth() === now.getUTCMonth() &&
+    completedAt.getUTCDate() === now.getUTCDate()
+  );
+}
 
 export const programsRouter = router({
   /** List all active programs */
@@ -61,11 +73,17 @@ export const programsRouter = router({
       const lesson = await getLessonByDay(input.programId, currentDay);
       if (!lesson) return null;
       const response = await getLessonResponse(ctx.user.id, input.programId, currentDay);
+      // Check if the existing response was submitted today (for the one-per-day gate UI)
+      const alreadySubmittedToday = response ? submittedToday(response.completedAt) : false;
+      // Fetch next day's lesson title for the insight page
+      const nextLessonRaw = await getLessonByDay(input.programId, currentDay + 1);
       return {
         lesson,
         enrollment,
         response: response ?? null,
         isCompleted: !!response,
+        alreadySubmittedToday,
+        nextLesson: nextLessonRaw ? { day: nextLessonRaw.day, title: nextLessonRaw.title } : null,
       };
     }),
 
@@ -83,9 +101,28 @@ export const programsRouter = router({
       const enrollment = await getUserEnrollment(ctx.user.id, input.programId);
       if (!enrollment) throw new TRPCError({ code: "FORBIDDEN", message: "You are not enrolled in this program" });
 
-      // Check if already submitted
+      // ── One-per-day gate ──────────────────────────────────────────────────
+      // Only allow submitting the current day's lesson
+      const currentDay = enrollment.currentDay ?? 1;
+      if (input.day !== currentDay) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: input.day < currentDay
+            ? "You have already completed this day."
+            : "This day is not yet unlocked. Complete the previous day first.",
+        });
+      }
+
+      // Check if already submitted today (duplicate guard)
       const existing = await getLessonResponse(ctx.user.id, input.programId, input.day);
-      if (existing) throw new TRPCError({ code: "CONFLICT", message: "You have already submitted this lesson" });
+      if (existing) {
+        // If submitted today, block re-submission
+        if (submittedToday(existing.completedAt)) {
+          throw new TRPCError({ code: "CONFLICT", message: "You've already completed today's lesson. Come back tomorrow!" });
+        }
+        // Edge case: same day number but different calendar day shouldn't happen in normal flow
+        throw new TRPCError({ code: "CONFLICT", message: "You have already submitted this lesson" });
+      }
 
       const lesson = await getLessonByDay(input.programId, input.day);
       if (!lesson) throw new TRPCError({ code: "NOT_FOUND", message: "Lesson not found" });
@@ -132,7 +169,36 @@ Your role: reflect back what the person shared, name what you notice with warmth
         ...(isLastDay ? { completedAt: new Date() } : {}),
       });
 
-      return { success: true, aiFeedback, isCompleted: isLastDay, nextDay: isLastDay ? null : nextDay };
+      // ── 21-day completion reward ────────────────────────────────────────────
+      let completionReward: { points: number; grantActivated: boolean } | null = null;
+      if (isLastDay && program?.durationDays === 21) {
+        // Award 25 points
+        await addRewardPoints(
+          ctx.user.id,
+          25,
+          "checkin",
+          `program_completion_${input.programId}_${Date.now()}`
+        );
+        // Award 1 month Pro grant
+        const grant = await createRewardGrant(ctx.user.id, "month_pro", "spin");
+        completionReward = { points: 25, grantActivated: grant.activated };
+      }
+
+      // Fetch next day's lesson preview (title only) for the insight page
+      let nextLesson: { day: number; title: string } | null = null;
+      if (!isLastDay) {
+        const nl = await getLessonByDay(input.programId, nextDay);
+        if (nl) nextLesson = { day: nl.day, title: nl.title };
+      }
+
+      return {
+        success: true,
+        aiFeedback,
+        isCompleted: isLastDay,
+        nextDay: isLastDay ? null : nextDay,
+        nextLesson,
+        completionReward,
+      };
     }),
 
   /** Get full progress for a program */

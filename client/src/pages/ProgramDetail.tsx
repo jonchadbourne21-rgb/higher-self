@@ -16,14 +16,16 @@ import {
   BookOpen,
   ChevronRight,
   Loader2,
+  Lock,
+  CalendarClock,
 } from "lucide-react";
-import { Streamdown } from "streamdown";
 
 const CATEGORY_LABELS: Record<string, string> = {
   "emotional-mastery": "Emotional Mastery",
   "building-presence": "Building Presence",
   relationships: "Relationships",
   mindfulness: "Mindfulness",
+  "self-awareness": "Self-Awareness",
 };
 
 const PROGRAM_ICONS: Record<string, string> = {
@@ -31,6 +33,7 @@ const PROGRAM_ICONS: Record<string, string> = {
   "building-presence": "✨",
   relationships: "❤️",
   mindfulness: "🧘",
+  "self-awareness": "🪞",
 };
 
 export default function ProgramDetail() {
@@ -38,7 +41,6 @@ export default function ProgramDetail() {
   const programId = parseInt(params.id ?? "0", 10);
   const [, navigate] = useLocation();
   const [reflection, setReflection] = useState("");
-  const [aiFeedback, setAiFeedback] = useState<string | null>(null);
   const [showLessonView, setShowLessonView] = useState(false);
   const utils = trpc.useUtils();
 
@@ -73,14 +75,24 @@ export default function ProgramDetail() {
 
   const submitLesson = trpc.programs.submitLessonResponse.useMutation({
     onSuccess: (res) => {
-      setAiFeedback(res.aiFeedback);
       utils.programs.getCurrentLesson.invalidate({ programId });
       utils.programs.getProgress.invalidate({ programId });
-      if (res.isCompleted) {
-        toast.success("🎉 Program complete! You've mastered this journey.");
-      } else {
-        toast.success(`Day ${currentLessonData?.lesson.day} complete! Day ${res.nextDay} unlocked.`);
+      // Store insight data in sessionStorage for the insight page
+      const day = currentLessonData?.lesson.day ?? 1;
+      try {
+        sessionStorage.setItem(
+          `program_insight_${programId}_${day}`,
+          JSON.stringify({
+            aiFeedback: res.aiFeedback,
+            userReflection: reflection,
+            nextLesson: res.nextLesson,
+          })
+        );
+      } catch {
+        // sessionStorage unavailable — insight page will show generic view
       }
+      // Navigate to the insight page
+      navigate(`/programs/${programId}/insight/${day}`);
     },
     onError: (err) => toast.error(err.message ?? "Could not submit. Please try again."),
   });
@@ -132,10 +144,11 @@ export default function ProgramDetail() {
     });
   };
 
-  // Show active lesson view
+  // ── Active lesson view ──────────────────────────────────────────────────────
   if ((showLessonView || isEnrolled) && !isCompleted && currentLessonData?.lesson) {
     const lesson = currentLessonData.lesson;
     const alreadySubmitted = currentLessonData.isCompleted;
+    const submittedToday = currentLessonData.alreadySubmittedToday;
 
     return (
       <AppShell>
@@ -149,7 +162,7 @@ export default function ProgramDetail() {
             {program.name}
           </button>
 
-          {/* Day badge */}
+          {/* Day badge + progress bar */}
           <div className="flex items-center gap-2 mb-4">
             <span className="text-xs font-semibold text-primary uppercase tracking-widest">
               Day {lesson.day} of {program.durationDays}
@@ -205,21 +218,43 @@ export default function ProgramDetail() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5"
+              className="space-y-4"
             >
-              <div className="flex items-center gap-2 mb-3">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span className="text-sm font-semibold text-emerald-400">Day {lesson.day} Complete</span>
+              {/* User's saved reflection */}
+              <div className="rounded-xl border border-border/40 bg-card/60 p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span className="text-sm font-semibold text-emerald-400">Your Reflection</span>
+                </div>
+                <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                  {currentLessonData.response?.userReflection}
+                </p>
               </div>
+
+              {/* AI insight */}
               {currentLessonData.response?.aiFeedback && (
-                <div className="text-sm text-foreground/80 leading-relaxed">
-                  <Streamdown>{currentLessonData.response.aiFeedback}</Streamdown>
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-semibold text-primary uppercase tracking-wider">Your Mirror Reflects</span>
+                  </div>
+                  <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
+                    {currentLessonData.response.aiFeedback}
+                  </p>
                 </div>
               )}
-              {currentDay <= program.durationDays && (
-                <p className="text-xs text-muted-foreground mt-3">
-                  Come back tomorrow for Day {currentDay}.
-                </p>
+
+              {/* Come back tomorrow */}
+              {submittedToday && currentDay <= program.durationDays && (
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 flex items-center gap-3">
+                  <CalendarClock className="w-5 h-5 text-amber-400 shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-amber-400">See you tomorrow</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Day {currentDay} is unlocked tomorrow. One lesson per day keeps the growth steady.
+                    </p>
+                  </div>
+                </div>
               )}
             </motion.div>
           ) : (
@@ -246,31 +281,12 @@ export default function ProgramDetail() {
                   className="gap-2"
                 >
                   {submitLesson.isPending ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" /> Getting feedback...</>
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Getting insight...</>
                   ) : (
-                    <><Sparkles className="w-4 h-4" /> Submit & Get Feedback</>
+                    <><Sparkles className="w-4 h-4" /> Submit & Reflect</>
                   )}
                 </Button>
               </div>
-
-              {/* AI Feedback */}
-              <AnimatePresence>
-                {aiFeedback && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-5 rounded-xl border border-primary/20 bg-primary/5 p-5"
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      <Sparkles className="w-4 h-4 text-primary" />
-                      <span className="text-xs font-semibold text-primary uppercase tracking-wider">Your Mirror Reflects</span>
-                    </div>
-                    <div className="text-sm text-foreground/90 leading-relaxed">
-                      <Streamdown>{aiFeedback}</Streamdown>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </motion.div>
           )}
         </div>
@@ -278,7 +294,7 @@ export default function ProgramDetail() {
     );
   }
 
-  // Program overview
+  // ── Program overview ────────────────────────────────────────────────────────
   return (
     <AppShell>
       <div className="max-w-2xl mx-auto px-4 py-8 pb-28">
@@ -288,13 +304,13 @@ export default function ProgramDetail() {
           className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-sm mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          All Programs
+          Programs
         </button>
 
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <div className="flex items-start gap-4 mb-4">
-            <span className="text-5xl">{PROGRAM_ICONS[program.category]}</span>
+            <span className="text-5xl">{PROGRAM_ICONS[program.category] ?? "🌱"}</span>
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-foreground leading-snug">{program.name}</h1>
               <div className="flex items-center gap-3 mt-2 flex-wrap">
@@ -310,6 +326,29 @@ export default function ProgramDetail() {
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed">{program.description}</p>
         </motion.div>
+
+        {/* Completion reward callout */}
+        {program.durationDays === 21 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-xl p-4 mb-5 flex items-center gap-3"
+            style={{
+              background: "linear-gradient(135deg, oklch(0.28 0.10 55 / 0.25), oklch(0.22 0.06 280 / 0.25))",
+              border: "1px solid oklch(0.60 0.18 55 / 0.35)",
+            }}
+          >
+            <span className="text-2xl">🏆</span>
+            <div>
+              <p className="text-sm font-semibold" style={{ color: "oklch(0.80 0.16 55)" }}>
+                Complete all 21 days
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Earn <strong className="text-foreground">25 reward points</strong> + <strong className="text-foreground">1 month of Pro free</strong>
+              </p>
+            </div>
+          </motion.div>
+        )}
 
         {/* Progress bar (if enrolled) */}
         {isEnrolled && progress && (
@@ -337,7 +376,7 @@ export default function ProgramDetail() {
         {/* Lessons list */}
         <div className="mb-6">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            The Journey
+            The Journey — One Day at a Time
           </h2>
           <div className="space-y-2">
             {lessons.map((lesson, idx) => {
@@ -350,14 +389,14 @@ export default function ProgramDetail() {
                   key={lesson.id}
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.04 }}
+                  transition={{ delay: idx * 0.03 }}
                   className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
                     isCurrent
                       ? "border-primary/40 bg-primary/5 cursor-pointer hover:bg-primary/10"
                       : isDone
                       ? "border-emerald-500/20 bg-emerald-500/5"
                       : isLocked
-                      ? "border-border/20 opacity-50"
+                      ? "border-border/20 opacity-40 cursor-not-allowed"
                       : "border-border/30 bg-card/40"
                   }`}
                   onClick={() => isCurrent && setShowLessonView(true)}
@@ -365,6 +404,8 @@ export default function ProgramDetail() {
                   <div className="shrink-0">
                     {isDone ? (
                       <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                    ) : isLocked ? (
+                      <Lock className="w-4 h-4 text-muted-foreground/40" />
                     ) : isCurrent ? (
                       <div className="w-5 h-5 rounded-full border-2 border-primary flex items-center justify-center">
                         <div className="w-2 h-2 rounded-full bg-primary" />
@@ -380,6 +421,9 @@ export default function ProgramDetail() {
                         <span className="text-xs font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
                           Today
                         </span>
+                      )}
+                      {isLocked && (
+                        <span className="text-xs text-muted-foreground/50">Unlocks after Day {lesson.day - 1}</span>
                       )}
                     </div>
                     <p className="text-sm font-medium text-foreground truncate">{lesson.title}</p>
