@@ -1,0 +1,9 @@
+{
+  "query": "\nALTER TABLE daily_check_ins\n  ADD COLUMN reflectionPrompt TEXT NULL,\n  ADD COLUMN reflectionAnswer TEXT NULL,\n  ADD COLUMN followUpQuestion TEXT NULL,\n  ADD COLUMN followUpAnswer TEXT NULL;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UbcpEQhTnXTazXN.root --database LQwmD5t86EFFZjkEDkXbgz --execute \nALTER TABLE daily_check_ins\n  ADD COLUMN reflectionPrompt TEXT NULL,\n  ADD COLUMN reflectionAnswer TEXT NULL,\n  ADD COLUMN followUpQuestion TEXT NULL,\n  ADD COLUMN followUpAnswer TEXT NULL;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1067
+}

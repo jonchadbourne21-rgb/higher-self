@@ -12,30 +12,69 @@ import { Streamdown } from "streamdown";
 
 const MOOD_EMOJIS = ["😔", "😞", "😕", "😐", "🙂", "😊", "😄", "🌟", "✨", "🌈"];
 
+const STEP_LABELS = [
+  { title: "How are you?", subtitle: "Mood, energy & stress — all in one" },
+  { title: "Today's reflection", subtitle: "A question just for today" },
+  { title: "Going deeper", subtitle: "One more thing worth exploring" },
+];
+
 export default function CheckIn() {
   const { isAuthenticated, loading } = useAuth();
   const [, navigate] = useLocation();
+
+  // Step state
   const [step, setStep] = useState(0);
+
+  // Step 1: vitals
   const [mood, setMood] = useState(5);
   const [energy, setEnergy] = useState(5);
   const [stress, setStress] = useState(5);
-  const [gratitude, setGratitude] = useState("");
-  const [reflection, setReflection] = useState("");
+
+  // Step 2: AI reflection prompt + answer
+  const [reflectionPrompt, setReflectionPrompt] = useState("");
+  const [reflectionAnswer, setReflectionAnswer] = useState("");
+
+  // Step 3: AI follow-up question + answer
+  const [followUpQuestion, setFollowUpQuestion] = useState("");
+  const [followUpAnswer, setFollowUpAnswer] = useState("");
+
+  // Result
   const [aiResponse, setAiResponse] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
   const { data: todayCheckIn } = trpc.checkIn.today.useQuery(undefined, { enabled: isAuthenticated });
-  const { data: habits } = trpc.habits.list.useQuery(undefined, { enabled: isAuthenticated });
+
+  // Load the AI daily prompt on mount
+  const { data: dailyPromptData, isLoading: promptLoading } = trpc.checkIn.getDailyPrompt.useQuery(
+    undefined,
+    { enabled: isAuthenticated && !todayCheckIn }
+  );
+
+  // Set the prompt text once loaded
+  useEffect(() => {
+    if (dailyPromptData?.prompt && !reflectionPrompt) {
+      setReflectionPrompt(dailyPromptData.prompt);
+    }
+  }, [dailyPromptData]);
 
   // Notification opt-in
   const { isSupported, isSubscribed, permission, isSubscribing, subscribe } = useNotifications();
   const [notifDismissed, setNotifDismissed] = useState(false);
   const showNotifPrompt = isSupported && !isSubscribed && permission !== "denied" && !notifDismissed;
 
+  // Generate AI follow-up when user moves from step 2 → step 3
+  const generateFollowUpMutation = trpc.checkIn.generateFollowUp.useMutation({
+    onSuccess: (data) => {
+      setFollowUpQuestion(data.question);
+    },
+    onError: () => {
+      setFollowUpQuestion("What's really underneath all of this for you?");
+    },
+  });
+
   const submitMutation = trpc.checkIn.submit.useMutation({
     onSuccess: (data) => {
       setAiResponse(data.aiResponse);
-      // Show streak spin notification if earned
       if (data.streakSpinEarned) {
         setTimeout(() => {
           toast.success("🎡 3-day streak! You earned a free spin — check Rewards!", {
@@ -44,7 +83,6 @@ export default function CheckIn() {
         }, 1500);
       }
       if (data.aiResponse) {
-        // Store insight in session storage and navigate to insight page
         sessionStorage.setItem("checkInInsight", data.aiResponse);
         navigate("/check-in-insight");
       } else {
@@ -59,17 +97,37 @@ export default function CheckIn() {
     if (todayCheckIn) setDone(true);
   }, [isAuthenticated, loading, todayCheckIn]);
 
-  const steps = [
-    { title: "Mood", subtitle: "How are you feeling right now?" },
-    { title: "Energy & Stress", subtitle: "Your vitals today" },
-    { title: "Gratitude", subtitle: "What are you grateful for?" },
-    { title: "Reflection", subtitle: "What's on your mind?" },
-  ];
-
-  const handleSubmit = () => {
-    submitMutation.mutate({ mood, energy, stress, gratitude, reflection });
+  const handleNext = () => {
+    if (step === 1) {
+      // Moving to step 3 — generate the AI follow-up question
+      if (reflectionAnswer.trim()) {
+        generateFollowUpMutation.mutate({
+          mood,
+          energy,
+          stress,
+          reflectionPrompt,
+          reflectionAnswer,
+        });
+      } else {
+        setFollowUpQuestion("What's one thing you'd like to feel more of tomorrow?");
+      }
+    }
+    setStep((s) => s + 1);
   };
 
+  const handleSubmit = () => {
+    submitMutation.mutate({
+      mood,
+      energy,
+      stress,
+      reflectionPrompt,
+      reflectionAnswer,
+      followUpQuestion,
+      followUpAnswer,
+    });
+  };
+
+  // ── Completed state ──────────────────────────────────────────────────────────
   if (done && todayCheckIn && !submitMutation.isPending) {
     return (
       <AppShell>
@@ -109,10 +167,21 @@ export default function CheckIn() {
             ))}
           </div>
 
-          {todayCheckIn.gratitude && (
+          {todayCheckIn.reflectionAnswer && (
             <div className="glass rounded-2xl p-4 space-y-2">
-              <p className="text-xs text-muted-foreground uppercase tracking-widest">Gratitude</p>
-              <p className="text-sm text-foreground">{todayCheckIn.gratitude}</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-widest">
+                {todayCheckIn.reflectionPrompt || "Reflection"}
+              </p>
+              <p className="text-sm text-foreground">{todayCheckIn.reflectionAnswer}</p>
+            </div>
+          )}
+
+          {todayCheckIn.followUpAnswer && (
+            <div className="glass rounded-2xl p-4 space-y-2">
+              <p className="text-xs text-muted-foreground uppercase tracking-widest">
+                {todayCheckIn.followUpQuestion || "Going deeper"}
+              </p>
+              <p className="text-sm text-foreground">{todayCheckIn.followUpAnswer}</p>
             </div>
           )}
 
@@ -122,21 +191,21 @@ export default function CheckIn() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.2 }}
-              className="rounded-2xl border border-violet-200 bg-violet-50 p-5 space-y-3"
+              className="rounded-2xl border border-violet-500/30 bg-violet-500/10 p-5 space-y-3"
             >
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center flex-shrink-0">
-                  <BellRing className="w-5 h-5 text-violet-600" />
+                <div className="w-10 h-10 rounded-full bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+                  <BellRing className="w-5 h-5 text-violet-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm text-violet-900">Want a daily reminder?</p>
-                  <p className="text-xs text-violet-700 mt-0.5 leading-relaxed">
+                  <p className="font-semibold text-sm text-foreground">Want a daily reminder?</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                     Get a personalised nudge every morning at 6am — your goals, your pace.
                   </p>
                 </div>
                 <button
                   onClick={() => setNotifDismissed(true)}
-                  className="text-violet-400 hover:text-violet-600 p-1 flex-shrink-0"
+                  className="text-muted-foreground hover:text-foreground p-1 flex-shrink-0"
                 >
                   <BellOff className="w-4 h-4" />
                 </button>
@@ -163,26 +232,30 @@ export default function CheckIn() {
     );
   }
 
+  // ── 3-step flow ──────────────────────────────────────────────────────────────
   return (
     <AppShell>
-      <div className="px-5 pt-8 pb-4 flex flex-col">
+      <div className="px-5 pt-8 pb-4 flex flex-col min-h-[calc(100dvh-4rem)]">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <button onClick={() => navigate("/home")} className="text-muted-foreground">
+          <button
+            onClick={() => step > 0 ? setStep(step - 1) : navigate("/home")}
+            className="text-muted-foreground"
+          >
             <ChevronLeft size={20} />
           </button>
           <div className="flex-1">
-            <h1 className="text-2xl font-serif">{steps[step].title}</h1>
-            <p className="text-xs text-muted-foreground">{steps[step].subtitle}</p>
+            <h1 className="text-2xl font-serif">{STEP_LABELS[step].title}</h1>
+            <p className="text-xs text-muted-foreground">{STEP_LABELS[step].subtitle}</p>
           </div>
-          <span className="text-xs text-muted-foreground">{step + 1}/{steps.length}</span>
+          <span className="text-xs text-muted-foreground font-medium">{step + 1} / 3</span>
         </div>
 
-        {/* Progress */}
+        {/* Progress bar */}
         <div className="h-0.5 bg-border rounded-full mb-8">
           <motion.div
             className="h-full bg-primary rounded-full"
-            animate={{ width: `${((step + 1) / steps.length) * 100}%` }}
+            animate={{ width: `${((step + 1) / 3) * 100}%` }}
             transition={{ duration: 0.3 }}
           />
         </div>
@@ -198,48 +271,55 @@ export default function CheckIn() {
               transition={{ duration: 0.25 }}
               className="space-y-6"
             >
-              {/* Mood */}
+              {/* ── Step 1: Mood + Energy + Stress ──────────────────────── */}
               {step === 0 && (
                 <div className="space-y-6">
-                  <div className="text-center space-y-2">
-                    <span className="text-7xl">{MOOD_EMOJIS[mood - 1]}</span>
-                    <p className="text-4xl font-serif text-primary">{mood}/10</p>
+                  {/* Mood */}
+                  <div className="glass rounded-2xl p-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">{MOOD_EMOJIS[mood - 1]}</span>
+                        <p className="text-sm font-medium">Mood</p>
+                      </div>
+                      <span className="text-2xl font-serif text-primary">{mood}/10</span>
+                    </div>
+                    <input
+                      type="range" min={1} max={10} value={mood}
+                      onChange={(e) => setMood(Number(e.target.value))}
+                      className="w-full accent-primary"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Very low</span><span>Wonderful</span>
+                    </div>
                   </div>
-                  <input
-                    type="range" min={1} max={10} value={mood}
-                    onChange={(e) => setMood(Number(e.target.value))}
-                    className="w-full accent-primary"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Very low</span><span>Wonderful</span>
-                  </div>
-                </div>
-              )}
 
-              {/* Energy & Stress */}
-              {step === 1 && (
-                <div className="space-y-6">
+                  {/* Energy */}
                   <div className="glass rounded-2xl p-5 space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-xl">⚡</span>
-                        <p className="text-sm font-medium">Energy Level</p>
+                        <p className="text-sm font-medium">Energy</p>
                       </div>
-                      <span className="text-2xl font-serif text-primary">{energy}</span>
+                      <span className="text-2xl font-serif text-primary">{energy}/10</span>
                     </div>
                     <input
                       type="range" min={1} max={10} value={energy}
                       onChange={(e) => setEnergy(Number(e.target.value))}
                       className="w-full accent-primary"
                     />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Drained</span><span>Fully charged</span>
+                    </div>
                   </div>
+
+                  {/* Stress */}
                   <div className="glass rounded-2xl p-5 space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-xl">🌊</span>
-                        <p className="text-sm font-medium">Stress Level</p>
+                        <p className="text-sm font-medium">Stress</p>
                       </div>
-                      <span className="text-2xl font-serif text-primary">{stress}</span>
+                      <span className="text-2xl font-serif text-primary">{stress}/10</span>
                     </div>
                     <input
                       type="range" min={1} max={10} value={stress}
@@ -253,38 +333,75 @@ export default function CheckIn() {
                 </div>
               )}
 
-              {/* Gratitude */}
-              {step === 2 && (
-                <div className="space-y-4">
-                  <div className="glass rounded-2xl p-4">
-                    <p className="text-sm text-muted-foreground italic leading-relaxed">
-                      "Gratitude transforms what we have into enough." Take a moment to notice what is good.
-                    </p>
-                  </div>
+              {/* ── Step 2: AI-generated reflection prompt ───────────────── */}
+              {step === 1 && (
+                <div className="space-y-5">
+                  {promptLoading || !reflectionPrompt ? (
+                    <div className="glass rounded-2xl p-6 flex items-center gap-3">
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                      <p className="text-sm text-muted-foreground">Crafting today's question…</p>
+                    </div>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="glass rounded-2xl p-5 border border-primary/20"
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="text-xl mt-0.5">✦</span>
+                        <p className="text-base font-medium leading-relaxed text-foreground">
+                          {reflectionPrompt}
+                        </p>
+                      </div>
+                      {dailyPromptData?.theme && (
+                        <p className="text-xs text-muted-foreground mt-3 ml-8 capitalize">
+                          Today's theme: {dailyPromptData.theme.split(" —")[0]}
+                        </p>
+                      )}
+                    </motion.div>
+                  )}
+
                   <textarea
-                    value={gratitude}
-                    onChange={(e) => setGratitude(e.target.value)}
-                    placeholder="Today I am grateful for..."
-                    rows={5}
+                    value={reflectionAnswer}
+                    onChange={(e) => setReflectionAnswer(e.target.value)}
+                    placeholder="Take your time…"
+                    rows={6}
                     className="w-full bg-input border border-border rounded-2xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm resize-none"
+                    autoFocus
                   />
                 </div>
               )}
 
-              {/* Reflection */}
-              {step === 3 && (
-                <div className="space-y-4">
-                  <div className="glass rounded-2xl p-4">
-                    <p className="text-sm text-muted-foreground italic leading-relaxed">
-                      What's present for you today? What are you thinking about, feeling, or working through?
-                    </p>
-                  </div>
+              {/* ── Step 3: AI-generated follow-up question ──────────────── */}
+              {step === 2 && (
+                <div className="space-y-5">
+                  {generateFollowUpMutation.isPending || !followUpQuestion ? (
+                    <div className="glass rounded-2xl p-6 flex items-center gap-3">
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                      <p className="text-sm text-muted-foreground">Reading between the lines…</p>
+                    </div>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="glass rounded-2xl p-5 border border-amber-500/20"
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="text-xl mt-0.5">🔍</span>
+                        <p className="text-base font-medium leading-relaxed text-foreground">
+                          {followUpQuestion}
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+
                   <textarea
-                    value={reflection}
-                    onChange={(e) => setReflection(e.target.value)}
-                    placeholder="Today I'm thinking about..."
+                    value={followUpAnswer}
+                    onChange={(e) => setFollowUpAnswer(e.target.value)}
+                    placeholder="Be honest with yourself…"
                     rows={6}
                     className="w-full bg-input border border-border rounded-2xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm resize-none"
+                    autoFocus
                   />
                 </div>
               )}
@@ -295,12 +412,21 @@ export default function CheckIn() {
         {/* Navigation */}
         <div className="flex gap-3 pt-6">
           {step > 0 && (
-            <Button variant="outline" onClick={() => setStep(step - 1)} className="flex-1 rounded-2xl py-5">
+            <Button
+              variant="outline"
+              onClick={() => setStep(step - 1)}
+              className="rounded-2xl py-5 px-5"
+            >
               <ChevronLeft size={18} />
             </Button>
           )}
-          {step < steps.length - 1 ? (
-            <Button onClick={() => setStep(step + 1)} className="flex-1 rounded-2xl py-5">
+
+          {step < 2 ? (
+            <Button
+              onClick={handleNext}
+              className="flex-1 rounded-2xl py-5"
+              disabled={step === 1 && promptLoading}
+            >
               Continue <ChevronRight size={18} className="ml-1" />
             </Button>
           ) : (
@@ -310,7 +436,7 @@ export default function CheckIn() {
               className="flex-1 rounded-2xl py-5 glow-gold"
             >
               {submitMutation.isPending ? (
-                <span className="animate-pulse">Reflecting...</span>
+                <span className="animate-pulse">Reflecting…</span>
               ) : (
                 <><Sparkles size={16} className="mr-2" /> Complete Check-in</>
               )}

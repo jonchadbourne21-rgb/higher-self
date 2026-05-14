@@ -897,3 +897,17 @@
 - [x] Add Programs card to Quick Access grid (2x2 grid: Mirror | Journal / Life Domains | Programs)
 - [x] Stretch Calendar card to full width below the 2x2 Quick Access grid (with next event preview inline)
 - [x] User's name already shown via AnimatedName component; ensured fallback chain is correct
+
+## Dynamic Daily Check-In Redesign
+- [x] Schema already had mood/energy/stress; added reflectionPrompt, reflectionAnswer, followUpQuestion, followUpAnswer columns to DB + schema
+- [x] Add checkIn.getDailyPrompt tRPC procedure — AI picks a fresh reflection prompt each day (10 rotating themes: gratitude, surprise, joy, growth, connection, release, courage, beauty, energy, intention)
+- [x] Add checkIn.generateFollowUp tRPC procedure — LLM generates a personalized follow-up question based on mood + stress + energy + reflection answer
+- [x] Update checkIn.submit to accept all new fields and include them in the AI response context
+- [x] Rebuilt CheckIn UI as 3-step flow:
+  - Step 1: Mood slider + Energy slider + Stress slider on one screen (3 glass cards)
+  - Step 2: AI-generated dynamic reflection prompt with theme label + free-text answer
+  - Step 3: AI-generated personalized follow-up question ("Reading between the lines…") + free-text answer
+- [x] Step progress indicator (1 / 3, 2 / 3, 3 / 3) with animated progress bar
+- [x] Smooth animated transitions between steps (framer-motion slide)
+- [x] Completed view shows reflection prompt + answer + follow-up question + answer
+- [x] Streak spin logic still triggers after the new 3-step submit

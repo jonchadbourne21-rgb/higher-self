@@ -140,6 +140,14 @@ export const dailyCheckIns = mysqlTable("daily_check_ins", {
   stress: int("stress").notNull(),
   // Gratitude note
   gratitude: text("gratitude"),
+  // Dynamic AI-generated reflection prompt (rotates daily, e.g. gratitude/surprise/joy)
+  reflectionPrompt: text("reflectionPrompt"),
+  // User's answer to the AI-generated reflection prompt
+  reflectionAnswer: text("reflectionAnswer"),
+  // AI-generated personalized follow-up question based on all prior answers
+  followUpQuestion: text("followUpQuestion"),
+  // User's answer to the AI follow-up question
+  followUpAnswer: text("followUpAnswer"),
   // Main reflection for the day
   reflection: text("reflection"),
   // AI response to the check-in

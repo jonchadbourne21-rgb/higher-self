@@ -221,6 +221,85 @@ export const appRouter = router({
       return getTodayCheckIn(ctx.user.id);
     }),
 
+    // Returns a fresh AI-generated reflection prompt for today
+    // Rotates through themes: gratitude, surprise, joy, unexpected, small wins, etc.
+    getDailyPrompt: protectedProcedure.query(async ({ ctx }) => {
+      const profile = await getUserProfile(ctx.user.id);
+      const name = profile?.preferredName || "friend";
+      const recentCheckIns = await getRecentCheckIns(ctx.user.id, 7);
+      const recentAnswers = recentCheckIns
+        .slice(0, 3)
+        .map((c) => c.reflectionAnswer || c.gratitude)
+        .filter(Boolean)
+        .join(" | ");
+
+      // Use day-of-year to deterministically rotate theme, but let AI craft the exact question
+      const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+      const themes = [
+        "gratitude — something you're genuinely thankful for today",
+        "surprise — something unexpected that happened or that you noticed",
+        "joy — a small moment that made you feel good, even briefly",
+        "growth — something you learned or a way you showed up differently",
+        "connection — a moment with someone (or yourself) that felt real",
+        "release — something you're ready to let go of or stop carrying",
+        "courage — a moment you did something despite fear or discomfort",
+        "beauty — something you noticed that was beautiful, simple, or alive",
+        "energy — what's been draining you vs. what's been filling you up",
+        "intention — what you want to bring more of into your life right now",
+      ];
+      const theme = themes[dayOfYear % themes.length];
+
+      try {
+        const res = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You write short, personal, emotionally intelligent reflection prompts for a growth app. The user's name is ${name}. Today's theme is: ${theme}. ${recentAnswers ? `Recent reflections for context: "${recentAnswers}"` : ""} Write a single question — conversational, specific, never generic. Under 20 words. No emojis. No quotation marks. Just the question.`,
+            },
+            { role: "user", content: "Write today's reflection prompt." },
+          ],
+        });
+        const rawContent = res.choices[0]?.message?.content;
+        const prompt = typeof rawContent === "string" ? rawContent.trim().replace(/^"|"$/g, "") : `What's one thing you're grateful for today?`;
+        return { prompt, theme };
+      } catch {
+        return { prompt: `What's one thing you're grateful for today?`, theme };
+      }
+    }),
+
+    // Generates a personalized follow-up question based on mood, stress, energy + reflection answer
+    generateFollowUp: protectedProcedure
+      .input(z.object({
+        mood: z.number().min(1).max(10),
+        energy: z.number().min(1).max(10),
+        stress: z.number().min(1).max(10),
+        reflectionPrompt: z.string(),
+        reflectionAnswer: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const profile = await getUserProfile(ctx.user.id);
+        const name = profile?.preferredName || "friend";
+        try {
+          const res = await invokeLLM({
+            messages: [
+              {
+                role: "system",
+                content: `You are a deeply perceptive growth coach. The user's name is ${name}. Based on their check-in data, craft ONE powerful follow-up question that goes deeper into what's really going on for them. The question should feel like it comes from someone who truly sees them — not a therapist, not a life coach script. A real human who notices things. Under 25 words. No emojis. Just the question.`,
+              },
+              {
+                role: "user",
+                content: `Mood: ${input.mood}/10, Energy: ${input.energy}/10, Stress: ${input.stress}/10\nReflection prompt: "${input.reflectionPrompt}"\nTheir answer: "${input.reflectionAnswer}"\n\nWhat's the one question that would unlock something real for them right now?`,
+              },
+            ],
+          });
+          const rawContent = res.choices[0]?.message?.content;
+          const question = typeof rawContent === "string" ? rawContent.trim().replace(/^"|"$/g, "") : "What's really underneath all of this for you?";
+          return { question };
+        } catch {
+          return { question: "What's really underneath all of this for you?" };
+        }
+      }),
+
     recent: protectedProcedure
       .input(z.object({ days: z.number().default(30) }))
       .query(async ({ ctx, input }) => {
@@ -235,6 +314,10 @@ export const appRouter = router({
           stress: z.number().min(1).max(10),
           gratitude: z.string().optional(),
           reflection: z.string().optional(),
+          reflectionPrompt: z.string().optional(),
+          reflectionAnswer: z.string().optional(),
+          followUpQuestion: z.string().optional(),
+          followUpAnswer: z.string().optional(),
           completedHabitIds: z.array(z.number()).optional(),
         })
       )
@@ -286,19 +369,25 @@ export const appRouter = router({
         // Generate AI response
         try {
           const systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id, ctx.user.seedIntent || undefined);
-          const userMessage = `Today's check-in:
-Mood: ${input.mood}/10
-Energy: ${input.energy}/10
-Stress: ${input.stress}/10
-${input.gratitude ? `Gratitude: ${input.gratitude}` : ""}
-${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
+          const userMessage = [
+            `Today's check-in:`,
+            `Mood: ${input.mood}/10`,
+            `Energy: ${input.energy}/10`,
+            `Stress: ${input.stress}/10`,
+            input.reflectionPrompt ? `Reflection prompt: "${input.reflectionPrompt}"` : "",
+            input.reflectionAnswer ? `Their answer: "${input.reflectionAnswer}"` : "",
+            input.followUpQuestion ? `Follow-up question: "${input.followUpQuestion}"` : "",
+            input.followUpAnswer ? `Follow-up answer: "${input.followUpAnswer}"` : "",
+            input.gratitude ? `Gratitude: ${input.gratitude}` : "",
+            input.reflection ? `Reflection: ${input.reflection}` : "",
+          ].filter(Boolean).join("\n");
 
           const aiRes = await invokeLLM({
             messages: [
               { role: "system", content: systemPrompt },
               {
                 role: "user",
-                content: `${userMessage}\n\nRespond to my check-in like you know me. Keep it real, keep it short (under 120 words). No formal greetings. Just speak directly to what's actually going on.`,
+                content: `${userMessage}\n\nRespond to my check-in like you know me. Keep it real, keep it short (under 120 words). No formal greetings. Just speak directly to what's actually going on. Reference what they actually said — not generic affirmations.`,
               },
             ],
           });
