@@ -35,6 +35,14 @@ export default function CheckIn() {
   const submitMutation = trpc.checkIn.submit.useMutation({
     onSuccess: (data) => {
       setAiResponse(data.aiResponse);
+      // Show streak spin notification if earned
+      if (data.streakSpinEarned) {
+        setTimeout(() => {
+          toast.success("🎡 3-day streak! You earned a free spin — check Rewards!", {
+            duration: 5000,
+          });
+        }, 1500);
+      }
       if (data.aiResponse) {
         // Store insight in session storage and navigate to insight page
         sessionStorage.setItem("checkInInsight", data.aiResponse);

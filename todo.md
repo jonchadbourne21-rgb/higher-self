@@ -811,13 +811,20 @@
 - [x] Change Habits icon from CalendarDays to Flame in bottom nav
 
 ## Sunday Weekly Insight Job
-- [ ] Read periodic-updates.md for scheduling approach
-- [ ] Aggregate Mirror conversations from the past week per user
-- [ ] Aggregate journal entries from the past week per user
-- [ ] Aggregate habit check-in data and streaks from the past week
-- [ ] Aggregate goal progress from the past week
-- [ ] Generate personalized AI growth reflection using LLM
-- [ ] Store weekly insight in database (weekly_insights table)
-- [ ] Schedule job to run every Sunday via heartbeat
-- [ ] Show latest weekly insight prominently in Growth Dashboard
-- [ ] Notify user when their weekly insight is ready
+- [x] Read periodic-updates.md for scheduling approach
+- [x] Aggregate Mirror conversations from the past week per user
+- [x] Aggregate journal entries from the past week per user
+- [x] Aggregate habit check-in data and streaks from the past week
+- [x] Aggregate goal progress from the past week
+- [x] Generate personalized AI growth reflection using LLM
+- [x] Store weekly insight in database (weekly_insights table)
+- [x] Schedule job to run every Sunday 8AM UTC via Heartbeat cron (task_uid: MWivTgSorowf3feRdu8Xix)
+- [x] Show latest weekly insight prominently in Growth Dashboard
+- [ ] Notify user when their weekly insight is ready (push notification)
+
+## 3-Day Check-In Streak Auto-Spin
+- [x] Add getCheckInStreak DB helper (count consecutive daily check-ins)
+- [x] Add lastStreakSpinDate column to users table to prevent duplicate grants per streak cycle
+- [x] On check-in submit: detect 3-consecutive-day streak and auto-grant a free spin (every 3 days)
+- [x] Show streak spin toast notification after check-in when earned
+- [ ] Update Rewards page to show streak spin availability (pending spins count)

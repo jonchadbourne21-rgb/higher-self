@@ -378,6 +378,78 @@ export async function getRecentCheckIns(userId: number, days = 30) {
     .orderBy(desc(dailyCheckIns.createdAt));
 }
 
+/**
+ * Count consecutive daily check-ins ending today.
+ * Returns the streak length (0 if no check-in today).
+ */
+export async function getCheckInStreak(userId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+
+  let streak = 0;
+  let checkDate = new Date();
+  checkDate.setHours(0, 0, 0, 0);
+
+  for (let dayOffset = 0; dayOffset < 365; dayOffset++) {
+    const start = new Date(checkDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(checkDate);
+    end.setHours(23, 59, 59, 999);
+
+    const rows = await db
+      .select({ id: dailyCheckIns.id })
+      .from(dailyCheckIns)
+      .where(
+        and(
+          eq(dailyCheckIns.userId, userId),
+          gte(dailyCheckIns.createdAt, start),
+          lte(dailyCheckIns.createdAt, end)
+        )
+      )
+      .limit(1);
+
+    if (rows.length > 0) {
+      streak++;
+      checkDate = new Date(checkDate.getTime() - 24 * 60 * 60 * 1000);
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
+
+/**
+ * Get the date of the last streak spin grant for a user (as YYYY-MM-DD string).
+ */
+export async function getLastStreakSpinDate(userId: number): Promise<string | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db
+    .select({ lastStreakSpinDate: users.lastStreakSpinDate })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  const val = rows[0]?.lastStreakSpinDate;
+  if (!val) return null;
+  // Drizzle date columns return Date objects
+  if (val instanceof Date) {
+    return val.toISOString().slice(0, 10);
+  }
+  return String(val).slice(0, 10);
+}
+
+/**
+ * Update the lastStreakSpinDate for a user to today.
+ */
+export async function setLastStreakSpinDate(userId: number, dateStr: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  // Drizzle date column accepts Date objects
+  const dateObj = new Date(dateStr + "T00:00:00Z");
+  await db.update(users).set({ lastStreakSpinDate: dateObj }).where(eq(users.id, userId));
+}
+
 // ─── Journal Entries ──────────────────────────────────────────────────────────
 
 export async function getJournalEntries(

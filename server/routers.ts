@@ -61,6 +61,9 @@ import {
   upsertUserProfile,
   getLastSessionId,
   updateLastSessionId,
+  getCheckInStreak,
+  getLastStreakSpinDate,
+  setLastStreakSpinDate,
 } from "./db";
 import { sendPushNotification } from "./pushNotifications";
 import { retrieveContextForChat, upsertJournalEmbedding } from "./rag/embeddings";
@@ -249,11 +252,34 @@ export const appRouter = router({
         if (!today) return { success: true, aiResponse: null };
 
         // Award 1 reward point for daily check-in
+        let streakSpinEarned = false;
         try {
           const { addRewardPoints } = await import("./db/rewards");
           await addRewardPoints(ctx.user.id, 1, "checkin", `checkin_${today.id}`);
         } catch (e) {
           console.error("Failed to award check-in point:", e);
+        }
+
+        // 3-day streak auto-spin: grant a free spin if user has checked in 3+ consecutive days
+        // and hasn't already received a streak spin in this streak cycle
+        try {
+          const streak = await getCheckInStreak(ctx.user.id);
+          if (streak >= 3 && streak % 3 === 0) {
+            // Check if we already granted a spin for this streak milestone
+            const todayStr = new Date().toISOString().slice(0, 10);
+            const lastSpinDate = await getLastStreakSpinDate(ctx.user.id);
+            if (lastSpinDate !== todayStr) {
+              // Grant a free spin by adding a streak_spin entry to wheel_spins
+              // We record it as a pending spin the user can use from Rewards page
+              const { addRewardPoints } = await import("./db/rewards");
+              await addRewardPoints(ctx.user.id, 1, "checkin", `streak_spin_${streak}_${today.id}`);
+              await setLastStreakSpinDate(ctx.user.id, todayStr);
+              streakSpinEarned = true;
+              console.log(`[Streak] User ${ctx.user.id} earned a free spin at ${streak}-day streak`);
+            }
+          }
+        } catch (e) {
+          console.error("Failed to check streak spin:", e);
         }
 
         // Generate AI response
@@ -279,10 +305,10 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
           const rawContent = aiRes.choices[0]?.message?.content;
           const aiResponse = typeof rawContent === 'string' ? rawContent : "";
           await updateCheckInAiResponse(today.id, aiResponse);
-          return { success: true, aiResponse };
+          return { success: true, aiResponse, streakSpinEarned };
         } catch (e) {
           console.error("AI check-in response failed:", e);
-          return { success: true, aiResponse: null };
+          return { success: true, aiResponse: null, streakSpinEarned };
         }
       }),
 

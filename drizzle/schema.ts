@@ -27,6 +27,8 @@ export const users = mysqlTable("users", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
   welcomeSpinUsed: boolean("welcomeSpinUsed").default(false).notNull(),
+  // Date of last 3-day streak spin grant (to prevent duplicates per streak cycle)
+  lastStreakSpinDate: date("lastStreakSpinDate"),
 });
 
 export type User = typeof users.$inferSelect;
