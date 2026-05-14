@@ -689,6 +689,17 @@
 - [ ] Update VITE_APP_TITLE to Mentrove (requires Management UI > Settings > General)
 - [ ] Update VITE_APP_LOGO to new logo URL (requires Management UI > Settings > General)
 
+## Mentrove Landing Page Redesign (May 14) - COMPLETE
+- [x] Rewrite Landing.tsx with dark midnight radial gradient background
+- [x] Add sacred geometry mandala with pulsing glow rings
+- [x] Add MENTROVE wordmark in serif font with purple glow shadow
+- [x] Add description tagline below decorative divider
+- [x] Add 'Start My Journey →' teal gradient CTA button
+- [x] Add 'Safety & FAQ' themed link at bottom
+- [x] Loading state uses mandala pulse animation on dark background
+- [x] All 320 tests still passing
+- [x] TypeScript: 0 errors
+
 ## Mentrove Onboarding Splash Screen (May 14) - COMPLETE
 - [x] Replace Step 0 welcome card in Onboarding.tsx with full-screen dark midnight splash
 - [x] Add sacred geometry mandala image to onboarding Step 0 (with pulsing glow rings)

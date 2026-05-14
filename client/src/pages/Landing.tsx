@@ -5,15 +5,6 @@ import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.14, duration: 0.55 },
-  }),
-};
-
 export default function Landing() {
   const { isAuthenticated, loading, user } = useAuth();
   const [, navigate] = useLocation();
@@ -42,115 +33,129 @@ export default function Landing() {
 
   if (loading) {
     return (
-      <div className="h-dvh bg-aurora flex items-center justify-center">
-        <motion.div
-          animate={{ opacity: [0.3, 1, 0.3], scale: [0.95, 1.05, 0.95] }}
-          transition={{ repeat: Infinity, duration: 2.2 }}
-          className="text-primary text-4xl font-serif"
-        >
-          ✦
-        </motion.div>
+      <div
+        className="h-dvh flex items-center justify-center"
+        style={{ background: "oklch(0.05 0.02 260)" }}
+      >
+        <motion.img
+          src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
+          alt="Mentrove"
+          className="w-20 h-20 rounded-full object-cover"
+          animate={{ opacity: [0.4, 1, 0.4], scale: [0.92, 1.08, 0.92] }}
+          transition={{ repeat: Infinity, duration: 2.4 }}
+          style={{ filter: "drop-shadow(0 0 24px oklch(0.55 0.18 295 / 0.6))" }}
+        />
       </div>
     );
   }
 
   return (
     <div
-      className="h-dvh flex flex-col items-center justify-between px-6 py-12 max-w-[480px] mx-auto w-full"
+      className="h-dvh flex flex-col items-center justify-between max-w-[480px] mx-auto w-full px-8 py-12 overflow-hidden"
       style={{
         background:
-          "radial-gradient(ellipse at 20% 0%, oklch(0.46 0.14 185 / 0.07) 0%, transparent 50%), " +
-          "radial-gradient(ellipse at 80% 15%, oklch(0.62 0.14 155 / 0.07) 0%, transparent 50%), " +
-          "oklch(0.98 0.008 80)",
+          "radial-gradient(ellipse at 50% 35%, oklch(0.22 0.12 295 / 0.9) 0%, oklch(0.08 0.04 270) 60%, oklch(0.05 0.02 260) 100%)",
       }}
     >
-      {/* ── Top logo mark ─────────────────────────────────────────────────── */}
+      {/* ── Top spacer ────────────────────────────────────────────────────── */}
+      <div />
+
+      {/* ── Brand lockup (mandala + wordmark + tagline) ───────────────────── */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.75 }}
+        initial={{ opacity: 0, scale: 0.85 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.9, ease: "easeOut" }}
-        className="flex flex-col items-center gap-3"
+        transition={{ duration: 1.1, ease: "easeOut" }}
+        className="flex flex-col items-center gap-6 text-center"
       >
+        {/* Mandala with pulsing rings */}
         <div className="relative">
           <motion.img
             src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
             alt="Mentrove"
-            className="w-20 h-20 rounded-full object-cover"
-            style={{ boxShadow: "0 0 32px oklch(0.46 0.14 295 / 0.35)" }}
+            className="w-44 h-44 object-cover rounded-full"
+            style={{ filter: "drop-shadow(0 0 40px oklch(0.55 0.18 295 / 0.7))" }}
           />
           <motion.div
-            animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.1, 0.4] }}
-            transition={{ repeat: Infinity, duration: 3 }}
-            className="absolute -inset-3 rounded-full"
-            style={{ border: "1px solid oklch(0.46 0.14 295 / 0.3)" }}
+            animate={{ scale: [1, 1.12, 1], opacity: [0.3, 0.08, 0.3] }}
+            transition={{ repeat: Infinity, duration: 3.5 }}
+            className="absolute -inset-5 rounded-full"
+            style={{ border: "1px solid oklch(0.55 0.18 295 / 0.25)" }}
+          />
+          <motion.div
+            animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.04, 0.15] }}
+            transition={{ repeat: Infinity, duration: 3.5, delay: 0.5 }}
+            className="absolute -inset-10 rounded-full"
+            style={{ border: "1px solid oklch(0.55 0.18 295 / 0.12)" }}
           />
         </div>
-        <p className="text-xs tracking-[0.35em] text-violet-500 uppercase font-medium">Mentrove</p>
-      </motion.div>
 
-      {/* ── Main content ──────────────────────────────────────────────────── */}
-      <div className="flex flex-col items-center text-center gap-8 max-w-sm">
-        <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible" className="space-y-4">
-          <h1 className="text-5xl font-serif font-light leading-tight text-foreground">
-            Become who you
-            <br />
-            <span className="text-violet-gradient italic">were meant to be</span>
-          </h1>
-          <p className="text-base font-light text-muted-foreground leading-relaxed">
-            Your AI mirror guides you toward inner peace, emotional maturity, and authentic living.
-          </p>
-        </motion.div>
-
-        <motion.div
-          custom={1}
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="flex flex-col gap-3 w-full"
-        >
-          <a
-            href={getLoginUrl()}
-            className="w-full py-4 rounded-2xl font-semibold text-base tracking-wide text-center text-white transition-all duration-200 active:scale-95"
+        {/* Wordmark */}
+        <div className="space-y-2">
+          <h1
+            className="text-5xl tracking-[0.25em] font-light"
             style={{
-              background: "linear-gradient(135deg, oklch(0.46 0.14 185), oklch(0.52 0.14 200))",
-              boxShadow: "0 6px 28px oklch(0.46 0.14 185 / 0.30)",
+              color: "oklch(0.96 0.02 80)",
+              fontFamily: "'Georgia', 'Times New Roman', serif",
+              textShadow: "0 0 30px oklch(0.55 0.18 295 / 0.4)",
             }}
           >
-            Begin Your Journey
-          </a>
-          <p className="text-xs text-muted-foreground">Free to start · Your data stays private</p>
-        </motion.div>
-      </div>
-
-      {/* ── Feature chips ─────────────────────────────────────────────────── */}
-      <motion.div
-        custom={2}
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        className="flex flex-col gap-4 w-full"
-      >
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { emoji: "🪞", label: "AI Mirror", bg: "bg-violet-50", border: "border-violet-100" },
-            { emoji: "🌱", label: "Daily Growth", bg: "bg-emerald-50", border: "border-emerald-100" },
-            { emoji: "✨", label: "Inner Peace", bg: "bg-amber-50", border: "border-amber-100" },
-          ].map((f) => (
-            <div
-              key={f.label}
-              className={`${f.bg} border ${f.border} rounded-2xl p-3 flex flex-col items-center gap-2`}
-            >
-              <span className="text-2xl">{f.emoji}</span>
-              <span className="text-xs text-foreground font-semibold">{f.label}</span>
-            </div>
-          ))}
+            MENTROVE
+          </h1>
+          <div
+            className="h-px w-48 mx-auto"
+            style={{
+              background:
+                "linear-gradient(90deg, transparent, oklch(0.55 0.18 295 / 0.5), transparent)",
+            }}
+          />
+          <p
+            className="text-base font-light leading-relaxed max-w-xs mx-auto"
+            style={{ color: "oklch(0.72 0.06 295)", letterSpacing: "0.05em" }}
+          >
+            Your AI mirror guides you toward inner peace, emotional maturity, and authentic living.
+          </p>
         </div>
+      </motion.div>
+
+      {/* ── Bottom: CTA + FAQ ─────────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.5 }}
+        className="w-full space-y-4"
+      >
+        {/* CTA button */}
         <a
-          href="/faq"
-          className="text-xs text-violet-600 hover:text-violet-700 text-center transition-colors mt-2"
+          href={getLoginUrl()}
+          className="block w-full py-4 rounded-2xl text-base font-semibold tracking-wide text-center transition-all duration-200 active:scale-95"
+          style={{
+            background: "linear-gradient(135deg, oklch(0.55 0.18 185), oklch(0.62 0.16 170))",
+            color: "oklch(0.98 0.01 185)",
+            boxShadow: "0 0 32px oklch(0.55 0.18 185 / 0.4)",
+            border: "none",
+          }}
         >
-          Questions? Read our FAQ →
+          Start My Journey →
         </a>
+
+        {/* Subtext */}
+        <p
+          className="text-center text-xs"
+          style={{ color: "oklch(0.5 0.06 295)" }}
+        >
+          Free to start · Your data stays private
+        </p>
+
+        {/* FAQ link */}
+        <div className="text-center pt-1">
+          <a
+            href="/faq"
+            className="text-xs tracking-widest uppercase transition-opacity hover:opacity-80"
+            style={{ color: "oklch(0.55 0.1 295)", letterSpacing: "0.15em" }}
+          >
+            Safety & FAQ
+          </a>
+        </div>
       </motion.div>
     </div>
   );
