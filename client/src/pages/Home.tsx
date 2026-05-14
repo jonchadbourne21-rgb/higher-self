@@ -233,7 +233,20 @@ export default function Home() {
                 {greeting},
               </motion.span>
               <br />
-              <AnimatedName name={name} />
+              <span className="inline-flex items-center gap-2 flex-wrap">
+                <AnimatedName name={name} />
+                {isPro && (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.6, duration: 0.3 }}
+                    className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full align-middle"
+                    style={{ background: "oklch(0.30 0.10 55)", color: "oklch(0.85 0.18 55)", verticalAlign: "middle" }}
+                  >
+                    👑 Pro
+                  </motion.span>
+                )}
+              </span>
             </h1>
           </motion.div>
 
