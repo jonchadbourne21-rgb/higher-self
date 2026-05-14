@@ -938,3 +938,10 @@
 - [x] Convert Calendar and Rewards into matching h-20 Journey Access tiles (3x2 grid: Mirror|Journal / Life Domains|Programs / Rewards|Calendar)
 - [x] Check-in card: when done, shows M/E/S scores + "Done" badge + first line of AI reflection preview, taps through to /checkin for full reflection
 - [x] Check-in card: when not done, shows teal gradient CTA as before
+
+## 4 Home + Onboarding Improvements
+- [x] Pre-fill preferred name in FullOnboarding from profile.get query (profile.preferredName → user.name fallback)
+- [x] Mirror greeting personalization: preferredName captured in QuickOnboarding Step 1, used in Mirror system prompt from first session
+- [x] Tile accent colors: Mirror=teal, Journal=amber, Life Domains=violet, Programs=gold, Calendar=slate (all OKLCH)
+- [x] Aura score: computed client-side as mood×0.4 + energy×0.3 + (11-stress)×0.3 (no DB column needed)
+- [x] Home check-in card: shows "Aura 8/10 · 💫 Vibrant" with color-coded label (Radiant/Vibrant/Balanced/Heavy/Low)

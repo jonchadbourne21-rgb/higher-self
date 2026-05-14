@@ -30,10 +30,20 @@ export default function FullOnboarding() {
   const [longTermVision, setLongTermVision] = useState("");
   const [personalityNotes, setPersonalityNotes] = useState("");
   const [beliefs, setBeliefs] = useState("");
-  const [preferredName, setPreferredName] = useState(user?.name || "");
+  const [preferredName, setPreferredName] = useState("");
 
   const utils = trpc.useUtils();
   const saveOnboardingMutation = trpc.onboarding.saveFullOnboarding.useMutation();
+
+  // Pre-fill preferred name from profile (set in QuickOnboarding Step 1)
+  const { data: profile } = trpc.profile.get.useQuery(undefined, { enabled: isAuthenticated });
+  useEffect(() => {
+    if (profile?.preferredName) {
+      setPreferredName(profile.preferredName);
+    } else if (user?.name) {
+      setPreferredName(user.name.split(" ")[0]);
+    }
+  }, [profile?.preferredName, user?.name]);
 
   // Redirect logic
   useEffect(() => {

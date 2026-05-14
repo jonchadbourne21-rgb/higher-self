@@ -98,6 +98,61 @@ export default function Home() {
       ? upcomingEvents[0].title
       : "No upcoming events";
 
+  // Aura score — weighted average of mood (40%), energy (30%), stress inverted (30%)
+  const auraScore = todayCheckIn
+    ? Math.round(
+        (todayCheckIn.mood * 0.4 +
+          todayCheckIn.energy * 0.3 +
+          (11 - todayCheckIn.stress) * 0.3)
+      )
+    : null;
+  const auraLabel =
+    auraScore === null
+      ? null
+      : auraScore >= 9
+      ? "✨ Radiant"
+      : auraScore >= 7
+      ? "💫 Vibrant"
+      : auraScore >= 5
+      ? "🌤 Balanced"
+      : auraScore >= 3
+      ? "🌧 Heavy"
+      : "🌑 Low";
+  const auraColor =
+    auraScore === null
+      ? "oklch(0.70 0.02 280)"
+      : auraScore >= 9
+      ? "oklch(0.82 0.18 55)"
+      : auraScore >= 7
+      ? "oklch(0.78 0.16 185)"
+      : auraScore >= 5
+      ? "oklch(0.72 0.12 240)"
+      : auraScore >= 3
+      ? "oklch(0.65 0.10 280)"
+      : "oklch(0.55 0.08 300)";
+
+  // Tile accent styles
+  const TILE_MIRROR = {
+    background: "oklch(0.17 0.05 185)",
+    border: "1px solid oklch(0.35 0.10 185 / 0.5)",
+  };
+  const TILE_JOURNAL = {
+    background: "oklch(0.17 0.05 60)",
+    border: "1px solid oklch(0.40 0.12 60 / 0.5)",
+  };
+  const TILE_DOMAINS = {
+    background: "oklch(0.17 0.05 290)",
+    border: "1px solid oklch(0.40 0.12 290 / 0.5)",
+  };
+  const TILE_PROGRAMS = {
+    background: "oklch(0.17 0.05 45)",
+    border: "1px solid oklch(0.45 0.14 45 / 0.5)",
+  };
+  const TILE_CALENDAR = {
+    background: "oklch(0.17 0.04 220)",
+    border: "1px solid oklch(0.35 0.08 220 / 0.5)",
+  };
+
   return (
     <>
       <AppShell>
@@ -176,21 +231,14 @@ export default function Home() {
                   }}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <p className="text-xs font-semibold text-primary">Today's Check-in</p>
-                      <div className="flex items-center gap-2">
-                        {[
-                          { label: "M", value: todayCheckIn.mood },
-                          { label: "E", value: todayCheckIn.energy },
-                          { label: "S", value: todayCheckIn.stress },
-                        ].map(({ label, value }) => (
-                          <span key={label} className="text-xs text-muted-foreground">
-                            <span className="font-semibold text-foreground">{value}</span>
-                            <span className="ml-0.5">{label}</span>
+                  <div className="flex items-center gap-3">
+                        <p className="text-xs font-semibold text-primary">Today's Check-in</p>
+                        {auraScore !== null && (
+                          <span className="text-xs font-semibold" style={{ color: auraColor }}>
+                            Aura {auraScore}/10 · {auraLabel}
                           </span>
-                        ))}
+                        )}
                       </div>
-                    </div>
                     <div className="flex items-center gap-1.5">
                       <span
                         className="text-xs px-2 py-0.5 rounded-full font-medium"
@@ -248,9 +296,9 @@ export default function Home() {
                 <motion.div
                   whileTap={{ scale: 0.96 }}
                   className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
-                  style={TILE_STYLE}
+                  style={TILE_MIRROR}
                 >
-                  <span className="text-xl">🪞</span>
+                  <span className="text-xl">🧐</span>
                   <p className="text-xs font-semibold text-foreground">Talk to Mirror</p>
                 </motion.div>
               </Link>
@@ -259,7 +307,7 @@ export default function Home() {
                 <motion.div
                   whileTap={{ scale: 0.96 }}
                   className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
-                  style={TILE_STYLE}
+                  style={TILE_JOURNAL}
                 >
                   <span className="text-xl">📝</span>
                   <p className="text-xs font-semibold text-foreground">Journal</p>
@@ -271,7 +319,7 @@ export default function Home() {
                 <motion.div
                   whileTap={{ scale: 0.96 }}
                   className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
-                  style={TILE_STYLE}
+                  style={TILE_DOMAINS}
                 >
                   <div className="flex items-start justify-between">
                     <span className="text-xl">🧭</span>
@@ -292,7 +340,7 @@ export default function Home() {
                 <motion.div
                   whileTap={{ scale: 0.96 }}
                   className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
-                  style={TILE_STYLE}
+                  style={TILE_PROGRAMS}
                 >
                   <span className="text-xl">🎓</span>
                   <p className="text-xs font-semibold text-foreground">Programs</p>
@@ -321,7 +369,7 @@ export default function Home() {
                 <motion.div
                   whileTap={{ scale: 0.96 }}
                   className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
-                  style={TILE_STYLE}
+                  style={TILE_CALENDAR}
                 >
                   <span className="text-xl">📅</span>
                   <div>
