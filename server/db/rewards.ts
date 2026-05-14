@@ -242,6 +242,45 @@ export async function hasReceivedStreakReward(
 }
 
 /**
+ * Get the current consecutive dare streak (how many of the most recent spins were dares)
+ */
+export async function getDareStreak(userId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+
+  const recentSpins = await db
+    .select({ result: wheelSpins.result })
+    .from(wheelSpins)
+    .where(eq(wheelSpins.userId, userId))
+    .orderBy(desc(wheelSpins.spinnedAt))
+    .limit(10);
+
+  let streak = 0;
+  for (const spin of recentSpins) {
+    if (spin.result === "dare") {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+/**
+ * Check if the user just hit a 3-dare streak and award 10 bonus points if so.
+ * Returns true if bonus was awarded.
+ */
+export async function checkAndAwardDareStreakBonus(userId: number): Promise<boolean> {
+  const streak = await getDareStreak(userId);
+  // Award bonus on every 3rd consecutive dare (3, 6, 9, ...)
+  if (streak > 0 && streak % 3 === 0) {
+    await addRewardPoints(userId, 10, "spin", `dare_streak_bonus_${streak}_${Date.now()}`);
+    return true;
+  }
+  return false;
+}
+
+/**
  * Count pending (unused) free spins for a user.
  * Sources: streak_spin_ (3-day streaks) and purchase_spin_ (subscription bonus).
  * Each actual wheel spin is recorded in wheelSpins.

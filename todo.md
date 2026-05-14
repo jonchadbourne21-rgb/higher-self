@@ -1013,6 +1013,12 @@
 - [x] Add meta name="author" and meta name="robots" content="index, follow"
 
 ## 21-Day Inner Voice Reset Program
-- [ ] Write all 21 lesson scripts (journaling prompt, Mirror starter, micro-habit)
-- [ ] Add program to database via seed script
-- [ ] Verify program appears correctly in Programs page
+- [x] Write all 21 lesson scripts (journaling prompt, Mirror starter, micro-habit)
+- [x] Add program to database via seed script
+- [x] Verify program appears correctly in Programs page
+
+## Dare Streak Badge, Pro Button Swap, Spin History Tab
+- [x] Dare streak badge: track consecutive dare spins, show badge with 3-dot progress indicator in Rewards Spin tab
+- [x] Dare streak bonus: award +10 points after every 3 consecutive dare results; show toast notification
+- [x] Pro button swap: "Upgrade" button on Home header becomes "👑 Pro ✓" (gold) when user has active Pro access; links to /rewards
+- [x] Spin History tab: 4th tab in Rewards page showing last 10 spins with emoji icons, prize labels, dates, and color-coded result chips

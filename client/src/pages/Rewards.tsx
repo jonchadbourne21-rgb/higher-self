@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Gift, Star, Zap, Trophy, ChevronRight, Sparkles, RotateCcw, Crown } from "lucide-react";
+import { Gift, Star, Zap, Trophy, ChevronRight, Sparkles, RotateCcw, Crown, History } from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
@@ -430,7 +430,7 @@ export default function Rewards() {
     isWelcome: false,
     grantActivated: false,
   });
-  const [activeTab, setActiveTab] = useState<"spin" | "points" | "redeem">("spin");
+  const [activeTab, setActiveTab] = useState<"spin" | "points" | "redeem" | "history">("spin");
 
   const { data: dashboard, refetch } = trpc.rewards.dashboard.useQuery(undefined, { enabled: isAuthenticated });
   const spinMutation = trpc.rewards.spin.useMutation();
@@ -456,6 +456,10 @@ export default function Rewards() {
       // Wait for animation
       setTimeout(() => {
         setSpinning(false);
+        // Show dare streak bonus toast if awarded
+        if (result.dareStreakBonusAwarded) {
+          toast.success("🎯 Dare Streak! +10 bonus points awarded!", { duration: 4000 });
+        }
         setPrizeModal({
           open: true,
           label: result.prizeLabel,
@@ -504,6 +508,7 @@ export default function Rewards() {
     { id: "spin" as const, label: "Spin", icon: Sparkles },
     { id: "points" as const, label: "Points", icon: Star },
     { id: "redeem" as const, label: "Redeem", icon: Gift },
+    { id: "history" as const, label: "History", icon: History },
   ];
 
   return (
@@ -649,25 +654,44 @@ export default function Rewards() {
               </div>
             )}
 
-            {/* Recent spins */}
-            {dashboard?.spinHistory && dashboard.spinHistory.length > 0 && (
-              <div className="space-y-3">
-                <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Recent Spins</p>
-                <div className="space-y-2">
-                  {dashboard.spinHistory.slice(0, 5).map((spin) => (
+            {/* Dare streak badge */}
+            {(dashboard?.dareStreak ?? 0) > 0 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="rounded-2xl p-3 flex items-center gap-3"
+                style={{
+                  background: "linear-gradient(135deg, oklch(0.28 0.10 45 / 0.3), oklch(0.22 0.06 280 / 0.3))",
+                  border: "1px solid oklch(0.60 0.18 50 / 0.4)",
+                }}
+              >
+                <span className="text-2xl">🎯</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold" style={{ color: "oklch(0.80 0.16 55)" }}>
+                    Dare Streak: {dashboard?.dareStreak}x
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {(dashboard?.dareStreak ?? 0) % 3 === 0
+                      ? "🏆 Bonus unlocked! +10 pts awarded"
+                      : `${3 - ((dashboard?.dareStreak ?? 0) % 3)} more dare${3 - ((dashboard?.dareStreak ?? 0) % 3) === 1 ? "" : "s"} for +10 bonus pts`}
+                  </p>
+                </div>
+                <div
+                  className="flex gap-0.5"
+                >
+                  {[1, 2, 3].map((i) => (
                     <div
-                      key={spin.id}
-                      className="flex items-center justify-between rounded-xl p-3"
-                      style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.24 0.04 280)" }}
-                    >
-                      <span className="text-sm text-foreground">{spin.prizeValue || spin.result}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(spin.spinnedAt).toLocaleDateString()}
-                      </span>
-                    </div>
+                      key={i}
+                      className="w-2 h-2 rounded-full"
+                      style={{
+                        background: i <= ((dashboard?.dareStreak ?? 0) % 3 === 0 ? 3 : (dashboard?.dareStreak ?? 0) % 3)
+                          ? "oklch(0.75 0.18 55)"
+                          : "oklch(0.30 0.04 280)",
+                      }}
+                    />
                   ))}
                 </div>
-              </div>
+              </motion.div>
             )}
           </motion.div>
         )}
@@ -892,6 +916,76 @@ export default function Rewards() {
                   );
                 })}
               </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── History tab ────────────────────────────────────────────── */}
+        {activeTab === "history" && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-5"
+          >
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Last 10 Spins</p>
+              {dashboard?.spinHistory && dashboard.spinHistory.length > 0 ? (
+                <div className="space-y-2">
+                  {dashboard.spinHistory.map((spin, idx) => {
+                    const resultIcon =
+                      spin.result === "month_pro" ? "👑" :
+                      spin.result === "dare" ? "🎯" :
+                      spin.result === "try_again" ? "🔄" :
+                      spin.result === "week_trial" ? "⭐" :
+                      spin.result === "reward_points" ? "✨" : "🎰";
+                    const resultColor =
+                      spin.result === "month_pro" ? "oklch(0.55 0.18 290)" :
+                      spin.result === "dare" ? "oklch(0.75 0.16 55)" :
+                      spin.result === "try_again" ? "oklch(0.50 0.03 270)" :
+                      spin.result === "week_trial" ? "oklch(0.65 0.16 185)" :
+                      "oklch(0.65 0.16 145)";
+                    return (
+                      <motion.div
+                        key={spin.id}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.04 }}
+                        className="flex items-center gap-3 rounded-xl p-3"
+                        style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.24 0.04 280)" }}
+                      >
+                        <span className="text-xl w-8 text-center">{resultIcon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {spin.prizeValue || spin.result}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(spin.spinnedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                          </p>
+                        </div>
+                        <span
+                          className="text-xs font-semibold px-2 py-1 rounded-full"
+                          style={{ background: "oklch(0.22 0.06 280)", color: resultColor }}
+                        >
+                          {spin.result === "month_pro" ? "1 Mo Pro" :
+                           spin.result === "dare" ? "Dare" :
+                           spin.result === "try_again" ? "No prize" :
+                           spin.result === "week_trial" ? "1 Wk Pro" :
+                           "+5 pts"}
+                        </span>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div
+                  className="rounded-2xl p-8 text-center"
+                  style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.24 0.04 280)" }}
+                >
+                  <p className="text-3xl mb-3">🎰</p>
+                  <p className="text-sm font-medium text-foreground mb-1">No spins yet</p>
+                  <p className="text-xs text-muted-foreground">Spin the wheel to start your history!</p>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

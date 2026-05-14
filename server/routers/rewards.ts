@@ -13,6 +13,8 @@ import {
   redeemPoints,
   getStreakRewards,
   getPendingStreakSpins,
+  getDareStreak,
+  checkAndAwardDareStreakBonus,
 } from "../db/rewards";
 import {
   createRewardGrant,
@@ -47,7 +49,7 @@ const SPIN_GRANT_MAP: Record<string, string> = {
 export const rewardsRouter = router({
   // Get full rewards dashboard data
   dashboard: protectedProcedure.query(async ({ ctx }) => {
-    const [totalPoints, history, spinHistory, lastSpin, welcomeSpinUsed, streakRewardsList, grantStatus, allGrants, pendingStreakSpins] =
+    const [totalPoints, history, spinHistory, lastSpin, welcomeSpinUsed, streakRewardsList, grantStatus, allGrants, pendingStreakSpins, dareStreak] =
       await Promise.all([
         getTotalRewardPoints(ctx.user.id),
         getRewardPointsHistory(ctx.user.id),
@@ -58,12 +60,13 @@ export const rewardsRouter = router({
         checkAndProcessExpiredGrants(ctx.user.id),
         getAllGrants(ctx.user.id),
         getPendingStreakSpins(ctx.user.id),
+        getDareStreak(ctx.user.id),
       ]);
 
     return {
       totalPoints,
       history: history.slice(0, 50),
-      spinHistory: spinHistory.slice(0, 20),
+      spinHistory: spinHistory.slice(0, 10),
       lastSpin,
       welcomeSpinUsed,
       redemptionTiers: REDEMPTION_TIERS,
@@ -76,6 +79,8 @@ export const rewardsRouter = router({
       allGrants: allGrants.slice(0, 50),
       // Streak spins
       pendingStreakSpins,
+      // Dare streak
+      dareStreak,
     };
   }),
 
@@ -136,7 +141,16 @@ export const rewardsRouter = router({
       // reward_points are already handled in recordWheelSpin
       // dare and try_again don't need grants
 
-      return { success: true, result, prizeLabel, error: null, grantActivated };
+      // Check for dare streak bonus (3 consecutive dares = +10 pts)
+      let dareStreakBonusAwarded = false;
+      if (result === "dare") {
+        dareStreakBonusAwarded = await checkAndAwardDareStreakBonus(ctx.user.id);
+      }
+
+      // Return current dare streak count for UI badge
+      const currentDareStreak = result === "dare" ? await getDareStreak(ctx.user.id) : 0;
+
+      return { success: true, result, prizeLabel, error: null, grantActivated, dareStreakBonusAwarded, dareStreak: currentDareStreak };
     }),
 
   // Redeem points for a reward — now creates a grant

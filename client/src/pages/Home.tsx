@@ -232,14 +232,28 @@ export default function Home() {
                 <span>{today}</span>
               </div>
               <div className="flex items-center gap-1">
-                <Link href="/pricing">
-                  <button
-                    className="px-3 py-1.5 rounded-full transition-colors text-xs font-semibold"
-                    style={{ background: "oklch(0.65 0.16 185 / 0.15)", color: "oklch(0.65 0.16 185)" }}
-                  >
-                    Upgrade
-                  </button>
-                </Link>
+                {isPro ? (
+                  <Link href="/rewards">
+                    <motion.button
+                      initial={{ scale: 0.85, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                      className="px-3 py-1.5 rounded-full transition-colors text-xs font-semibold flex items-center gap-1"
+                      style={{ background: "oklch(0.30 0.10 55 / 0.5)", color: "oklch(0.85 0.18 55)" }}
+                    >
+                      👑 Pro ✓
+                    </motion.button>
+                  </Link>
+                ) : (
+                  <Link href="/pricing">
+                    <button
+                      className="px-3 py-1.5 rounded-full transition-colors text-xs font-semibold"
+                      style={{ background: "oklch(0.65 0.16 185 / 0.15)", color: "oklch(0.65 0.16 185)" }}
+                    >
+                      Upgrade
+                    </button>
+                  </Link>
+                )}
                 <Link href="/notifications">
                   <button className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground">
                     <Bell className="w-4 h-4" />
