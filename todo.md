@@ -967,3 +967,10 @@
 - [x] "Mirror is reflecting…" typing indicator text above thinking dots
 - [x] Message timestamps on each bubble (e.g. "2 min ago")
 - [x] Replace 5% annual wheel prize with a fun positive dare
+
+## FAQ Page & Support Email
+- [x] Create FAQ page with About Mentrove / What It Is / What It's NOT / Crisis Resources at top
+- [x] Add existing FAQ content below the About section
+- [x] Add support email section on FAQ page
+- [x] Add FAQ link below tiles on Home.tsx
+- [x] Register /faq route in App.tsx

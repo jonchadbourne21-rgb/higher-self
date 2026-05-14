@@ -109,7 +109,7 @@ export default function FAQ() {
               textShadow: "0 0 20px oklch(0.55 0.18 295 / 0.3)",
             }}
           >
-            Safety & FAQ
+            About Mentrove
           </h2>
           <div
             className="h-px w-32 mx-auto mb-3"
@@ -287,6 +287,33 @@ export default function FAQ() {
             </motion.div>
           ))}
         </div>
+
+        {/* Support Email */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="rounded-2xl p-5 mb-8 text-center space-y-2"
+          style={{
+            background: "oklch(0.12 0.05 295 / 0.5)",
+            border: "1px solid oklch(0.3 0.08 295 / 0.3)",
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: "oklch(0.65 0.14 185)" }}>
+            Contact Support
+          </p>
+          <p className="text-sm" style={{ color: "oklch(0.72 0.06 295)" }}>
+            Have a question or need help? We're here.
+          </p>
+          <a
+            href="mailto:support@mentrove.com"
+            className="inline-block text-sm font-medium underline underline-offset-2 transition-opacity hover:opacity-70"
+            style={{ color: "oklch(0.75 0.16 185)" }}
+          >
+            support@mentrove.com
+          </a>
+        </motion.div>
 
         {/* Back link */}
         <motion.div
