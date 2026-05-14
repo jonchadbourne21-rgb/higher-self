@@ -1,0 +1,1 @@
+ALTER TABLE `reward_points_history` MODIFY COLUMN `source` enum('habit','journal','chat','checkin','spin','redemption') NOT NULL;

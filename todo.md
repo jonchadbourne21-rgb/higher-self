@@ -745,3 +745,12 @@
 - [x] Make yearly upgrade button same teal green as monthly button
 - [x] Fix FAQ section cards to use dark backgrounds with readable text
 - [x] Fix milestone/streak reward cards to use dark backgrounds
+
+## Rewards System Enhancement
+- [x] Free welcome spin for new users (first-time spin after onboarding)
+- [x] Post-spin message: "Check in 3 days in a row for another free spin!"
+- [x] Points system: 1 point per daily check-in
+- [x] Dedicated Rewards page showing points balance, spin history, and redemption options
+- [x] Points can unlock Pro access or perks (redemption tiers)
+- [x] Add Rewards to app navigation
+- [x] Track welcome_spin_used flag in database

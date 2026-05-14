@@ -26,6 +26,7 @@ export const users = mysqlTable("users", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  welcomeSpinUsed: boolean("welcomeSpinUsed").default(false).notNull(),
 });
 
 export type User = typeof users.$inferSelect;
@@ -566,7 +567,7 @@ export const rewardPointsHistory = mysqlTable("reward_points_history", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
   points: int("points").notNull(),
-  source: mysqlEnum("source", ["habit", "journal", "chat", "checkin"]).notNull(),
+  source: mysqlEnum("source", ["habit", "journal", "chat", "checkin", "spin", "redemption"]).notNull(),
   sourceId: varchar("sourceId", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

@@ -2,7 +2,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { rewardPointsHistory, wheelSpins, streakRewards } from "../../drizzle/schema";
 import { getDb } from "../db";
 
-type RewardSource = "habit" | "journal" | "chat" | "checkin";
+type RewardSource = "habit" | "journal" | "chat" | "checkin" | "spin" | "redemption";
 type WheelResult = "month_pro" | "five_percent_off" | "try_again" | "week_trial" | "reward_points";
 
 /**
@@ -98,8 +98,60 @@ export async function recordWheelSpin(
 
   // If result is reward points, add 5 points
   if (result === "reward_points") {
-    await addRewardPoints(userId, 5, "chat", `wheel_spin_${Date.now()}`);
+    await addRewardPoints(userId, 5, "spin", `wheel_spin_${Date.now()}`);
   }
+}
+
+/**
+ * Mark the user's welcome spin as used
+ */
+export async function markWelcomeSpinUsed(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database connection failed");
+
+  const { users } = await import("../../drizzle/schema");
+  await db.update(users).set({ welcomeSpinUsed: true }).where(eq(users.id, userId));
+}
+
+/**
+ * Check if user has used their welcome spin
+ */
+export async function hasUsedWelcomeSpin(userId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) throw new Error("Database connection failed");
+
+  const { users } = await import("../../drizzle/schema");
+  const result = await db.select({ welcomeSpinUsed: users.welcomeSpinUsed })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  return result[0]?.welcomeSpinUsed ?? false;
+}
+
+/**
+ * Redeem reward points (deduct points)
+ */
+export async function redeemPoints(
+  userId: number,
+  points: number,
+  description: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database connection failed");
+
+  // Verify user has enough points
+  const total = await getTotalRewardPoints(userId);
+  if (total < points) throw new Error("Insufficient points");
+
+  await db.insert(rewardPointsHistory).values({
+    userId,
+    points: -points,
+    source: "redemption",
+    sourceId: description,
+  });
+
+  return { success: true, remainingPoints: total - points };
 }
 
 /**

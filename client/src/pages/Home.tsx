@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Sparkles, ChevronRight, Sun, Moon, Star, Bell } from "lucide-react";
+import { Sparkles, ChevronRight, Sun, Moon, Star, Bell, Gift } from "lucide-react";
 import { format } from "date-fns";
 
 // Staggered word-by-word animation for the greeting name
@@ -37,6 +37,8 @@ export default function Home() {
   const { data: weeklyDigest } = trpc.home.getLatestDigest.useQuery(undefined, { enabled: isAuthenticated });
   const { data: upcomingEvents } = trpc.calendar.upcoming.useQuery(undefined, { enabled: isAuthenticated });
   const { data: habitStreak } = trpc.habits.currentStreak.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: rewardPoints } = trpc.rewards.points.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: welcomeSpin } = trpc.rewards.welcomeSpinAvailable.useQuery(undefined, { enabled: isAuthenticated });
 
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate("/");
@@ -277,6 +279,53 @@ export default function Home() {
               </motion.div>
             </Link>
           </div>
+        </motion.div>
+
+        {/* ── Rewards card ────────────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.20 }}
+        >
+          <Link href="/rewards">
+            <motion.div
+              whileTap={{ scale: 0.98 }}
+              className="rounded-2xl p-5 cursor-pointer"
+              style={{
+                background: welcomeSpin?.available
+                  ? "linear-gradient(135deg, oklch(0.55 0.18 290 / 0.2), oklch(0.65 0.16 185 / 0.2))"
+                  : "oklch(0.17 0.04 280)",
+                border: welcomeSpin?.available
+                  ? "1px solid oklch(0.65 0.16 185 / 0.3)"
+                  : "1px solid oklch(0.28 0.05 280 / 0.6)",
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ background: "oklch(0.65 0.16 185 / 0.15)" }}>
+                    <Gift size={20} className="text-primary" />
+                  </div>
+                  <div>
+                    {welcomeSpin?.available ? (
+                      <>
+                        <p className="text-sm font-semibold text-primary">🎁 Free Welcome Spin!</p>
+                        <p className="text-xs text-muted-foreground">Try your luck on the reward wheel</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm font-semibold text-foreground">Rewards</p>
+                        <p className="text-xs text-muted-foreground">
+                          <span className="text-primary font-semibold">{rewardPoints?.total ?? 0}</span> points earned
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-muted-foreground" />
+              </div>
+            </motion.div>
+          </Link>
         </motion.div>
 
         {/* ── Latest insight / generate prompt ────────────────────────── */}

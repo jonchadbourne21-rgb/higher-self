@@ -7,6 +7,7 @@ import { detectCrisisKeywords, SAFETY_KILL_SWITCH_RESPONSE, logSafetyBreach } fr
 import { systemRouter } from "./_core/systemRouter";
 import { weeklyInsightRouter } from "./routers/weeklyInsight";
 import { subscriptionRouter } from "./routers/subscription";
+import { rewardsRouter } from "./routers/rewards";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import {
   createCheckIn,
@@ -246,6 +247,14 @@ export const appRouter = router({
         // Get the inserted ID
         const today = await getTodayCheckIn(ctx.user.id);
         if (!today) return { success: true, aiResponse: null };
+
+        // Award 1 reward point for daily check-in
+        try {
+          const { addRewardPoints } = await import("./db/rewards");
+          await addRewardPoints(ctx.user.id, 1, "checkin", `checkin_${today.id}`);
+        } catch (e) {
+          console.error("Failed to award check-in point:", e);
+        }
 
         // Generate AI response
         try {
@@ -1111,5 +1120,6 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
   }),
   weeklyInsight: weeklyInsightRouter,
   subscription: subscriptionRouter,
+  rewards: rewardsRouter,
 });
 export type AppRouter = typeof appRouter;
