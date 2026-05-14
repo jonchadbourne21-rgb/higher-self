@@ -58,6 +58,7 @@ export default function Journal() {
 
   // ── Title suggestion state ───────────────────────────────────────────────
   const [suggestedTitle, setSuggestedTitle] = useState<string | null>(null);
+  const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [lastSuggestedContent, setLastSuggestedContent] = useState("");
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -139,7 +140,10 @@ export default function Journal() {
 
   const suggestTitleMutation = trpc.journal.suggestTitle.useMutation({
     onSuccess: (data) => {
-      setSuggestedTitle(data.title);
+      // Support both new multi-title response and legacy single-title fallback
+      const titles = data.titles ?? (data.title ? [data.title] : []);
+      setSuggestedTitles(titles);
+      setSuggestedTitle(titles[0] ?? null);
       setIsSuggesting(false);
       setLastSuggestedContent(content);
     },
@@ -156,6 +160,7 @@ export default function Journal() {
     setMoodTag("");
     setSelectedCategoryId(null);
     setSuggestedTitle(null);
+    setSuggestedTitles([]);
     setLastSuggestedContent("");
     setIsSuggesting(false);
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
@@ -166,6 +171,7 @@ export default function Journal() {
     setContent(newContent);
     if (suggestedTitle && Math.abs(newContent.length - lastSuggestedContent.length) > 40) {
       setSuggestedTitle(null);
+      setSuggestedTitles([]);
     }
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     if (newContent.trim().length >= MIN_CONTENT_FOR_SUGGESTION) {
@@ -183,6 +189,7 @@ export default function Journal() {
     if (content.trim().length >= MIN_CONTENT_FOR_SUGGESTION && !isSuggesting) {
       setIsSuggesting(true);
       setSuggestedTitle(null);
+      setSuggestedTitles([]);
       suggestTitleMutation.mutate({ content });
     }
   };
@@ -534,29 +541,34 @@ export default function Journal() {
                       <span>Crafting a title...</span>
                     </motion.div>
                   )}
-                  {suggestedTitle && !isSuggesting && !title && (
+                  {suggestedTitles.length > 0 && !isSuggesting && !title && (
                     <motion.div
                       key="suggestion"
                       initial={{ opacity: 0, y: -4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -4 }}
-                      className="flex items-center gap-2 flex-wrap"
+                      className="flex flex-col gap-2"
                     >
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Wand2 size={11} className="text-primary" /> Suggested:
+                        <Wand2 size={11} className="text-primary" /> Pick a title:
                       </span>
-                      <button
-                        onClick={() => { setTitle(suggestedTitle); setSuggestedTitle(null); }}
-                        className="px-3 py-1 rounded-full text-xs border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition-all font-medium"
-                      >
-                        {suggestedTitle}
-                      </button>
-                      <button
-                        onClick={() => setSuggestedTitle(null)}
-                        className="text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        Dismiss
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        {suggestedTitles.map((t, i) => (
+                          <button
+                            key={i}
+                            onClick={() => { setTitle(t); setSuggestedTitles([]); setSuggestedTitle(null); }}
+                            className="px-3 py-1 rounded-full text-xs border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition-all font-medium text-left"
+                          >
+                            {t}
+                          </button>
+                        ))}
+                        <button
+                          onClick={() => { setSuggestedTitles([]); setSuggestedTitle(null); }}
+                          className="text-xs text-muted-foreground hover:text-foreground px-2"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>

@@ -572,18 +572,58 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
           messages: [
             {
               role: "system",
-              content:
-                "You are a poetic journal assistant. Given a journal entry, suggest ONE short, evocative title (4–8 words). The title should feel personal, reflective, and meaningful — not generic. Return ONLY the title text, no quotes, no explanation.",
+              content: `You are a deeply perceptive journal title writer. Your job is to read a person's raw journal entry and generate 3 distinct, creative title options that feel like they were written BY that person — not about them.
+
+Each title should come from a completely different creative angle:
+1. **Metaphorical / poetic** — use imagery, nature, or a striking metaphor that captures the emotional undercurrent
+2. **Raw / direct** — name the real thing the person is wrestling with, no softening, like a song title that hits you in the chest
+3. **Transformational / forward-looking** — hint at the shift, the realization, or the becoming that's happening
+
+Rules:
+- 3–7 words per title
+- No generic phrases like "My Journey", "Reflections", "Today's Thoughts"
+- Draw from the specific language, emotions, and details in the entry
+- Make each title feel like it could be the title of a chapter in their memoir
+- No quotes, no numbering, no explanation in the output`,
             },
             {
               role: "user",
-              content: `Journal entry:\n\n${input.content.slice(0, 1000)}`,
+              content: `Journal entry:\n\n${input.content.slice(0, 1200)}`,
             },
           ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "title_suggestions",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  titles: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Exactly 3 title suggestions, one per creative angle",
+                  },
+                },
+                required: ["titles"],
+                additionalProperties: false,
+              },
+            },
+          },
         });
         const raw = res.choices[0]?.message?.content;
-        const title = (typeof raw === "string" ? raw : "").trim().replace(/^"|"$/g, "");
-        return { title };
+        let titles: string[] = [];
+        try {
+          const parsed = JSON.parse(typeof raw === "string" ? raw : "{}");
+          titles = (parsed.titles || []).map((t: string) => t.trim().replace(/^"|"$/g, "")).filter(Boolean);
+        } catch {
+          // Fallback: treat raw as a single title
+          const fallback = (typeof raw === "string" ? raw : "").trim().replace(/^"|"$/g, "");
+          if (fallback) titles = [fallback];
+        }
+        // Always return at least one title
+        if (titles.length === 0) titles = ["Untitled"];
+        return { titles, title: titles[0] };
       }),
   }),
 

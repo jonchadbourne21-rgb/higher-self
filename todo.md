@@ -842,3 +842,17 @@
 - [x] Add pendingStreakSpins field to rewards.dashboard tRPC response
 - [x] Show "You have X free spins available" banner on Rewards page Spin tab
 - [x] Show streak spin count on Home page Rewards card (highlighted card with amber glow when spins available)
+
+## Journal Category Vitest Tests
+- [x] Write vitest tests for journal.categories.list procedure (5 tests)
+- [x] Write vitest tests for journal.categories.create procedure (7 tests)
+- [x] Write vitest tests for journal.categories.delete procedure (5 tests)
+- [x] Write vitest tests for journal.suggestTitle procedure (6 tests)
+- [x] All 23 tests cover auth guard, input validation, DB helper calls, and edge cases
+
+## Creative Journal Title Suggestion
+- [x] Upgrade journal.suggestTitle LLM prompt to be more creative and personalized
+- [x] Prompt draws on emotional tone, key themes, metaphors, and the user's voice
+- [x] Generate 3 distinct title options with different creative angles (metaphorical, raw/direct, transformational)
+- [x] Update frontend to show 3 title chips the user can pick from ("Pick a title:" UI)
+- [x] Backward-compatible: title field still returns first suggestion, titles[] returns all 3
