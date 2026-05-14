@@ -933,3 +933,8 @@
 - [x] Progress bar shows Step 1 of 2 / Step 2 of 2 with animated fill
 - [x] Animated slide transitions between steps (framer-motion AnimatePresence)
 - [x] Greeting on Home page uses preferredName from day one (already wired to profile.preferredName)
+
+## Home Page: Tile Consistency + Check-In Card
+- [x] Convert Calendar and Rewards into matching h-20 Journey Access tiles (3x2 grid: Mirror|Journal / Life Domains|Programs / Rewards|Calendar)
+- [x] Check-in card: when done, shows M/E/S scores + "Done" badge + first line of AI reflection preview, taps through to /checkin for full reflection
+- [x] Check-in card: when not done, shows teal gradient CTA as before
