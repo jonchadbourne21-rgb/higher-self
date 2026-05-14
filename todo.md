@@ -782,3 +782,14 @@
 - [x] Remove "Your Week in Reflection" card from Home page
 - [x] Add unified "Insights & Reflections" section to Growth Dashboard page
 - [x] Clean up Home page to reduce clutter
+
+## Mirror Chat Cleanup & Voice Mode
+- [x] Auto-start new chat after 8 hours of inactivity (no more manual "new chat" needed)
+- [x] Automatically save conversations into history
+- [x] Ensure conversation history is properly displayed and accessible
+- [x] Add voice conversation mode toggle in Mirror
+- [x] Integrate ElevenLabs for AI voice responses (real-time call feel)
+- [x] Use speech-to-text for user voice input
+- [x] AI adapts to user's communication style, preferences, and emotional needs
+- [x] AI asks hard self-awareness questions for growth and transformation
+- [x] Real-time voice response like being on a call

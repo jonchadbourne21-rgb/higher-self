@@ -2,10 +2,10 @@
 import type { User } from "../../../drizzle/schema";
 import { trpc } from "@/lib/trpc";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Send, Heart, Star, RefreshCw, X, History, ChevronRight, Pencil, Check, Bookmark, MessageCircle } from "lucide-react";
+import { Send, Heart, Star, RefreshCw, X, History, ChevronRight, Pencil, Check, Bookmark, MessageCircle, Mic, MicOff, Volume2 } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
@@ -106,11 +106,17 @@ export default function Chat() {
   const [activeTab, setActiveTab] = useState<"chat" | "history" | "insights">("chat");
   // History search state
   const [historySearchQuery, setHistorySearchQuery] = useState("");
-  // Resume/new chat modal state
-  const [showResumeModal, setShowResumeModal] = useState(false);
+  // Auto-resume handled via useEffect (no modal)
   const [hasShownResumeModal, setHasShownResumeModal] = useState(false);
   const [showRewardWheel, setShowRewardWheel] = useState(false);
   const [wheelPrize, setWheelPrize] = useState<string | null>(null);
+  // Voice mode state
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -193,6 +199,10 @@ export default function Chat() {
           dbId: data.messageId,
         },
       ]);
+      // Play audio if voice mode returned audio
+      if (data.audioDataUrl) {
+        playAudioResponse(data.audioDataUrl);
+      }
     },
     onError: (error) => {
       setIsThinking(false);
@@ -241,11 +251,24 @@ export default function Chat() {
     if (!loading && !isAuthenticated) navigate("/");
   }, [isAuthenticated, loading]);
 
-  // Show resume modal on first load if there's a last session
+  // Auto-new-chat after 8 hours of inactivity, otherwise resume last session
   useEffect(() => {
     if (isAuthenticated && !hasShownResumeModal && lastSession) {
-      setShowResumeModal(true);
       setHasShownResumeModal(true);
+      const EIGHT_HOURS_MS = 8 * 60 * 60 * 1000;
+      const lastMsgTime = lastSession.lastMessageAt ? new Date(lastSession.lastMessageAt).getTime() : 0;
+      const timeSinceLastMsg = Date.now() - lastMsgTime;
+      
+      if (timeSinceLastMsg >= EIGHT_HOURS_MS || lastSession.messageCount === 0) {
+        // Auto-start fresh session (save old one to history)
+        clearMutation.mutate();
+      } else {
+        // Resume the existing session
+        setSessionId(lastSession.sessionId);
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+        }, 100);
+      }
     }
   }, [isAuthenticated, hasShownResumeModal, lastSession]);
   // On first load, determine the current session from history
@@ -305,6 +328,119 @@ export default function Chat() {
     ];
   }, [history, localMessages, isViewingPast, pastHistory]);
 
+  // ─── Voice mode helpers ──────────────────────────────────────────────────
+  const playAudioResponse = useCallback((audioDataUrl: string) => {
+    setIsPlayingAudio(true);
+    const audio = new Audio(audioDataUrl);
+    audioRef.current = audio;
+    audio.onended = () => setIsPlayingAudio(false);
+    audio.onerror = () => setIsPlayingAudio(false);
+    audio.play().catch(() => setIsPlayingAudio(false));
+  }, []);
+
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        stream.getTracks().forEach((track) => track.stop());
+        
+        // Convert to base64 and send for transcription
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = (reader.result as string).split(",")[1];
+          // Use Web Speech API for transcription (browser-native)
+          transcribeWithWebSpeech(audioBlob);
+        };
+        reader.readAsDataURL(audioBlob);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      toast.error("Microphone access denied. Please allow mic access.");
+    }
+  }, []);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  }, []);
+
+  const transcribeWithWebSpeech = useCallback((audioBlob: Blob) => {
+    // Use SpeechRecognition API for real-time transcription
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Speech recognition not supported in this browser.");
+      return;
+    }
+    // Fallback: create a simple text prompt for the user
+    toast.info("Processing your voice...");
+    // For now, use a simpler approach: record and use the blob URL
+    // The real transcription happens via the Web Speech API live
+  }, []);
+
+  // Live speech recognition for voice mode
+  const startLiveRecording = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Speech recognition not supported. Try Chrome or Safari.");
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      if (transcript.trim()) {
+        // Auto-send the transcribed text
+        setLocalMessages((prev) => [
+          ...prev,
+          {
+            role: "user",
+            content: transcript,
+            id: Date.now().toString(),
+            createdAt: new Date(),
+          },
+        ]);
+        setIsThinking(true);
+        sendMutation.mutate({ message: transcript, sessionId, voiceMode: true });
+      }
+      setIsRecording(false);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error:", event.error);
+      if (event.error === "not-allowed") {
+        toast.error("Microphone access denied.");
+      } else {
+        toast.error("Could not understand speech. Try again.");
+      }
+      setIsRecording(false);
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognition.start();
+    setIsRecording(true);
+  }, [sessionId]);
+
   const handleSend = () => {
     if (!input.trim() || isThinking || isViewingPast) return;
     const msg = input.trim();
@@ -319,7 +455,7 @@ export default function Chat() {
       },
     ]);
     setIsThinking(true);
-    sendMutation.mutate({ message: msg, sessionId });
+    sendMutation.mutate({ message: msg, sessionId, voiceMode });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -982,8 +1118,62 @@ export default function Chat() {
                 Return to live chat ✦
               </button>
             </div>
+          ) : voiceMode ? (
+            /* Voice mode input */
+            <div className="flex flex-col items-center gap-3 py-2">
+              <div className="flex items-center gap-3 w-full">
+                {/* Toggle back to text */}
+                <button
+                  onClick={() => setVoiceMode(false)}
+                  className="w-10 h-10 rounded-full border border-border/40 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all flex-shrink-0"
+                  title="Switch to text"
+                >
+                  <MessageCircle size={16} />
+                </button>
+                
+                {/* Main mic button */}
+                <button
+                  onClick={isRecording ? stopRecording : startLiveRecording}
+                  disabled={isThinking || isPlayingAudio}
+                  className={`flex-1 h-14 rounded-2xl flex items-center justify-center gap-2 font-medium transition-all active:scale-95 ${
+                    isRecording
+                      ? "bg-red-500/20 border-2 border-red-500 text-red-400 animate-pulse"
+                      : "bg-primary/10 border-2 border-primary text-primary hover:bg-primary/20"
+                  } disabled:opacity-40 disabled:cursor-not-allowed`}
+                >
+                  {isRecording ? (
+                    <><MicOff size={20} /> <span className="text-sm">Tap to stop</span></>
+                  ) : isPlayingAudio ? (
+                    <><Volume2 size={20} /> <span className="text-sm">AI speaking...</span></>
+                  ) : (
+                    <><Mic size={20} /> <span className="text-sm">Tap to speak</span></>
+                  )}
+                </button>
+              </div>
+              {isPlayingAudio && (
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-0.5">
+                    {[0,1,2,3,4].map(i => (
+                      <motion.div key={i} className="w-1 bg-primary rounded-full" animate={{ height: [8, 16, 8] }} transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.15 }} />
+                    ))}
+                  </div>
+                  <button onClick={() => { audioRef.current?.pause(); setIsPlayingAudio(false); }} className="text-xs text-muted-foreground hover:text-foreground">
+                    Stop
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
+            /* Text mode input */
             <div className="flex gap-2 items-end">
+              {/* Voice mode toggle */}
+              <button
+                onClick={() => setVoiceMode(true)}
+                className="w-12 h-12 rounded-2xl border border-border/40 flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all flex-shrink-0"
+                title="Switch to voice mode"
+              >
+                <Mic size={18} />
+              </button>
               <textarea
                 ref={inputRef}
                 value={input}
@@ -1005,41 +1195,7 @@ export default function Chat() {
           )}
         </div>
       </div>
-      {/* Resume/New Chat Modal */}
-      {showResumeModal && lastSession && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-background border border-border rounded-2xl p-8 max-w-sm mx-4 shadow-2xl">
-            <h2 className="text-xl font-bold text-foreground mb-2">Welcome back, {user?.name}! ✦</h2>
-            <p className="text-sm text-muted-foreground mb-6">
-              You have a previous conversation with {lastSession.messageCount} messages.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setSessionId(lastSession.sessionId);
-                  setShowResumeModal(false);
-                  // Scroll to bottom after loading
-                  setTimeout(() => {
-                    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-                  }, 100);
-                }}
-                className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
-              >
-                Continue
-              </button>
-              <button
-                onClick={() => {
-                  setShowResumeModal(false);
-                  clearMutation.mutate();
-                }}
-                className="flex-1 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/90 transition-colors"
-              >
-                Start Fresh
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
       <UpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}

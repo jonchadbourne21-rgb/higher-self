@@ -635,7 +635,8 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
       const lastSessionId = await getLastSessionId(ctx.user.id);
       if (!lastSessionId) return null;
       const messages = await getChatHistory(ctx.user.id, lastSessionId);
-      return { sessionId: lastSessionId, messageCount: messages.length };
+      const lastMsg = messages.length > 0 ? messages[messages.length - 1] : null;
+      return { sessionId: lastSessionId, messageCount: messages.length, lastMessageAt: lastMsg?.createdAt ?? null };
     }),
     clearConversation: protectedProcedure.mutation(async ({ ctx }) => {
       const { randomUUID } = await import("crypto");
@@ -646,7 +647,7 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
     }),
 
     send: protectedProcedure
-      .input(z.object({ message: z.string().min(1), sessionId: z.string().nullable().optional() }))
+      .input(z.object({ message: z.string().min(1), sessionId: z.string().nullable().optional(), voiceMode: z.boolean().optional() }))
       .mutation(async ({ ctx, input }) => {
         const sessionId = input.sessionId ?? null;
         
@@ -749,7 +750,19 @@ ${input.reflection ? `Reflection: ${input.reflection}` : ""}`;
             ragEntriesCount,
           },
         });
-        return { response: aiContent, messageId: aiMsgId };
+        // If voice mode, generate TTS audio
+        let audioDataUrl: string | null = null;
+        if (input.voiceMode) {
+          try {
+            const { textToSpeechBase64 } = await import("./voice");
+            // Strip markdown for cleaner speech
+            const cleanText = aiContent.replace(/[#*_`~\[\]()>]/g, "").replace(/\n+/g, " ").trim();
+            audioDataUrl = await textToSpeechBase64(cleanText);
+          } catch (err) {
+            console.error("[Voice] TTS generation failed:", err);
+          }
+        }
+        return { response: aiContent, messageId: aiMsgId, audioDataUrl };
       }),
   }),
 
