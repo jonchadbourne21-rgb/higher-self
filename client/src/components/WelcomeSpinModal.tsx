@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useCallback, useRef } from "react";
-import { Sparkles, Zap } from "lucide-react";
+import { Sparkles, Zap, Crown, Gift } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
@@ -69,6 +69,7 @@ export default function WelcomeSpinModal({ open, onClose }: WelcomeSpinModalProp
   const [phase, setPhase] = useState<"intro" | "spinning" | "result">("intro");
   const [rotation, setRotation] = useState(0);
   const [prizeLabel, setPrizeLabel] = useState<string | null>(null);
+  const [grantActivated, setGrantActivated] = useState(false);
   const spinMutation = trpc.rewards.spin.useMutation();
   const utils = trpc.useUtils();
   const wheelRef = useRef<HTMLDivElement>(null);
@@ -93,11 +94,14 @@ export default function WelcomeSpinModal({ open, onClose }: WelcomeSpinModalProp
       // Show result after spin animation completes
       setTimeout(() => {
         setPrizeLabel(result.prizeLabel);
+        setGrantActivated(result.grantActivated ?? false);
         setPhase("result");
         // Invalidate rewards queries so Home card updates
         utils.rewards.welcomeSpinAvailable.invalidate();
         utils.rewards.points.invalidate();
         utils.rewards.dashboard.invalidate();
+        utils.subscription.isProUser.invalidate();
+        utils.subscription.getStatus.invalidate();
       }, 4500);
     } catch {
       toast.error("Something went wrong");
@@ -291,56 +295,97 @@ export default function WelcomeSpinModal({ open, onClose }: WelcomeSpinModalProp
                 boxShadow: "0 8px 48px oklch(0.65 0.16 185 / 0.2)",
               }}
             >
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 0.15, type: "spring", stiffness: 250 }}
-                className="text-7xl"
-              >
-                🎉
-              </motion.div>
+              {(() => {
+                const isProPrize = prizeLabel?.includes("Pro") || prizeLabel?.includes("Trial");
+                return (
+                  <>
+                    <motion.div
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ delay: 0.15, type: "spring", stiffness: 250 }}
+                      className="text-7xl"
+                    >
+                      {isProPrize ? "👑" : "🎉"}
+                    </motion.div>
 
-              <h2 className="text-2xl font-serif text-foreground">You Won!</h2>
+                    <h2 className="text-2xl font-serif text-foreground">
+                      {isProPrize && grantActivated ? "You're Pro Now!" : "You Won!"}
+                    </h2>
 
-              <div
-                className="rounded-2xl p-5"
-                style={{
-                  background: "oklch(0.65 0.16 185 / 0.12)",
-                  border: "1px solid oklch(0.65 0.16 185 / 0.25)",
-                }}
-              >
-                <p className="text-xl font-bold text-primary">{prizeLabel}</p>
-              </div>
+                    <div
+                      className="rounded-2xl p-5"
+                      style={{
+                        background: "oklch(0.65 0.16 185 / 0.12)",
+                        border: "1px solid oklch(0.65 0.16 185 / 0.25)",
+                      }}
+                    >
+                      <p className="text-xl font-bold text-primary">{prizeLabel}</p>
+                    </div>
 
-              {/* 3-day streak nudge */}
-              <div
-                className="rounded-xl p-4 text-left space-y-2"
-                style={{
-                  background: "oklch(0.55 0.18 290 / 0.1)",
-                  border: "1px solid oklch(0.55 0.18 290 / 0.2)",
-                }}
-              >
-                <p className="text-sm font-semibold text-accent-foreground flex items-center gap-2">
-                  <Zap size={14} className="text-amber-400" /> Want another spin?
-                </p>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Check in <strong className="text-foreground">3 days in a row</strong> to earn a
-                  free spin on the reward wheel. Every daily check-in also earns you{" "}
-                  <strong className="text-foreground">1 reward point</strong>!
-                </p>
-              </div>
+                    {/* Pro activation message */}
+                    {isProPrize && grantActivated && (
+                      <div
+                        className="rounded-xl p-4 text-left space-y-2"
+                        style={{ background: "oklch(0.65 0.16 185 / 0.08)", border: "1px solid oklch(0.65 0.16 185 / 0.2)" }}
+                      >
+                        <p className="text-sm font-semibold flex items-center gap-2" style={{ color: "oklch(0.65 0.16 185)" }}>
+                          <Crown size={14} /> Pro Access Activated!
+                        </p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          Your Pro features are now unlocked. Enjoy unlimited AI chats, journals, and more!
+                          {prizeLabel?.includes("Month") && " Your access lasts for 30 days."}
+                          {prizeLabel?.includes("Week") && " Your access lasts for 7 days."}
+                        </p>
+                      </div>
+                    )}
 
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={handleClose}
-                className="w-full py-3.5 rounded-2xl font-bold text-base text-white"
-                style={{
-                  background: "linear-gradient(135deg, #0d9488, #14b8a6)",
-                  boxShadow: "0 4px 20px rgba(13,148,136,0.3)",
-                }}
-              >
-                Let's Go!
-              </motion.button>
+                    {/* Stacked reward message */}
+                    {isProPrize && !grantActivated && (
+                      <div
+                        className="rounded-xl p-4 text-left space-y-2"
+                        style={{ background: "oklch(0.55 0.18 290 / 0.08)", border: "1px solid oklch(0.55 0.18 290 / 0.2)" }}
+                      >
+                        <p className="text-sm font-semibold flex items-center gap-2" style={{ color: "oklch(0.55 0.18 290)" }}>
+                          <Gift size={14} /> Saved to Rewards!
+                        </p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          You already have active Pro access, so this reward has been saved. It will automatically activate when your current Pro period ends!
+                        </p>
+                      </div>
+                    )}
+
+                    {/* 3-day streak nudge */}
+                    <div
+                      className="rounded-xl p-4 text-left space-y-2"
+                      style={{
+                        background: "oklch(0.55 0.18 290 / 0.1)",
+                        border: "1px solid oklch(0.55 0.18 290 / 0.2)",
+                      }}
+                    >
+                      <p className="text-sm font-semibold text-accent-foreground flex items-center gap-2">
+                        <Zap size={14} className="text-amber-400" /> Want another spin?
+                      </p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Check in <strong className="text-foreground">3 days in a row</strong> to earn a
+                        free spin on the reward wheel. Every daily check-in also earns you{" "}
+                        <strong className="text-foreground">1 reward point</strong>!
+                      </p>
+                    </div>
+
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleClose}
+                      className="w-full py-3.5 rounded-2xl font-bold text-base text-white"
+                      style={{
+                        background: "linear-gradient(135deg, #0d9488, #14b8a6)",
+                        boxShadow: "0 4px 20px rgba(13,148,136,0.3)",
+                      }}
+                    >
+                      {isProPrize && grantActivated ? "Start Exploring Pro!" : "Let's Go!"}
+                    </motion.button>
+                  </>
+                );
+              })()}
             </motion.div>
           )}
         </motion.div>

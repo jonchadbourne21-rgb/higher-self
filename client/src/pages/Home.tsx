@@ -452,7 +452,6 @@ export default function Home() {
 
       </div>
     </AppShell>
-
     {/* Welcome spin modal - auto-pops for new users */}
     <WelcomeSpinModal
       open={showWelcomeSpin}

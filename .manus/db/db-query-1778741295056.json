@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE `reward_grants` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`userId` int NOT NULL,\n\t`grantType` varchar(50) NOT NULL,\n\t`label` varchar(200) NOT NULL,\n\t`durationDays` int NOT NULL,\n\t`source` varchar(50) NOT NULL,\n\t`status` enum('pending','active','expired','used') NOT NULL DEFAULT 'pending',\n\t`activatedAt` timestamp,\n\t`expiresAt` timestamp,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `reward_grants_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UbcpEQhTnXTazXN.root --database LQwmD5t86EFFZjkEDkXbgz --execute CREATE TABLE `reward_grants` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`userId` int NOT NULL,\n\t`grantType` varchar(50) NOT NULL,\n\t`label` varchar(200) NOT NULL,\n\t`durationDays` int NOT NULL,\n\t`source` varchar(50) NOT NULL,\n\t`status` enum('pending','active','expired','used') NOT NULL DEFAULT 'pending',\n\t`activatedAt` timestamp,\n\t`expiresAt` timestamp,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `reward_grants_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 326
+}

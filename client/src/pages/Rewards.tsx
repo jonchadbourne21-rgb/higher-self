@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Gift, Star, Zap, Trophy, ChevronRight, Sparkles, RotateCcw } from "lucide-react";
+import { Gift, Star, Zap, Trophy, ChevronRight, Sparkles, RotateCcw, Crown } from "lucide-react";
 import { toast } from "sonner";
 
 // ── Wheel segments ──────────────────────────────────────────────────────────
@@ -160,13 +160,16 @@ function PrizeModal({
   open,
   prizeLabel,
   isWelcome,
+  grantActivated,
   onClose,
 }: {
   open: boolean;
   prizeLabel: string | null;
   isWelcome: boolean;
+  grantActivated?: boolean;
   onClose: () => void;
 }) {
+  const isProPrize = prizeLabel?.includes("Pro") || prizeLabel?.includes("Trial");
   return (
     <AnimatePresence>
       {open && (
@@ -197,15 +200,45 @@ function PrizeModal({
               transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
               className="text-6xl"
             >
-              🎉
+              {isProPrize ? "👑" : "🎉"}
             </motion.div>
-            <h2 className="text-2xl font-serif text-foreground">You Won!</h2>
+            <h2 className="text-2xl font-serif text-foreground">
+              {isProPrize ? "You're Pro Now!" : "You Won!"}
+            </h2>
             <div
               className="rounded-2xl p-4"
               style={{ background: "oklch(0.65 0.16 185 / 0.1)", border: "1px solid oklch(0.65 0.16 185 / 0.2)" }}
             >
               <p className="text-lg font-semibold text-primary">{prizeLabel}</p>
             </div>
+            {isProPrize && grantActivated && (
+              <div
+                className="rounded-xl p-4 text-left space-y-2"
+                style={{ background: "oklch(0.65 0.16 185 / 0.08)", border: "1px solid oklch(0.65 0.16 185 / 0.2)" }}
+              >
+                <p className="text-sm font-semibold flex items-center gap-2" style={{ color: "oklch(0.65 0.16 185)" }}>
+                  <Crown size={14} /> Pro Access Activated!
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Your Pro features are now unlocked. Enjoy unlimited AI chats, journals, and more!
+                  {prizeLabel?.includes("Month") && " Your access lasts for 30 days."}
+                  {prizeLabel?.includes("Week") && " Your access lasts for 7 days."}
+                </p>
+              </div>
+            )}
+            {isProPrize && !grantActivated && (
+              <div
+                className="rounded-xl p-4 text-left space-y-2"
+                style={{ background: "oklch(0.55 0.18 290 / 0.08)", border: "1px solid oklch(0.55 0.18 290 / 0.2)" }}
+              >
+                <p className="text-sm font-semibold flex items-center gap-2" style={{ color: "oklch(0.55 0.18 290)" }}>
+                  <Gift size={14} /> Saved to Rewards!
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  You already have active Pro access, so this reward has been saved. It will automatically activate when your current Pro period ends!
+                </p>
+              </div>
+            )}
             {isWelcome && (
               <div
                 className="rounded-xl p-4 text-left space-y-2"
@@ -228,7 +261,7 @@ function PrizeModal({
                 background: "linear-gradient(135deg, oklch(0.50 0.14 185), oklch(0.55 0.14 200))",
               }}
             >
-              Awesome!
+              {isProPrize && grantActivated ? "Start Exploring Pro!" : "Awesome!"}
             </motion.button>
           </motion.div>
         </motion.div>
@@ -267,10 +300,11 @@ export default function Rewards() {
   const { isAuthenticated, loading } = useAuth();
   const [, navigate] = useLocation();
   const [spinning, setSpinning] = useState(false);
-  const [prizeModal, setPrizeModal] = useState<{ open: boolean; label: string | null; isWelcome: boolean }>({
+  const [prizeModal, setPrizeModal] = useState<{ open: boolean; label: string | null; isWelcome: boolean; grantActivated: boolean }>({
     open: false,
     label: null,
     isWelcome: false,
+    grantActivated: false,
   });
   const [activeTab, setActiveTab] = useState<"spin" | "points" | "redeem">("spin");
 
@@ -302,6 +336,7 @@ export default function Rewards() {
           open: true,
           label: result.prizeLabel,
           isWelcome: type === "welcome",
+          grantActivated: result.grantActivated ?? false,
         });
         refetch();
       }, 4200);
@@ -316,7 +351,11 @@ export default function Rewards() {
       try {
         const result = await redeemMutation.mutateAsync({ tierId });
         if (result.success) {
-          toast.success("Reward redeemed! Check your account.");
+          if (result.grantActivated) {
+            toast.success("Pro access activated! Enjoy your upgrade.");
+          } else {
+            toast.success("Reward saved! It will activate when your current Pro period ends.");
+          }
           refetch();
         } else {
           toast.error(result.error || "Redemption failed");
@@ -345,6 +384,43 @@ export default function Rewards() {
   return (
     <AppShell>
       <div className="px-5 pt-4 pb-6 space-y-5">
+        {/* ── Pro Status Banner ──────────────────────────────────────── */}
+        {dashboard?.isPro && dashboard.activeGrant && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl p-4 space-y-2"
+            style={{
+              background: "linear-gradient(135deg, oklch(0.65 0.16 185 / 0.15), oklch(0.55 0.18 290 / 0.15))",
+              border: "1px solid oklch(0.65 0.16 185 / 0.3)",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Crown size={18} style={{ color: "oklch(0.65 0.16 185)" }} />
+                <span className="text-sm font-semibold text-foreground">Pro Active</span>
+              </div>
+              <span className="text-xs px-2.5 py-1 rounded-full font-medium"
+                style={{ background: "oklch(0.65 0.16 185 / 0.2)", color: "oklch(0.65 0.16 185)" }}>
+                {dashboard.activeGrant.label}
+              </span>
+            </div>
+            {dashboard.proExpiresAt && (
+              <p className="text-xs text-muted-foreground">
+                Expires {new Date(dashboard.proExpiresAt).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
+              </p>
+            )}
+            {dashboard.pendingGrants && dashboard.pendingGrants.length > 0 && (
+              <div className="flex items-center gap-2 mt-1">
+                <Gift size={14} style={{ color: "oklch(0.55 0.18 290)" }} />
+                <span className="text-xs" style={{ color: "oklch(0.55 0.18 290)" }}>
+                  {dashboard.pendingGrants.length} reward{dashboard.pendingGrants.length > 1 ? "s" : ""} queued — will auto-activate next
+                </span>
+              </div>
+            )}
+          </motion.div>
+        )}
+
         {/* ── Points balance header ──────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: -8 }}
@@ -574,6 +650,70 @@ export default function Rewards() {
               })}
             </div>
 
+            {/* My Rewards Inventory */}
+            {dashboard?.allGrants && dashboard.allGrants.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">My Rewards</p>
+                <div className="space-y-2">
+                  {dashboard.allGrants.map((grant) => (
+                    <div
+                      key={grant.id}
+                      className="flex items-center justify-between rounded-xl p-3"
+                      style={{
+                        background: grant.status === "active"
+                          ? "oklch(0.65 0.16 185 / 0.08)"
+                          : grant.status === "pending"
+                            ? "oklch(0.55 0.18 290 / 0.08)"
+                            : "oklch(0.17 0.04 280)",
+                        border: `1px solid ${
+                          grant.status === "active"
+                            ? "oklch(0.65 0.16 185 / 0.25)"
+                            : grant.status === "pending"
+                              ? "oklch(0.55 0.18 290 / 0.2)"
+                              : "oklch(0.24 0.04 280)"
+                        }`,
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">
+                          {grant.status === "active" ? "👑" : grant.status === "pending" ? "🎁" : "✅"}
+                        </span>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{grant.label}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {grant.status === "active" && grant.expiresAt
+                              ? `Expires ${new Date(grant.expiresAt).toLocaleDateString()}`
+                              : grant.status === "pending"
+                                ? "Queued — activates next"
+                                : grant.activatedAt
+                                  ? `Used ${new Date(grant.activatedAt).toLocaleDateString()}`
+                                  : "Used"}
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        className="text-xs px-2 py-1 rounded-full font-medium"
+                        style={{
+                          background: grant.status === "active"
+                            ? "oklch(0.65 0.16 185 / 0.2)"
+                            : grant.status === "pending"
+                              ? "oklch(0.55 0.18 290 / 0.2)"
+                              : "oklch(0.30 0.02 270 / 0.5)",
+                          color: grant.status === "active"
+                            ? "oklch(0.65 0.16 185)"
+                            : grant.status === "pending"
+                              ? "oklch(0.55 0.18 290)"
+                              : "oklch(0.55 0.02 270)",
+                        }}
+                      >
+                        {grant.status === "active" ? "Active" : grant.status === "pending" ? "Queued" : "Used"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Streak milestones */}
             <div className="space-y-3">
               <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Streak Milestones</p>
@@ -617,7 +757,8 @@ export default function Rewards() {
         open={prizeModal.open}
         prizeLabel={prizeModal.label}
         isWelcome={prizeModal.isWelcome}
-        onClose={() => setPrizeModal({ open: false, label: null, isWelcome: false })}
+        grantActivated={prizeModal.grantActivated}
+        onClose={() => setPrizeModal({ open: false, label: null, isWelcome: false, grantActivated: false })}
       />
     </AppShell>
   );

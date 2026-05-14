@@ -759,3 +759,15 @@
 - [x] Fix spin wheel animation to visually spin and land on the correct winning segment
 - [x] Auto-popup welcome spin as full-screen modal on Home page for new users after onboarding
 - [x] Remove need for user to navigate to Rewards page for first spin
+
+## Reward Fulfillment System
+- [x] Add reward_grants table (userId, type, durationDays, grantedAt, activatedAt, expiresAt, status: pending/active/expired/used)
+- [x] Add proExpiresAt and proSource fields to users table
+- [x] When user wins Pro from spin, immediately activate and set proExpiresAt
+- [x] When user wins Pro again while already Pro, store as pending grant (stackable)
+- [x] Auto-apply next pending grant when current Pro expires
+- [x] Revert to Free tier when no more grants and Pro expired
+- [x] Update tier enforcement to check proExpiresAt dynamically
+- [x] Show Pro status with expiration date in UI
+- [x] Show pending/stacked rewards in Rewards page inventory
+- [x] Make point-redeemed Pro also go through same grant system

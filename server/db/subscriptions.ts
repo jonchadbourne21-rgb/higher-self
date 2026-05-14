@@ -50,17 +50,28 @@ export async function getUserSubscription(userId: number) {
 }
 
 /**
- * Check if user has active Pro subscription
+ * Check if user has active Pro subscription (Stripe or reward grants)
  */
 export async function isProUser(userId: number): Promise<boolean> {
   const subscription = await getUserSubscription(userId);
-  if (!subscription) return false;
-
-  return (
+  
+  // Check Stripe subscription first
+  if (subscription &&
     subscription.tier === "pro" &&
     subscription.status === "active" &&
     (!subscription.endDate || new Date(subscription.endDate) > new Date())
-  );
+  ) {
+    return true;
+  }
+
+  // Check reward grants as fallback
+  try {
+    const { checkAndProcessExpiredGrants } = await import("./rewardGrants");
+    const grantStatus = await checkAndProcessExpiredGrants(userId);
+    return grantStatus.isPro;
+  } catch {
+    return false;
+  }
 }
 
 /**

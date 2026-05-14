@@ -622,6 +622,25 @@ export const streakRewards = mysqlTable("streak_rewards", {
 export type StreakReward = typeof streakRewards.$inferSelect;
 export type InsertStreakReward = typeof streakRewards.$inferInsert;
 
-// ─── Pro Tier: Reward Points (user total) ─────────────────────────────────────
-// This is stored in users table as rewardPoints column
-// We'll add this column to the users table via migration
+// ─── Pro Tier: Reward Grants (stackable Pro access from spins/redemptions) ────
+export const rewardGrants = mysqlTable("reward_grants", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // Type of grant: month_pro, week_trial, two_months_pro, one_year_pro, etc.
+  grantType: varchar("grantType", { length: 50 }).notNull(),
+  // Human-readable label
+  label: varchar("label", { length: 200 }).notNull(),
+  // Duration in days
+  durationDays: int("durationDays").notNull(),
+  // Source: spin, redemption, streak
+  source: varchar("source", { length: 50 }).notNull(),
+  // Status: pending (not yet activated), active (currently in use), expired, used (was active, now done)
+  status: mysqlEnum("status", ["pending", "active", "expired", "used"]).default("pending").notNull(),
+  // When this grant was activated (set to Pro)
+  activatedAt: timestamp("activatedAt"),
+  // When this grant expires
+  expiresAt: timestamp("expiresAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type RewardGrant = typeof rewardGrants.$inferSelect;
+export type InsertRewardGrant = typeof rewardGrants.$inferInsert;

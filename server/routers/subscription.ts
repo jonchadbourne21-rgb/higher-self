@@ -8,6 +8,7 @@ import {
   upgradeToProTier,
   downgradeToFreeTier,
 } from "../db/subscriptions";
+import { checkAndProcessExpiredGrants } from "../db/rewardGrants";
 import { getProMonthlyPriceId, getProAnnualPriceId } from "../_core/stripe-products";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
@@ -133,10 +134,14 @@ export const subscriptionRouter = router({
   }),
 
   /**
-   * Check if user is a Pro subscriber
+   * Check if user is a Pro subscriber (checks both Stripe and reward grants)
    */
   isProUser: protectedProcedure.query(async ({ ctx }) => {
-    const isProStatus = await isProUser(ctx.user.id);
-    return { isProUser: isProStatus };
+    // First check Stripe subscription
+    const stripeProStatus = await isProUser(ctx.user.id);
+    if (stripeProStatus) return { isProUser: true };
+    // Then check reward grants (also processes expired ones)
+    const grantStatus = await checkAndProcessExpiredGrants(ctx.user.id);
+    return { isProUser: grantStatus.isPro };
   }),
 });
