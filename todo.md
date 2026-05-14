@@ -809,3 +809,15 @@
 ## UI Polish
 - [x] Add Pro badge next to user icon at top right for Pro users
 - [x] Change Habits icon from CalendarDays to Flame in bottom nav
+
+## Sunday Weekly Insight Job
+- [ ] Read periodic-updates.md for scheduling approach
+- [ ] Aggregate Mirror conversations from the past week per user
+- [ ] Aggregate journal entries from the past week per user
+- [ ] Aggregate habit check-in data and streaks from the past week
+- [ ] Aggregate goal progress from the past week
+- [ ] Generate personalized AI growth reflection using LLM
+- [ ] Store weekly insight in database (weekly_insights table)
+- [ ] Schedule job to run every Sunday via heartbeat
+- [ ] Show latest weekly insight prominently in Growth Dashboard
+- [ ] Notify user when their weekly insight is ready

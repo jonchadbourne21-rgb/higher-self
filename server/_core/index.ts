@@ -8,7 +8,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { startDailyReminderScheduler } from "../pushNotifications";
-import { startWeeklyDigestScheduler } from "../jobs/weeklyDigestScheduler";
+import { weeklyInsightHandler } from "../jobs/weeklyInsightJob";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -99,6 +99,9 @@ Request-rate: 1/1s`;
     res.send(robots);
   });
 
+  // Scheduled job endpoints (Heartbeat cron)
+  app.post("/api/scheduled/weeklyInsight", weeklyInsightHandler);
+
   // tRPC API
   app.use(
     "/api/trpc",
@@ -126,8 +129,8 @@ Request-rate: 1/1s`;
     console.log(`Server running on http://localhost:${port}/`);
     // Start the daily 6am push notification scheduler
     startDailyReminderScheduler();
-    // Start the weekly digest scheduler (Sunday 8 AM UTC)
-    startWeeklyDigestScheduler();
+    // Weekly insight job is now driven by Manus Heartbeat cron (not setInterval)
+    // See server/jobs/weeklyInsightJob.ts — triggered via POST /api/scheduled/weeklyInsight
   });
 }
 
