@@ -974,3 +974,10 @@
 - [x] Add support email section on FAQ page
 - [x] Add FAQ link below tiles on Home.tsx
 - [x] Register /faq route in App.tsx
+
+## Privacy Policy & Terms of Service
+- [x] Create /privacy page covering data storage, encryption, deletion rights
+- [x] Create /terms page with clear user expectations for AI engagement
+- [x] Register routes in App.tsx
+- [x] Add links from Home.tsx footer (alongside FAQ link)
+- [x] Add links from FAQ.tsx footer

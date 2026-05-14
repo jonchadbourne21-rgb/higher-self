@@ -23,6 +23,8 @@ import Calendar from "./pages/Calendar";
 import QuickOnboarding from "./pages/QuickOnboarding";
 import FullOnboarding from "./pages/FullOnboarding";
 import FAQ from "./pages/FAQ";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import Pricing from "./pages/Pricing";
 import Rewards from "./pages/Rewards";
 import Programs from "./pages/Programs";
@@ -112,6 +114,8 @@ function AnimatedRouter() {
             <Route path="/programs" component={Programs} />
             <Route path="/programs/:id" component={ProgramDetail} />
             <Route path="/faq" component={FAQ} />
+            <Route path="/privacy" component={Privacy} />
+            <Route path="/terms" component={Terms} />
             <Route path="/404" component={NotFound} />
             <Route component={NotFound} />
           </Switch>

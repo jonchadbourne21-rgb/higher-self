@@ -315,6 +315,30 @@ export default function FAQ() {
           </a>
         </motion.div>
 
+        {/* Legal links */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+          className="flex justify-center items-center gap-3 mb-6"
+        >
+          <a
+            href="/privacy"
+            className="text-xs transition-opacity hover:opacity-70"
+            style={{ color: "oklch(0.50 0.08 295)" }}
+          >
+            Privacy Policy
+          </a>
+          <span className="text-[10px]" style={{ color: "oklch(0.35 0.04 295)" }}>·</span>
+          <a
+            href="/terms"
+            className="text-xs transition-opacity hover:opacity-70"
+            style={{ color: "oklch(0.50 0.08 295)" }}
+          >
+            Terms of Service
+          </a>
+        </motion.div>
+
         {/* Back link */}
         <motion.div
           initial={{ opacity: 0 }}

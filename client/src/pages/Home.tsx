@@ -404,20 +404,37 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* ── FAQ link ────────────────────────────────────────────────── */}
+          {/* ── Footer links ─────────────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.28 }}
-            className="flex justify-center pt-1 pb-4"
+            className="flex justify-center items-center gap-3 pt-1 pb-4"
           >
             <Link href="/faq">
               <button
-                className="flex items-center gap-1.5 text-xs transition-opacity hover:opacity-70"
+                className="text-xs transition-opacity hover:opacity-70"
                 style={{ color: "oklch(0.50 0.08 295)" }}
               >
-                <span>About &amp; FAQ</span>
-                <ChevronRight size={12} />
+                About & FAQ
+              </button>
+            </Link>
+            <span className="text-[10px]" style={{ color: "oklch(0.35 0.04 295)" }}>·</span>
+            <Link href="/privacy">
+              <button
+                className="text-xs transition-opacity hover:opacity-70"
+                style={{ color: "oklch(0.50 0.08 295)" }}
+              >
+                Privacy
+              </button>
+            </Link>
+            <span className="text-[10px]" style={{ color: "oklch(0.35 0.04 295)" }}>·</span>
+            <Link href="/terms">
+              <button
+                className="text-xs transition-opacity hover:opacity-70"
+                style={{ color: "oklch(0.50 0.08 295)" }}
+              >
+                Terms
               </button>
             </Link>
           </motion.div>
