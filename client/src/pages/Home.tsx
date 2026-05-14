@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Sparkles, ChevronRight, Sun, Moon, Star, Bell, Gift } from "lucide-react";
+import { Sparkles, ChevronRight, Sun, Moon, Bell, Gift } from "lucide-react";
 import WelcomeSpinModal from "@/components/WelcomeSpinModal";
 import { format } from "date-fns";
 
@@ -34,8 +34,7 @@ export default function Home() {
 
   const { data: profile } = trpc.profile.get.useQuery(undefined, { enabled: isAuthenticated });
   const { data: todayCheckIn } = trpc.checkIn.today.useQuery(undefined, { enabled: isAuthenticated });
-  const { data: latestInsight } = trpc.insights.latest.useQuery(undefined, { enabled: isAuthenticated });
-  const { data: weeklyDigest } = trpc.home.getLatestDigest.useQuery(undefined, { enabled: isAuthenticated });
+
   const { data: upcomingEvents } = trpc.calendar.upcoming.useQuery(undefined, { enabled: isAuthenticated });
   const { data: habitStreak } = trpc.habits.currentStreak.useQuery(undefined, { enabled: isAuthenticated });
   const { data: rewardPoints } = trpc.rewards.points.useQuery(undefined, { enabled: isAuthenticated });
@@ -340,95 +339,11 @@ export default function Home() {
           </Link>
         </motion.div>
 
-        {/* ── Latest insight / generate prompt ────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.24 }}
-          className="space-y-3"
-        >
-          <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Your Insights</p>
-          {latestInsight ? (
-            <Link href="/insights">
-              <div
-                className="rounded-2xl p-5 space-y-3 cursor-pointer transition-all hover:shadow-md"
-                style={{
-                  background: "oklch(0.17 0.04 280)",
-                  border: "1px solid oklch(0.28 0.05 280 / 0.6)",
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <Star size={12} className="text-amber-400 fill-amber-400" />
-                    <p className="text-xs text-amber-400 uppercase tracking-widest font-medium">Latest Insight</p>
-                  </div>
-                  <ChevronRight size={14} className="text-muted-foreground" />
-                </div>
-                <p className="text-sm text-foreground leading-relaxed line-clamp-3">
-                  {latestInsight.insightText}
-                </p>
-                {Array.isArray(latestInsight.actionableSteps) && latestInsight.actionableSteps.length > 0 && (
-                  <span className="text-xs text-primary font-medium">
-                    {latestInsight.actionableSteps.length} action steps →
-                  </span>
-                )}
-              </div>
-            </Link>
-          ) : (
-            <Link href="/insights">
-              <motion.div
-                whileTap={{ scale: 0.98 }}
-                className="rounded-2xl p-5 cursor-pointer border-2 border-dashed transition-all"
-                style={{ borderColor: "oklch(0.55 0.14 290 / 0.4)", background: "oklch(0.55 0.14 290 / 0.05)" }}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">🔮</span>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Generate Your First Insight</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Let your Higher Self analyze your patterns</p>
-                  </div>
-                  <ChevronRight size={16} className="text-muted-foreground ml-auto shrink-0" />
-                </div>
-              </motion.div>
-            </Link>
-          )}
-        </motion.div>
-
-        {/* ── Weekly reflection digest ────────────────────────────────── */}
-        {weeklyDigest && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.28 }}
-          >
-            <Link href="/insights">
-              <div
-                className="rounded-2xl p-5 space-y-3 cursor-pointer transition-all hover:shadow-md"
-                style={{
-                  background: "oklch(0.17 0.04 280)",
-                  border: "1px solid oklch(0.65 0.16 185 / 0.25)",
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-primary uppercase tracking-widest font-medium">✦ Your week in reflection</span>
-                  <ChevronRight size={14} className="text-muted-foreground" />
-                </div>
-                <p className="text-sm text-foreground leading-relaxed line-clamp-3">
-                  {weeklyDigest.summary}
-                </p>
-                <p className="text-xs text-primary font-medium">
-                  {weeklyDigest.sessionCount} Mirror sessions this week
-                </p>
-              </div>
-            </Link>
-          </motion.div>
-        )}
-
         {/* ── Growth dashboard link ───────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.32 }}
+          transition={{ duration: 0.45, delay: 0.24 }}
         >
           <Link href="/dashboard">
             <div
@@ -444,7 +359,7 @@ export default function Home() {
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-3xl font-serif text-primary">✦</div>
-                <p className="text-sm text-muted-foreground">View your evolution across all life domains</p>
+                <p className="text-sm text-muted-foreground">Insights, reflections & your evolution</p>
               </div>
             </div>
           </Link>

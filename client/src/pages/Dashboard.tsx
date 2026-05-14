@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import AppShell from "@/components/AppShell";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Star, Sparkles } from "lucide-react";
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -34,6 +34,8 @@ export default function Dashboard() {
   const [, navigate] = useLocation();
 
   const { data: overview, isLoading } = trpc.dashboard.overview.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: latestInsight } = trpc.insights.latest.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: weeklyDigest } = trpc.home.getLatestDigest.useQuery(undefined, { enabled: isAuthenticated });
 
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate("/");
@@ -59,7 +61,7 @@ export default function Dashboard() {
         {/* Header */}
         <div>
           <h1 className="text-3xl font-serif font-light">Growth</h1>
-          <p className="text-xs text-muted-foreground mt-1">Your evolution, visualized</p>
+          <p className="text-xs text-muted-foreground mt-1">Insights, reflections & your evolution</p>
         </div>
 
         {isLoading ? (
@@ -70,10 +72,95 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
+            {/* ── Insights & Reflections ──────────────────────────────── */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-3"
+            >
+              <p className="text-xs text-muted-foreground uppercase tracking-widest">Insights & Reflections</p>
+
+              {/* Latest AI Insight */}
+              {latestInsight ? (
+                <Link href="/insights">
+                  <div
+                    className="rounded-2xl p-5 space-y-3 cursor-pointer transition-all hover:shadow-md"
+                    style={{
+                      background: "oklch(0.17 0.04 280)",
+                      border: "1px solid oklch(0.28 0.05 280 / 0.6)",
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Star size={12} className="text-amber-400 fill-amber-400" />
+                        <p className="text-xs text-amber-400 uppercase tracking-widest font-medium">Latest Insight</p>
+                      </div>
+                      <ChevronRight size={14} className="text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-foreground leading-relaxed line-clamp-3">
+                      {latestInsight.insightText}
+                    </p>
+                    {Array.isArray(latestInsight.actionableSteps) && latestInsight.actionableSteps.length > 0 && (
+                      <span className="text-xs text-primary font-medium">
+                        {latestInsight.actionableSteps.length} action steps →
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              ) : (
+                <Link href="/insights">
+                  <motion.div
+                    whileTap={{ scale: 0.98 }}
+                    className="rounded-2xl p-5 cursor-pointer border-2 border-dashed transition-all"
+                    style={{ borderColor: "oklch(0.55 0.14 290 / 0.4)", background: "oklch(0.55 0.14 290 / 0.05)" }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl">🔮</span>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">Generate Your First Insight</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Let your mirror analyze your patterns</p>
+                      </div>
+                      <ChevronRight size={16} className="text-muted-foreground ml-auto shrink-0" />
+                    </div>
+                  </motion.div>
+                </Link>
+              )}
+
+              {/* Weekly Reflection */}
+              {weeklyDigest && (
+                <Link href="/insights">
+                  <div
+                    className="rounded-2xl p-5 space-y-3 cursor-pointer transition-all hover:shadow-md"
+                    style={{
+                      background: "oklch(0.17 0.04 280)",
+                      border: "1px solid oklch(0.65 0.16 185 / 0.25)",
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles size={12} style={{ color: "oklch(0.65 0.16 185)" }} />
+                        <span className="text-xs uppercase tracking-widest font-medium" style={{ color: "oklch(0.65 0.16 185)" }}>
+                          Weekly Reflection
+                        </span>
+                      </div>
+                      <ChevronRight size={14} className="text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-foreground leading-relaxed line-clamp-3">
+                      {weeklyDigest.summary}
+                    </p>
+                    <p className="text-xs text-primary font-medium">
+                      {weeklyDigest.sessionCount} Mirror sessions this week
+                    </p>
+                  </div>
+                </Link>
+              )}
+            </motion.div>
+
             {/* Overall score */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
               className="glass rounded-3xl p-6 flex items-center gap-6"
             >
               <div className="relative w-20 h-20">
@@ -110,7 +197,7 @@ export default function Dashboard() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
+                transition={{ delay: 0.2 }}
                 className="glass rounded-3xl p-5 space-y-3"
               >
                 <p className="text-xs text-muted-foreground uppercase tracking-widest">Life Balance</p>
@@ -141,7 +228,7 @@ export default function Dashboard() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
+                transition={{ delay: 0.3 }}
                 className="glass rounded-3xl p-5 space-y-3"
               >
                 <p className="text-xs text-muted-foreground uppercase tracking-widest">Mood & Energy Trend</p>
@@ -200,7 +287,7 @@ export default function Dashboard() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.4 }}
                 className="space-y-3"
               >
                 <p className="text-xs text-muted-foreground uppercase tracking-widest">Domain Scores</p>
@@ -231,7 +318,7 @@ export default function Dashboard() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
+                transition={{ delay: 0.5 }}
                 className="space-y-3"
               >
                 <div className="flex items-center justify-between">

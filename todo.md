@@ -776,3 +776,9 @@
 - [x] Add "Already have an account? Sign in" link below Start My Journey on Landing page
 - [x] Streamline onboarding: reduce steps from 6 to 3 (name+intent, values, one goal)
 - [x] Keep onboarding intriguing enough to complete but not so long users drop off
+
+## Merge Insights & Reflections into Dashboard
+- [x] Remove "Latest Insight" card from Home page
+- [x] Remove "Your Week in Reflection" card from Home page
+- [x] Add unified "Insights & Reflections" section to Growth Dashboard page
+- [x] Clean up Home page to reduce clutter
