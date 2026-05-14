@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Sparkles, ChevronRight, Sun, Moon, Bell, Gift } from "lucide-react";
+import { Sparkles, ChevronRight, Sun, Moon, Bell, Gift, User } from "lucide-react";
 import WelcomeSpinModal from "@/components/WelcomeSpinModal";
 import { format } from "date-fns";
 
@@ -118,6 +118,11 @@ export default function Home() {
               <Link href="/notifications">
                 <button className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground">
                   <Bell className="w-4 h-4" />
+                </button>
+              </Link>
+              <Link href="/settings">
+                <button className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground">
+                  <User className="w-4 h-4" />
                 </button>
               </Link>
             </div>

@@ -800,3 +800,8 @@
 - [x] Remove heart/star reaction buttons below each message
 - [x] Fix 8-hour logic: only start new chat when returning after 8hrs inactivity, NOT when navigating to other pages
 - [x] Conversations still feed into weekly AI insight (Sunday) combined with journals, habits, goals
+
+## Navigation Restructure
+- [x] Move Calendar tab to bottom nav where Profile tab currently is
+- [x] Remove Profile tab from bottom nav
+- [x] Add Profile link at the top of the app (near settings/header area)

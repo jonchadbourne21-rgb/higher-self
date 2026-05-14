@@ -1,12 +1,13 @@
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen,
+  Calendar,
   CalendarDays,
   Home,
   Info,
   MessageCircle,
-  Settings,
   Sparkles,
+  Settings,
   User,
   X,
 } from "lucide-react";
@@ -20,7 +21,7 @@ const navItems = [
   { path: "/domains", icon: CalendarDays, label: "Habits" },
   { path: "/chat", icon: Sparkles, label: "AI Coach" },
   { path: "/journal", icon: BookOpen, label: "Journal" },
-  { path: "/settings", icon: User, label: "Profile" },
+  { path: "/calendar", icon: Calendar, label: "Calendar" },
 ];
 
 /** Fire a short haptic pulse if the device supports it (Android Chrome) */
