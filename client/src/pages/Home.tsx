@@ -90,6 +90,8 @@ export default function Home() {
     ? "🎁 Welcome Spin!"
     : pendingSpins > 0
     ? `🎡 ${pendingSpins} Free Spin${pendingSpins > 1 ? "s" : ""}!`
+    : (rewardPoints?.total ?? 0) === 0
+    ? "Earn your first spin →"
     : `${rewardPoints?.total ?? 0} pts`;
   const rewardsLabelColor = hasWelcomeSpin || pendingSpins > 0 ? "oklch(0.75 0.16 55)" : undefined;
 
