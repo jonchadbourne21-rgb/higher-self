@@ -793,3 +793,10 @@
 - [x] AI adapts to user's communication style, preferences, and emotional needs
 - [x] AI asks hard self-awareness questions for growth and transformation
 - [x] Real-time voice response like being on a call
+
+## Mirror Chat Fixes (May 14)
+- [x] Fix history tab stuck on "Loading..." — sessions query not resolving
+- [x] Remove Insights tab from Mirror chat entirely
+- [x] Remove heart/star reaction buttons below each message
+- [x] Fix 8-hour logic: only start new chat when returning after 8hrs inactivity, NOT when navigating to other pages
+- [x] Conversations still feed into weekly AI insight (Sunday) combined with journals, habits, goals

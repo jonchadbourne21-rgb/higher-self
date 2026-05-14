@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Send, Heart, Star, RefreshCw, X, History, ChevronRight, Pencil, Check, Bookmark, MessageCircle, Mic, MicOff, Volume2 } from "lucide-react";
+import { Send, RefreshCw, X, History, ChevronRight, Pencil, Check, MessageCircle, Mic, MicOff, Volume2 } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
@@ -102,8 +102,8 @@ export default function Chat() {
   const [editingSessionId, setEditingSessionId] = useState<string | null | undefined>(undefined);
   const [editingTitle, setEditingTitle] = useState("");
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  // Tab state: "chat" | "history" | "insights"
-  const [activeTab, setActiveTab] = useState<"chat" | "history" | "insights">("chat");
+  // Tab state: "chat" | "history"
+  const [activeTab, setActiveTab] = useState<"chat" | "history">("chat");
   // History search state
   const [historySearchQuery, setHistorySearchQuery] = useState("");
   // Auto-resume handled via useEffect (no modal)
@@ -139,7 +139,7 @@ export default function Chat() {
 
   // Fetch all sessions for history panel
   const { data: sessions } = trpc.chat.sessions.useQuery(undefined, {
-    enabled: isAuthenticated && showHistory,
+    enabled: isAuthenticated && (showHistory || activeTab === "history"),
   });
 
   // Fetch session titles map
@@ -147,10 +147,7 @@ export default function Chat() {
     enabled: isAuthenticated && (showHistory || activeTab === "history"),
   });
 
-  // Fetch saved insights
-  const { data: insights } = trpc.savedInsights.list.useQuery(undefined, {
-    enabled: isAuthenticated && activeTab === "insights",
-  });
+
   // Fetch last session for resume modal
   const { data: lastSession } = trpc.chat.getLastSession.useQuery(undefined, {
     enabled: isAuthenticated && !hasShownResumeModal,
@@ -214,13 +211,7 @@ export default function Chat() {
     },
   });
 
-  const saveInsightMutation = trpc.savedInsights.save.useMutation({
-    onSuccess: (_, vars) => {
-      const emoji = vars.reactionType === "heart" ? "💜" : "⭐";
-      toast.success(`${emoji} Saved to your insights`);
-    },
-    onError: () => toast.error("Couldn't save insight. Try again."),
-  });
+
 
   const updateTitleMutation = trpc.chat.updateSessionTitle.useMutation({
     onSuccess: () => {
@@ -232,26 +223,12 @@ export default function Chat() {
     onError: () => toast.error("Couldn't save title. Try again."),
   });
 
-  const [reactions, setReactions] = useState<Record<string, "heart" | "star">>({});
-
-  const handleReaction = (msg: ChatMessage, type: "heart" | "star") => {
-    if (reactions[msg.id] === type) {
-      setReactions((prev) => { const n = { ...prev }; delete n[msg.id]; return n; });
-      return;
-    }
-    setReactions((prev) => ({ ...prev, [msg.id]: type }));
-    saveInsightMutation.mutate({
-      chatMessageId: msg.dbId,
-      content: msg.content,
-      reactionType: type,
-    });
-  };
-
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate("/");
   }, [isAuthenticated, loading]);
 
-  // Auto-new-chat after 8 hours of inactivity, otherwise resume last session
+  // Resume existing session on load. Only auto-start fresh if 8+ hours since last message.
+  // This does NOT trigger on page navigation — only on initial mount when Chat loads.
   useEffect(() => {
     if (isAuthenticated && !hasShownResumeModal && lastSession) {
       setHasShownResumeModal(true);
@@ -259,18 +236,22 @@ export default function Chat() {
       const lastMsgTime = lastSession.lastMessageAt ? new Date(lastSession.lastMessageAt).getTime() : 0;
       const timeSinceLastMsg = Date.now() - lastMsgTime;
       
-      if (timeSinceLastMsg >= EIGHT_HOURS_MS || lastSession.messageCount === 0) {
-        // Auto-start fresh session (save old one to history)
+      if (lastSession.messageCount > 0 && timeSinceLastMsg >= EIGHT_HOURS_MS) {
+        // 8+ hours since last message — save old session to history, start fresh
         clearMutation.mutate();
-      } else {
-        // Resume the existing session
+      } else if (lastSession.messageCount > 0) {
+        // Active session within 8 hours — resume where they left off
         setSessionId(lastSession.sessionId);
         setTimeout(() => {
           messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
         }, 100);
+      } else {
+        // Empty session or first time — just use current session
+        setSessionId(lastSession.sessionId);
       }
     }
   }, [isAuthenticated, hasShownResumeModal, lastSession]);
+
   // On first load, determine the current session from history
   useEffect(() => {
     if (sessionId === undefined && isAuthenticated) {
@@ -570,14 +551,13 @@ export default function Chat() {
             {[
               { id: "chat", label: "Chat", icon: MessageCircle },
               { id: "history", label: "History", icon: History },
-              { id: "insights", label: "Insights", icon: Bookmark },
             ].map((tab) => {
               const isActive = activeTab === tab.id;
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as "chat" | "history" | "insights")}
+                  onClick={() => setActiveTab(tab.id as "chat" | "history")}
                   className={`flex items-center gap-2 px-3 py-2.5 text-xs font-medium rounded-t-lg border-b-2 transition-all ${
                     isActive
                       ? "border-primary text-primary"
@@ -894,41 +874,7 @@ export default function Chat() {
                       <p className="text-sm leading-relaxed">{msg.content}</p>
                     )}
                   </div>
-                  {/* Reaction buttons — only for assistant messages in live view */}
-                  {msg.role === "assistant" && !isViewingPast && (
-                    <AnimatePresence>
-                      <motion.div
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex gap-1 pl-1"
-                      >
-                        <button
-                          onClick={() => handleReaction(msg, "heart")}
-                          title="Save as emotional insight"
-                          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-all ${
-                            reactions[msg.id] === "heart"
-                              ? "bg-pink-500/20 text-pink-400 border border-pink-400/40"
-                              : "text-muted-foreground/50 hover:text-pink-400 hover:bg-pink-500/10"
-                          }`}
-                        >
-                          <Heart className="w-3 h-3" fill={reactions[msg.id] === "heart" ? "currentColor" : "none"} />
-                          {reactions[msg.id] === "heart" && <span>Saved</span>}
-                        </button>
-                        <button
-                          onClick={() => handleReaction(msg, "star")}
-                          title="Save as actionable insight"
-                          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-all ${
-                            reactions[msg.id] === "star"
-                              ? "bg-amber-500/20 text-amber-400 border border-amber-400/40"
-                              : "text-muted-foreground/50 hover:text-amber-400 hover:bg-amber-500/10"
-                          }`}
-                        >
-                          <Star className="w-3 h-3" fill={reactions[msg.id] === "star" ? "currentColor" : "none"} />
-                          {reactions[msg.id] === "star" && <span>Saved</span>}
-                        </button>
-                      </motion.div>
-                    </AnimatePresence>
-                  )}
+
                 </div>
               </motion.div>
             </div>
@@ -1071,40 +1017,7 @@ export default function Chat() {
           </div>
         </div>
         )}
-        {/* Insights Tab */}
-        {activeTab === "insights" && (
-        <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-hide pb-24">
-          {!insights ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">Loading...</div>
-          ) : insights.length === 0 ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              <p className="mb-2">No saved insights yet.</p>
-              <p className="text-xs">Heart or star messages in Chat to save them here.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {insights.map((insight) => (
-                <div
-                  key={insight.id}
-                  className="glass rounded-2xl p-4 border border-border/20"
-                >
-                  <div className="flex items-start gap-2 mb-2">
-                    {insight.reactionType === "heart" ? (
-                      <Heart className="w-4 h-4 text-pink-400 flex-shrink-0 mt-0.5" fill="currentColor" />
-                    ) : (
-                      <Star className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" fill="currentColor" />
-                    )}
-                    <p className="text-xs text-muted-foreground/60">
-                      {new Date(insight.savedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                    </p>
-                  </div>
-                  <p className="text-sm text-foreground leading-relaxed">{insight.content}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        )}
+
 
         {/* Input — stays pinned at bottom; pb-24 clears the floating nav */}
         <div className="px-4 pb-24 pt-2 border-t border-border/30 flex-shrink-0">
