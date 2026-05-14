@@ -4,14 +4,32 @@ import { Sparkles, Zap, Crown, Gift } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
+// ── Dare messages (randomly picked when user lands on dare) ──────────────────
+const DARE_MESSAGES = [
+  "Text someone right now and tell them one thing you appreciate about them 💌",
+  "Stand up, do 10 jumping jacks, and say 'I'm unstoppable' out loud 🏃",
+  "Go outside, touch some grass, and take one deep breath of fresh air 🌿",
+  "Send a voice note to a friend just saying 'Hey, thinking of you' 🎙️",
+  "Do your best power pose for 30 seconds — yes, right now 💪",
+  "Write down 3 things that made you smile this week, no matter how small 😄",
+  "Put on your favourite song and dance for at least 30 seconds 🎵",
+  "Drink a full glass of water right now. Hydration is self-care 💧",
+  "Look in the mirror and say one genuine compliment to yourself 🪞",
+  "Step away from your screen for 5 minutes and just breathe 🧘",
+];
+
+export function getRandomDareMessage(): string {
+  return DARE_MESSAGES[Math.floor(Math.random() * DARE_MESSAGES.length)];
+}
+
 // ── Wheel segments (8 slices, 45° each) ─────────────────────────────────────
 const SEGMENTS = [
   { id: "month_pro", label: "1 Month\nFree Pro", color: "#7c3aed", textColor: "#fff", icon: "👑" },
-  { id: "five_percent_off", label: "5% Off\nAnnual", color: "#334155", textColor: "#cbd5e1", icon: "💰" },
+  { id: "dare", label: "Take a\nDare! 🎯", color: "#92400e", textColor: "#fde68a", icon: "🎯" },
   { id: "try_again", label: "Try\nAgain", color: "#1e1b4b", textColor: "#94a3b8", icon: "🔄" },
   { id: "week_trial", label: "1 Week\nFree Trial", color: "#0d9488", textColor: "#fff", icon: "⭐" },
   { id: "reward_points", label: "+5\nPoints", color: "#059669", textColor: "#fff", icon: "✨" },
-  { id: "five_percent_off_2", label: "5% Off\nAnnual", color: "#334155", textColor: "#cbd5e1", icon: "💰" },
+  { id: "dare_2", label: "Take a\nDare! 🎯", color: "#78350f", textColor: "#fde68a", icon: "🎯" },
   { id: "try_again_2", label: "Try\nAgain", color: "#1e1b4b", textColor: "#94a3b8", icon: "🔄" },
   { id: "reward_points_2", label: "+5\nPoints", color: "#059669", textColor: "#fff", icon: "✨" },
 ];
@@ -19,7 +37,7 @@ const SEGMENTS = [
 // Map backend result to a segment index the pointer should land on
 const RESULT_TO_SEGMENT_INDEX: Record<string, number[]> = {
   month_pro: [0],
-  five_percent_off: [1, 5],
+  dare: [1, 5],
   try_again: [2, 6],
   week_trial: [3],
   reward_points: [4, 7],
@@ -297,6 +315,8 @@ export default function WelcomeSpinModal({ open, onClose }: WelcomeSpinModalProp
             >
               {(() => {
                 const isProPrize = prizeLabel?.includes("Pro") || prizeLabel?.includes("Trial");
+                const isDare = prizeLabel?.toLowerCase().includes("dare") || prizeLabel?.includes("🎯");
+                const dareMessage = isDare ? getRandomDareMessage() : null;
                 return (
                   <>
                     <motion.div
@@ -305,22 +325,38 @@ export default function WelcomeSpinModal({ open, onClose }: WelcomeSpinModalProp
                       transition={{ delay: 0.15, type: "spring", stiffness: 250 }}
                       className="text-7xl"
                     >
-                      {isProPrize ? "👑" : "🎉"}
+                      {isProPrize ? "👑" : isDare ? "🎯" : "🎉"}
                     </motion.div>
 
                     <h2 className="text-2xl font-serif text-foreground">
-                      {isProPrize && grantActivated ? "You're Pro Now!" : "You Won!"}
+                      {isProPrize && grantActivated ? "You're Pro Now!" : isDare ? "You've Been Dared!" : "You Won!"}
                     </h2>
 
                     <div
                       className="rounded-2xl p-5"
                       style={{
-                        background: "oklch(0.65 0.16 185 / 0.12)",
-                        border: "1px solid oklch(0.65 0.16 185 / 0.25)",
+                        background: isDare ? "oklch(0.25 0.08 45 / 0.3)" : "oklch(0.65 0.16 185 / 0.12)",
+                        border: isDare ? "1px solid oklch(0.65 0.15 60 / 0.4)" : "1px solid oklch(0.65 0.16 185 / 0.25)",
                       }}
                     >
-                      <p className="text-xl font-bold text-primary">{prizeLabel}</p>
+                      {isDare ? (
+                        <p className="text-sm leading-relaxed" style={{ color: "#fde68a" }}>{dareMessage}</p>
+                      ) : (
+                        <p className="text-xl font-bold text-primary">{prizeLabel}</p>
+                      )}
                     </div>
+
+                    {/* Dare consolation nudge */}
+                    {isDare && (
+                      <div
+                        className="rounded-xl p-4 text-left space-y-1"
+                        style={{ background: "oklch(0.20 0.04 280)", border: "1px solid oklch(0.35 0.06 280 / 0.4)" }}
+                      >
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          Complete your dare for a mood boost 😄 Good luck next time on the wheel!
+                        </p>
+                      </div>
+                    )}
 
                     {/* Pro activation message */}
                     {isProPrize && grantActivated && (
