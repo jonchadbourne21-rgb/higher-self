@@ -306,8 +306,11 @@ export default function Home() {
                   className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
                   style={TILE_MIRROR}
                 >
-                  <span className="text-xl">🧐</span>
-                  <p className="text-xs font-semibold text-foreground">Talk to Mirror</p>
+                  <span className="text-xl">🪞</span>
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">Talk to Mirror</p>
+                    <p className="text-[10px] text-muted-foreground leading-tight">Reflect & grow</p>
+                  </div>
                 </motion.div>
               </Link>
 
@@ -318,7 +321,10 @@ export default function Home() {
                   style={TILE_JOURNAL}
                 >
                   <span className="text-xl">📝</span>
-                  <p className="text-xs font-semibold text-foreground">Journal</p>
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">Journal</p>
+                    <p className="text-[10px] text-muted-foreground leading-tight">Write your thoughts</p>
+                  </div>
                 </motion.div>
               </Link>
 
@@ -340,7 +346,10 @@ export default function Home() {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs font-semibold text-foreground">Life Domains</p>
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">Life Domains</p>
+                    <p className="text-[10px] text-muted-foreground leading-tight">Track your life</p>
+                  </div>
                 </motion.div>
               </Link>
 
@@ -351,7 +360,10 @@ export default function Home() {
                   style={TILE_PROGRAMS}
                 >
                   <span className="text-xl">🎓</span>
-                  <p className="text-xs font-semibold text-foreground">Programs</p>
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">Programs</p>
+                    <p className="text-[10px] text-muted-foreground leading-tight">Guided growth</p>
+                  </div>
                 </motion.div>
               </Link>
 
@@ -363,12 +375,15 @@ export default function Home() {
                   style={{ background: rewardsBg, border: rewardsBorder }}
                 >
                   <span className="text-xl">🎁</span>
-                  <p
-                    className="text-xs font-semibold"
-                    style={{ color: rewardsLabelColor ?? "oklch(0.92 0.02 280)" }}
-                  >
-                    {rewardsLabel}
-                  </p>
+                  <div>
+                    <p
+                      className="text-xs font-semibold"
+                      style={{ color: rewardsLabelColor ?? "oklch(0.92 0.02 280)" }}
+                    >
+                      {rewardsLabel}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground leading-tight">Spin & earn</p>
+                  </div>
                 </motion.div>
               </Link>
 
@@ -382,7 +397,7 @@ export default function Home() {
                   <span className="text-xl">📅</span>
                   <div>
                     <p className="text-xs font-semibold text-foreground">Calendar</p>
-                    <p className="text-[10px] text-muted-foreground leading-tight line-clamp-1">{calendarSub}</p>
+                    <p className="text-[10px] text-muted-foreground leading-tight line-clamp-1">{calendarSub || "Plan your week"}</p>
                   </div>
                 </motion.div>
               </Link>
