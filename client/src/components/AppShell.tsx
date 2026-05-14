@@ -1,15 +1,13 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   BookOpen,
   Calendar,
   Flame,
   Home,
-  Info,
   MessageCircle,
   Sparkles,
   Settings,
   User,
-  X,
   GraduationCap,
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
@@ -118,7 +116,6 @@ export default function AppShell({ children, noScroll }: AppShellProps) {
     [currentIndex, navigate]
   );
 
-  const [disclaimerOpen, setDisclaimerOpen] = useState(false);
 
   return (
     <div
@@ -137,64 +134,6 @@ export default function AppShell({ children, noScroll }: AppShellProps) {
         {children}
       </main>
 
-      {/* Crisis info button — fixed bottom-right above nav */}
-      <button
-        onClick={() => setDisclaimerOpen(true)}
-        className="fixed bottom-20 right-4 z-40 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-opacity opacity-40 hover:opacity-80"
-        style={{ background: "oklch(0.20 0.04 280 / 0.6)", border: "1px solid oklch(0.28 0.05 280 / 0.5)" }}
-        aria-label="Safety information"
-      >
-        <Info size={14} className="text-primary" />
-      </button>
-
-      {/* Crisis disclaimer modal */}
-      <AnimatePresence>
-        {disclaimerOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-end justify-center"
-            style={{ background: "oklch(0.08 0.02 280 / 0.7)" }}
-            onClick={() => setDisclaimerOpen(false)}
-          >
-            <motion.div
-              initial={{ y: 60, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 60, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 400, damping: 32 }}
-              className="w-full max-w-[480px] rounded-t-2xl p-6 pb-10 overflow-y-auto max-h-[80dvh]"
-              style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280)" }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-foreground">About Mentrove</h2>
-                <button onClick={() => setDisclaimerOpen(false)} className="p-1 rounded-full hover:bg-muted">
-                  <X size={18} className="text-muted-foreground" />
-                </button>
-              </div>
-              <div className="space-y-4 text-sm text-muted-foreground">
-                <div>
-                  <p className="font-semibold text-foreground mb-1">What Mentrove Is</p>
-                  <p>Mentrove is an AI-powered self-reflection tool designed to support personal growth, emotional awareness, and mindfulness. It offers guided journaling, mood tracking, and AI-assisted insights to help you understand yourself better.</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground mb-1">What Mentrove Is NOT</p>
-                  <p>Mentrove is <strong className="text-foreground">not</strong> a licensed therapist, psychologist, medical doctor, or crisis counselor. It does not provide medical advice, diagnosis, or treatment. It is not a substitute for professional mental health care.</p>
-                </div>
-                <div className="rounded-xl p-4" style={{ background: "oklch(0.20 0.08 15 / 0.3)", border: "1px solid oklch(0.40 0.12 15 / 0.4)" }}>
-                  <p className="font-semibold text-red-400 mb-2">🆘 In Crisis? Get Help Now</p>
-                  <div className="space-y-1 text-red-300">
-                    <p><a href="tel:988" className="font-semibold text-red-400 underline">988</a> — Suicide &amp; Crisis Lifeline (call or text)</p>
-                    <p><a href="tel:18002738255" className="font-semibold text-red-400 underline">1-800-273-8255</a> — National Suicide Prevention Lifeline</p>
-                    <p><a href="tel:911" className="font-semibold text-red-400 underline">911</a> — Emergency Services</p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Floating pill nav — dark glass, auto-hides on scroll down */}
       <motion.nav

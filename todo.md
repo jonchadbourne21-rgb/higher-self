@@ -981,3 +981,6 @@
 - [x] Register routes in App.tsx
 - [x] Add links from Home.tsx footer (alongside FAQ link)
 - [x] Add links from FAQ.tsx footer
+
+## Remove Disclaimer (!) Button
+- [x] Remove info (!) button and disclaimer modal from AppShell since content now lives on /faq About page
