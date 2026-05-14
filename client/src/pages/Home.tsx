@@ -77,12 +77,13 @@ export default function Home() {
     ? "linear-gradient(135deg, oklch(0.55 0.18 290 / 0.22), oklch(0.65 0.16 185 / 0.22))"
     : pendingSpins > 0
     ? "linear-gradient(135deg, oklch(0.60 0.18 50 / 0.18), oklch(0.55 0.18 290 / 0.14))"
-    : TILE_STYLE.background;
+    // Muted Plum — subtle reward focal point (default state)
+    : "oklch(0.15 0.05 320)";
   const rewardsBorder = hasWelcomeSpin
     ? "1px solid oklch(0.65 0.16 185 / 0.35)"
     : pendingSpins > 0
     ? "1px solid oklch(0.60 0.18 50 / 0.4)"
-    : TILE_STYLE.border;
+    : "1px solid oklch(0.38 0.10 320 / 0.55)";
 
   // Rewards label
   const rewardsLabel = hasWelcomeSpin
@@ -132,25 +133,30 @@ export default function Home() {
       : "oklch(0.55 0.08 300)";
 
   // Tile accent styles
+  // Deep Amethyst / Dark Indigo — introspection, wisdom
   const TILE_MIRROR = {
-    background: "oklch(0.17 0.05 185)",
-    border: "1px solid oklch(0.35 0.10 185 / 0.5)",
+    background: "oklch(0.15 0.06 290)",
+    border: "1px solid oklch(0.40 0.14 290 / 0.55)",
   };
+  // Dark Slate Blue — calming, reduces cognitive load
   const TILE_JOURNAL = {
-    background: "oklch(0.17 0.05 60)",
-    border: "1px solid oklch(0.40 0.12 60 / 0.5)",
+    background: "oklch(0.15 0.05 240)",
+    border: "1px solid oklch(0.38 0.10 240 / 0.55)",
   };
+  // Deep Teal / Cyan — exploration, matches main banner
   const TILE_DOMAINS = {
-    background: "oklch(0.17 0.05 290)",
-    border: "1px solid oklch(0.40 0.12 290 / 0.5)",
+    background: "oklch(0.15 0.06 185)",
+    border: "1px solid oklch(0.38 0.12 185 / 0.55)",
   };
+  // Dark Emerald Green — growth, learning, progress
   const TILE_PROGRAMS = {
-    background: "oklch(0.17 0.05 45)",
-    border: "1px solid oklch(0.45 0.14 45 / 0.5)",
+    background: "oklch(0.15 0.06 155)",
+    border: "1px solid oklch(0.38 0.12 155 / 0.55)",
   };
+  // Midnight Navy — neutral, structured, utility
   const TILE_CALENDAR = {
-    background: "oklch(0.17 0.04 220)",
-    border: "1px solid oklch(0.35 0.08 220 / 0.5)",
+    background: "oklch(0.13 0.04 250)",
+    border: "1px solid oklch(0.30 0.07 250 / 0.55)",
   };
 
   return (

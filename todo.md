@@ -945,3 +945,11 @@
 - [x] Tile accent colors: Mirror=teal, Journal=amber, Life Domains=violet, Programs=gold, Calendar=slate (all OKLCH)
 - [x] Aura score: computed client-side as mood×0.4 + energy×0.3 + (11-stress)×0.3 (no DB column needed)
 - [x] Home check-in card: shows "Aura 8/10 · 💫 Vibrant" with color-coded label (Radiant/Vibrant/Balanced/Heavy/Low)
+
+## Jewel-Tone Tile Palette
+- [x] Mirror: Deep Amethyst/Dark Indigo oklch(0.15 0.06 290) — introspection, wisdom
+- [x] Journal: Dark Slate Blue oklch(0.15 0.05 240) — calming, reduces cognitive load
+- [x] Life Domains: Deep Teal/Cyan oklch(0.15 0.06 185) — exploration, matches main banner
+- [x] Programs: Dark Emerald Green oklch(0.15 0.06 155) — growth, learning, progress
+- [x] Rewards default: Muted Plum oklch(0.15 0.05 320) — subtle reward focal point
+- [x] Calendar: Midnight Navy oklch(0.13 0.04 250) — neutral, structured, utility
