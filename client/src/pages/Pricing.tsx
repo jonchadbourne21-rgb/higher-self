@@ -1,5 +1,4 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Button } from "@/components/ui/button";
 import { Check, X, Sparkles, Zap, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
@@ -9,52 +8,26 @@ import AppShell from "@/components/AppShell";
 const STRIPE_CHECKOUT_MONTHLY = "https://buy.stripe.com/test_14A5kC1EB85s5SQe9fco000";
 const STRIPE_CHECKOUT_YEARLY = "https://buy.stripe.com/test_7sYdR8dnj71o1CA5CJco001";
 
-const PRICING_TIERS = [
-  {
-    name: "Free",
-    description: "Perfect for getting started",
-    price: "$0",
-    period: "forever",
-    cta: "Current Plan",
-    ctaVariant: "outline" as const,
-    highlight: false,
-    features: [
-      { name: "5 AI chats per day", included: true },
-      { name: "4 journal entries per week", included: true },
-      { name: "Unlimited life domains & habits", included: true },
-      { name: "Daily check-ins", included: true },
-      { name: "Weekly insights", included: true },
-      { name: "3-day streak reward wheel", included: true },
-      { name: "Reward points system", included: true },
-      { name: "Priority support", included: false },
-      { name: "Advanced analytics", included: false },
-      { name: "Custom integrations", included: false },
-    ],
-  },
-  {
-    name: "Pro",
-    description: "Unlimited growth & insights",
-    price: "$2.99",
-    period: "per month",
-    priceAnnual: "$39.99/year",
-    cta: "Upgrade to Pro",
-    ctaVariant: "default" as const,
-    highlight: true,
-    checkoutUrl: STRIPE_CHECKOUT_MONTHLY,
-    checkoutUrlAnnual: STRIPE_CHECKOUT_YEARLY,
-    features: [
-      { name: "Unlimited AI chats", included: true },
-      { name: "Unlimited journal entries", included: true },
-      { name: "Unlimited life domains & habits", included: true },
-      { name: "Daily check-ins", included: true },
-      { name: "Weekly insights", included: true },
-      { name: "3-day streak reward wheel", included: true },
-      { name: "Reward points system", included: true },
-      { name: "Priority support", included: true },
-      { name: "Advanced analytics & trends", included: true },
-      { name: "Custom integrations", included: true },
-    ],
-  },
+const FREE_FEATURES = [
+  { name: "5 AI chats per day", included: true },
+  { name: "4 journal entries per week", included: true },
+  { name: "Life domains & habits", included: true },
+  { name: "Daily check-ins", included: true },
+  { name: "Weekly insights", included: true },
+  { name: "Reward wheel", included: true },
+  { name: "Priority support", included: false },
+  { name: "Advanced analytics", included: false },
+];
+
+const PRO_FEATURES = [
+  { name: "Unlimited AI chats", included: true },
+  { name: "Unlimited journals", included: true },
+  { name: "Life domains & habits", included: true },
+  { name: "Daily check-ins", included: true },
+  { name: "Weekly insights", included: true },
+  { name: "Reward wheel", included: true },
+  { name: "Priority support", included: true },
+  { name: "Advanced analytics", included: true },
 ];
 
 const MILESTONES = [
@@ -73,7 +46,7 @@ const MILESTONES = [
 ];
 
 export default function Pricing() {
-  const { isAuthenticated, loading, user } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const [, navigate] = useLocation();
 
   useEffect(() => {
@@ -85,248 +58,291 @@ export default function Pricing() {
   if (loading) {
     return (
       <AppShell>
-        <div className="px-5 pt-8 pb-4 space-y-6">
-          <div className="h-96 bg-gradient-to-b from-background/50 to-background/20 rounded-3xl animate-pulse" />
+        <div className="px-4 pt-6 pb-4 space-y-6">
+          <div className="h-96 rounded-2xl animate-pulse" style={{ background: "oklch(0.18 0.04 280)" }} />
         </div>
       </AppShell>
     );
   }
 
   const handleUpgrade = (billingPeriod: "monthly" | "yearly" = "monthly") => {
-    // Open Stripe checkout in new tab
     const url = billingPeriod === "yearly" ? STRIPE_CHECKOUT_YEARLY : STRIPE_CHECKOUT_MONTHLY;
     window.open(url, "_blank");
   };
 
   return (
     <AppShell>
-      <div className="px-5 pt-8 pb-4 space-y-12">
+      <div className="px-4 pt-4 pb-4 space-y-8">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-3"
+          className="text-center space-y-2"
         >
-          <div className="flex justify-center mb-2">
-            <img
-              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
-              alt="Mentrove"
-              className="w-16 h-16 rounded-full object-cover"
-              style={{ boxShadow: "0 0 24px oklch(0.46 0.14 295 / 0.3)" }}
-            />
-          </div>
-          <h1 className="text-4xl font-serif font-light">Simple, Transparent Pricing</h1>
-          <p className="text-muted-foreground text-lg">
-            Choose the plan that fits your growth journey
+          <h1
+            className="text-2xl font-light tracking-wide"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: "oklch(0.93 0.01 270)" }}
+          >
+            Choose Your Plan
+          </h1>
+          <p className="text-xs" style={{ color: "oklch(0.58 0.03 270)" }}>
+            Start free, upgrade when you're ready
           </p>
         </motion.div>
 
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          {PRICING_TIERS.map((tier, idx) => (
-            <motion.div
-              key={tier.name}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              className={`rounded-3xl p-8 space-y-6 relative ${
-                tier.highlight
-                  ? "bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/30 shadow-lg"
-                  : "bg-white border border-border"
-              }`}
+        {/* Side-by-side Pricing Cards */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* Free Tier */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="rounded-2xl p-4 space-y-3"
+            style={{
+              background: "oklch(0.17 0.04 280)",
+              border: "1px solid oklch(0.28 0.05 280)",
+            }}
+          >
+            <div>
+              <h2 className="text-base font-semibold" style={{ color: "oklch(0.85 0.02 270)" }}>Free</h2>
+              <p className="text-[10px]" style={{ color: "oklch(0.55 0.03 270)" }}>Get started</p>
+            </div>
+
+            <div>
+              <span className="text-2xl font-bold" style={{ color: "oklch(0.90 0.01 270)" }}>$0</span>
+              <span className="text-[10px] ml-1" style={{ color: "oklch(0.55 0.03 270)" }}>/forever</span>
+            </div>
+
+            <button
+              disabled
+              className="w-full rounded-xl py-2 text-xs font-medium opacity-50 cursor-not-allowed"
+              style={{
+                background: "oklch(0.22 0.04 280)",
+                border: "1px solid oklch(0.32 0.05 280)",
+                color: "oklch(0.60 0.03 270)",
+              }}
             >
-              {tier.highlight && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-primary text-white px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-2">
-                    <Sparkles size={14} /> Most Popular
+              Current Plan
+            </button>
+
+            <div className="space-y-2 pt-2" style={{ borderTop: "1px solid oklch(0.25 0.04 280)" }}>
+              {FREE_FEATURES.map((f) => (
+                <div key={f.name} className="flex items-start gap-1.5">
+                  {f.included ? (
+                    <Check size={12} className="flex-shrink-0 mt-0.5" style={{ color: "oklch(0.65 0.16 185)" }} />
+                  ) : (
+                    <X size={12} className="flex-shrink-0 mt-0.5" style={{ color: "oklch(0.35 0.03 270)" }} />
+                  )}
+                  <span
+                    className="text-[10px] leading-tight"
+                    style={{ color: f.included ? "oklch(0.78 0.02 270)" : "oklch(0.40 0.03 270)" }}
+                  >
+                    {f.name}
                   </span>
                 </div>
-              )}
+              ))}
+            </div>
+          </motion.div>
 
-              {/* Tier Name */}
-              <div className="space-y-2">
-                <h2 className="text-2xl font-serif font-semibold">{tier.name}</h2>
-                <p className="text-sm text-muted-foreground">{tier.description}</p>
-              </div>
+          {/* Pro Tier */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="rounded-2xl p-4 space-y-3 relative"
+            style={{
+              background: "linear-gradient(135deg, oklch(0.20 0.06 280), oklch(0.17 0.05 290))",
+              border: "1.5px solid oklch(0.65 0.16 185 / 0.4)",
+              boxShadow: "0 0 20px oklch(0.65 0.16 185 / 0.08)",
+            }}
+          >
+            {/* Popular badge */}
+            <div
+              className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[9px] font-semibold flex items-center gap-1"
+              style={{ background: "oklch(0.65 0.16 185)", color: "oklch(0.10 0.02 185)" }}
+            >
+              <Sparkles size={9} /> PRO
+            </div>
 
-              {/* Price */}
-              <div className="space-y-1">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-serif font-semibold">{tier.price}</span>
-                  <span className="text-muted-foreground text-sm">/{tier.period}</span>
+            <div>
+              <h2 className="text-base font-semibold" style={{ color: "oklch(0.93 0.01 270)" }}>Pro</h2>
+              <p className="text-[10px]" style={{ color: "oklch(0.65 0.16 185)" }}>Unlimited access</p>
+            </div>
+
+            <div>
+              <span className="text-2xl font-bold" style={{ color: "oklch(0.93 0.01 270)" }}>$2.99</span>
+              <span className="text-[10px] ml-1" style={{ color: "oklch(0.55 0.03 270)" }}>/month</span>
+            </div>
+
+            {/* Monthly button — teal */}
+            <button
+              onClick={() => handleUpgrade("monthly")}
+              className="w-full rounded-xl py-2 text-xs font-semibold transition-transform active:scale-95"
+              style={{
+                background: "oklch(0.65 0.16 185)",
+                color: "oklch(0.10 0.02 185)",
+              }}
+            >
+              Upgrade Monthly
+            </button>
+
+            {/* Yearly button — same teal */}
+            <button
+              onClick={() => handleUpgrade("yearly")}
+              className="w-full rounded-xl py-2 text-xs font-semibold transition-transform active:scale-95"
+              style={{
+                background: "oklch(0.65 0.16 185)",
+                color: "oklch(0.10 0.02 185)",
+              }}
+            >
+              Yearly — $39.99 (Save 17%)
+            </button>
+
+            <div className="space-y-2 pt-2" style={{ borderTop: "1px solid oklch(0.30 0.06 280)" }}>
+              {PRO_FEATURES.map((f) => (
+                <div key={f.name} className="flex items-start gap-1.5">
+                  <Check size={12} className="flex-shrink-0 mt-0.5" style={{ color: "oklch(0.65 0.16 185)" }} />
+                  <span className="text-[10px] leading-tight" style={{ color: "oklch(0.85 0.02 270)" }}>
+                    {f.name}
+                  </span>
                 </div>
-                {tier.priceAnnual && (
-                  <p className="text-xs text-primary font-medium">{tier.priceAnnual} (save 17%)</p>
-                )}
-              </div>
-
-              {/* CTA Button */}
-              {tier.name === "Pro" ? (
-                <div className="space-y-2">
-                  <Button
-                    onClick={() => handleUpgrade("monthly")}
-                    variant={tier.ctaVariant}
-                    className="w-full rounded-2xl py-5 text-base font-medium"
-                  >
-                    {tier.cta} - Monthly
-                  </Button>
-                  <Button
-                    onClick={() => handleUpgrade("yearly")}
-                    variant="outline"
-                    className="w-full rounded-2xl py-5 text-base font-medium"
-                  >
-                    {tier.cta} - Yearly (Save 17%)
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  onClick={() => handleUpgrade()}
-                  variant={tier.ctaVariant}
-                  className="w-full rounded-2xl py-5 text-base font-medium"
-                  disabled={tier.name === "Free"}
-                >
-                  {tier.cta}
-                </Button>
-              )}
-
-              {/* Features */}
-              <div className="space-y-3 pt-6 border-t border-border/50">
-                {tier.features.map((feature, i) => (
-                  <motion.div
-                    key={feature.name}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.1 + i * 0.02 }}
-                    className="flex items-center gap-3"
-                  >
-                    {feature.included ? (
-                      <Check size={18} className="text-primary flex-shrink-0" />
-                    ) : (
-                      <X size={18} className="text-muted-foreground/30 flex-shrink-0" />
-                    )}
-                    <span
-                      className={`text-sm ${
-                        feature.included ? "text-foreground" : "text-muted-foreground/50"
-                      }`}
-                    >
-                      {feature.name}
-                    </span>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          ))}
+              ))}
+            </div>
+          </motion.div>
         </div>
 
-        {/* Milestone Rewards Section */}
+        {/* Milestone Rewards */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="max-w-4xl mx-auto space-y-6"
+          transition={{ delay: 0.2 }}
+          className="space-y-4"
         >
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-serif font-semibold flex items-center justify-center gap-2">
-              <Zap size={24} className="text-primary" /> Earn Free Pro Access
+          <div className="text-center space-y-1">
+            <h2
+              className="text-lg font-light flex items-center justify-center gap-2"
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: "oklch(0.90 0.01 270)" }}
+            >
+              <Zap size={18} style={{ color: "oklch(0.65 0.16 185)" }} /> Earn Free Pro
             </h2>
-            <p className="text-muted-foreground">
-              Build consistency streaks and unlock free Pro access
+            <p className="text-[11px]" style={{ color: "oklch(0.55 0.03 270)" }}>
+              Build streaks, unlock rewards
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            {MILESTONES.map((milestone, idx) => (
+          <div className="grid grid-cols-2 gap-3">
+            {MILESTONES.map((m, idx) => (
               <motion.div
-                key={milestone.days}
-                initial={{ opacity: 0, scale: 0.9 }}
+                key={m.days}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.4 + idx * 0.1 }}
-                className="rounded-2xl p-6 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/50 space-y-3"
+                transition={{ delay: 0.25 + idx * 0.05 }}
+                className="rounded-xl p-3 space-y-1.5"
+                style={{
+                  background: "oklch(0.17 0.04 280)",
+                  border: "1px solid oklch(0.28 0.05 280)",
+                }}
               >
-                <div className="text-4xl">{milestone.icon}</div>
-                <div>
-                  <p className="text-sm text-muted-foreground">{milestone.description}</p>
-                  <p className="text-lg font-semibold text-foreground">{milestone.reward}</p>
-                </div>
+                <div className="text-2xl">{m.icon}</div>
+                <p className="text-[10px]" style={{ color: "oklch(0.60 0.03 270)" }}>{m.description}</p>
+                <p className="text-xs font-semibold" style={{ color: "oklch(0.65 0.16 185)" }}>{m.reward}</p>
               </motion.div>
             ))}
           </div>
 
-          <div className="rounded-2xl p-6 bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200/50 space-y-3">
+          {/* Consistency reward card */}
+          <div
+            className="rounded-xl p-4 space-y-2"
+            style={{
+              background: "oklch(0.17 0.04 280)",
+              border: "1px solid oklch(0.65 0.16 185 / 0.25)",
+            }}
+          >
             <div className="flex items-center gap-2">
-              <Heart size={20} className="text-primary" />
-              <p className="font-semibold">Consistency is Rewarded</p>
+              <Heart size={14} style={{ color: "oklch(0.65 0.16 185)" }} />
+              <p className="text-xs font-semibold" style={{ color: "oklch(0.88 0.02 270)" }}>Consistency is Rewarded</p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Every 3-day streak unlocks a spin on the reward wheel with chances to win free Pro access, discount codes, and reward points. The more consistent you are, the more you earn!
+            <p className="text-[11px] leading-relaxed" style={{ color: "oklch(0.60 0.03 270)" }}>
+              Every 3-day streak unlocks a spin on the reward wheel with chances to win free Pro access, discount codes, and reward points.
             </p>
           </div>
         </motion.div>
 
         {/* FAQ Section */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="max-w-4xl mx-auto space-y-6"
+          transition={{ delay: 0.3 }}
+          className="space-y-4"
         >
-          <h2 className="text-2xl font-serif font-semibold text-center">Frequently Asked Questions</h2>
+          <h2
+            className="text-lg font-light text-center"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: "oklch(0.90 0.01 270)" }}
+          >
+            Questions
+          </h2>
 
-          <div className="space-y-4">
+          <div className="space-y-2.5">
             {[
               {
                 q: "Can I cancel anytime?",
-                a: "Yes! You can cancel your Pro subscription at any time from your account settings. Your access will continue until the end of your billing period.",
+                a: "Yes! Cancel from account settings anytime. Access continues until end of billing period.",
               },
               {
-                q: "What payment methods do you accept?",
-                a: "We accept all major credit and debit cards through Stripe. Your payment information is secure and encrypted.",
+                q: "What payment methods?",
+                a: "All major credit and debit cards through Stripe. Secure and encrypted.",
               },
               {
                 q: "Do I get a free trial?",
-                a: "We offer a free tier with 5 chats per day and 4 journals per week. Upgrade to Pro anytime to unlock unlimited access.",
+                a: "The free tier gives you 5 chats/day and 4 journals/week. Upgrade to Pro anytime.",
               },
               {
-                q: "Can I earn free Pro through streaks?",
-                a: "Absolutely! Reach a 30-day streak to earn 2 months free Pro, or a 100-day streak to earn 1 year free Pro. Plus, every 3-day streak gives you a chance to spin the reward wheel!",
+                q: "Can I earn free Pro?",
+                a: "Yes! 30-day streak = 2 months free. 100-day streak = 1 year free. Plus reward wheel spins every 3 days.",
               },
               {
-                q: "What if I need help?",
-                a: "Pro users get priority support. Contact us anytime at support@synapset.com or use the help button in the app.",
+                q: "Need help?",
+                a: "Pro users get priority support. Use the help button in the app or contact us directly.",
               },
             ].map((faq, idx) => (
-              <motion.div
+              <div
                 key={idx}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 + idx * 0.05 }}
-                className="rounded-2xl p-4 bg-white border border-border space-y-2"
+                className="rounded-xl p-3.5 space-y-1.5"
+                style={{
+                  background: "oklch(0.17 0.04 280)",
+                  border: "1px solid oklch(0.25 0.04 280)",
+                }}
               >
-                <p className="font-semibold text-foreground">{faq.q}</p>
-                <p className="text-sm text-muted-foreground">{faq.a}</p>
-              </motion.div>
+                <p className="text-xs font-semibold" style={{ color: "oklch(0.65 0.16 185)" }}>{faq.q}</p>
+                <p className="text-[11px] leading-relaxed" style={{ color: "oklch(0.65 0.03 270)" }}>{faq.a}</p>
+              </div>
             ))}
           </div>
         </motion.div>
 
-        {/* CTA Footer */}
+        {/* Bottom CTA */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="max-w-2xl mx-auto text-center space-y-4 py-8"
+          transition={{ delay: 0.4 }}
+          className="text-center space-y-3 pb-4"
         >
-          <h3 className="text-2xl font-serif font-semibold">Ready to unlock your potential?</h3>
-          <p className="text-muted-foreground">
-            Start with free, upgrade anytime. No credit card required to get started.
+          <p className="text-sm" style={{ color: "oklch(0.70 0.03 270)" }}>
+            Ready to unlock your potential?
           </p>
-          <Button
+          <button
             onClick={() => handleUpgrade("monthly")}
-            size="lg"
-            className="rounded-2xl px-8 py-6 text-base font-medium"
+            className="w-full rounded-xl py-3.5 text-sm font-semibold transition-transform active:scale-95"
+            style={{
+              background: "oklch(0.65 0.16 185)",
+              color: "oklch(0.10 0.02 185)",
+            }}
           >
             Upgrade to Pro Now
-          </Button>
+          </button>
+          <p className="text-[10px]" style={{ color: "oklch(0.50 0.03 270)" }}>
+            No commitment · Cancel anytime
+          </p>
         </motion.div>
       </div>
     </AppShell>

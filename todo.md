@@ -738,3 +738,10 @@
 - [x] Apply mandala O to Landing.tsx wordmark
 - [x] Apply mandala O to Onboarding.tsx wordmark
 - [x] MentroveHeader.tsx updated with new MandalaO component used across all app pages
+
+## Pricing Page Redesign
+- [x] Fix Pricing page to use dark midnight theme (no white cards)
+- [x] Put Free and Pro tiers side by side at the top
+- [x] Make yearly upgrade button same teal green as monthly button
+- [x] Fix FAQ section cards to use dark backgrounds with readable text
+- [x] Fix milestone/streak reward cards to use dark backgrounds
