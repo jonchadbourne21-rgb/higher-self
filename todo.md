@@ -892,3 +892,8 @@
 - [x] playWin(): ascending 4-note chime (C5-E5-G5-C6) when wheel stops
 - [x] Wire useWheelSound to SpinWheel component via useEffect on spinning state
 - Note: Used Web Audio API instead of Hume TTS (Hume is for voice narration; Web Audio gives zero-latency mechanical clicks)
+
+## Home Page Layout Update
+- [x] Add Programs card to Quick Access grid (2x2 grid: Mirror | Journal / Life Domains | Programs)
+- [x] Stretch Calendar card to full width below the 2x2 Quick Access grid (with next event preview inline)
+- [x] User's name already shown via AnimatedName component; ensured fallback chain is correct

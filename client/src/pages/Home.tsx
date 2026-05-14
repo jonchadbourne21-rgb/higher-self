@@ -148,7 +148,7 @@ export default function Home() {
               {greeting},
             </motion.span>
             <br />
-            <AnimatedName name={profile?.preferredName || user?.name?.split(" ")[0] || ""} />
+            <AnimatedName name={profile?.preferredName || user?.name?.split(" ")[0] || name} />
           </h1>
         </motion.div>
 
@@ -226,39 +226,39 @@ export default function Home() {
           className="space-y-3"
         >
           <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Quick Access</p>
-          <div className="grid grid-cols-2 gap-3 auto-rows-max">
-            {quickActions.slice(0, 2).map((action) => (
-              <Link key={action.path} href={action.path}>
-                <motion.div
-                  whileTap={{ scale: 0.96 }}
-                  className="rounded-2xl p-4 space-y-3 cursor-pointer transition-all hover:shadow-md"
-                  style={{
-                    background: "oklch(0.17 0.04 280)",
-                    border: "1px solid oklch(0.28 0.05 280 / 0.6)",
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl">{action.icon}</span>
-                    {action.done && (
-                      <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                        style={{ background: "oklch(0.65 0.16 185 / 0.15)", color: "oklch(0.65 0.16 185)" }}>
-                        ✓
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm font-semibold text-foreground">{action.label}</p>
-                </motion.div>
-              </Link>
-            ))}
-            {/* Life Domains card with streak badge */}
+
+          {/* 2x2 grid: Mirror | Journal / Life Domains | Programs */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Mirror */}
+            <Link href="/chat">
+              <motion.div
+                whileTap={{ scale: 0.96 }}
+                className="rounded-2xl p-4 space-y-3 cursor-pointer transition-all hover:shadow-md"
+                style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
+              >
+                <span className="text-2xl">🪞</span>
+                <p className="text-sm font-semibold text-foreground">Talk to Mirror</p>
+              </motion.div>
+            </Link>
+
+            {/* Journal */}
+            <Link href="/journal">
+              <motion.div
+                whileTap={{ scale: 0.96 }}
+                className="rounded-2xl p-4 space-y-3 cursor-pointer transition-all hover:shadow-md"
+                style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
+              >
+                <span className="text-2xl">📝</span>
+                <p className="text-sm font-semibold text-foreground">Journal</p>
+              </motion.div>
+            </Link>
+
+            {/* Life Domains with streak badge */}
             <Link href="/domains">
               <motion.div
                 whileTap={{ scale: 0.96 }}
                 className="rounded-2xl p-4 space-y-3 cursor-pointer transition-all hover:shadow-md"
-                style={{
-                  background: "oklch(0.17 0.04 280)",
-                  border: "1px solid oklch(0.28 0.05 280 / 0.6)",
-                }}
+                style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-2xl">🧭</span>
@@ -272,40 +272,51 @@ export default function Home() {
                 <p className="text-sm font-semibold text-foreground">Life Domains</p>
               </motion.div>
             </Link>
-            {/* Calendar card with upcoming events preview */}
-            <Link href="/calendar">
+
+            {/* Programs */}
+            <Link href="/programs">
               <motion.div
                 whileTap={{ scale: 0.96 }}
                 className="rounded-2xl p-4 space-y-3 cursor-pointer transition-all hover:shadow-md"
-                style={{
-                  background: "oklch(0.17 0.04 280)",
-                  border: "1px solid oklch(0.28 0.05 280 / 0.6)",
-                }}
+                style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl">📅</span>
-                </div>
-                <p className="text-sm font-semibold text-foreground">Calendar</p>
-                {upcomingEvents && upcomingEvents.length > 0 ? (
-                  <div className="space-y-1.5 text-xs">
-                    {upcomingEvents.slice(0, 2).map((event) => (
-                      <div key={event.id} className="text-primary line-clamp-1">
-                        <span className="font-medium">{event.title}</span>
-                        <span className="text-muted-foreground ml-1">
-                          {format(new Date(event.eventDate), "MMM d")}
-                        </span>
-                      </div>
-                    ))}
-                    {upcomingEvents.length > 2 && (
-                      <p className="text-primary font-medium">+{upcomingEvents.length - 2} more</p>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">No upcoming events</p>
-                )}
+                <span className="text-2xl">🎓</span>
+                <p className="text-sm font-semibold text-foreground">Programs</p>
               </motion.div>
             </Link>
           </div>
+
+          {/* Full-width Calendar row */}
+          <Link href="/calendar">
+            <motion.div
+              whileTap={{ scale: 0.98 }}
+              className="rounded-2xl p-4 cursor-pointer transition-all hover:shadow-md"
+              style={{ background: "oklch(0.17 0.04 280)", border: "1px solid oklch(0.28 0.05 280 / 0.6)" }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">📅</span>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Calendar</p>
+                    {upcomingEvents && upcomingEvents.length > 0 ? (
+                      <p className="text-xs text-primary mt-0.5">
+                        {upcomingEvents[0].title}
+                        <span className="text-muted-foreground ml-1">
+                          · {format(new Date(upcomingEvents[0].eventDate), "MMM d")}
+                        </span>
+                        {upcomingEvents.length > 1 && (
+                          <span className="text-muted-foreground"> +{upcomingEvents.length - 1} more</span>
+                        )}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground mt-0.5">No upcoming events</p>
+                    )}
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-muted-foreground" />
+              </div>
+            </motion.div>
+          </Link>
         </motion.div>
 
         {/* ── Rewards card ────────────────────────────────────────────── */}
