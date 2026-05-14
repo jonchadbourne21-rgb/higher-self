@@ -771,3 +771,8 @@
 - [x] Show Pro status with expiration date in UI
 - [x] Show pending/stacked rewards in Rewards page inventory
 - [x] Make point-redeemed Pro also go through same grant system
+
+## Landing Page & Onboarding Streamlining
+- [x] Add "Already have an account? Sign in" link below Start My Journey on Landing page
+- [x] Streamline onboarding: reduce steps from 6 to 3 (name+intent, values, one goal)
+- [x] Keep onboarding intriguing enough to complete but not so long users drop off

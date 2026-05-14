@@ -146,6 +146,17 @@ export default function Landing() {
           Free to start · Your data stays private
         </p>
 
+        {/* Sign in link for existing users */}
+        <div className="text-center">
+          <a
+            href={getLoginUrl()}
+            className="text-sm font-medium transition-opacity hover:opacity-80"
+            style={{ color: "oklch(0.65 0.16 185)" }}
+          >
+            Already have an account? <span className="underline underline-offset-2">Sign in</span>
+          </a>
+        </div>
+
         {/* FAQ link */}
         <div className="text-center pt-1">
           <a
