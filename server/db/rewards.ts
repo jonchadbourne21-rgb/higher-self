@@ -3,7 +3,7 @@ import { rewardPointsHistory, wheelSpins, streakRewards } from "../../drizzle/sc
 import { getDb } from "../db";
 
 type RewardSource = "habit" | "journal" | "chat" | "checkin" | "spin" | "redemption";
-type WheelResult = "month_pro" | "five_percent_off" | "try_again" | "week_trial" | "reward_points";
+type WheelResult = "month_pro" | "dare" | "try_again" | "week_trial" | "reward_points";
 
 /**
  * Add reward points to a user
@@ -58,7 +58,7 @@ export async function getRewardPointsHistory(userId: number) {
  * Spin the reward wheel with weighted odds
  * Odds:
  * - 5% chance: 1 month free Pro
- * - 23.75% chance: 5% off annual
+ * - 23.75% chance: Take a Dare
  * - 23.75% chance: Try again
  * - 23.75% chance: 1 week free trial
  * - 23.75% chance: 5 reward points
@@ -69,7 +69,7 @@ export function spinWheel(): WheelResult {
   if (random < 5) {
     return "month_pro";
   } else if (random < 28.75) {
-    return "five_percent_off";
+    return "dare";
   } else if (random < 52.5) {
     return "try_again";
   } else if (random < 76.25) {

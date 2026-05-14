@@ -588,7 +588,7 @@ export type InsertRewardPointsHistory = typeof rewardPointsHistory.$inferInsert;
 export const wheelSpins = mysqlTable("wheel_spins", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
-  result: mysqlEnum("result", ["month_pro", "five_percent_off", "try_again", "week_trial", "reward_points"]).notNull(),
+  result: mysqlEnum("result", ["month_pro", "dare", "try_again", "week_trial", "reward_points"]).notNull(),
   prizeValue: varchar("prizeValue", { length: 255 }),
   spinnedAt: timestamp("spinnedAt").defaultNow().notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

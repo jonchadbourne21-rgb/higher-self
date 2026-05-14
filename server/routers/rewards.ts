@@ -32,7 +32,7 @@ const REDEMPTION_TIERS = [
 // Wheel prize display names
 const PRIZE_LABELS: Record<string, string> = {
   month_pro: "1 Month Free Pro!",
-  five_percent_off: "5% Off Annual Plan",
+  dare: "Take a Dare! 🎯",
   try_again: "Try Again",
   week_trial: "1 Week Free Trial",
   reward_points: "+5 Reward Points",
@@ -134,7 +134,7 @@ export const rewardsRouter = router({
         grantActivated = grantResult.activated;
       }
       // reward_points are already handled in recordWheelSpin
-      // five_percent_off and try_again don't need grants
+      // dare and try_again don't need grants
 
       return { success: true, result, prizeLabel, error: null, grantActivated };
     }),

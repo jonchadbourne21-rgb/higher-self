@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE `wheel_spins` SET `result` = 'try_again' WHERE `result` = 'five_percent_off';\nALTER TABLE `wheel_spins` MODIFY COLUMN `result` enum('month_pro','dare','try_again','week_trial','reward_points') NOT NULL;\nALTER TABLE `daily_check_ins` ADD COLUMN IF NOT EXISTS `reflectionPrompt` text;\nALTER TABLE `daily_check_ins` ADD COLUMN IF NOT EXISTS `reflectionAnswer` text;\nALTER TABLE `daily_check_ins` ADD COLUMN IF NOT EXISTS `followUpQuestion` text;\nALTER TABLE `daily_check_ins` ADD COLUMN IF NOT EXISTS `followUpAnswer` text;\nALTER TABLE `users` ADD COLUMN IF NOT EXISTS `lastStreakSpinDate` date;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UbcpEQhTnXTazXN.root --database LQwmD5t86EFFZjkEDkXbgz --execute UPDATE `wheel_spins` SET `result` = 'try_again' WHERE `result` = 'five_percent_off';\nALTER TABLE `wheel_spins` MODIFY COLUMN `result` enum('month_pro','dare','try_again','week_trial','reward_points') NOT NULL;\nALTER TABLE `daily_check_ins` ADD COLUMN IF NOT EXISTS `reflectionPrompt` text;\nALTER TABLE `daily_check_ins` ADD COLUMN IF NOT EXISTS `reflectionAnswer` text;\nALTER TABLE `daily_check_ins` ADD COLUMN IF NOT EXISTS `followUpQuestion` text;\nALTER TABLE `daily_check_ins` ADD COLUMN IF NOT EXISTS `followUpAnswer` text;\nALTER TABLE `users` ADD COLUMN IF NOT EXISTS `lastStreakSpinDate` date;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 576
+}

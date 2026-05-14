@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE `wheel_spins` MODIFY COLUMN `result` enum('month_pro','dare','try_again','week_trial','reward_points') NOT NULL;\nALTER TABLE `daily_check_ins` ADD `reflectionPrompt` text;\nALTER TABLE `daily_check_ins` ADD `reflectionAnswer` text;\nALTER TABLE `daily_check_ins` ADD `followUpQuestion` text;\nALTER TABLE `daily_check_ins` ADD `followUpAnswer` text;\nALTER TABLE `users` ADD `lastStreakSpinDate` date;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UbcpEQhTnXTazXN.root --database LQwmD5t86EFFZjkEDkXbgz --execute ALTER TABLE `wheel_spins` MODIFY COLUMN `result` enum('month_pro','dare','try_again','week_trial','reward_points') NOT NULL;\nALTER TABLE `daily_check_ins` ADD `reflectionPrompt` text;\nALTER TABLE `daily_check_ins` ADD `reflectionAnswer` text;\nALTER TABLE `daily_check_ins` ADD `followUpQuestion` text;\nALTER TABLE `daily_check_ins` ADD `followUpAnswer` text;\nALTER TABLE `users` ADD `lastStreakSpinDate` date;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1265 (01000) at line 1: Data truncated for column 'result', value is 'five_percent_off'"
+  ]
+}
