@@ -990,3 +990,9 @@
 - [x] Settings: "Delete my account" button with confirmation modal
 - [x] Post-purchase Pro celebration modal with confetti on Stripe redirect
 - [x] Home page: FAQ footer link pulse animation for first-time users
+
+## Dare Follow-up, Pro Badge, Try Again Upgrade
+- [x] Schedule dare follow-up push notification 30 min after dare spin (requires deploy to activate)
+- [x] Add dare completion tRPC endpoint that awards 2 bonus points
+- [x] Pro crown badge next to user name in Settings header
+- [x] Upgrade "Try Again!" wheel result to warm consolation message

@@ -103,7 +103,7 @@ export function RewardWheel({ isOpen, onClose, onSpinComplete }: RewardWheelProp
     const messages: Record<WheelPrize, string> = {
       month_free: "🎉 You won 1 month of Pro! Your journey continues...",
       dare: getDareMessage(),
-      try_again: "😄 Today's not the day, but keep building those streaks!",
+      try_again: "Not today, champ — but your streak is still 🔥. Luck respects consistency.",
       week_free: "🌟 1 week of Pro unlocked! Keep the momentum going!",
       reward_points: "⭐ 5 reward points added! Save them for the shop!",
     };

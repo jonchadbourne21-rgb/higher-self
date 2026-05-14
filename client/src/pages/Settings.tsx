@@ -46,6 +46,7 @@ export default function Settings() {
   const { user, logout } = useAuth();
   const [, navigate] = useLocation();
   const { data: settings, isLoading } = trpc.settings.get.useQuery();
+  const { data: proStatus } = trpc.rewards.proStatus.useQuery();
   const updateSettings = trpc.settings.update.useMutation();
   const utils = trpc.useUtils();
 
@@ -164,12 +165,23 @@ export default function Settings() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-1">Name</label>
-                <input
-                  type="text"
-                  value={user?.name || ""}
-                  disabled
-                  className="w-full px-3 py-2 rounded-lg bg-muted border border-border/30 text-foreground"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={user?.name || ""}
+                    disabled
+                    className="w-full px-3 py-2 rounded-lg bg-muted border border-border/30 text-foreground"
+                  />
+                  {proStatus?.isPro && (
+                    <span
+                      className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full"
+                      style={{ background: "oklch(0.30 0.10 55)", color: "oklch(0.85 0.18 55)" }}
+                    >
+                      <Crown className="w-3 h-3" />
+                      Pro
+                    </span>
+                  )}
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-1">Email</label>
