@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Send, RefreshCw, X, History, ChevronRight, Pencil, Check, MessageCircle, Mic, MicOff, Volume2 } from "lucide-react";
+import { Send, RefreshCw, X, History, ChevronRight, Pencil, Check, MessageCircle, Mic, MicOff, Volume2, ChevronDown } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
@@ -123,6 +123,7 @@ export default function Chat() {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const hasScrolledOnLoad = useRef(false);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
 
   // Reliable scroll-to-bottom helper that uses both approaches
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
@@ -133,6 +134,14 @@ export default function Chat() {
       }
       messagesEndRef.current?.scrollIntoView({ behavior });
     });
+  };
+
+  // Track whether user has scrolled up — show scroll-to-bottom button
+  const handleChatScroll = () => {
+    const el = chatContainerRef.current;
+    if (!el) return;
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setShowScrollBtn(distFromBottom > 120);
   };
 
   const utils = trpc.useUtils();
@@ -804,7 +813,8 @@ export default function Chat() {
 
         {/* Content area — switches based on activeTab */}
         {activeTab === "chat" && (
-        <div ref={chatContainerRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-hide pb-4 relative">
+        <div className="relative flex-1 overflow-hidden">
+        <div ref={chatContainerRef} onScroll={handleChatScroll} className="h-full overflow-y-auto px-4 py-4 space-y-4 scrollbar-hide pb-4 relative">
           {/* Subtle mandala watermark */}
           <div className="pointer-events-none fixed inset-0 flex items-center justify-center opacity-[0.04] z-0">
             <svg width="320" height="320" viewBox="0 0 320 320" fill="none">
@@ -891,7 +901,14 @@ export default function Chat() {
                       <p className="text-sm leading-relaxed">{msg.content}</p>
                     )}
                   </div>
-
+                  {/* Per-message timestamp */}
+                  {msg.createdAt && (
+                    <p className={`text-[10px] text-muted-foreground/50 px-1 ${
+                      msg.role === "user" ? "text-right" : "text-left"
+                    }`}>
+                      {msg.createdAt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}
+                    </p>
+                  )}
                 </div>
               </motion.div>
             </div>
@@ -901,27 +918,52 @@ export default function Chat() {
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex justify-start"
+              className="flex flex-col gap-1"
             >
-              <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mr-2 mt-1">
-                <span className="text-xs">✦</span>
-              </div>
-              <div className="glass rounded-3xl rounded-bl-lg px-4 py-3">
-                <div className="flex gap-1 items-center h-5">
-                  {[0, 1, 2].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1.5 h-1.5 rounded-full bg-primary"
-                      animate={{ opacity: [0.3, 1, 0.3] }}
-                      transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.2 }}
-                    />
-                  ))}
+              <p className="text-[11px] text-muted-foreground/60 ml-9 italic tracking-wide">
+                Mirror is reflecting…
+              </p>
+              <div className="flex justify-start">
+                <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mr-2 mt-1">
+                  <span className="text-xs">✦</span>
+                </div>
+                <div className="glass rounded-3xl rounded-bl-lg px-4 py-3">
+                  <div className="flex gap-1 items-center h-5">
+                    {[0, 1, 2].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-1.5 h-1.5 rounded-full bg-primary"
+                        animate={{ opacity: [0.3, 1, 0.3] }}
+                        transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.2 }}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
             </motion.div>
           )}
 
           <div ref={messagesEndRef} />
+        </div>
+
+        {/* Scroll-to-bottom floating button */}
+        {showScrollBtn && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={() => { scrollToBottom("smooth"); }}
+            className="absolute bottom-4 right-4 z-20 w-9 h-9 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-95"
+            style={{
+              background: "oklch(0.22 0.04 200)",
+              border: "1px solid oklch(0.35 0.06 185 / 0.5)",
+              color: "oklch(0.65 0.16 185)",
+            }}
+            title="Jump to latest"
+          >
+            <ChevronDown size={16} />
+          </motion.button>
+        )}
         </div>
         )}
 

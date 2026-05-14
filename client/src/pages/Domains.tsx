@@ -190,7 +190,7 @@ export default function Domains() {
         isOpen={showRewardWheel}
         onClose={() => setShowRewardWheel(false)}
         onSpinComplete={(prize: WheelPrize) => {
-          toast.success(`You won: ${prize === "month_free" ? "1 Month Free" : prize === "discount_5pct" ? "5% Off Annual" : prize === "week_free" ? "1 Week Free" : prize === "reward_points" ? "5 Reward Points" : "Try Again!"}`);
+          toast.success(`You won: ${prize === "month_free" ? "1 Month Free" : prize === "dare" ? "Take a Dare! 🎯" : prize === "week_free" ? "1 Week Free" : prize === "reward_points" ? "5 Reward Points" : "Try Again!"}`);
           setShowRewardWheel(false);
         }}
       />

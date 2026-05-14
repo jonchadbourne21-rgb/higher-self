@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles } from "lucide-react";
 
-export type WheelPrize = "month_free" | "discount_5pct" | "try_again" | "week_free" | "reward_points";
+export type WheelPrize = "month_free" | "dare" | "try_again" | "week_free" | "reward_points";
 
 interface RewardWheelProps {
   isOpen: boolean;
@@ -12,7 +12,7 @@ interface RewardWheelProps {
 
 const WHEEL_PRIZES: Array<{ id: WheelPrize; label: string; color: string; odds: number }> = [
   { id: "month_free", label: "1 Month Free", color: "oklch(0.70 0.20 20)", odds: 0.05 },
-  { id: "discount_5pct", label: "5% Off Annual", color: "oklch(0.65 0.18 120)", odds: 0.2375 },
+  { id: "dare", label: "Take a Dare! 🎯", color: "oklch(0.55 0.18 30)", odds: 0.2375 },
   { id: "try_again", label: "Try Again!", color: "oklch(0.60 0.15 260)", odds: 0.2375 },
   { id: "week_free", label: "1 Week Free", color: "oklch(0.68 0.19 40)", odds: 0.2375 },
   { id: "reward_points", label: "5 Reward Points", color: "oklch(0.72 0.17 180)", odds: 0.2375 },
@@ -83,10 +83,26 @@ export function RewardWheel({ isOpen, onClose, onSpinComplete }: RewardWheelProp
     return WHEEL_PRIZES[WHEEL_PRIZES.length - 1].id;
   };
 
+  const getDareMessage = (): string => {
+    const dares = [
+      "😄 Dare: Text someone right now and tell them one thing you genuinely appreciate about them. Go. Do it. We'll wait.",
+      "💃 Dare: Stand up, do 10 jumping jacks, and yell \"I AM UNSTOPPABLE!\" (neighbors optional).",
+      "🌞 Dare: Step outside for 60 seconds, breathe the air, and notice one thing you've never noticed before.",
+      "😂 Dare: Watch or read something that makes you laugh out loud in the next 5 minutes. Laughter is medicine.",
+      "📝 Dare: Write down 3 things you're proud of yourself for this week. No cheating — they count.",
+      "🍫 Dare: Treat yourself to something small and delicious today. You've earned it.",
+      "🎵 Dare: Play your favorite song right now and actually listen to it — no multitasking allowed.",
+      "👋 Dare: Wave or smile at the next person you see. Spread a little light.",
+      "💪 Dare: Strike a power pose for 30 seconds. Hands on hips, chin up. Science says it works.",
+      "🌿 Dare: Touch some grass. Literally. Go outside, feel the ground, reset your nervous system.",
+    ];
+    return dares[Math.floor(Math.random() * dares.length)];
+  };
+
   const getPrizeMessage = (prize: WheelPrize): string => {
     const messages: Record<WheelPrize, string> = {
       month_free: "🎉 You won 1 month of Pro! Your journey continues...",
-      discount_5pct: "💰 5% off your annual subscription! Great savings!",
+      dare: getDareMessage(),
       try_again: "😄 Today's not the day, but keep building those streaks!",
       week_free: "🌟 1 week of Pro unlocked! Keep the momentum going!",
       reward_points: "⭐ 5 reward points added! Save them for the shop!",

@@ -961,3 +961,9 @@
 - [x] Gate monthly/yearly analytics behind Pro — free users see week-by-week only
 - [x] Growth Dashboard accessible only to Pro users
 - [x] Full year analytics insight only available to Pro users
+
+## Chat UX Improvements & Wheel Prize Update
+- [x] Scroll-to-bottom floating button in AI Mirror chat
+- [x] "Mirror is reflecting…" typing indicator text above thinking dots
+- [x] Message timestamps on each bubble (e.g. "2 min ago")
+- [x] Replace 5% annual wheel prize with a fun positive dare
