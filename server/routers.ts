@@ -235,6 +235,19 @@ export const appRouter = router({
       return getTodayCheckIn(ctx.user.id);
     }),
 
+    // Returns last 7 days of Aura scores for the sparkline on Home
+    auraHistory: protectedProcedure.query(async ({ ctx }) => {
+      const recent = await getRecentCheckIns(ctx.user.id, 7);
+      // Map each check-in to { date, aura } — aura = mood*0.4 + energy*0.3 + (11-stress)*0.3
+      return recent
+        .slice(0, 7)
+        .reverse()
+        .map((c) => ({
+          date: c.createdAt,
+          aura: Math.round(c.mood * 0.4 + c.energy * 0.3 + (11 - c.stress) * 0.3),
+        }));
+    }),
+
     // Returns a fresh AI-generated reflection prompt for today
     // Rotates through themes: gratitude, surprise, joy, unexpected, small wins, etc.
     getDailyPrompt: protectedProcedure.query(async ({ ctx }) => {

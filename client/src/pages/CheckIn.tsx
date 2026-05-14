@@ -40,9 +40,11 @@ export default function CheckIn() {
 
   // Result
   const [aiResponse, setAiResponse] = useState<string | null>(null);
-  const [done, setDone] = useState(false);
 
-  const { data: todayCheckIn } = trpc.checkIn.today.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: todayCheckIn, isLoading: checkInLoading } = trpc.checkIn.today.useQuery(undefined, { enabled: isAuthenticated });
+
+  // Initialize done immediately once todayCheckIn resolves — avoids flash of form
+  const [done, setDone] = useState(false);
 
   // Load the AI daily prompt on mount
   const { data: dailyPromptData, isLoading: promptLoading } = trpc.checkIn.getDailyPrompt.useQuery(
@@ -127,8 +129,20 @@ export default function CheckIn() {
     });
   };
 
+  // ── Loading guard — prevents flash of form while fetching today's check-in ────
+  if ((loading || checkInLoading) && !done) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      </AppShell>
+    );
+  }
+
   // ── Completed state ──────────────────────────────────────────────────────────
-  if (done && todayCheckIn && !submitMutation.isPending) {
+  if ((done || !!todayCheckIn) && !submitMutation.isPending) {
+    const ci = todayCheckIn ?? null;
     return (
       <AppShell>
         <div className="px-5 pt-8 pb-4 space-y-6">
@@ -142,46 +156,48 @@ export default function CheckIn() {
           <div className="glass rounded-3xl p-6 space-y-4">
             <p className="text-xs text-muted-foreground uppercase tracking-widest">Your Higher Self responds</p>
             <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center">
-              <span className="text-xl">✦</span>
+              <span className="text-xl">✶</span>
             </div>
-            {(aiResponse || todayCheckIn.aiResponse) ? (
+            {(aiResponse || ci?.aiResponse) ? (
               <div className="streamdown-content">
-                <Streamdown>{aiResponse || todayCheckIn.aiResponse || ""}</Streamdown>
+                <Streamdown>{aiResponse || ci?.aiResponse || ""}</Streamdown>
               </div>
             ) : (
               <p className="text-muted-foreground text-sm italic">Your reflection has been saved.</p>
             )}
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { label: "Mood", value: todayCheckIn.mood, emoji: MOOD_EMOJIS[todayCheckIn.mood - 1] },
-              { label: "Energy", value: todayCheckIn.energy, emoji: "⚡" },
-              { label: "Stress", value: todayCheckIn.stress, emoji: "🌊" },
-            ].map((item) => (
-              <div key={item.label} className="glass rounded-2xl p-4 text-center space-y-1">
-                <span className="text-2xl">{item.emoji}</span>
-                <p className="text-2xl font-serif text-primary">{item.value}</p>
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-              </div>
-            ))}
-          </div>
-
-          {todayCheckIn.reflectionAnswer && (
-            <div className="glass rounded-2xl p-4 space-y-2">
-              <p className="text-xs text-muted-foreground uppercase tracking-widest">
-                {todayCheckIn.reflectionPrompt || "Reflection"}
-              </p>
-              <p className="text-sm text-foreground">{todayCheckIn.reflectionAnswer}</p>
+          {ci && (
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: "Mood", value: ci.mood, emoji: MOOD_EMOJIS[ci.mood - 1] },
+                { label: "Energy", value: ci.energy, emoji: "⚡" },
+                { label: "Stress", value: ci.stress, emoji: "🌊" },
+              ].map((item) => (
+                <div key={item.label} className="glass rounded-2xl p-4 text-center space-y-1">
+                  <span className="text-2xl">{item.emoji}</span>
+                  <p className="text-2xl font-serif text-primary">{item.value}</p>
+                  <p className="text-xs text-muted-foreground">{item.label}</p>
+                </div>
+              ))}
             </div>
           )}
 
-          {todayCheckIn.followUpAnswer && (
+          {ci?.reflectionAnswer && (
             <div className="glass rounded-2xl p-4 space-y-2">
               <p className="text-xs text-muted-foreground uppercase tracking-widest">
-                {todayCheckIn.followUpQuestion || "Going deeper"}
+                {ci.reflectionPrompt || "Reflection"}
               </p>
-              <p className="text-sm text-foreground">{todayCheckIn.followUpAnswer}</p>
+              <p className="text-sm text-foreground">{ci.reflectionAnswer}</p>
+            </div>
+          )}
+
+          {ci?.followUpAnswer && (
+            <div className="glass rounded-2xl p-4 space-y-2">
+              <p className="text-xs text-muted-foreground uppercase tracking-widest">
+                {ci.followUpQuestion || "Going deeper"}
+              </p>
+              <p className="text-sm text-foreground">{ci.followUpAnswer}</p>
             </div>
           )}
 

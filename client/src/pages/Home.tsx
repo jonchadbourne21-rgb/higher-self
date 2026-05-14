@@ -8,6 +8,42 @@ import { Sparkles, Sun, Moon, Bell, User, ChevronRight } from "lucide-react";
 import WelcomeSpinModal from "@/components/WelcomeSpinModal";
 import { format } from "date-fns";
 
+// Inline SVG sparkline for the last 7 Aura scores
+function AuraSparkline({ data }: { data: { date: Date; aura: number }[] }) {
+  if (!data || data.length < 2) return null;
+  const W = 120, H = 28, PAD = 2;
+  const min = 1, max = 10;
+  const pts = data.map((d, i) => {
+    const x = PAD + (i / (data.length - 1)) * (W - PAD * 2);
+    const y = H - PAD - ((d.aura - min) / (max - min)) * (H - PAD * 2);
+    return `${x},${y}`;
+  });
+  const polyline = pts.join(" ");
+  const lastPt = pts[pts.length - 1].split(",");
+  const lastAura = data[data.length - 1].aura;
+  const dotColor =
+    lastAura >= 9 ? "oklch(0.82 0.18 55)" :
+    lastAura >= 7 ? "oklch(0.78 0.16 185)" :
+    lastAura >= 5 ? "oklch(0.72 0.12 240)" :
+    lastAura >= 3 ? "oklch(0.65 0.10 280)" : "oklch(0.55 0.08 300)";
+  return (
+    <div className="flex items-center gap-2">
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="overflow-visible">
+        <polyline
+          points={polyline}
+          fill="none"
+          stroke="oklch(0.65 0.16 185 / 0.5)"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle cx={lastPt[0]} cy={lastPt[1]} r="3" fill={dotColor} />
+      </svg>
+      <span className="text-[10px] text-muted-foreground">7-day aura</span>
+    </div>
+  );
+}
+
 // Staggered word-by-word animation for the greeting name
 function AnimatedName({ name }: { name: string }) {
   const words = name.split(" ");
@@ -48,6 +84,7 @@ export default function Home() {
     enabled: isAuthenticated && !welcomeSpin?.available,
   });
   const { data: proStatus } = trpc.rewards.proStatus.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: auraHistory } = trpc.checkIn.auraHistory.useQuery(undefined, { enabled: isAuthenticated });
   const isPro = proStatus?.isPro ?? false;
   const [showWelcomeSpin, setShowWelcomeSpin] = useState(false);
   const [showFaqPulse, setShowFaqPulse] = useState(false);
@@ -315,6 +352,18 @@ export default function Home() {
               </Link>
             )}
           </motion.div>
+
+          {/* ── Aura Sparkline ──────────────────────────────────────────── */}
+          {auraHistory && auraHistory.length >= 2 && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.18 }}
+              className="px-1"
+            >
+              <AuraSparkline data={auraHistory} />
+            </motion.div>
+          )}
 
           {/* ── Journey Access 3×2 grid (6 equal tiles) ────────────────── */}
           <motion.div

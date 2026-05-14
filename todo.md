@@ -996,3 +996,9 @@
 - [x] Add dare completion tRPC endpoint that awards 2 bonus points
 - [x] Pro crown badge next to user name in Settings header
 - [x] Upgrade "Try Again!" wheel result to warm consolation message
+
+## Aura Sparkline & Check-in Reflection View
+- [x] Backend: last 7 Aura scores endpoint (trpc.checkIn.auraHistory)
+- [x] AuraSparkline component with SVG polyline
+- [x] Add sparkline below check-in card on Home.tsx
+- [x] CheckIn page: show full AI reflection when today's check-in is already completed
