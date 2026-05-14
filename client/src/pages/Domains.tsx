@@ -263,9 +263,9 @@ export default function Domains() {
                 transition={{ delay: i * 0.06 }}
                 className="rounded-3xl p-5 space-y-4"
                 style={{
-                  background: `linear-gradient(145deg, white 60%, ${info.cardBg})`,
+                  background: info.cardBg,
                   border: `1px solid ${info.cardBorder}`,
-                  boxShadow: `0 2px 12px ${info.cardBg.replace("0.5)", "0.3)")}`,
+                  boxShadow: `0 4px 20px oklch(0.05 0 0 / 0.4)`,
                 }}
               >
                 {/* Domain header */}
@@ -297,16 +297,23 @@ export default function Domains() {
                   </button>
                 </div>
 
-                {/* Score bar */}
+                {/* Circular progress ring */}
                 {score > 0 && (
-                  <div className="h-1.5 bg-border/50 rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full rounded-full"
-                      style={{ backgroundColor: info.barColor }}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${score * 10}%` }}
-                      transition={{ duration: 0.8, delay: i * 0.1 }}
-                    />
+                  <div className="flex items-center gap-3">
+                    <svg width="44" height="44" viewBox="0 0 44 44" className="-rotate-90">
+                      <circle cx="22" cy="22" r="18" fill="none" stroke="oklch(0.25 0.02 0)" strokeWidth="4" />
+                      <motion.circle
+                        cx="22" cy="22" r="18" fill="none"
+                        stroke={info.barColor}
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                        strokeDasharray={`${2 * Math.PI * 18}`}
+                        initial={{ strokeDashoffset: 2 * Math.PI * 18 }}
+                        animate={{ strokeDashoffset: 2 * Math.PI * 18 * (1 - score / 10) }}
+                        transition={{ duration: 1, delay: i * 0.1 }}
+                      />
+                    </svg>
+                    <span className="text-xs text-muted-foreground">{Math.round(score * 10)}%</span>
                   </div>
                 )}
 

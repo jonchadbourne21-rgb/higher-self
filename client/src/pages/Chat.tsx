@@ -671,7 +671,21 @@ export default function Chat() {
 
         {/* Content area — switches based on activeTab */}
         {activeTab === "chat" && (
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-hide pb-4">
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-hide pb-4 relative">
+          {/* Subtle mandala watermark */}
+          <div className="pointer-events-none fixed inset-0 flex items-center justify-center opacity-[0.04] z-0">
+            <svg width="320" height="320" viewBox="0 0 320 320" fill="none">
+              <circle cx="160" cy="160" r="140" stroke="currentColor" strokeWidth="0.5" />
+              <circle cx="160" cy="160" r="110" stroke="currentColor" strokeWidth="0.5" />
+              <circle cx="160" cy="160" r="80" stroke="currentColor" strokeWidth="0.5" />
+              <circle cx="160" cy="160" r="50" stroke="currentColor" strokeWidth="0.5" />
+              <circle cx="160" cy="160" r="20" stroke="currentColor" strokeWidth="0.5" />
+              {/* Petals */}
+              {[0,30,60,90,120,150,180,210,240,270,300,330].map((angle) => (
+                <line key={angle} x1="160" y1="160" x2={160 + 140 * Math.cos(angle * Math.PI / 180)} y2={160 + 140 * Math.sin(angle * Math.PI / 180)} stroke="currentColor" strokeWidth="0.3" />
+              ))}
+            </svg>
+          </div>
           {allMessages.length === 0 && !isThinking && !isViewingPast && (
             <div className="space-y-6 pt-4">
               <div className="glass rounded-3xl p-6 space-y-3 text-center">
@@ -731,9 +745,10 @@ export default function Chat() {
                   <div
                     className={`rounded-3xl px-4 py-3 ${
                       msg.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-lg"
+                        ? "rounded-br-lg text-white"
                         : "glass rounded-bl-lg"
                     }`}
+                    style={msg.role === "user" ? { background: 'linear-gradient(135deg, oklch(0.55 0.12 185), oklch(0.45 0.10 195))' } : undefined}
                   >
                     {msg.role === "assistant" ? (
                       <div className="streamdown-content text-sm leading-relaxed">
