@@ -242,17 +242,17 @@ export async function hasReceivedStreakReward(
 }
 
 /**
- * Count pending (unused) streak spins for a user.
- * Each 3-day streak grants 1 spin, tracked in rewardPointsHistory with sourceId starting with 'streak_spin_'.
+ * Count pending (unused) free spins for a user.
+ * Sources: streak_spin_ (3-day streaks) and purchase_spin_ (subscription bonus).
  * Each actual wheel spin is recorded in wheelSpins.
- * Pending = granted streak spins - spins used (total wheelSpins count minus welcome spin).
+ * Pending = total granted spins - spins used (total wheelSpins count minus welcome spin).
  */
 export async function getPendingStreakSpins(userId: number): Promise<number> {
   const db = await getDb();
   if (!db) return 0;
 
-  // Count streak spin grants (entries in rewardPointsHistory with sourceId like 'streak_spin_%')
-  const grantsResult = await db
+  // Count streak spin grants
+  const streakGrantsResult = await db
     .select({ count: sql<number>`COUNT(*)` })
     .from(rewardPointsHistory)
     .where(
@@ -261,7 +261,21 @@ export async function getPendingStreakSpins(userId: number): Promise<number> {
         like(rewardPointsHistory.sourceId, "streak_spin_%")
       )
     );
-  const granted = Number(grantsResult[0]?.count ?? 0);
+  const streakGranted = Number(streakGrantsResult[0]?.count ?? 0);
+
+  // Count purchase bonus spin grants
+  const purchaseGrantsResult = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(rewardPointsHistory)
+    .where(
+      and(
+        eq(rewardPointsHistory.userId, userId),
+        like(rewardPointsHistory.sourceId, "purchase_spin_%")
+      )
+    );
+  const purchaseGranted = Number(purchaseGrantsResult[0]?.count ?? 0);
+
+  const totalGranted = streakGranted + purchaseGranted;
 
   // Count total wheel spins used (excluding the welcome spin which is tracked separately)
   const spinsResult = await db
@@ -270,9 +284,7 @@ export async function getPendingStreakSpins(userId: number): Promise<number> {
     .where(eq(wheelSpins.userId, userId));
   const totalSpins = Number(spinsResult[0]?.count ?? 0);
 
-  // Welcome spin is 1 spin that doesn't come from streak grants
-  // Pending streak spins = granted - spins used from streak grants
-  // spins used from streak grants = max(0, totalSpins - 1) where 1 is the welcome spin
-  const spinsUsedFromStreak = Math.max(0, totalSpins - 1);
-  return Math.max(0, granted - spinsUsedFromStreak);
+  // Welcome spin is 1 spin that doesn't come from streak/purchase grants
+  const spinsUsedFromGrants = Math.max(0, totalSpins - 1);
+  return Math.max(0, totalGranted - spinsUsedFromGrants);
 }

@@ -12,18 +12,20 @@ export const STRIPE_PRODUCTS = {
 
 export const STRIPE_PRICES = {
   PRO_MONTHLY: {
-    amount: 299, // $2.99 in cents
+    amount: 399, // $3.99 in cents
     currency: "usd",
     interval: "month",
     intervalCount: 1,
-    displayName: "$2.99/month",
+    displayName: "$3.99/month",
+    bonusSpins: 1,
   },
   PRO_ANNUAL: {
-    amount: 3999, // $39.99 in cents
+    amount: 4999, // $49.99 in cents
     currency: "usd",
     interval: "year",
     intervalCount: 1,
-    displayName: "$39.99/year",
+    displayName: "$49.99/year",
+    bonusSpins: 3,
   },
 };
 

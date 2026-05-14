@@ -92,17 +92,19 @@ export const subscriptionRouter = router({
   getPricing: protectedProcedure.query(async () => {
     return {
       monthly: {
-        amount: 299,
+        amount: 399,
         currency: "usd",
-        displayAmount: "$2.99",
+        displayAmount: "$3.99",
         interval: "month",
+        bonusSpins: 1,
       },
       annual: {
-        amount: 3999,
+        amount: 4999,
         currency: "usd",
-        displayAmount: "$39.99",
+        displayAmount: "$49.99",
         interval: "year",
-        savings: "Save $6.89/year",
+        savings: "Save 17%",
+        bonusSpins: 3,
       },
     };
   }),

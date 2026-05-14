@@ -13,10 +13,11 @@ const FREE_FEATURES = [
   { name: "4 journal entries per week", included: true },
   { name: "Life domains & habits", included: true },
   { name: "Daily check-ins", included: true },
-  { name: "Weekly insights", included: true },
+  { name: "Weekly insights only", included: true },
   { name: "Reward wheel", included: true },
+  { name: "Growth Dashboard", included: false },
+  { name: "Monthly & yearly analytics", included: false },
   { name: "Priority support", included: false },
-  { name: "Advanced analytics", included: false },
 ];
 
 const PRO_FEATURES = [
@@ -24,10 +25,11 @@ const PRO_FEATURES = [
   { name: "Unlimited journals", included: true },
   { name: "Life domains & habits", included: true },
   { name: "Daily check-ins", included: true },
-  { name: "Weekly insights", included: true },
+  { name: "Weekly + monthly + yearly insights", included: true },
   { name: "Reward wheel", included: true },
+  { name: "Growth Dashboard & full analytics", included: true },
+  { name: "Bonus spins on purchase", included: true },
   { name: "Priority support", included: true },
-  { name: "Advanced analytics", included: true },
 ];
 
 const MILESTONES = [
@@ -170,7 +172,7 @@ export default function Pricing() {
             </div>
 
             <div>
-              <span className="text-2xl font-bold" style={{ color: "oklch(0.93 0.01 270)" }}>$2.99</span>
+              <span className="text-2xl font-bold" style={{ color: "oklch(0.93 0.01 270)" }}>$3.99</span>
               <span className="text-[10px] ml-1" style={{ color: "oklch(0.55 0.03 270)" }}>/month</span>
             </div>
 
@@ -183,7 +185,7 @@ export default function Pricing() {
                 color: "oklch(0.10 0.02 185)",
               }}
             >
-              Upgrade Monthly
+              Monthly + 1 Free Spin 🎡
             </button>
 
             {/* Yearly button — same teal */}
@@ -195,7 +197,7 @@ export default function Pricing() {
                 color: "oklch(0.10 0.02 185)",
               }}
             >
-              Yearly — $39.99 (Save 17%)
+              Yearly — $49.99 + 3 Free Spins 🎡
             </button>
 
             <div className="space-y-2 pt-2" style={{ borderTop: "1px solid oklch(0.30 0.06 280)" }}>

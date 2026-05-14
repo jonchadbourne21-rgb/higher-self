@@ -1,10 +1,10 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useLocation, Link } from "wouter";
 import AppShell from "@/components/AppShell";
-import { ChevronRight, Star, Sparkles } from "lucide-react";
+import { ChevronRight, Star, Sparkles, Lock, Crown } from "lucide-react";
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -29,13 +29,32 @@ const DOMAIN_LABELS: Record<string, string> = {
   finances: "Finances",
 };
 
+type TimeRange = "week" | "month" | "year";
+
 export default function Dashboard() {
   const { isAuthenticated, loading } = useAuth();
   const [, navigate] = useLocation();
+  const [timeRange, setTimeRange] = useState<TimeRange>("week");
 
   const { data: overview, isLoading } = trpc.dashboard.overview.useQuery(undefined, { enabled: isAuthenticated });
   const { data: latestInsight } = trpc.insights.latest.useQuery(undefined, { enabled: isAuthenticated });
   const { data: weeklyDigest } = trpc.home.getLatestDigest.useQuery(undefined, { enabled: isAuthenticated });
+
+  const isPro = overview?.isPro ?? false;
+
+  // Fetch mood trend based on selected time range
+  const daysForRange = useMemo(() => {
+    switch (timeRange) {
+      case "week": return 7;
+      case "month": return 30;
+      case "year": return 365;
+    }
+  }, [timeRange]);
+
+  const { data: extendedMoodTrend } = trpc.dashboard.moodTrend.useQuery(
+    { days: daysForRange },
+    { enabled: isAuthenticated && (timeRange !== "week" || !overview?.moodTrend) }
+  );
 
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate("/");
@@ -47,13 +66,26 @@ export default function Dashboard() {
     fullMark: 10,
   }));
 
-  const moodData = (overview?.moodTrend || []).map((d) => ({
-    date: d.date ? format(new Date(d.date), "MMM d") : "",
-    mood: Number(d.avgMood?.toFixed(1)) || 0,
-    energy: Number(d.avgEnergy?.toFixed(1)) || 0,
+  // Use extended mood trend when available, otherwise fall back to overview data
+  const rawMoodData = timeRange === "week" && overview?.moodTrend
+    ? overview.moodTrend
+    : extendedMoodTrend || [];
+
+  const moodData = rawMoodData.map((d) => ({
+    date: d.date ? format(new Date(d.date), timeRange === "year" ? "MMM" : "MMM d") : "",
+    mood: Number(Number(d.avgMood || 0).toFixed(1)) || 0,
+    energy: Number(Number(d.avgEnergy || 0).toFixed(1)) || 0,
   }));
 
   const avgScore = overview?.avgGrowthScore || 0;
+
+  const handleTimeRangeChange = (range: TimeRange) => {
+    if (range !== "week" && !isPro) {
+      navigate("/pricing");
+      return;
+    }
+    setTimeRange(range);
+  };
 
   return (
     <AppShell>
@@ -156,7 +188,43 @@ export default function Dashboard() {
               )}
             </motion.div>
 
-            {/* Overall score */}
+            {/* Pro-gated Growth Dashboard banner for free users */}
+            {!isPro && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <Link href="/pricing">
+                  <div
+                    className="rounded-2xl p-5 cursor-pointer transition-all hover:shadow-md"
+                    style={{
+                      background: "linear-gradient(135deg, oklch(0.20 0.06 280), oklch(0.17 0.05 290))",
+                      border: "1.5px solid oklch(0.65 0.16 185 / 0.3)",
+                      boxShadow: "0 0 20px oklch(0.65 0.16 185 / 0.06)",
+                    }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                        style={{ background: "oklch(0.65 0.16 185 / 0.15)", border: "1px solid oklch(0.65 0.16 185 / 0.3)" }}
+                      >
+                        <Crown size={20} style={{ color: "oklch(0.65 0.16 185)" }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground">Unlock Growth Dashboard</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Get monthly & yearly analytics, full mood trends, and deep insights with Pro
+                        </p>
+                      </div>
+                      <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            )}
+
+            {/* Overall score — visible to all */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -192,7 +260,7 @@ export default function Dashboard() {
               </div>
             </motion.div>
 
-            {/* Radar chart */}
+            {/* Radar chart — visible to all */}
             {radarData.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -223,62 +291,98 @@ export default function Dashboard() {
               </motion.div>
             )}
 
-            {/* Mood trend */}
-            {moodData.length > 0 && (
+            {/* Mood trend with time range selector */}
+            {(moodData.length > 0 || isPro) && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
                 className="glass rounded-3xl p-5 space-y-3"
               >
-                <p className="text-xs text-muted-foreground uppercase tracking-widest">Mood & Energy Trend</p>
-                <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={moodData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.22 0.03 200)" />
-                      <XAxis
-                        dataKey="date"
-                        tick={{ fill: "oklch(0.50 0.04 185)", fontSize: 10 }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <YAxis
-                        domain={[0, 10]}
-                        tick={{ fill: "oklch(0.50 0.04 185)", fontSize: 10 }}
-                        axisLine={false}
-                        tickLine={false}
-                        width={20}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          background: "oklch(0.16 0.03 200)",
-                          border: "1px solid oklch(0.22 0.03 200)",
-                          borderRadius: "12px",
-                          color: "oklch(0.95 0.01 80)",
-                          fontSize: "12px",
-                        }}
-                      />
-                      <Line
-                        type="monotone" dataKey="mood" stroke="oklch(0.62 0.14 155)"
-                        strokeWidth={2} dot={false} name="Mood"
-                      />
-                      <Line
-                        type="monotone" dataKey="energy" stroke="oklch(0.65 0.10 155)"
-                        strokeWidth={2} dot={false} name="Energy"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="flex gap-4">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-0.5 rounded-full bg-primary" />
-                    <span className="text-xs text-muted-foreground">Mood</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-0.5 rounded-full" style={{ background: "oklch(0.65 0.10 155)" }} />
-                    <span className="text-xs text-muted-foreground">Energy</span>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest">Mood & Energy Trend</p>
+                  {/* Time range tabs */}
+                  <div className="flex gap-1 rounded-lg p-0.5" style={{ background: "oklch(0.15 0.02 200)" }}>
+                    {(["week", "month", "year"] as TimeRange[]).map((range) => {
+                      const isActive = timeRange === range;
+                      const isLocked = range !== "week" && !isPro;
+                      return (
+                        <button
+                          key={range}
+                          onClick={() => handleTimeRangeChange(range)}
+                          className="relative px-2.5 py-1 rounded-md text-[10px] font-medium transition-all flex items-center gap-1"
+                          style={{
+                            background: isActive ? "oklch(0.22 0.04 200)" : "transparent",
+                            color: isActive
+                              ? "oklch(0.90 0.01 270)"
+                              : isLocked
+                                ? "oklch(0.40 0.03 270)"
+                                : "oklch(0.60 0.03 270)",
+                          }}
+                        >
+                          {isLocked && <Lock size={8} />}
+                          {range === "week" ? "7d" : range === "month" ? "30d" : "1y"}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
+
+                {moodData.length > 0 ? (
+                  <>
+                    <div className="h-48">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={moodData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.22 0.03 200)" />
+                          <XAxis
+                            dataKey="date"
+                            tick={{ fill: "oklch(0.50 0.04 185)", fontSize: 10 }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <YAxis
+                            domain={[0, 10]}
+                            tick={{ fill: "oklch(0.50 0.04 185)", fontSize: 10 }}
+                            axisLine={false}
+                            tickLine={false}
+                            width={20}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              background: "oklch(0.16 0.03 200)",
+                              border: "1px solid oklch(0.22 0.03 200)",
+                              borderRadius: "12px",
+                              color: "oklch(0.95 0.01 80)",
+                              fontSize: "12px",
+                            }}
+                          />
+                          <Line
+                            type="monotone" dataKey="mood" stroke="oklch(0.62 0.14 155)"
+                            strokeWidth={2} dot={false} name="Mood"
+                          />
+                          <Line
+                            type="monotone" dataKey="energy" stroke="oklch(0.65 0.10 155)"
+                            strokeWidth={2} dot={false} name="Energy"
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-3 h-0.5 rounded-full bg-primary" />
+                        <span className="text-xs text-muted-foreground">Mood</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-3 h-0.5 rounded-full" style={{ background: "oklch(0.65 0.10 155)" }} />
+                        <span className="text-xs text-muted-foreground">Energy</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="h-48 flex items-center justify-center">
+                    <p className="text-xs text-muted-foreground">Complete check-ins to see your mood trends</p>
+                  </div>
+                )}
               </motion.div>
             )}
 

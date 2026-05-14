@@ -1020,7 +1020,8 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
 
   dashboard: router({
     overview: protectedProcedure.query(async ({ ctx }) => {
-      const [domainScores, moodTrend, recentCheckIns, latestInsight, milestones, habits] =
+      const { isProUser } = await import("./db/subscriptions");
+      const [domainScores, moodTrend, recentCheckIns, latestInsight, milestones, habits, isPro] =
         await Promise.all([
           getLatestDomainScores(ctx.user.id),
           getMoodTrend(ctx.user.id, 14),
@@ -1028,6 +1029,7 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
           getLatestInsight(ctx.user.id),
           getMilestones(ctx.user.id),
           getUserHabits(ctx.user.id),
+          isProUser(ctx.user.id),
         ]);
 
       const avgGrowthScore =
@@ -1043,6 +1045,7 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
         milestones: milestones.slice(0, 5),
         habitCount: habits.length,
         avgGrowthScore: Math.round(avgGrowthScore * 10),
+        isPro,
       };
     }),
 

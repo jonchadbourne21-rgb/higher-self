@@ -953,3 +953,11 @@
 - [x] Programs: Dark Emerald Green oklch(0.15 0.06 155) — growth, learning, progress
 - [x] Rewards default: Muted Plum oklch(0.15 0.05 320) — subtle reward focal point
 - [x] Calendar: Midnight Navy oklch(0.13 0.04 250) — neutral, structured, utility
+
+## Pricing Update & Pro Analytics Gating
+- [x] Update monthly price to $3.99 and annual to $49.99
+- [x] Award 1 bonus free spin on monthly subscription purchase
+- [x] Award 3 bonus free spins on annual subscription purchase
+- [x] Gate monthly/yearly analytics behind Pro — free users see week-by-week only
+- [x] Growth Dashboard accessible only to Pro users
+- [x] Full year analytics insight only available to Pro users

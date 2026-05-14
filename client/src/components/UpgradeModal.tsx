@@ -83,8 +83,9 @@ export function UpgradeModal({ isOpen, onClose, limitType }: UpgradeModalProps) 
                     : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
               >
-                <div className="font-semibold text-teal-600">$2.99</div>
+                <div className="font-semibold text-teal-600">$3.99</div>
                 <div className="text-xs text-gray-600">/month</div>
+                <div className="text-[10px] text-teal-500 mt-0.5">+1 free spin</div>
               </button>
               <button
                 onClick={() => setSelectedBilling("annual")}
@@ -95,10 +96,11 @@ export function UpgradeModal({ isOpen, onClose, limitType }: UpgradeModalProps) 
                 }`}
               >
                 <div className="absolute -top-2 right-2 bg-teal-500 text-white text-xs px-2 py-0.5 rounded">
-                  Save 17%
+                  Best Value
                 </div>
-                <div className="font-semibold text-teal-600">$39.99</div>
+                <div className="font-semibold text-teal-600">$49.99</div>
                 <div className="text-xs text-gray-600">/year</div>
+                <div className="text-[10px] text-teal-500 mt-0.5">+3 free spins</div>
               </button>
             </div>
           </div>
