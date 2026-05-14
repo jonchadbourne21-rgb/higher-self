@@ -169,6 +169,13 @@
       "when": 1778763340227,
       "tag": "0023_familiar_dragon_lord",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "5",
+      "when": 1778797445769,
+      "tag": "0024_tense_bullseye",
+      "breakpoints": true
     }
   ]
 }

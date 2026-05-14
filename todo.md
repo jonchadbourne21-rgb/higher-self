@@ -1011,3 +1011,8 @@
 - [x] Add og:locale, og:image:secure_url, og:image:alt to Open Graph tags
 - [x] Add twitter:site, twitter:creator, twitter:image:alt to Twitter card tags
 - [x] Add meta name="author" and meta name="robots" content="index, follow"
+
+## 21-Day Inner Voice Reset Program
+- [ ] Write all 21 lesson scripts (journaling prompt, Mirror starter, micro-habit)
+- [ ] Add program to database via seed script
+- [ ] Verify program appears correctly in Programs page

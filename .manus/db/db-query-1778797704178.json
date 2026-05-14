@@ -1,0 +1,94 @@
+{
+  "query": "SELECT day, title FROM program_lessons WHERE programId = 30002 ORDER BY day;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UbcpEQhTnXTazXN.root --database LQwmD5t86EFFZjkEDkXbgz --execute SELECT day, title FROM program_lessons WHERE programId = 30002 ORDER BY day;",
+  "rows": [
+    {
+      "day": "1",
+      "title": "The Voice Has a Name"
+    },
+    {
+      "day": "2",
+      "title": "The Origin Story"
+    },
+    {
+      "day": "3",
+      "title": "The Lie It Tells Most"
+    },
+    {
+      "day": "4",
+      "title": "When It Protects You"
+    },
+    {
+      "day": "5",
+      "title": "The Body Knows First"
+    },
+    {
+      "day": "6",
+      "title": "The Comparison Trap"
+    },
+    {
+      "day": "7",
+      "title": "Week 1 Integration"
+    },
+    {
+      "day": "8",
+      "title": "Is It True?"
+    },
+    {
+      "day": "9",
+      "title": "Whose Voice Is It Really?"
+    },
+    {
+      "day": "10",
+      "title": "The Worst Case Isn't What You Think"
+    },
+    {
+      "day": "11",
+      "title": "The Identity Underneath"
+    },
+    {
+      "day": "12",
+      "title": "The Friend Test"
+    },
+    {
+      "day": "13",
+      "title": "Rewriting the Headline"
+    },
+    {
+      "day": "14",
+      "title": "Week 2 Integration"
+    },
+    {
+      "day": "15",
+      "title": "Building the New Narrator"
+    },
+    {
+      "day": "16",
+      "title": "The Permission Slip"
+    },
+    {
+      "day": "17",
+      "title": "Failure as Data"
+    },
+    {
+      "day": "18",
+      "title": "The Gratitude Reframe"
+    },
+    {
+      "day": "19",
+      "title": "The Conversation You've Been Avoiding"
+    },
+    {
+      "day": "20",
+      "title": "Who You're Becoming"
+    },
+    {
+      "day": "21",
+      "title": "The Voice You Choose"
+    }
+  ],
+  "messages": [],
+  "stdout": "day\ttitle\n1\tThe Voice Has a Name\n2\tThe Origin Story\n3\tThe Lie It Tells Most\n4\tWhen It Protects You\n5\tThe Body Knows First\n6\tThe Comparison Trap\n7\tWeek 1 Integration\n8\tIs It True?\n9\tWhose Voice Is It Really?\n10\tThe Worst Case Isn't What You Think\n11\tThe Identity Underneath\n12\tThe Friend Test\n13\tRewriting the Headline\n14\tWeek 2 Integration\n15\tBuilding the New Narrator\n16\tThe Permission Slip\n17\tFailure as Data\n18\tThe Gratitude Reframe\n19\tThe Conversation You've Been Avoiding\n20\tWho You're Becoming\n21\tThe Voice You Choose\n",
+  "stderr": "",
+  "execution_time_ms": 268
+}

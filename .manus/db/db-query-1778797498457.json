@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO `growth_programs` (name, slug, description, durationDays, category, status) VALUES ('21-Day Inner Voice Reset', '21-day-inner-voice-reset', 'A 3-week transformative journey to identify, challenge, and rewire the internal narrative that shapes every decision, emotion, and relationship in your life. Each day is a single, focused act of reclamation — a journaling prompt to excavate what''s real, a Mirror conversation to hear yourself out loud, and one micro-habit to prove to your nervous system that change is already happening.', 21, 'self-awareness', 'active');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UbcpEQhTnXTazXN.root --database LQwmD5t86EFFZjkEDkXbgz --execute INSERT INTO `growth_programs` (name, slug, description, durationDays, category, status) VALUES ('21-Day Inner Voice Reset', '21-day-inner-voice-reset', 'A 3-week transformative journey to identify, challenge, and rewire the internal narrative that shapes every decision, emotion, and relationship in your life. Each day is a single, focused act of reclamation — a journaling prompt to excavate what''s real, a Mirror conversation to hear yourself out loud, and one micro-habit to prove to your nervous system that change is already happening.', 21, 'self-awareness', 'active');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 279
+}
