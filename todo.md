@@ -731,3 +731,10 @@
 - [x] All 320 tests still passing
 - [x] TypeScript: 0 errors
 - [x] Dev server: Running and stable
+
+## Header UI Fixes
+- [x] Fix subtitle wrapping: "AI GUIDANCE. REAL GROWTH. INNER YOU." now fits on one line (reduced font-size, letter-spacing, added whitespace-nowrap)
+- [x] Replace plain "O" in MENTROVE with ornate mandala SVG (thick outer ring, inner ring, 4-pointed star sparkle) matching twitter banner
+- [x] Apply mandala O to Landing.tsx wordmark
+- [x] Apply mandala O to Onboarding.tsx wordmark
+- [x] MentroveHeader.tsx updated with new MandalaO component used across all app pages
