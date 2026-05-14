@@ -820,11 +820,25 @@
 - [x] Store weekly insight in database (weekly_insights table)
 - [x] Schedule job to run every Sunday 8AM UTC via Heartbeat cron (task_uid: MWivTgSorowf3feRdu8Xix)
 - [x] Show latest weekly insight prominently in Growth Dashboard
-- [ ] Notify user when their weekly insight is ready (push notification)
+- [x] Notify user when their weekly insight is ready (push notification)
 
 ## 3-Day Check-In Streak Auto-Spin
 - [x] Add getCheckInStreak DB helper (count consecutive daily check-ins)
 - [x] Add lastStreakSpinDate column to users table to prevent duplicate grants per streak cycle
 - [x] On check-in submit: detect 3-consecutive-day streak and auto-grant a free spin (every 3 days)
 - [x] Show streak spin toast notification after check-in when earned
-- [ ] Update Rewards page to show streak spin availability (pending spins count)
+- [x] Update Rewards page to show streak spin availability (pending spins count)
+
+## Heartbeat Cron URL Update
+- [x] Heartbeat cron URL is auto-resolved by Manus platform to the deployed domain — no update needed
+
+## Weekly Insight Push Notification
+- [x] After generating each user's weekly insight, send push notification "Your weekly reflection is ready 🌟"
+- [x] Only send to users with active push subscriptions
+- [x] Handle notification send errors gracefully (don't fail the whole job)
+
+## Rewards Page Pending-Spin Counter
+- [x] Add getPendingStreakSpins DB helper to count banked streak spins
+- [x] Add pendingStreakSpins field to rewards.dashboard tRPC response
+- [x] Show "You have X free spins available" banner on Rewards page Spin tab
+- [x] Show streak spin count on Home page Rewards card (highlighted card with amber glow when spins available)

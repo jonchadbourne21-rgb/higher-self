@@ -371,7 +371,8 @@ export default function Rewards() {
     if (!dashboard) return false;
     // Welcome spin not used yet
     if (!dashboard.welcomeSpinUsed) return true;
-    // TODO: check if 3-day streak qualifies for another spin
+    // Has pending streak spins banked
+    if ((dashboard.pendingStreakSpins ?? 0) > 0) return true;
     return false;
   }, [dashboard]);
 
@@ -485,6 +486,26 @@ export default function Rewards() {
                   You have a free spin waiting. Try your luck!
                 </p>
               </div>
+            )}
+
+            {/* Pending streak spins banner */}
+            {dashboard?.welcomeSpinUsed && (dashboard?.pendingStreakSpins ?? 0) > 0 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="rounded-2xl p-4 text-center space-y-1"
+                style={{
+                  background: "linear-gradient(135deg, oklch(0.60 0.18 50 / 0.15), oklch(0.55 0.18 290 / 0.15))",
+                  border: "1px solid oklch(0.60 0.18 50 / 0.35)",
+                }}
+              >
+                <p className="text-sm font-semibold" style={{ color: "oklch(0.75 0.16 55)" }}>
+                  🎡 {dashboard.pendingStreakSpins} Free Spin{(dashboard.pendingStreakSpins ?? 0) > 1 ? "s" : ""} Available!
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  You earned {(dashboard.pendingStreakSpins ?? 0) > 1 ? "these" : "this"} from your check-in streak. Spin to claim your reward!
+                </p>
+              </motion.div>
             )}
 
             <SpinWheel onSpin={handleSpin} spinning={spinning} disabled={!canSpin} />

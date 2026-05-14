@@ -12,6 +12,7 @@ import {
   addRewardPoints,
   redeemPoints,
   getStreakRewards,
+  getPendingStreakSpins,
 } from "../db/rewards";
 import {
   createRewardGrant,
@@ -46,7 +47,7 @@ const SPIN_GRANT_MAP: Record<string, string> = {
 export const rewardsRouter = router({
   // Get full rewards dashboard data
   dashboard: protectedProcedure.query(async ({ ctx }) => {
-    const [totalPoints, history, spinHistory, lastSpin, welcomeSpinUsed, streakRewardsList, grantStatus, allGrants] =
+    const [totalPoints, history, spinHistory, lastSpin, welcomeSpinUsed, streakRewardsList, grantStatus, allGrants, pendingStreakSpins] =
       await Promise.all([
         getTotalRewardPoints(ctx.user.id),
         getRewardPointsHistory(ctx.user.id),
@@ -56,6 +57,7 @@ export const rewardsRouter = router({
         getStreakRewards(ctx.user.id),
         checkAndProcessExpiredGrants(ctx.user.id),
         getAllGrants(ctx.user.id),
+        getPendingStreakSpins(ctx.user.id),
       ]);
 
     return {
@@ -72,6 +74,8 @@ export const rewardsRouter = router({
       pendingGrants: grantStatus.pendingGrants,
       proExpiresAt: grantStatus.expiresAt,
       allGrants: allGrants.slice(0, 50),
+      // Streak spins
+      pendingStreakSpins,
     };
   }),
 

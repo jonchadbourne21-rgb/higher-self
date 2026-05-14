@@ -1,4 +1,4 @@
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, like, sql } from "drizzle-orm";
 import { rewardPointsHistory, wheelSpins, streakRewards } from "../../drizzle/schema";
 import { getDb } from "../db";
 
@@ -239,4 +239,40 @@ export async function hasReceivedStreakReward(
     .limit(1);
 
   return result.length > 0;
+}
+
+/**
+ * Count pending (unused) streak spins for a user.
+ * Each 3-day streak grants 1 spin, tracked in rewardPointsHistory with sourceId starting with 'streak_spin_'.
+ * Each actual wheel spin is recorded in wheelSpins.
+ * Pending = granted streak spins - spins used (total wheelSpins count minus welcome spin).
+ */
+export async function getPendingStreakSpins(userId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+
+  // Count streak spin grants (entries in rewardPointsHistory with sourceId like 'streak_spin_%')
+  const grantsResult = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(rewardPointsHistory)
+    .where(
+      and(
+        eq(rewardPointsHistory.userId, userId),
+        like(rewardPointsHistory.sourceId, "streak_spin_%")
+      )
+    );
+  const granted = Number(grantsResult[0]?.count ?? 0);
+
+  // Count total wheel spins used (excluding the welcome spin which is tracked separately)
+  const spinsResult = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(wheelSpins)
+    .where(eq(wheelSpins.userId, userId));
+  const totalSpins = Number(spinsResult[0]?.count ?? 0);
+
+  // Welcome spin is 1 spin that doesn't come from streak grants
+  // Pending streak spins = granted - spins used from streak grants
+  // spins used from streak grants = max(0, totalSpins - 1) where 1 is the welcome spin
+  const spinsUsedFromStreak = Math.max(0, totalSpins - 1);
+  return Math.max(0, granted - spinsUsedFromStreak);
 }

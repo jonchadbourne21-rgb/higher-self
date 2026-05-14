@@ -39,6 +39,7 @@ export default function Home() {
   const { data: habitStreak } = trpc.habits.currentStreak.useQuery(undefined, { enabled: isAuthenticated });
   const { data: rewardPoints } = trpc.rewards.points.useQuery(undefined, { enabled: isAuthenticated });
   const { data: welcomeSpin } = trpc.rewards.welcomeSpinAvailable.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: rewardsDashboard } = trpc.rewards.dashboard.useQuery(undefined, { enabled: isAuthenticated && !welcomeSpin?.available });
   const { data: proStatus } = trpc.rewards.proStatus.useQuery(undefined, { enabled: isAuthenticated });
   const isPro = proStatus?.isPro ?? false;
   const [showWelcomeSpin, setShowWelcomeSpin] = useState(false);
@@ -320,9 +321,13 @@ export default function Home() {
               style={{
                 background: welcomeSpin?.available
                   ? "linear-gradient(135deg, oklch(0.55 0.18 290 / 0.2), oklch(0.65 0.16 185 / 0.2))"
+                  : (rewardsDashboard?.pendingStreakSpins ?? 0) > 0
+                  ? "linear-gradient(135deg, oklch(0.60 0.18 50 / 0.15), oklch(0.55 0.18 290 / 0.12))"
                   : "oklch(0.17 0.04 280)",
                 border: welcomeSpin?.available
                   ? "1px solid oklch(0.65 0.16 185 / 0.3)"
+                  : (rewardsDashboard?.pendingStreakSpins ?? 0) > 0
+                  ? "1px solid oklch(0.60 0.18 50 / 0.35)"
                   : "1px solid oklch(0.28 0.05 280 / 0.6)",
               }}
             >
@@ -337,6 +342,13 @@ export default function Home() {
                       <>
                         <p className="text-sm font-semibold text-primary">🎁 Free Welcome Spin!</p>
                         <p className="text-xs text-muted-foreground">Try your luck on the reward wheel</p>
+                      </>
+                    ) : (rewardsDashboard?.pendingStreakSpins ?? 0) > 0 ? (
+                      <>
+                        <p className="text-sm font-semibold" style={{ color: "oklch(0.75 0.16 55)" }}>
+                          🎡 {rewardsDashboard?.pendingStreakSpins} Free Spin{(rewardsDashboard?.pendingStreakSpins ?? 0) > 1 ? "s" : ""} Ready!
+                        </p>
+                        <p className="text-xs text-muted-foreground">Earned from your check-in streak</p>
                       </>
                     ) : (
                       <>

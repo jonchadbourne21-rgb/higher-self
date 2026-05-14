@@ -25,9 +25,11 @@ import {
   calculateWeeklyGrowthScore,
   getSessionMessageCount,
   saveWeeklyInsight,
+  getActivePushSubscription,
 } from "../db";
 import { invokeLLM } from "../_core/llm";
 import { notifyOwner } from "../_core/notification";
+import { sendPushNotification } from "../pushNotifications";
 import { getDb } from "../db";
 import { weeklyInsights, users, userProfiles } from "../../drizzle/schema";
 import { eq, and, gte, lt } from "drizzle-orm";
@@ -263,16 +265,37 @@ export async function weeklyInsightHandler(req: Request, res: Response) {
     let successCount = 0;
     let skippedCount = 0;
 
+    let notifiedCount = 0;
     for (const user of allUsers) {
       const generated = await generateInsightForUser(user.id, weekStart);
       if (generated) {
         successCount++;
+        // Send push notification to the user if they have an active subscription
+        try {
+          const sub = await getActivePushSubscription(user.id);
+          if (sub) {
+            const sent = await sendPushNotification(
+              sub.endpoint,
+              sub.p256dh,
+              sub.auth,
+              {
+                title: "Your weekly reflection is ready 🌟",
+                body: "Your Higher Self has prepared your personalized growth insight for this week.",
+                url: "/dashboard",
+                tag: "weekly-insight",
+              }
+            );
+            if (sent) notifiedCount++;
+          }
+        } catch (notifErr) {
+          console.error(`[WeeklyInsight] Push notification failed for user ${user.id}:`, notifErr);
+        }
       } else {
         skippedCount++;
       }
     }
 
-    const summary = `Weekly insight job complete: ${successCount} generated, ${skippedCount} skipped out of ${allUsers.length} users`;
+    const summary = `Weekly insight job complete: ${successCount} generated, ${skippedCount} skipped, ${notifiedCount} push notifications sent out of ${allUsers.length} users`;
     console.log(`[WeeklyInsight] ${summary}`);
 
     // Notify the owner with a summary
@@ -285,6 +308,7 @@ export async function weeklyInsightHandler(req: Request, res: Response) {
       ok: true,
       generated: successCount,
       skipped: skippedCount,
+      notified: notifiedCount,
       total: allUsers.length,
       weekStart: weekStart.toISOString(),
     });
