@@ -190,6 +190,13 @@
       "when": 1778814415105,
       "tag": "0026_closed_hannibal_king",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "5",
+      "when": 1778820041154,
+      "tag": "0027_giant_black_widow",
+      "breakpoints": true
     }
   ]
 }

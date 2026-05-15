@@ -657,3 +657,34 @@ export const rewardGrants = mysqlTable("reward_grants", {
 });
 export type RewardGrant = typeof rewardGrants.$inferSelect;
 export type InsertRewardGrant = typeof rewardGrants.$inferInsert;
+
+
+// ─── V2V Voice Sessions ──────────────────────────────────────────────────────
+
+export const v2vSessions = mysqlTable("v2v_sessions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  sessionUuid: varchar("sessionUuid", { length: 36 }).notNull(),
+  startedAt: timestamp("startedAt").defaultNow().notNull(),
+  endedAt: timestamp("endedAt"),
+});
+export type V2vSession = typeof v2vSessions.$inferSelect;
+export type InsertV2vSession = typeof v2vSessions.$inferInsert;
+
+// ─── V2V Voice Messages ──────────────────────────────────────────────────────
+
+export const v2vMessages = mysqlTable("v2v_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: int("sessionId").notNull(),
+  role: mysqlEnum("role", ["user", "assistant", "system"]).notNull(),
+  transcript: text("transcript").notNull(),
+  emotion1Name: varchar("emotion1Name", { length: 64 }),
+  emotion1Score: float("emotion1Score"),
+  emotion2Name: varchar("emotion2Name", { length: 64 }),
+  emotion2Score: float("emotion2Score"),
+  emotion3Name: varchar("emotion3Name", { length: 64 }),
+  emotion3Score: float("emotion3Score"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type V2vMessage = typeof v2vMessages.$inferSelect;
+export type InsertV2vMessage = typeof v2vMessages.$inferInsert;

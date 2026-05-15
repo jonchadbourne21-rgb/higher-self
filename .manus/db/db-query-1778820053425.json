@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE `v2v_messages` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`sessionId` int NOT NULL,\n\t`role` enum('user','assistant','system') NOT NULL,\n\t`transcript` text NOT NULL,\n\t`emotion1Name` varchar(64),\n\t`emotion1Score` float,\n\t`emotion2Name` varchar(64),\n\t`emotion2Score` float,\n\t`emotion3Name` varchar(64),\n\t`emotion3Score` float,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `v2v_messages_id` PRIMARY KEY(`id`)\n);\n\nCREATE TABLE `v2v_sessions` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`userId` int NOT NULL,\n\t`sessionUuid` varchar(36) NOT NULL,\n\t`startedAt` timestamp NOT NULL DEFAULT (now()),\n\t`endedAt` timestamp,\n\tCONSTRAINT `v2v_sessions_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UbcpEQhTnXTazXN.root --database LQwmD5t86EFFZjkEDkXbgz --execute CREATE TABLE `v2v_messages` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`sessionId` int NOT NULL,\n\t`role` enum('user','assistant','system') NOT NULL,\n\t`transcript` text NOT NULL,\n\t`emotion1Name` varchar(64),\n\t`emotion1Score` float,\n\t`emotion2Name` varchar(64),\n\t`emotion2Score` float,\n\t`emotion3Name` varchar(64),\n\t`emotion3Score` float,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `v2v_messages_id` PRIMARY KEY(`id`)\n);\n\nCREATE TABLE `v2v_sessions` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`userId` int NOT NULL,\n\t`sessionUuid` varchar(36) NOT NULL,\n\t`startedAt` timestamp NOT NULL DEFAULT (now()),\n\t`endedAt` timestamp,\n\tCONSTRAINT `v2v_sessions_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 453
+}

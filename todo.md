@@ -1068,3 +1068,15 @@
 - [x] Backend: on lesson submission, detect 7-day and 14-day streak milestones and award bonus points
 - [x] Frontend: show 🔥 streak badge on active program card on Home
 - [x] Frontend: show milestone toast when 7-day (+15 pts) or 14-day (+25 pts) streak is hit
+
+## V2V (Voice-to-Voice) Module Integration
+- [x] Request Hume API credentials (HUME_API_KEY, HUME_SECRET_KEY)
+- [x] Add v2v_sessions and v2v_messages tables to Drizzle schema + run migration
+- [x] Backend: WebSocket relay on existing Express server at /ws path (Hume EVI proxy)
+- [x] Backend: relay intercepts user_message for top-3 prosody emotions, persists to DB
+- [x] Backend: kill_switch message handling to sever Hume connection
+- [x] Frontend: TypeScript V2V component with dark theme, mic capture, audio playback, VAD barge-in
+- [x] Frontend: self-harm kill switch with crisis message display
+- [x] Frontend: emotion badges on user messages (top-3 prosody scores)
+- [x] Add /voice route and voice toggle button on Chat page
+- [x] Configure Vite dev proxy for /ws WebSocket path (not needed — same server)

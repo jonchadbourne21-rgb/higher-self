@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Send, RefreshCw, X, History, ChevronRight, Pencil, Check, MessageCircle, Mic, MicOff, Volume2, ChevronDown } from "lucide-react";
+import { Send, RefreshCw, X, History, ChevronRight, Pencil, Check, MessageCircle, Mic, MicOff, Volume2, ChevronDown, Phone } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
@@ -560,6 +560,15 @@ export default function Chat() {
               </div>
             </div>
             <div className="flex items-center gap-1.5">
+              {/* Voice Mirror button */}
+              <button
+                onClick={() => navigate("/voice")}
+                title="Switch to Voice Mirror"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-primary border border-primary/40 hover:bg-primary/10 transition-all"
+              >
+                <Phone className="w-3.5 h-3.5" />
+                Voice
+              </button>
               {/* New conversation button */}
               <button
                 onClick={() => setShowClearConfirm(true)}

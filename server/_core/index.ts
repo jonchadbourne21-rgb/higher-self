@@ -9,6 +9,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { startDailyReminderScheduler } from "../pushNotifications";
 import { weeklyInsightHandler } from "../jobs/weeklyInsightJob";
+import { attachV2VRelay } from "../v2vRelay";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -124,6 +125,9 @@ Request-rate: 1/1s`;
   if (port !== preferredPort) {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
+
+  // Attach V2V WebSocket relay to the HTTP server
+  attachV2VRelay(server);
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
