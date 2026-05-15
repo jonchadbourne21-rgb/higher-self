@@ -10,6 +10,7 @@ import { serveStatic, setupVite } from "./vite";
 import { startDailyReminderScheduler } from "../pushNotifications";
 import { weeklyInsightHandler } from "../jobs/weeklyInsightJob";
 import { attachV2VRelay } from "../v2vRelay";
+import { humeWebhookHandler } from "../humeWebhook";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -102,6 +103,9 @@ Request-rate: 1/1s`;
 
   // Scheduled job endpoints (Heartbeat cron)
   app.post("/api/scheduled/weeklyInsight", weeklyInsightHandler);
+
+  // Hume EVI webhook — receives real-time voice session events
+  app.post("/api/hume/webhook", humeWebhookHandler);
 
   // tRPC API
   app.use(

@@ -1104,3 +1104,13 @@
 - [ ] Completion badges per program (Bulletproof badge for Stoic Path, Cosmic Player for Alan Watts)
 - [ ] Voice session naming (allow user to name past sessions)
 - [ ] Vitest tests for voice.getSessionMessages and voice.saveToJournal
+
+## Hume EVI Webhook Integration
+- [x] Create server/humeWebhook.ts — POST /api/hume/webhook handler
+- [x] Handle chat_started, chat_ended, tool_call events
+- [x] HMAC-SHA256 signature verification using HUME_WEBHOOK_SIGNING_KEY (skips gracefully if key not set)
+- [x] Replay attack prevention via timestamp validation (3-minute window)
+- [x] Register route in server/_core/index.ts before tRPC middleware
+- [x] Verified endpoint returns {"status":"ok"} for both chat_started and chat_ended test payloads
+- [ ] Add HUME_WEBHOOK_SIGNING_KEY secret (from Hume Developers page → Generate signing key)
+- [ ] Update Hume EVI config webhook URL to https://mentrove.manus.space/api/hume/webhook
