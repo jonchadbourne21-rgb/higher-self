@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as cnt, MIN(day) as min_day, MAX(day) as max_day FROM program_lessons WHERE programId = 60002;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UbcpEQhTnXTazXN.root --database LQwmD5t86EFFZjkEDkXbgz --execute SELECT COUNT(*) as cnt, MIN(day) as min_day, MAX(day) as max_day FROM program_lessons WHERE programId = 60002;",
+  "rows": [
+    {
+      "cnt": "30",
+      "min_day": "1",
+      "max_day": "30"
+    }
+  ],
+  "messages": [],
+  "stdout": "cnt\tmin_day\tmax_day\n30\t1\t30\n",
+  "stderr": "",
+  "execution_time_ms": 268
+}

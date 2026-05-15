@@ -27,6 +27,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   relationships: "Relationships",
   mindfulness: "Mindfulness",
   "self-awareness": "Self-Awareness",
+  "zen-philosophy": "Zen Philosophy",
 };
 
 const PROGRAM_ICONS: Record<string, string> = {
@@ -35,6 +36,7 @@ const PROGRAM_ICONS: Record<string, string> = {
   relationships: "❤️",
   mindfulness: "🧘",
   "self-awareness": "🪞",
+  "zen-philosophy": "🎭",
 };
 
 /** Format an ISO timestamp as a human-readable EST time string */

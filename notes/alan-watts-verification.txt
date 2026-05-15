@@ -1,0 +1,10 @@
+Alan Watts Challenge - Programs Page Verification
+==================================================
+- Program appears as 3rd card in "All Programs" list
+- Icon: 🎭 (theater masks) - displays correctly
+- Title: "The Alan Watts Challenge"
+- Description truncated correctly in card view
+- Category badge: "Zen Philosophy" with emerald green styling
+- Metadata: "30 days · 30 lessons" 
+- Card design matches the other two programs (unified layout)
+- All three cards have consistent icon size, title position, description, and metadata row

@@ -176,6 +176,13 @@
       "when": 1778797445769,
       "tag": "0024_tense_bullseye",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1778805570954,
+      "tag": "0025_loose_squirrel_girl",
+      "breakpoints": true
     }
   ]
 }

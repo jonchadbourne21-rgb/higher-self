@@ -1039,3 +1039,9 @@
 - [x] Backend: getCurrentLesson returns isLocked=true + unlockAt timestamp when next day not yet available
 - [x] Frontend: ProgramDetail shows locked card with "Unlocks at 6:00 AM tomorrow" when isLocked=true
 - [x] Frontend: no lesson content visible at all when locked — only the lock message
+
+## 30-Day Alan Watts Challenge Program
+- [x] Write all 30 daily experiments (game, why, playful twist) across 3 phases + wildcard days
+- [x] Seed the program and all 30 lessons into the database
+- [x] Add program icon/category mapping for "zen-philosophy" or similar
+- [x] Verify program appears correctly in Programs page with unified card design

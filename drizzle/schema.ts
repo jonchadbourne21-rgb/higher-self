@@ -269,6 +269,7 @@ export const growthPrograms = mysqlTable("growth_programs", {
     "relationships",
     "mindfulness",
     "self-awareness",
+    "zen-philosophy",
   ]).notNull(),
   status: mysqlEnum("status", ["active", "archived"]).default("active"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
