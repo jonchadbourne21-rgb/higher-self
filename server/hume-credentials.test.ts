@@ -31,4 +31,26 @@ describe("Hume AI credentials", () => {
     expect(typeof json.access_token).toBe("string");
     expect(json.access_token.length).toBeGreaterThan(0);
   });
+
+  it("should validate HUME_CONFIG_ID exists and is accessible", async () => {
+    const apiKey = process.env.HUME_API_KEY;
+    const configId = process.env.HUME_CONFIG_ID;
+
+    if (!apiKey || !configId) {
+      console.warn("HUME_API_KEY or HUME_CONFIG_ID not set — skipping");
+      return;
+    }
+
+    // Fetch the EVI config using API key auth (EVI configs require X-Hume-Api-Key)
+    const configRes = await fetch(`https://api.hume.ai/v0/evi/configs/${configId}`, {
+      headers: { "X-Hume-Api-Key": apiKey },
+    });
+
+    expect(configRes.ok).toBe(true);
+    const body = await configRes.json();
+    // API returns paginated response with configs_page array
+    const config = body.configs_page?.[0] ?? body;
+    expect(config.id).toBe(configId);
+    console.log(`Validated config: "${config.name}" — voice: ${config.voice?.name} (id: ${config.id})`);
+  });
 });
