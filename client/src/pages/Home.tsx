@@ -470,16 +470,16 @@ export default function Home() {
                 </motion.div>
               </Link>
 
-              <Link href="/journal" className="block">
+              <Link href="/programs" className="block">
                 <motion.div
                   whileTap={{ scale: 0.96 }}
                   className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
-                  style={TILE_JOURNAL}
+                  style={TILE_PROGRAMS}
                 >
-                  <span className="text-xl">📝</span>
+                  <span className="text-xl">🎓</span>
                   <div>
-                    <p className="text-xs font-semibold text-foreground">Journal</p>
-                    <p className="text-[10px] text-muted-foreground leading-tight">Write your thoughts</p>
+                    <p className="text-xs font-semibold text-foreground">Programs</p>
+                    <p className="text-[10px] text-muted-foreground leading-tight">Guided growth</p>
                   </div>
                 </motion.div>
               </Link>
@@ -509,16 +509,16 @@ export default function Home() {
                 </motion.div>
               </Link>
 
-              <Link href="/programs" className="block">
+              <Link href="/journal" className="block">
                 <motion.div
                   whileTap={{ scale: 0.96 }}
                   className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
-                  style={TILE_PROGRAMS}
+                  style={TILE_JOURNAL}
                 >
-                  <span className="text-xl">🎓</span>
+                  <span className="text-xl">📝</span>
                   <div>
-                    <p className="text-xs font-semibold text-foreground">Programs</p>
-                    <p className="text-[10px] text-muted-foreground leading-tight">Guided growth</p>
+                    <p className="text-xs font-semibold text-foreground">Journal</p>
+                    <p className="text-[10px] text-muted-foreground leading-tight">Write your thoughts</p>
                   </div>
                 </motion.div>
               </Link>
