@@ -10,6 +10,7 @@ import { weeklyInsightRouter } from "./routers/weeklyInsight";
 import { subscriptionRouter } from "./routers/subscription";
 import { rewardsRouter } from "./routers/rewards";
 import { programsRouter } from "./routers/programs";
+import { voiceRouter } from "./routers/voice";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { deleteUserAccount, getDb } from "./db";
 import {
@@ -1394,5 +1395,6 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
   subscription: subscriptionRouter,
   rewards: rewardsRouter,
   programs: programsRouter,
+  voice: voiceRouter,
 });
 export type AppRouter = typeof appRouter;

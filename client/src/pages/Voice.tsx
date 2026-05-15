@@ -1,350 +1,345 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
+import { ArrowLeft, Mic, MicOff, PhoneOff, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, MicOff, Phone, PhoneOff, ArrowLeft, AlertTriangle, ShieldAlert } from "lucide-react";
-import AppShell from "@/components/AppShell";
+import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import AppShell from "@/components/AppShell";
+import { Button } from "@/components/ui/button";
 
-// ─── Safety kill switch ──────────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────────────
 
-const KILL_PHRASES = [
-  "suicide",
-  "kill myself",
-  "killing myself",
-  "end my life",
-  "ending it all",
-  "end it all",
-  "don't want to be here anymore",
-  "dont want to be here anymore",
-  "i want to die",
-  "hurting myself",
-  "hurt myself",
-  "self harm",
-  "self-harm",
-  "hurt someone",
-  "hurting someone",
-];
-
-const KILL_MESSAGE =
-  "I'm only an AI and I'm not able to give advice about this. If you're in immediate danger, please call your local emergency services. In the U.S. you can also call or text 988 (Suicide & Crisis Lifeline). I have to stop the conversation here so you can reach a real person who can help.";
-
-function containsKillPhrase(text: string): boolean {
-  if (!text) return false;
-  const t = text.toLowerCase();
-  return KILL_PHRASES.some((p) => t.includes(p));
+interface Emotion {
+  name: string;
+  score: number;
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(String(reader.result).split(",")[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
-
-function base64ToArrayBuffer(b64: string): ArrayBuffer {
-  const bin = atob(b64);
-  const buf = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-  return buf.buffer;
-}
-
-type Emotion = { name: string; score: number };
-
-type VoiceMessage = {
-  role: "user" | "assistant" | "system";
+interface Message {
+  id: string;
+  role: "user" | "assistant";
   content: string;
   emotions?: Emotion[];
-};
-
-// ─── Emotion color mapping ───────────────────────────────────────────────────
-
-const EMOTION_COLORS: Record<string, string> = {
-  Joy: "text-yellow-400",
-  Excitement: "text-amber-400",
-  Interest: "text-teal-400",
-  Surprise: "text-purple-400",
-  Concentration: "text-blue-400",
-  Contemplation: "text-indigo-400",
-  Determination: "text-emerald-400",
-  Realization: "text-cyan-400",
-  Admiration: "text-pink-400",
-  Amusement: "text-orange-400",
-  Sadness: "text-blue-300",
-  Anxiety: "text-red-300",
-  Confusion: "text-yellow-300",
-  Disappointment: "text-gray-400",
-  Distress: "text-red-400",
-  Anger: "text-red-500",
-  Fear: "text-violet-400",
-  Empathic_Pain: "text-rose-400",
-};
-
-function getEmotionColor(name: string): string {
-  return EMOTION_COLORS[name] ?? "text-muted-foreground";
+  timestamp: number;
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+type Status = "idle" | "connecting" | "live" | "ended" | "error";
+
+// ── Crisis keywords ────────────────────────────────────────────────────────────
+const CRISIS_KEYWORDS = [
+  "kill myself", "want to die", "end my life", "suicide", "self-harm",
+  "hurt myself", "not worth living", "rather be dead",
+];
+
+function hasCrisisContent(text: string): boolean {
+  const lower = text.toLowerCase();
+  return CRISIS_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
+// ── Emotion badge color ────────────────────────────────────────────────────────
+function emotionColor(name: string): string {
+  const map: Record<string, string> = {
+    joy: "bg-yellow-500/20 text-yellow-300",
+    sadness: "bg-blue-500/20 text-blue-300",
+    anger: "bg-red-500/20 text-red-300",
+    fear: "bg-purple-500/20 text-purple-300",
+    surprise: "bg-orange-500/20 text-orange-300",
+    disgust: "bg-green-500/20 text-green-300",
+    contempt: "bg-slate-500/20 text-slate-300",
+    anxiety: "bg-indigo-500/20 text-indigo-300",
+    excitement: "bg-amber-500/20 text-amber-300",
+    calmness: "bg-teal-500/20 text-teal-300",
+  };
+  const key = name.toLowerCase();
+  for (const [k, v] of Object.entries(map)) {
+    if (key.includes(k)) return v;
+  }
+  return "bg-primary/20 text-primary";
+}
+
+// ── Main Component ─────────────────────────────────────────────────────────────
 
 export default function Voice() {
-  const { user } = useAuth();
   const [, navigate] = useLocation();
+  const { user } = useAuth();
 
-  const [status, setStatus] = useState<"idle" | "connecting" | "live" | "ended">("idle");
-  const [isRecording, setIsRecording] = useState(false);
-  const [messages, setMessages] = useState<VoiceMessage[]>([]);
-  const [killSwitch, setKillSwitch] = useState(false);
-  const [lastEmotions, setLastEmotions] = useState<Emotion[]>([]);
+  const [status, setStatus] = useState<Status>("idle");
+  const [messages, setMessages] = useState<Message[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [killSwitch, setKillSwitch] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [sessionId, setSessionId] = useState<number | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const micStreamRef = useRef<MediaStream | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const activeSourcesRef = useRef(new Set<AudioBufferSourceNode>());
-  const nextStartRef = useRef(0);
-  const playingRef = useRef(false);
-  const killRef = useRef(false);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const audioQueueRef = useRef<ArrayBuffer[]>([]);
+  const isPlayingRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // tRPC mutations
+  const mintTokenMut = trpc.voice.mintToken.useMutation();
+  const createSessionMut = trpc.voice.createSession.useMutation();
+  const saveMessageMut = trpc.voice.saveMessage.useMutation();
+  const endSessionMut = trpc.voice.endSession.useMutation();
+
+  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ── Audio playback queue (barge-in capable) ──
+  // ── Audio helpers ────────────────────────────────────────────────────────────
 
-  const ensureAudioCtx = () => {
+  const getAudioContext = useCallback((): AudioContext => {
     if (!audioCtxRef.current || audioCtxRef.current.state === "closed") {
-      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      nextStartRef.current = 0;
+      audioCtxRef.current = new AudioContext({ sampleRate: 16000 });
     }
     return audioCtxRef.current;
-  };
+  }, []);
+
+  const enqueueAudio = useCallback((buffer: ArrayBuffer) => {
+    audioQueueRef.current.push(buffer);
+    if (!isPlayingRef.current) playNext();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const playNext = useCallback(async () => {
+    if (audioQueueRef.current.length === 0) {
+      isPlayingRef.current = false;
+      return;
+    }
+    isPlayingRef.current = true;
+    const buf = audioQueueRef.current.shift()!;
+    try {
+      const ctx = getAudioContext();
+      const decoded = await ctx.decodeAudioData(buf.slice(0));
+      const source = ctx.createBufferSource();
+      source.buffer = decoded;
+      source.connect(ctx.destination);
+      source.onended = () => playNext();
+      source.start();
+    } catch {
+      playNext();
+    }
+  }, [getAudioContext]);
 
   const stopPlayback = useCallback(() => {
-    Array.from(activeSourcesRef.current).forEach((src) => {
-      try {
-        src.onended = null;
-        src.stop(0);
-      } catch {
-        /* noop */
-      }
-    });
-    activeSourcesRef.current.clear();
-    nextStartRef.current = 0;
-    playingRef.current = false;
-  }, []);
-
-  const enqueueAudio = useCallback(async (b64Data: string) => {
-    if (killRef.current) return;
-    const ctx = ensureAudioCtx();
-    try {
-      const buf = await ctx.decodeAudioData(base64ToArrayBuffer(b64Data));
-      const src = ctx.createBufferSource();
-      src.buffer = buf;
-      src.connect(ctx.destination);
-      const startAt = Math.max(ctx.currentTime, nextStartRef.current);
-      src.start(startAt);
-      nextStartRef.current = startAt + buf.duration;
-      activeSourcesRef.current.add(src);
-      playingRef.current = true;
-      src.onended = () => {
-        activeSourcesRef.current.delete(src);
-        if (activeSourcesRef.current.size === 0) playingRef.current = false;
-      };
-    } catch (err) {
-      console.error("decode/play error", err);
+    audioQueueRef.current = [];
+    isPlayingRef.current = false;
+    if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
+      audioCtxRef.current.close().catch(() => {});
+      audioCtxRef.current = null;
     }
   }, []);
 
-  // ── Recording (mic capture) ──
+  // ── Mic capture ─────────────────────────────────────────────────────────────
+
+  const startRecording = useCallback(() => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+    navigator.mediaDevices
+      .getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 } })
+      .then((stream) => {
+        mediaStreamRef.current = stream;
+        const ctx = getAudioContext();
+        const source = ctx.createMediaStreamSource(stream);
+        const processor = ctx.createScriptProcessor(4096, 1, 1);
+        processorRef.current = processor;
+        processor.onaudioprocess = (e) => {
+          if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+          const pcm = e.inputBuffer.getChannelData(0);
+          const int16 = new Int16Array(pcm.length);
+          for (let i = 0; i < pcm.length; i++) {
+            int16[i] = Math.max(-32768, Math.min(32767, Math.round(pcm[i] * 32767)));
+          }
+          wsRef.current.send(
+            JSON.stringify({
+              type: "audio_input",
+              data: btoa(Array.from(new Uint8Array(int16.buffer), (b) => String.fromCharCode(b)).join("")),
+            })
+          );
+        };
+        source.connect(processor);
+        processor.connect(ctx.destination);
+        setIsRecording(true);
+      })
+      .catch(() => {
+        toast.error("Microphone access denied. Please allow mic access and try again.");
+      });
+  }, [getAudioContext]);
 
   const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-      try {
-        mediaRecorderRef.current.stop();
-      } catch {
-        /* noop */
-      }
-    }
-    if (micStreamRef.current) {
-      micStreamRef.current.getTracks().forEach((t) => t.stop());
-      micStreamRef.current = null;
-    }
+    processorRef.current?.disconnect();
+    processorRef.current = null;
+    mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
+    mediaStreamRef.current = null;
     setIsRecording(false);
   }, []);
 
-  const startRecording = useCallback(async () => {
-    if (killRef.current) return;
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      });
-      micStreamRef.current = stream;
-
-      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-        ? "audio/webm;codecs=opus"
-        : "audio/webm";
-
-      const rec = new MediaRecorder(stream, { mimeType });
-      mediaRecorderRef.current = rec;
-
-      rec.ondataavailable = async (e) => {
-        if (!e.data || e.data.size === 0) return;
-        const ws = wsRef.current;
-        if (!ws || ws.readyState !== WebSocket.OPEN) return;
-        const data = await blobToBase64(e.data);
-        ws.send(JSON.stringify({ type: "audio_input", data }));
-      };
-      rec.onerror = (e) => console.error("MediaRecorder error", e);
-
-      // 100ms chunks — Hume's recommended browser buffer size
-      rec.start(100);
-      setIsRecording(true);
-    } catch {
-      setErrorMsg("Microphone access is required for Voice Mirror. Please allow microphone permissions.");
-    }
-  }, []);
-
-  // ── Kill switch trigger ──
+  // ── Kill switch ──────────────────────────────────────────────────────────────
 
   const triggerKillSwitch = useCallback(() => {
-    killRef.current = true;
     setKillSwitch(true);
-    stopPlayback();
     stopRecording();
-    try {
-      wsRef.current?.send(JSON.stringify({ type: "kill_switch" }));
-      wsRef.current?.close(1000, "kill_switch");
-    } catch {
-      /* noop */
+    stopPlayback();
+    if (wsRef.current) {
+      wsRef.current.close(1000, "kill_switch");
+      wsRef.current = null;
     }
-    setMessages((prev) => [...prev, { role: "system", content: KILL_MESSAGE }]);
-  }, [stopPlayback, stopRecording]);
+    setStatus("ended");
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `crisis-${Date.now()}`,
+        role: "assistant",
+        content:
+          "I'm pausing our conversation because your safety matters most. If you're in crisis, please reach out to the 988 Suicide & Crisis Lifeline by calling or texting **988**. You are not alone.",
+        timestamp: Date.now(),
+      },
+    ]);
+  }, [stopRecording, stopPlayback]);
 
-  // ── WebSocket lifecycle ──
+  // ── Connect ──────────────────────────────────────────────────────────────────
 
-  const connect = useCallback(() => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) return;
+  const connect = useCallback(async () => {
+    if (!user) return;
     setStatus("connecting");
     setErrorMsg(null);
-    const proto = window.location.protocol === "https:" ? "wss" : "ws";
-    const userId = user?.id ?? 0;
-    const url = `${proto}://${window.location.host}/ws?userId=${userId}`;
-    const ws = new WebSocket(url);
-    wsRef.current = ws;
+    setMessages([]);
+    setKillSwitch(false);
 
-    ws.onopen = () => {
-      setStatus("live");
-      setErrorMsg(null);
-      startRecording();
-    };
+    try {
+      // 1. Mint token server-side
+      const { token, configId } = await mintTokenMut.mutateAsync();
 
-    ws.onmessage = (event) => {
-      let msg: any;
-      try {
-        msg = JSON.parse(event.data);
-      } catch {
-        return;
-      }
+      // 2. Create a DB session
+      const { sessionId: sid } = await createSessionMut.mutateAsync();
+      setSessionId(sid);
 
-      switch (msg.type) {
-        case "user_message": {
-          const text = msg.message?.content || "";
-          if (containsKillPhrase(text)) {
-            setMessages((prev) => [...prev, { role: "user", content: text }]);
-            triggerKillSwitch();
-            return;
+      // 3. Open WebSocket directly to Hume EVI
+      const params = new URLSearchParams({ access_token: token });
+      if (configId) params.set("config_id", configId);
+      const wsUrl = `wss://api.hume.ai/v0/evi/chat?${params.toString()}`;
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+      ws.binaryType = "arraybuffer";
+
+      ws.onopen = () => {
+        setStatus("live");
+        startRecording();
+      };
+
+      ws.onmessage = (event) => {
+        if (event.data instanceof ArrayBuffer) {
+          enqueueAudio(event.data);
+          return;
+        }
+        try {
+          const msg = JSON.parse(event.data as string);
+
+          if (msg.type === "audio_output" && msg.data) {
+            const binary = atob(msg.data);
+            const buf = new ArrayBuffer(binary.length);
+            const view = new Uint8Array(buf);
+            for (let i = 0; i < binary.length; i++) view[i] = binary.charCodeAt(i) & 0xff;
+            enqueueAudio(buf);
           }
-          const scores = msg.models?.prosody?.scores;
-          const top3: Emotion[] = scores
-            ? Object.entries(scores)
-                .sort((a, b) => (b[1] as number) - (a[1] as number))
-                .slice(0, 3)
-                .map(([name, score]) => ({ name, score: score as number }))
-            : (msg.top_emotions || []);
-          setLastEmotions(top3);
-          setMessages((prev) => [...prev, { role: "user", content: text, emotions: top3 }]);
-          break;
-        }
-        case "assistant_message": {
-          if (killRef.current) return;
-          const text = msg.message?.content || "";
-          setMessages((prev) => [...prev, { role: "assistant", content: text }]);
-          break;
-        }
-        case "audio_output": {
-          if (killRef.current) return;
-          enqueueAudio(msg.data);
-          break;
-        }
-        case "user_interruption": {
-          stopPlayback();
-          break;
-        }
-        case "error": {
-          console.error("Relay error:", msg);
-          if (msg.code === "hume_not_configured") {
-            setErrorMsg(
-              "Voice Mirror is not configured yet. The Hume AI credentials need to be set up in Settings."
-            );
-          } else {
-            setErrorMsg(msg.message || "Relay error");
+
+          if (msg.type === "user_message" && msg.message?.content) {
+            const content: string = msg.message.content;
+            if (hasCrisisContent(content)) {
+              triggerKillSwitch();
+              return;
+            }
+            const emotions: Emotion[] = (msg.models?.prosody?.scores
+              ? Object.entries(msg.models.prosody.scores as Record<string, number>)
+                  .sort((a, b) => b[1] - a[1])
+                  .slice(0, 3)
+                  .map(([name, score]) => ({ name, score }))
+              : []);
+            const newMsg: Message = {
+              id: `u-${Date.now()}`,
+              role: "user",
+              content,
+              emotions,
+              timestamp: Date.now(),
+            };
+            setMessages((prev) => [...prev, newMsg]);
+            if (sessionId) {
+              saveMessageMut.mutate({ sessionId, role: "user", content, emotions });
+            }
           }
-          break;
+
+          if (msg.type === "assistant_message" && msg.message?.content) {
+            const content: string = msg.message.content;
+            const newMsg: Message = {
+              id: `a-${Date.now()}`,
+              role: "assistant",
+              content,
+              timestamp: Date.now(),
+            };
+            setMessages((prev) => [...prev, newMsg]);
+            if (sessionId) {
+              saveMessageMut.mutate({ sessionId, role: "assistant", content });
+            }
+          }
+
+          if (msg.type === "error") {
+            setErrorMsg(msg.message || "An error occurred during the session.");
+            setStatus("error");
+          }
+        } catch {
+          // non-JSON message — ignore
         }
-        default:
-          break;
-      }
-    };
+      };
 
-    ws.onclose = (ev) => {
-      setStatus("ended");
-      stopRecording();
-      stopPlayback();
-      if (!killSwitch && ev.code !== 1000) {
-        setErrorMsg(
-          ev.reason ||
-            "The connection ended unexpectedly. Please try again."
-        );
-      }
-    };
+      ws.onerror = () => {
+        setErrorMsg("Could not connect to the voice server. Please try again.");
+        setStatus("error");
+      };
 
-    ws.onerror = () => {
-      setErrorMsg("Could not connect to the voice server. Please try again.");
-    };
-  }, [user, enqueueAudio, startRecording, stopPlayback, stopRecording, triggerKillSwitch, killSwitch]);
+      ws.onclose = (e) => {
+          if (!killSwitch && e.code !== 1000) {
+          setErrorMsg("The connection ended unexpectedly. Please try again.");
+          setStatus("ended");
+        } else if (e.code === 1000) {
+          setStatus("ended");
+        }
+        stopRecording();
+        stopPlayback();
+        if (sessionId) {
+          endSessionMut.mutate({ sessionId });
+        }
+      };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to start voice session.";
+      setErrorMsg(message);
+      setStatus("error");
+    }
+  }, [user, mintTokenMut, createSessionMut, sessionId, saveMessageMut, endSessionMut, startRecording, enqueueAudio, triggerKillSwitch, stopRecording, stopPlayback, killSwitch, status]);
 
   const disconnect = useCallback(() => {
-    try {
-      wsRef.current?.close(1000, "user_disconnect");
-    } catch {
-      /* noop */
+    stopRecording();
+    stopPlayback();
+    if (wsRef.current) {
+      wsRef.current.close(1000, "user_disconnect");
+      wsRef.current = null;
     }
-  }, []);
+    if (sessionId) {
+      endSessionMut.mutate({ sessionId });
+    }
+    setStatus("ended");
+  }, [stopRecording, stopPlayback, sessionId, endSessionMut]);
 
-  useEffect(
-    () => () => {
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
       disconnect();
-      stopRecording();
-      stopPlayback();
-      if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
-        audioCtxRef.current.close().catch(() => {});
-      }
-    },
-    [disconnect, stopRecording, stopPlayback]
-  );
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Pulsing animation for the mic circle ──
+  // ── Render ───────────────────────────────────────────────────────────────────
 
-  const pulseScale = status === "live" && isRecording ? [1, 1.15, 1] : [1, 1, 1];
+  const pulseScale = status === "live" && isRecording ? [1, 1.18, 1] : [1, 1, 1];
 
   return (
     <AppShell>
@@ -379,179 +374,132 @@ export default function Voice() {
                 <Mic className="w-10 h-10 text-primary" />
               </div>
               <div>
-                <p className="text-foreground font-medium text-lg">Voice Mirror</p>
-                <p className="text-muted-foreground text-sm mt-1 max-w-xs">
-                  Tap the button below to start a real-time voice conversation with your AI Mirror.
-                  It listens, reflects, and reads your emotions.
+                <p className="text-foreground font-medium">Voice Mirror</p>
+                <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+                  Speak naturally. Your Mirror listens, reflects, and responds in real time.
                 </p>
               </div>
             </div>
           )}
 
           {messages.length === 0 && status === "connecting" && (
-            <div className="flex flex-col items-center justify-center h-full text-center gap-3">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
-                <Mic className="w-8 h-8 text-primary" />
-              </div>
-              <p className="text-muted-foreground text-sm">Connecting to Voice Mirror...</p>
+            <div className="flex flex-col items-center justify-center h-full gap-3">
+              <div className="w-16 h-16 rounded-full border-2 border-primary/40 border-t-primary animate-spin" />
+              <p className="text-sm text-muted-foreground">Connecting to your Mirror…</p>
             </div>
           )}
 
-          <AnimatePresence>
-            {messages.map((m, i) => {
-              if (m.role === "system") {
-                return (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="rounded-xl border border-destructive/40 bg-destructive/10 p-4"
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <ShieldAlert className="w-5 h-5 text-destructive" />
-                      <p className="font-semibold text-destructive text-sm">Safety Message</p>
-                    </div>
-                    <p className="text-sm text-foreground/90 leading-relaxed">{m.content}</p>
-                  </motion.div>
-                );
-              }
-
-              const isUser = m.role === "user";
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className={`flex ${isUser ? "justify-end" : "justify-start"}`}
+          <AnimatePresence initial={false}>
+            {messages.map((msg) => (
+              <motion.div
+                key={msg.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground rounded-br-sm"
+                      : "bg-secondary text-secondary-foreground rounded-bl-sm"
+                  }`}
                 >
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                      isUser
-                        ? "bg-primary text-primary-foreground rounded-br-md"
-                        : "bg-secondary text-secondary-foreground rounded-bl-md"
-                    }`}
-                  >
-                    <p>{m.content}</p>
-                    {isUser && m.emotions && m.emotions.length > 0 && (
-                      <div className="mt-1.5 flex flex-wrap gap-1.5">
-                        {m.emotions.map((e, ei) => (
-                          <span
-                            key={ei}
-                            className={`text-[10px] font-medium ${getEmotionColor(e.name)} opacity-90`}
-                          >
-                            {e.name} {(e.score * 100).toFixed(0)}%
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
+                  <p>{msg.content}</p>
+                  {msg.emotions && msg.emotions.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {msg.emotions.map((e) => (
+                        <span
+                          key={e.name}
+                          className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${emotionColor(e.name)}`}
+                        >
+                          {e.name} {Math.round(e.score * 100)}%
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ))}
           </AnimatePresence>
           <div ref={messagesEndRef} />
         </main>
 
-        {/* Footer */}
-        <footer className="px-4 py-4 border-t border-border/40">
-          {killSwitch ? (
-            <div className="w-full text-center bg-destructive text-destructive-foreground text-sm font-medium py-3 rounded-xl flex items-center justify-center gap-2">
-              <AlertTriangle className="w-4 h-4" />
-              Session ended for your safety.
+        {/* Error / ended state */}
+        {(status === "ended" || status === "error") && errorMsg && (
+          <div className="mx-4 mb-3 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm text-amber-200">{errorMsg}</p>
+                <button
+                  onClick={() => { setStatus("idle"); setErrorMsg(null); }}
+                  className="text-xs text-amber-400 underline mt-1"
+                >
+                  Try again
+                </button>
+              </div>
             </div>
-          ) : errorMsg ? (
-            <div className="w-full bg-amber-900/20 border border-amber-500/30 text-amber-200 text-sm rounded-xl p-3">
-              <p className="font-medium mb-1">Session ended</p>
-              <p className="text-xs opacity-80">{errorMsg}</p>
+          </div>
+        )}
+
+        {/* Kill switch banner */}
+        {killSwitch && (
+          <div className="mx-4 mb-3 p-4 rounded-xl border border-red-500/40 bg-red-500/10">
+            <p className="text-sm font-semibold text-red-300">Crisis resources</p>
+            <p className="text-xs text-red-200 mt-1">
+              Call or text <strong>988</strong> (Suicide & Crisis Lifeline) · 24/7 · Free & confidential
+            </p>
+          </div>
+        )}
+
+        {/* Controls */}
+        <footer className="px-4 py-4 border-t border-border/40">
+          {status === "idle" || status === "error" || status === "ended" ? (
+            <Button
+              onClick={connect}
+              disabled={false}
+              className="w-full h-14 text-base font-semibold gap-2 bg-primary hover:bg-primary/90"
+            >
+              <Mic className="w-5 h-5" />
+              {status === "ended" ? "Start New Session" : "Start Voice Session"}
+            </Button>
+          ) : status === "connecting" ? (
+            <Button disabled className="w-full h-14 text-base">
+              <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin mr-2" />
+              Connecting…
+            </Button>
+          ) : (
+            <div className="flex items-center gap-3">
+              {/* Mic toggle */}
               <button
                 onClick={() => {
-                  setErrorMsg(null);
-                  setStatus("idle");
-                  setMessages([]);
+                  if (isRecording) stopRecording();
+                  else startRecording();
                 }}
-                className="mt-2 text-xs text-primary underline"
+                className={`flex-1 h-14 rounded-xl flex items-center justify-center gap-2 font-medium transition-colors ${
+                  isRecording
+                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                    : "bg-secondary text-muted-foreground border border-border"
+                }`}
               >
-                Try again
+                {/* Pulsing orb */}
+                <motion.div
+                  animate={{ scale: pulseScale }}
+                  transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
+                  className={`w-3 h-3 rounded-full ${isRecording ? "bg-emerald-400" : "bg-muted-foreground"}`}
+                />
+                {isRecording ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+                <span className="text-sm">{isRecording ? "Listening" : "Muted"}</span>
               </button>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-3">
-              {/* Emotion display */}
-              {lastEmotions.length > 0 && status === "live" && (
-                <div className="flex items-center gap-2 text-[11px]">
-                  <span className="text-muted-foreground">Feeling:</span>
-                  {lastEmotions.map((e, i) => (
-                    <span key={i} className={`font-medium ${getEmotionColor(e.name)}`}>
-                      {e.name} {(e.score * 100).toFixed(0)}%
-                    </span>
-                  ))}
-                </div>
-              )}
 
-              {/* Mic status */}
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                {status === "live" && isRecording ? (
-                  <>
-                    <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                    Listening...
-                  </>
-                ) : status === "connecting" ? (
-                  <>Connecting...</>
-                ) : status === "ended" ? (
-                  <>Session ended</>
-                ) : (
-                  <>Microphone idle</>
-                )}
-              </div>
-
-              {/* Main action button */}
-              <div className="flex items-center gap-4">
-                {status !== "live" ? (
-                  <motion.button
-                    onClick={connect}
-                    disabled={killSwitch || status === "connecting"}
-                    animate={{ scale: pulseScale }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                    className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/30 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <Phone className="w-7 h-7 text-primary-foreground" />
-                  </motion.button>
-                ) : (
-                  <motion.button
-                    onClick={disconnect}
-                    animate={{ scale: pulseScale }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                    className="w-16 h-16 rounded-full bg-destructive flex items-center justify-center shadow-lg shadow-destructive/30 hover:bg-destructive/90 transition-colors"
-                  >
-                    <PhoneOff className="w-7 h-7 text-destructive-foreground" />
-                  </motion.button>
-                )}
-              </div>
-
-              {/* Mute toggle when live */}
-              {status === "live" && (
-                <button
-                  onClick={() => {
-                    if (isRecording) {
-                      stopRecording();
-                    } else {
-                      startRecording();
-                    }
-                  }}
-                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {isRecording ? (
-                    <>
-                      <MicOff className="w-3.5 h-3.5" /> Mute
-                    </>
-                  ) : (
-                    <>
-                      <Mic className="w-3.5 h-3.5" /> Unmute
-                    </>
-                  )}
-                </button>
-              )}
+              {/* End call */}
+              <button
+                onClick={disconnect}
+                className="w-14 h-14 rounded-xl bg-red-500/20 text-red-400 border border-red-500/40 flex items-center justify-center hover:bg-red-500/30 transition-colors"
+              >
+                <PhoneOff className="w-5 h-5" />
+              </button>
             </div>
           )}
         </footer>
