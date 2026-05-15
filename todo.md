@@ -1056,3 +1056,8 @@
 ## Active Program Card + Life Domains Rename
 - [x] Add active program card to Home dashboard showing current day + tappable link to program
 - [x] Rename "Life Domains" to "Positive Habits" everywhere in the app
+
+## Dynamic Tile Reorder by Engagement
+- [x] Backend: tileEngagement query — count activity per feature (chat, journal, habits, programs, rewards, calendar)
+- [x] Frontend: sort tiles by engagement score, most-used goes top-left
+- [x] Frontend: smooth framer-motion layout animation on reorder

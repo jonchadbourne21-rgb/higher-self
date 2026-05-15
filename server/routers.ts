@@ -1,4 +1,5 @@
 import { COOKIE_NAME } from "@shared/const";
+import { sql, and, eq, gte } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -10,7 +11,15 @@ import { subscriptionRouter } from "./routers/subscription";
 import { rewardsRouter } from "./routers/rewards";
 import { programsRouter } from "./routers/programs";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
-import { deleteUserAccount } from "./db";
+import { deleteUserAccount, getDb } from "./db";
+import {
+  calendarEvents,
+  chatMessages,
+  habitCompletions,
+  journalEntries,
+  userLessonResponses,
+  wheelSpins,
+} from "../drizzle/schema";
 import {
   createCheckIn,
   createHabit,
@@ -1305,6 +1314,70 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
   // ─── Home Screen ──────────────────────────────────────────────────────────
 
   home: router({
+    tileEngagement: protectedProcedure.query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return {};
+      const uid = ctx.user.id;
+
+      // Count activity per feature over the last 30 days
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+      const [chatCount, journalCount, habitCount, programCount, rewardsCount, calendarCount] =
+        await Promise.all([
+          // Mirror / Chat — count chat messages sent by user
+          db
+            .select({ count: sql<number>`count(*)` })
+            .from(chatMessages)
+            .where(
+              and(
+                eq(chatMessages.userId, uid),
+                eq(chatMessages.role, "user"),
+                gte(chatMessages.createdAt, since)
+              )
+            )
+            .then((r) => Number(r[0]?.count ?? 0)),
+          // Journal — count journal entries
+          db
+            .select({ count: sql<number>`count(*)` })
+            .from(journalEntries)
+            .where(and(eq(journalEntries.userId, uid), gte(journalEntries.createdAt, since)))
+            .then((r) => Number(r[0]?.count ?? 0)),
+          // Positive Habits — count habit completions
+          db
+            .select({ count: sql<number>`count(*)` })
+            .from(habitCompletions)
+            .where(and(eq(habitCompletions.userId, uid), gte(habitCompletions.completedAt, since)))
+            .then((r) => Number(r[0]?.count ?? 0)),
+          // Programs — count lesson responses
+          db
+            .select({ count: sql<number>`count(*)` })
+            .from(userLessonResponses)
+            .where(and(eq(userLessonResponses.userId, uid), gte(userLessonResponses.completedAt, since)))
+            .then((r) => Number(r[0]?.count ?? 0)),
+          // Rewards — count wheel spins
+          db
+            .select({ count: sql<number>`count(*)` })
+            .from(wheelSpins)
+            .where(and(eq(wheelSpins.userId, uid), gte(wheelSpins.createdAt, since)))
+            .then((r) => Number(r[0]?.count ?? 0)),
+          // Calendar — count calendar events created
+          db
+            .select({ count: sql<number>`count(*)` })
+            .from(calendarEvents)
+            .where(and(eq(calendarEvents.userId, uid), gte(calendarEvents.createdAt, since)))
+            .then((r) => Number(r[0]?.count ?? 0)),
+        ]);
+
+      return {
+        mirror: chatCount,
+        journal: journalCount,
+        habits: habitCount,
+        programs: programCount,
+        rewards: rewardsCount,
+        calendar: calendarCount,
+      };
+    }),
+
     getLatestDigest: protectedProcedure.query(async ({ ctx }) => {
       const digest = await getLatestWeeklyReflection(ctx.user.id);
       if (!digest) return null;

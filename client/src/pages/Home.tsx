@@ -1,7 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useLocation, Link } from "wouter";
 import AppShell from "@/components/AppShell";
 import { Sparkles, Sun, Moon, Bell, User, ChevronRight } from "lucide-react";
@@ -87,6 +87,7 @@ export default function Home() {
   const { data: proStatus } = trpc.rewards.proStatus.useQuery(undefined, { enabled: isAuthenticated });
   const { data: auraHistory } = trpc.checkIn.auraHistory.useQuery(undefined, { enabled: isAuthenticated });
   const { data: myEnrollments } = trpc.programs.myEnrollments.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: tileEngagement } = trpc.home.tileEngagement.useQuery(undefined, { enabled: isAuthenticated });
   const isPro = proStatus?.isPro ?? false;
   const [showWelcomeSpin, setShowWelcomeSpin] = useState(false);
   const [showFaqPulse, setShowFaqPulse] = useState(false);
@@ -155,6 +156,22 @@ export default function Home() {
     upcomingEvents && upcomingEvents.length > 0
       ? upcomingEvents[0].title
       : "No upcoming events";
+
+  // Dynamic tile order based on engagement — most-used feature goes top-left
+  const TILE_DEFS = useMemo(() => [
+    { key: "mirror",   href: "/chat",     emoji: "🪞", label: "Talk to Mirror",  sub: "Reflect & grow",   score: tileEngagement?.mirror ?? 0 },
+    { key: "programs", href: "/programs", emoji: "🎓", label: "Programs",        sub: "Guided growth",   score: tileEngagement?.programs ?? 0 },
+    { key: "habits",   href: "/domains",  emoji: "🧭", label: "Positive Habits", sub: "Build your habits", score: tileEngagement?.habits ?? 0 },
+    { key: "journal",  href: "/journal",  emoji: "📝", label: "Journal",          sub: "Write your thoughts", score: tileEngagement?.journal ?? 0 },
+    { key: "rewards",  href: "/rewards",  emoji: "🎁", label: rewardsLabel,      sub: "Spin & earn",     score: tileEngagement?.rewards ?? 0 },
+    { key: "calendar", href: "/calendar", emoji: "📅", label: "Calendar",         sub: calendarSub || "Plan your week", score: tileEngagement?.calendar ?? 0 },
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [tileEngagement, rewardsLabel, calendarSub]);
+
+  const sortedTiles = useMemo(
+    () => [...TILE_DEFS].sort((a, b) => b.score - a.score),
+    [TILE_DEFS]
+  );
 
   // Aura score — weighted average of mood (40%), energy (30%), stress inverted (30%)
   const auraScore = todayCheckIn
@@ -455,108 +472,62 @@ export default function Home() {
             </p>
 
             <div className="grid grid-cols-2 gap-2">
-              {/* Row 1 */}
-              <Link href="/chat" className="block">
-                <motion.div
-                  whileTap={{ scale: 0.96 }}
-                  className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
-                  style={TILE_MIRROR}
-                >
-                  <span className="text-xl">🪞</span>
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">Talk to Mirror</p>
-                    <p className="text-[10px] text-muted-foreground leading-tight">Reflect & grow</p>
-                  </div>
-                </motion.div>
-              </Link>
+              {sortedTiles.map((tile, idx) => {
+                // Per-tile accent styles
+                const tileStyle =
+                  tile.key === "mirror"   ? TILE_MIRROR :
+                  tile.key === "programs" ? TILE_PROGRAMS :
+                  tile.key === "habits"   ? TILE_DOMAINS :
+                  tile.key === "journal"  ? TILE_JOURNAL :
+                  tile.key === "rewards"  ? { background: rewardsBg, border: rewardsBorder } :
+                  TILE_CALENDAR;
 
-              <Link href="/programs" className="block">
-                <motion.div
-                  whileTap={{ scale: 0.96 }}
-                  className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
-                  style={TILE_PROGRAMS}
-                >
-                  <span className="text-xl">🎓</span>
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">Programs</p>
-                    <p className="text-[10px] text-muted-foreground leading-tight">Guided growth</p>
-                  </div>
-                </motion.div>
-              </Link>
-
-              {/* Row 2 */}
-              <Link href="/domains" className="block">
-                <motion.div
-                  whileTap={{ scale: 0.96 }}
-                  className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
-                  style={TILE_DOMAINS}
-                >
-                  <div className="flex items-start justify-between">
-                    <span className="text-xl">🧭</span>
-                    {habitStreak && habitStreak.streak > 0 && (
-                      <span
-                        className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
-                        style={{ background: "oklch(0.55 0.14 290 / 0.2)", color: "oklch(0.70 0.14 290)" }}
-                      >
-                        🔥 {habitStreak.streak}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">Positive Habits</p>
-                    <p className="text-[10px] text-muted-foreground leading-tight">Build your habits</p>
-                  </div>
-                </motion.div>
-              </Link>
-
-              <Link href="/journal" className="block">
-                <motion.div
-                  whileTap={{ scale: 0.96 }}
-                  className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
-                  style={TILE_JOURNAL}
-                >
-                  <span className="text-xl">📝</span>
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">Journal</p>
-                    <p className="text-[10px] text-muted-foreground leading-tight">Write your thoughts</p>
-                  </div>
-                </motion.div>
-              </Link>
-
-              {/* Row 3 — Rewards tile */}
-              <Link href="/rewards" className="block">
-                <motion.div
-                  whileTap={{ scale: 0.96 }}
-                  className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
-                  style={{ background: rewardsBg, border: rewardsBorder }}
-                >
-                  <span className="text-xl">🎁</span>
-                  <div>
-                    <p
-                      className="text-xs font-semibold"
-                      style={{ color: rewardsLabelColor ?? "oklch(0.92 0.02 280)" }}
+                return (
+                  <Link key={tile.key} href={tile.href} className="block">
+                    <motion.div
+                      layout
+                      layoutId={tile.key}
+                      whileTap={{ scale: 0.96 }}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.35, delay: idx * 0.04 }}
+                      className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
+                      style={tileStyle}
                     >
-                      {rewardsLabel}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground leading-tight">Spin & earn</p>
-                  </div>
-                </motion.div>
-              </Link>
-
-              {/* Row 3 — Calendar tile */}
-              <Link href="/calendar" className="block">
-                <motion.div
-                  whileTap={{ scale: 0.96 }}
-                  className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
-                  style={TILE_CALENDAR}
-                >
-                  <span className="text-xl">📅</span>
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">Calendar</p>
-                    <p className="text-[10px] text-muted-foreground leading-tight line-clamp-1">{calendarSub || "Plan your week"}</p>
-                  </div>
-                </motion.div>
-              </Link>
+                      <div className="flex items-start justify-between">
+                        <span className="text-xl">{tile.emoji}</span>
+                        {/* Habit streak badge */}
+                        {tile.key === "habits" && habitStreak && habitStreak.streak > 0 && (
+                          <span
+                            className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
+                            style={{ background: "oklch(0.55 0.14 290 / 0.2)", color: "oklch(0.70 0.14 290)" }}
+                          >
+                            🔥 {habitStreak.streak}
+                          </span>
+                        )}
+                        {/* Top-tile engagement indicator */}
+                        {idx === 0 && tile.score > 0 && (
+                          <span
+                            className="text-[9px] px-1 py-0.5 rounded-full font-semibold"
+                            style={{ background: "oklch(0.65 0.16 185 / 0.18)", color: "oklch(0.65 0.16 185)" }}
+                          >
+                            ★ top
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <p
+                          className="text-xs font-semibold"
+                          style={{ color: tile.key === "rewards" ? (rewardsLabelColor ?? "oklch(0.92 0.02 280)") : undefined }}
+                        >
+                          {tile.label}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground leading-tight line-clamp-1">{tile.sub}</p>
+                      </div>
+                    </motion.div>
+                  </Link>
+                );
+              })}
             </div>
           </motion.div>
 
