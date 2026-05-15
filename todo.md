@@ -1045,3 +1045,10 @@
 - [x] Seed the program and all 30 lessons into the database
 - [x] Add program icon/category mapping for "zen-philosophy" or similar
 - [x] Verify program appears correctly in Programs page with unified card design
+
+## 30-Day The Stoic Path Program
+- [x] Write all 30 daily exercises (discipline, logic, resilience check) across 3 phases + resilience games
+- [x] Add "stoicism" category to schema enum and run migration
+- [x] Seed the program and all 30 lessons into the database
+- [x] Add program icon/category mapping in Programs.tsx and ProgramDetail.tsx
+- [x] Verify program appears correctly in Programs page with unified card design

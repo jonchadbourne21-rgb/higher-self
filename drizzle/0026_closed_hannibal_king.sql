@@ -1,0 +1,1 @@
+ALTER TABLE `growth_programs` MODIFY COLUMN `category` enum('emotional-mastery','building-presence','relationships','mindfulness','self-awareness','zen-philosophy','stoicism') NOT NULL;

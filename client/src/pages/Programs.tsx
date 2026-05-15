@@ -14,6 +14,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   "mindfulness": "Mindfulness",
   "self-awareness": "Self-Awareness",
   "zen-philosophy": "Zen Philosophy",
+  "stoicism": "Stoicism",
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -23,6 +24,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   "mindfulness": "bg-blue-500/20 text-blue-300 border-blue-500/30",
   "self-awareness": "bg-amber-500/20 text-amber-300 border-amber-500/30",
   "zen-philosophy": "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+  "stoicism": "bg-slate-500/20 text-slate-300 border-slate-500/30",
 };
 
 // Better icons — no brain, consistent visual weight
@@ -33,6 +35,7 @@ const PROGRAM_ICONS: Record<string, string> = {
   "mindfulness": "🧘",
   "self-awareness": "🪞",
   "zen-philosophy": "🎭",
+  "stoicism": "🏛️",
 };
 
 // Per-program override (slug or name-based) for unique identity
@@ -40,6 +43,7 @@ const PROGRAM_ICON_OVERRIDES: Record<string, string> = {
   "21-Day Inner Voice Reset": "🪞",
   "7-Day Emotional Mastery": "🌊",
   "The Alan Watts Challenge": "🎭",
+  "The Stoic Path": "🏛️",
 };
 
 function getProgramIcon(program: { name: string; category: string }): string {

@@ -183,6 +183,13 @@
       "when": 1778805570954,
       "tag": "0025_loose_squirrel_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "5",
+      "when": 1778814415105,
+      "tag": "0026_closed_hannibal_king",
+      "breakpoints": true
     }
   ]
 }
