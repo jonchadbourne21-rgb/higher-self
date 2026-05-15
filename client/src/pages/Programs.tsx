@@ -24,7 +24,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   "mindfulness": "bg-blue-500/20 text-blue-300 border-blue-500/30",
   "self-awareness": "bg-amber-500/20 text-amber-300 border-amber-500/30",
   "zen-philosophy": "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-  "stoicism": "bg-slate-500/20 text-slate-300 border-slate-500/30",
+  "stoicism": "bg-red-500/20 text-red-300 border-red-500/30",
 };
 
 // Better icons — no brain, consistent visual weight
