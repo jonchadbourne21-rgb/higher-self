@@ -112,4 +112,71 @@ export const voiceRouter = router({
       .limit(20);
     return sessions;
   }),
+
+  /** Get messages for a specific voice session */
+  getSessionMessages: protectedProcedure
+    .input(z.object({ sessionId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      // Verify session belongs to user
+      const sessions = await db
+        .select()
+        .from(v2vSessions)
+        .where(and(eq(v2vSessions.id, input.sessionId), eq(v2vSessions.userId, ctx.user.id)))
+        .limit(1);
+      if (!sessions.length) throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
+      const messages = await db
+        .select()
+        .from(v2vMessages)
+        .where(eq(v2vMessages.sessionId, input.sessionId))
+        .orderBy(v2vMessages.createdAt);
+      return messages;
+    }),
+
+  /** Save a voice session transcript as a journal entry */
+  saveToJournal: protectedProcedure
+    .input(z.object({ sessionId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      // Verify session belongs to user
+      const sessions = await db
+        .select()
+        .from(v2vSessions)
+        .where(and(eq(v2vSessions.id, input.sessionId), eq(v2vSessions.userId, ctx.user.id)))
+        .limit(1);
+      if (!sessions.length) throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
+      const session = sessions[0];
+
+      // Get all messages for this session
+      const messages = await db
+        .select()
+        .from(v2vMessages)
+        .where(eq(v2vMessages.sessionId, input.sessionId))
+        .orderBy(v2vMessages.createdAt);
+
+      if (!messages.length) throw new TRPCError({ code: "BAD_REQUEST", message: "No messages in session" });
+
+      // Build transcript text
+      const transcript = messages
+        .filter((m) => m.role !== "system")
+        .map((m) => `${m.role === "user" ? "Me" : "Mirror"}: ${m.transcript}`)
+        .join("\n\n");
+
+      const sessionDate = session.startedAt.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      const content = `Voice Mirror Session — ${sessionDate}\n\n${transcript}`;
+      const title = `Voice Mirror — ${sessionDate}`;
+
+      // Import journal helpers
+      const { createJournalEntry } = await import("../db");
+      await createJournalEntry({ userId: ctx.user.id, title, content, moodTag: "reflective" });
+      return { ok: true };
+    }),
 });

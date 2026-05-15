@@ -31,6 +31,7 @@ import Programs from "./pages/Programs";
 import ProgramDetail from "./pages/ProgramDetail";
 import ProgramInsight from "./pages/ProgramInsight";
 import Voice from "./pages/Voice";
+import VoiceHistory from "./pages/VoiceHistory";
 import { useRef, useEffect } from "react";
 import { usePageMetadata } from "@/lib/metadata";
 import { injectStructuredData } from "@/lib/structuredData";
@@ -117,6 +118,7 @@ function AnimatedRouter() {
             <Route path="/programs/:id" component={ProgramDetail} />
             <Route path="/programs/:id/insight/:day" component={ProgramInsight} />
             <Route path="/voice" component={Voice} />
+            <Route path="/voice/history" component={VoiceHistory} />
             <Route path="/faq" component={FAQ} />
             <Route path="/privacy" component={Privacy} />
             <Route path="/terms" component={Terms} />

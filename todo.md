@@ -1085,3 +1085,22 @@
 - [x] Craft voice-optimized Mirror system prompt for Hume EVI
 - [x] Push system prompt to config eb5b42d5 via Hume API (version 4)
 - [x] Verify config update succeeded
+
+## V2V Direct Browser Connection Fix
+- [x] Rewrite Voice.tsx to connect directly to wss://api.hume.ai/v0/evi/chat (bypass Cloud Run HTTP/2 proxy)
+- [x] Backend: voice.mintToken tRPC procedure — mints Hume access token server-side for browser use
+- [x] Fix TypeScript errors: useAuth import path, Uint8Array spread, unreachable status comparison
+- [x] All 360 tests pass after fix
+
+## Voice Session History & Voice-to-Journal
+- [x] Backend: voice.getSessionMessages — returns all messages for a session (with ownership check)
+- [x] Backend: voice.saveToJournal — converts session transcript to a journal entry
+- [x] Frontend: /voice/history page — lists past sessions, expandable with transcript + emotion timeline
+- [x] Frontend: "Save Session to Journal" button appears after session ends (one-tap)
+- [x] Frontend: History button (clock icon) in Voice page header links to /voice/history
+
+## Pending Features
+- [ ] Morning push notification at 6AM EST when program lesson unlocks
+- [ ] Completion badges per program (Bulletproof badge for Stoic Path, Cosmic Player for Alan Watts)
+- [ ] Voice session naming (allow user to name past sessions)
+- [ ] Vitest tests for voice.getSessionMessages and voice.saveToJournal

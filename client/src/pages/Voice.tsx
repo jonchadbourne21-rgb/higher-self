@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, Mic, MicOff, PhoneOff, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Mic, MicOff, PhoneOff, AlertTriangle, History, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -55,6 +55,50 @@ function emotionColor(name: string): string {
     if (key.includes(k)) return v;
   }
   return "bg-primary/20 text-primary";
+}
+
+// ── Save to Journal button ───────────────────────────────────────────────────
+
+function SaveToJournalButton({ sessionId }: { sessionId: number }) {
+  const [saved, setSaved] = useState(false);
+  const saveToJournalMut = trpc.voice.saveToJournal.useMutation({
+    onSuccess: () => {
+      setSaved(true);
+      toast.success("Session saved to your Journal!");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to save to journal.");
+    },
+  });
+
+  if (saved) {
+    return (
+      <div className="flex items-center justify-center gap-2 py-2 text-sm text-emerald-400">
+        <BookOpen className="w-4 h-4" />
+        Saved to Journal
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => saveToJournalMut.mutate({ sessionId })}
+      disabled={saveToJournalMut.isPending}
+      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-primary/30 text-primary text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50"
+    >
+      {saveToJournalMut.isPending ? (
+        <>
+          <span className="w-3 h-3 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
+          Saving…
+        </>
+      ) : (
+        <>
+          <BookOpen className="w-4 h-4" />
+          Save Session to Journal
+        </>
+      )}
+    </button>
+  );
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────────
@@ -364,6 +408,13 @@ export default function Voice() {
               )}
             </p>
           </div>
+          <button
+            onClick={() => navigate("/voice/history")}
+            className="p-2 rounded-full hover:bg-secondary/60 transition-colors"
+            title="Session history"
+          >
+            <History className="w-5 h-5 text-muted-foreground" />
+          </button>
         </header>
 
         {/* Messages */}
@@ -450,6 +501,13 @@ export default function Voice() {
             <p className="text-xs text-red-200 mt-1">
               Call or text <strong>988</strong> (Suicide & Crisis Lifeline) · 24/7 · Free & confidential
             </p>
+          </div>
+        )}
+
+        {/* Save to Journal (after session ends) */}
+        {status === "ended" && sessionId && messages.length > 0 && (
+          <div className="mx-4 mb-3">
+            <SaveToJournalButton sessionId={sessionId} />
           </div>
         )}
 
