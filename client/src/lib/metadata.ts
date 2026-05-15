@@ -34,7 +34,7 @@ export const ROUTE_METADATA: Record<string, PageMetadata> = {
     ogType: "website",
   },
   "/domains": {
-    title: "Life Domains — Higher Self",
+    title: "Positive Habits — Higher Self",
     description:
       "Track habits and growth across Mindset, Relationships, Work, Health, Spirituality, and Finances. Build consistency with habit streaks and domain scores.",
     ogType: "website",

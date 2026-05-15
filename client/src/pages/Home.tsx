@@ -7,6 +7,7 @@ import AppShell from "@/components/AppShell";
 import { Sparkles, Sun, Moon, Bell, User, ChevronRight } from "lucide-react";
 import WelcomeSpinModal from "@/components/WelcomeSpinModal";
 import { format } from "date-fns";
+import { BookOpen } from "lucide-react";
 
 // Inline SVG sparkline for the last 7 Aura scores
 function AuraSparkline({ data }: { data: { date: Date; aura: number }[] }) {
@@ -85,6 +86,7 @@ export default function Home() {
   });
   const { data: proStatus } = trpc.rewards.proStatus.useQuery(undefined, { enabled: isAuthenticated });
   const { data: auraHistory } = trpc.checkIn.auraHistory.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: myEnrollments } = trpc.programs.myEnrollments.useQuery(undefined, { enabled: isAuthenticated });
   const isPro = proStatus?.isPro ?? false;
   const [showWelcomeSpin, setShowWelcomeSpin] = useState(false);
   const [showFaqPulse, setShowFaqPulse] = useState(false);
@@ -188,7 +190,7 @@ export default function Home() {
       : "oklch(0.55 0.08 300)";
 
   // Tile accent styles
-  // Darker Forest Green — deeper than Life Domains, grounding
+  // Darker Forest Green — deeper than Positive Habits, grounding
   const TILE_MIRROR = {
     background: "oklch(0.12 0.07 145)",
     border: "1px solid oklch(0.32 0.13 145 / 0.55)",
@@ -367,6 +369,68 @@ export default function Home() {
             )}
           </motion.div>
 
+          {/* ── Active Program Card ─────────────────────────────────── */}
+          {myEnrollments && myEnrollments.filter(e => e.status === "in_progress" && e.program).length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.12 }}
+              className="space-y-1"
+            >
+              {myEnrollments
+                .filter(e => e.status === "in_progress" && e.program)
+                .map((enrollment) => {
+                  const p = enrollment.program!;
+                  const currentDay = enrollment.currentDay ?? 1;
+                  const totalDays = p.durationDays;
+                  const progress = Math.round(((currentDay - 1) / totalDays) * 100);
+                  const ICONS: Record<string, string> = {
+                    "21-Day Inner Voice Reset": "🪞",
+                    "7-Day Emotional Mastery": "🌊",
+                    "The Alan Watts Challenge": "🎭",
+                    "The Stoic Path": "🏛️",
+                  };
+                  const CAT_ICONS: Record<string, string> = {
+                    "emotional-mastery": "🌊", "building-presence": "✨",
+                    "relationships": "❤️", "mindfulness": "🧘",
+                    "self-awareness": "🪞", "zen-philosophy": "🎭", "stoicism": "🏛️",
+                  };
+                  const icon = ICONS[p.name] ?? CAT_ICONS[p.category] ?? "📖";
+                  return (
+                    <Link key={enrollment.id} href={`/programs/${p.id}`} className="block">
+                      <motion.div
+                        whileTap={{ scale: 0.98 }}
+                        className="rounded-xl px-4 py-3 cursor-pointer"
+                        style={{
+                          background: "linear-gradient(135deg, oklch(0.16 0.06 280), oklch(0.14 0.07 20 / 0.6))",
+                          border: "1px solid oklch(0.32 0.10 280 / 0.5)",
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{icon}</span>
+                            <div>
+                              <p className="text-xs font-semibold text-foreground">{p.name}</p>
+                              <p className="text-[10px] text-muted-foreground">Day {currentDay} of {totalDays}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-20 h-1.5 rounded-full overflow-hidden" style={{ background: "oklch(0.25 0.04 280)" }}>
+                              <div
+                                className="h-full rounded-full transition-all"
+                                style={{ width: `${progress}%`, background: "oklch(0.65 0.16 185)" }}
+                              />
+                            </div>
+                            <ChevronRight size={14} className="text-muted-foreground" />
+                          </div>
+                        </div>
+                      </motion.div>
+                    </Link>
+                  );
+                })}
+            </motion.div>
+          )}
+
           {/* ── Aura Sparkline ──────────────────────────────────────────── */}
           {auraHistory && auraHistory.length >= 2 && (
             <motion.div
@@ -439,8 +503,8 @@ export default function Home() {
                     )}
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-foreground">Life Domains</p>
-                    <p className="text-[10px] text-muted-foreground leading-tight">Track your life</p>
+                    <p className="text-xs font-semibold text-foreground">Positive Habits</p>
+                    <p className="text-[10px] text-muted-foreground leading-tight">Build your habits</p>
                   </div>
                 </motion.div>
               </Link>

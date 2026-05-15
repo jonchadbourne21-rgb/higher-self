@@ -1052,3 +1052,7 @@
 - [x] Seed the program and all 30 lessons into the database
 - [x] Add program icon/category mapping in Programs.tsx and ProgramDetail.tsx
 - [x] Verify program appears correctly in Programs page with unified card design
+
+## Active Program Card + Life Domains Rename
+- [x] Add active program card to Home dashboard showing current day + tappable link to program
+- [x] Rename "Life Domains" to "Positive Habits" everywhere in the app

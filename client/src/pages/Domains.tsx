@@ -237,7 +237,7 @@ export default function Domains() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-serif font-light">Life Domains</h1>
+            <h1 className="text-3xl font-serif font-light">Positive Habits</h1>
             <p className="text-xs text-muted-foreground mt-1">Track every dimension of your growth</p>
           </div>
           <button

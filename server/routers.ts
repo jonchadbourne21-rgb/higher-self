@@ -507,7 +507,7 @@ export const appRouter = router({
     }),
   }),
 
-  // ─── Life Domains ─────────────────────────────────────────────────────────
+  // ─── Positive Habits / Domains ─────────────────────────────────────────────
 
   domains: router({
     scores: protectedProcedure.query(async ({ ctx }) => {

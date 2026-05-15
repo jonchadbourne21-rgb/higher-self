@@ -138,7 +138,7 @@ export default function FullOnboarding() {
         <p className="text-xs text-gray-500 mt-2">Complete your profile</p>
       </div>
 
-      {/* Step 1: Life Domains */}
+      {/* Step 1: Positive Habits */}
       {currentStep === 0 && (
         <div>
           <div className="text-center mb-8">
