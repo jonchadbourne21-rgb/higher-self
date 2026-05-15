@@ -166,6 +166,33 @@ export async function getAllLessonResponses(userId: number, programId: number) {
     .orderBy(userLessonResponses.day);
 }
 
+/**
+ * Compute the current consecutive-day streak for a user in a program.
+ * A streak is the number of consecutive days completed counting back from the
+ * most recently completed day, with no gaps.
+ */
+export async function computeProgramStreak(
+  userId: number,
+  programId: number
+): Promise<number> {
+  const responses = await getAllLessonResponses(userId, programId);
+  if (responses.length === 0) return 0;
+
+  // Build a sorted list of completed day numbers
+  const days = responses.map((r) => r.day).sort((a, b) => a - b);
+
+  // Walk backwards from the last completed day, counting consecutive days
+  let streak = 1;
+  for (let i = days.length - 1; i > 0; i--) {
+    if (days[i] - days[i - 1] === 1) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
 export async function saveLessonResponse(data: {
   userId: number;
   programId: number;

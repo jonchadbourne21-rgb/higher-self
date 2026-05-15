@@ -13,6 +13,7 @@ import {
   getLessonResponse,
   getAllLessonResponses,
   saveLessonResponse,
+  computeProgramStreak,
 } from "../db/programs";
 import { invokeLLM } from "../_core/llm";
 import { addRewardPoints } from "../db/rewards";
@@ -265,6 +266,28 @@ Your role: reflect back what the person shared, name what you notice with warmth
         ...(isLastDay ? { completedAt: new Date() } : {}),
       });
 
+      // ── Streak milestone bonuses ──────────────────────────────────────────
+      // Compute streak AFTER saving the response (so the new day is counted)
+      const streak = await computeProgramStreak(ctx.user.id, input.programId);
+      let streakMilestone: { days: number; points: number } | null = null;
+      if (streak === 7) {
+        await addRewardPoints(
+          ctx.user.id,
+          15,
+          "checkin",
+          `program_streak_7_${input.programId}_${Date.now()}`
+        );
+        streakMilestone = { days: 7, points: 15 };
+      } else if (streak === 14) {
+        await addRewardPoints(
+          ctx.user.id,
+          25,
+          "checkin",
+          `program_streak_14_${input.programId}_${Date.now()}`
+        );
+        streakMilestone = { days: 14, points: 25 };
+      }
+
       // ── 21-day completion reward ──────────────────────────────────────────
       let completionReward: { points: number; grantActivated: boolean } | null = null;
       if (isLastDay && program?.durationDays === 21) {
@@ -296,6 +319,8 @@ Your role: reflect back what the person shared, name what you notice with warmth
         nextDay: isLastDay ? null : nextDay,
         nextLesson,
         completionReward,
+        streakMilestone,
+        streak,
         unlockAt: unlockAt ? unlockAt.toISOString() : null,
       };
     }),
@@ -324,7 +349,8 @@ Your role: reflect back what the person shared, name what you notice with warmth
     const enriched = await Promise.all(
       enrollments.map(async (e) => {
         const program = await getProgramById(e.programId);
-        return { ...e, program: program ?? null };
+        const streak = await computeProgramStreak(ctx.user.id, e.programId);
+        return { ...e, program: program ?? null, streak };
       })
     );
     return enriched;

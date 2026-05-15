@@ -21,6 +21,7 @@ vi.mock("./db/programs", () => ({
   getLessonResponse: vi.fn(),
   getAllLessonResponses: vi.fn(),
   saveLessonResponse: vi.fn(),
+  computeProgramStreak: vi.fn().mockResolvedValue(1),
 }));
 
 vi.mock("./db/rewards", () => ({

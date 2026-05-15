@@ -132,7 +132,18 @@ export default function ProgramDetail() {
     onSuccess: (res) => {
       utils.programs.getCurrentLesson.invalidate({ programId });
       utils.programs.getProgress.invalidate({ programId });
+      utils.programs.myEnrollments.invalidate();
       const day = currentLessonData?.lesson.day ?? 1;
+
+      // Streak milestone toast
+      if (res.streakMilestone) {
+        const { days, points } = res.streakMilestone;
+        toast.success(
+          `🔥 ${days}-Day Streak! +${points} bonus points awarded!`,
+          { duration: 5000 }
+        );
+      }
+
       try {
         sessionStorage.setItem(
           `program_insight_${programId}_${day}`,

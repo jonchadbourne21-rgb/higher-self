@@ -1061,3 +1061,10 @@
 - [x] Backend: tileEngagement query — count activity per feature (chat, journal, habits, programs, rewards, calendar)
 - [x] Frontend: sort tiles by engagement score, most-used goes top-left
 - [x] Frontend: smooth framer-motion layout animation on reorder
+
+## Program Streak Counter
+- [x] Backend: compute consecutive-day streak from userLessonResponses (days completed without a gap)
+- [x] Backend: expose streak count on myEnrollments query response
+- [x] Backend: on lesson submission, detect 7-day and 14-day streak milestones and award bonus points
+- [x] Frontend: show 🔥 streak badge on active program card on Home
+- [x] Frontend: show milestone toast when 7-day (+15 pts) or 14-day (+25 pts) streak is hit

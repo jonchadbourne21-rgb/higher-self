@@ -427,11 +427,29 @@ export default function Home() {
                           <div className="flex items-center gap-3">
                             <span className="text-2xl">{icon}</span>
                             <div>
-                              <p className="text-xs font-semibold text-foreground">{p.name}</p>
+                              <div className="flex items-center gap-1.5">
+                                <p className="text-xs font-semibold text-foreground">{p.name}</p>
+                                {(enrollment as any).streak >= 7 && (
+                                  <span
+                                    className="text-[9px] px-1.5 py-0.5 rounded-full font-bold"
+                                    style={{ background: "oklch(0.55 0.18 50 / 0.25)", color: "oklch(0.80 0.18 50)" }}
+                                  >
+                                    🔥 {(enrollment as any).streak}d
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-[10px] text-muted-foreground">Day {currentDay} of {totalDays}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
+                            {(enrollment as any).streak > 0 && (enrollment as any).streak < 7 && (
+                              <span
+                                className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
+                                style={{ background: "oklch(0.45 0.10 50 / 0.2)", color: "oklch(0.70 0.12 50)" }}
+                              >
+                                🔥 {(enrollment as any).streak}
+                              </span>
+                            )}
                             <div className="w-20 h-1.5 rounded-full overflow-hidden" style={{ background: "oklch(0.25 0.04 280)" }}>
                               <div
                                 className="h-full rounded-full transition-all"
