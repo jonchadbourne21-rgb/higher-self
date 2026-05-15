@@ -1080,3 +1080,8 @@
 - [x] Frontend: emotion badges on user messages (top-3 prosody scores)
 - [x] Add /voice route and voice toggle button on Chat page
 - [x] Configure Vite dev proxy for /ws WebSocket path (not needed — same server)
+
+## Hume EVI Config System Prompt
+- [x] Craft voice-optimized Mirror system prompt for Hume EVI
+- [x] Push system prompt to config eb5b42d5 via Hume API (version 4)
+- [x] Verify config update succeeded

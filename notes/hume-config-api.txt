@@ -1,0 +1,14 @@
+Hume EVI API: Create Config Version (POST /v0/evi/configs/:id)
+
+The prompt object has 4 properties:
+- id: string or null (Optional) - Identifier for existing Prompt
+- prompt_expansion: object (Optional) - Configure prompt expansion behavior
+- text: string or null (Optional) - Text used to create a NEW prompt inline
+- version: integer or null (Optional) - Version number for a Prompt
+
+So I can either:
+1. Reference existing prompt by id + version
+2. Create a new inline prompt by providing text directly
+
+The "text" field creates a new prompt inline. This is the simplest approach.
+Must also include evi_version: "3" (required field).
