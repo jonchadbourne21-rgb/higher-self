@@ -1033,3 +1033,9 @@
 - [x] Frontend: Day 21 completion screen with confetti, 25 pts badge, and 1 Month Pro celebration
 - [x] Vitest: test one-per-day gate procedure
 - [x] Vitest: test Day 21 completion reward procedure
+
+## 21-Day Program — Hard Day Gate Fix (6AM EST)
+- [x] Backend: lock next day until 6AM EST on the calendar day AFTER submission (not just same-day check)
+- [x] Backend: getCurrentLesson returns isLocked=true + unlockAt timestamp when next day not yet available
+- [x] Frontend: ProgramDetail shows locked card with "Unlocks at 6:00 AM tomorrow" when isLocked=true
+- [x] Frontend: no lesson content visible at all when locked — only the lock message

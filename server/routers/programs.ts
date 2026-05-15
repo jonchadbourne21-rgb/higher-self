@@ -18,14 +18,60 @@ import { invokeLLM } from "../_core/llm";
 import { addRewardPoints } from "../db/rewards";
 import { createRewardGrant } from "../db/rewardGrants";
 
-/** Returns true if the user has already submitted a lesson for today (UTC date) */
-function submittedToday(completedAt: Date): boolean {
+// ── Time helpers ──────────────────────────────────────────────────────────────
+
+const EST_OFFSET_MS = -5 * 60 * 60 * 1000; // UTC-5 (EST / no DST adjustment needed for lock logic)
+
+/**
+ * Convert a UTC Date to the equivalent Eastern Standard Time Date object.
+ * We use a fixed UTC-5 offset so the gate is consistent year-round.
+ */
+function toEST(utcDate: Date): Date {
+  return new Date(utcDate.getTime() + EST_OFFSET_MS);
+}
+
+/**
+ * Return the next 6:00 AM EST timestamp (as UTC ms) after a given UTC date.
+ * If it is currently before 6 AM EST today, returns today's 6 AM EST.
+ * Otherwise returns tomorrow's 6 AM EST.
+ */
+function next6amEST(afterUtc: Date): Date {
+  const estNow = toEST(afterUtc);
+
+  // Build today's 6 AM EST as a UTC date
+  const todayEST = new Date(estNow);
+  todayEST.setHours(6, 0, 0, 0);
+  // Convert back to UTC
+  const today6amUTC = new Date(todayEST.getTime() - EST_OFFSET_MS);
+
+  if (afterUtc < today6amUTC) {
+    // We haven't reached 6 AM EST today yet — unlock is today at 6 AM EST
+    return today6amUTC;
+  }
+
+  // Past 6 AM EST today — unlock is tomorrow at 6 AM EST
+  const tomorrowEST = new Date(estNow);
+  tomorrowEST.setDate(tomorrowEST.getDate() + 1);
+  tomorrowEST.setHours(6, 0, 0, 0);
+  return new Date(tomorrowEST.getTime() - EST_OFFSET_MS);
+}
+
+/**
+ * Returns true if the current time (UTC) is past the unlock time for the next
+ * day after a lesson was completed at `completedAt`.
+ * Unlock = 6:00 AM EST on the calendar day AFTER the submission day (EST).
+ */
+function isNextDayUnlocked(completedAt: Date): boolean {
   const now = new Date();
-  return (
-    completedAt.getUTCFullYear() === now.getUTCFullYear() &&
-    completedAt.getUTCMonth() === now.getUTCMonth() &&
-    completedAt.getUTCDate() === now.getUTCDate()
-  );
+  const unlockAt = next6amEST(completedAt);
+  return now >= unlockAt;
+}
+
+/**
+ * Returns the unlock timestamp (UTC) for the next day after a submission.
+ */
+function getUnlockAt(completedAt: Date): Date {
+  return next6amEST(completedAt);
 }
 
 export const programsRouter = router({
@@ -53,7 +99,6 @@ export const programsRouter = router({
       if (!program) throw new TRPCError({ code: "NOT_FOUND", message: "Program not found" });
       const existing = await getUserEnrollment(ctx.user.id, input.programId);
       if (existing) {
-        // Re-activate if paused
         if (existing.status === "paused") {
           await updateEnrollmentProgress(ctx.user.id, input.programId, { status: "in_progress" });
         }
@@ -63,26 +108,53 @@ export const programsRouter = router({
       return { success: true, alreadyEnrolled: false };
     }),
 
-  /** Get the user's current lesson for a program */
+  /**
+   * Get the user's current lesson for a program.
+   * Returns isLocked=true + unlockAt when the next day hasn't opened yet (before 6 AM EST).
+   */
   getCurrentLesson: protectedProcedure
     .input(z.object({ programId: z.number().int().positive() }))
     .query(async ({ input, ctx }) => {
       const enrollment = await getUserEnrollment(ctx.user.id, input.programId);
       if (!enrollment) return null;
+
       const currentDay = enrollment.currentDay ?? 1;
       const lesson = await getLessonByDay(input.programId, currentDay);
       if (!lesson) return null;
+
+      // Check if this day's lesson has already been submitted
       const response = await getLessonResponse(ctx.user.id, input.programId, currentDay);
-      // Check if the existing response was submitted today (for the one-per-day gate UI)
-      const alreadySubmittedToday = response ? submittedToday(response.completedAt) : false;
+
+      // ── 6 AM EST gate ─────────────────────────────────────────────────────
+      // If there is a completed response for the current day, the NEXT day is
+      // locked until 6 AM EST the following calendar day.
+      // But the current lesson view should also show the "come back tomorrow" state.
+      let isLocked = false;
+      let unlockAt: Date | null = null;
+
+      if (response) {
+        // This day is done. Check if next day is unlocked yet.
+        const unlocked = isNextDayUnlocked(response.completedAt);
+        if (!unlocked) {
+          // Next day not yet open — current lesson is "done for today" and locked
+          isLocked = true;
+          unlockAt = getUnlockAt(response.completedAt);
+        }
+        // If unlocked, the enrollment.currentDay should have already advanced to nextDay
+        // (set during submitLessonResponse). If somehow still on this day, it's fine —
+        // the user can see their completed response but cannot re-submit.
+      }
+
       // Fetch next day's lesson title for the insight page
       const nextLessonRaw = await getLessonByDay(input.programId, currentDay + 1);
+
       return {
         lesson,
         enrollment,
         response: response ?? null,
         isCompleted: !!response,
-        alreadySubmittedToday,
+        isLocked,
+        unlockAt: unlockAt ? unlockAt.toISOString() : null,
         nextLesson: nextLessonRaw ? { day: nextLessonRaw.day, title: nextLessonRaw.title } : null,
       };
     }),
@@ -99,29 +171,52 @@ export const programsRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const enrollment = await getUserEnrollment(ctx.user.id, input.programId);
-      if (!enrollment) throw new TRPCError({ code: "FORBIDDEN", message: "You are not enrolled in this program" });
+      if (!enrollment) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You are not enrolled in this program" });
+      }
 
-      // ── One-per-day gate ──────────────────────────────────────────────────
-      // Only allow submitting the current day's lesson
       const currentDay = enrollment.currentDay ?? 1;
-      if (input.day !== currentDay) {
+
+      // ── Day gate: only the current day is submittable ─────────────────────
+      if (input.day > currentDay) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: input.day < currentDay
-            ? "You have already completed this day."
-            : "This day is not yet unlocked. Complete the previous day first.",
+          message: "This day is not yet unlocked. Complete the previous day first.",
+        });
+      }
+      if (input.day < currentDay) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You have already completed this day.",
         });
       }
 
-      // Check if already submitted today (duplicate guard)
+      // ── Duplicate guard: check if already submitted ───────────────────────
       const existing = await getLessonResponse(ctx.user.id, input.programId, input.day);
       if (existing) {
-        // If submitted today, block re-submission
-        if (submittedToday(existing.completedAt)) {
-          throw new TRPCError({ code: "CONFLICT", message: "You've already completed today's lesson. Come back tomorrow!" });
+        // Check if the 6 AM EST gate has passed — if not, block re-submission
+        const unlocked = isNextDayUnlocked(existing.completedAt);
+        const unlockAt = getUnlockAt(existing.completedAt);
+        const unlockStr = unlockAt.toLocaleString("en-US", {
+          timeZone: "America/New_York",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        });
+        if (!unlocked) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `You've already completed today's lesson. Day ${input.day + 1} unlocks at ${unlockStr} Eastern.`,
+          });
         }
-        // Edge case: same day number but different calendar day shouldn't happen in normal flow
-        throw new TRPCError({ code: "CONFLICT", message: "You have already submitted this lesson" });
+        // If somehow unlocked but same day entry exists, still block (shouldn't happen in normal flow)
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "You have already submitted this lesson.",
+        });
       }
 
       const lesson = await getLessonByDay(input.programId, input.day);
@@ -145,7 +240,8 @@ Your role: reflect back what the person shared, name what you notice with warmth
         });
         aiFeedback = (res.choices[0]?.message?.content as string) ?? "";
       } catch {
-        aiFeedback = "Thank you for sharing that. Take a moment to sit with what you've written — there's wisdom in it.";
+        aiFeedback =
+          "Thank you for sharing that. Take a moment to sit with what you've written — there's wisdom in it.";
       }
 
       await saveLessonResponse({
@@ -157,7 +253,7 @@ Your role: reflect back what the person shared, name what you notice with warmth
         aiFeedback,
       });
 
-      // Advance to next day
+      // Advance enrollment to next day
       const program = await getProgramById(input.programId);
       const nextDay = input.day + 1;
       const isLastDay = program ? nextDay > program.durationDays : false;
@@ -169,27 +265,29 @@ Your role: reflect back what the person shared, name what you notice with warmth
         ...(isLastDay ? { completedAt: new Date() } : {}),
       });
 
-      // ── 21-day completion reward ────────────────────────────────────────────
+      // ── 21-day completion reward ──────────────────────────────────────────
       let completionReward: { points: number; grantActivated: boolean } | null = null;
       if (isLastDay && program?.durationDays === 21) {
-        // Award 25 points
         await addRewardPoints(
           ctx.user.id,
           25,
           "checkin",
           `program_completion_${input.programId}_${Date.now()}`
         );
-        // Award 1 month Pro grant
         const grant = await createRewardGrant(ctx.user.id, "month_pro", "spin");
         completionReward = { points: 25, grantActivated: grant.activated };
       }
 
-      // Fetch next day's lesson preview (title only) for the insight page
+      // Fetch next day's lesson preview for the insight page
       let nextLesson: { day: number; title: string } | null = null;
       if (!isLastDay) {
         const nl = await getLessonByDay(input.programId, nextDay);
         if (nl) nextLesson = { day: nl.day, title: nl.title };
       }
+
+      // Compute unlock time for the next day (for display on insight page)
+      const submittedAt = new Date();
+      const unlockAt = isLastDay ? null : getUnlockAt(submittedAt);
 
       return {
         success: true,
@@ -198,6 +296,7 @@ Your role: reflect back what the person shared, name what you notice with warmth
         nextDay: isLastDay ? null : nextDay,
         nextLesson,
         completionReward,
+        unlockAt: unlockAt ? unlockAt.toISOString() : null,
       };
     }),
 
