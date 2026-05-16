@@ -6,37 +6,15 @@ import { v2vSessions, v2vMessages } from "../../drizzle/schema";
 import { TRPCError } from "@trpc/server";
 import { randomUUID } from "crypto";
 
-const HUME_TOKEN_URL = "https://api.hume.ai/oauth2-cc/token";
-
-async function mintHumeToken(): Promise<string> {
-  const apiKey = process.env.HUME_API_KEY;
-  const secretKey = process.env.HUME_SECRET_KEY;
-  if (!apiKey || !secretKey) {
-    throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Hume credentials not configured" });
-  }
-  const basic = Buffer.from(`${apiKey}:${secretKey}`).toString("base64");
-  const res = await fetch(HUME_TOKEN_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Authorization: `Basic ${basic}`,
-    },
-    body: "grant_type=client_credentials",
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `Hume token error: ${err}` });
-  }
-  const json = (await res.json()) as { access_token: string };
-  return json.access_token;
-}
-
 export const voiceRouter = router({
-  /** Mint a short-lived Hume access token for the browser to use directly */
+  /** Return Hume API key and config ID for direct WebSocket connection */
   mintToken: protectedProcedure.mutation(async () => {
-    const token = await mintHumeToken();
+    const apiKey = process.env.HUME_API_KEY;
     const configId = process.env.HUME_CONFIG_ID || "";
-    return { token, configId };
+    if (!apiKey) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Hume API key not configured" });
+    }
+    return { apiKey, configId };
   }),
 
   /** Create a new voice session record */

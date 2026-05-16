@@ -252,15 +252,15 @@ export default function Voice() {
     setKillSwitch(false);
 
     try {
-      // 1. Mint token server-side
-      const { token, configId } = await mintTokenMut.mutateAsync();
+      // 1. Get API key and config from server
+      const { apiKey, configId } = await mintTokenMut.mutateAsync();
 
       // 2. Create a DB session
       const { sessionId: sid } = await createSessionMut.mutateAsync();
       setSessionId(sid);
 
-      // 3. Open WebSocket directly to Hume EVI
-      const params = new URLSearchParams({ access_token: token });
+      // 3. Open WebSocket directly to Hume EVI using API key
+      const params = new URLSearchParams({ api_key: apiKey });
       if (configId) params.set("config_id", configId);
       const wsUrl = `wss://api.hume.ai/v0/evi/chat?${params.toString()}`;
       const ws = new WebSocket(wsUrl);
