@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft, Mic, MicOff, PhoneOff, AlertTriangle, History, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -7,6 +7,7 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import AppShell from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
+import { useVoice } from "@humeai/voice-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -101,151 +102,107 @@ function SaveToJournalButton({ sessionId }: { sessionId: number }) {
   );
 }
 
-// ── Main Component ─────────────────────────────────────────────────────────────
+// ── Main Voice Component ───────────────────────────────────────────────────────
 
 export default function Voice() {
-  const [, navigate] = useLocation();
   const { user } = useAuth();
-
+  const [, setLocation] = useLocation();
   const [status, setStatus] = useState<Status>("idle");
-  const [messages, setMessages] = useState<Message[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [killSwitch, setKillSwitch] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [sessionId, setSessionId] = useState<number | null>(null);
+  const [killSwitch, setKillSwitch] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
 
-  const wsRef = useRef<WebSocket | null>(null);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
-  const audioQueueRef = useRef<ArrayBuffer[]>([]);
-  const isPlayingRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // tRPC mutations
+  // Hume SDK hooks
+  const {
+    connect,
+    disconnect,
+    messages: humeMessages,
+    error: humeError,
+  } = useVoice();
+
   const mintTokenMut = trpc.voice.mintToken.useMutation();
   const createSessionMut = trpc.voice.createSession.useMutation();
   const saveMessageMut = trpc.voice.saveMessage.useMutation();
-  const endSessionMut = trpc.voice.endSession.useMutation();
 
-  // Auto-scroll
+  // Scroll to latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ── Audio helpers ────────────────────────────────────────────────────────────
+  // Monitor Hume SDK messages and sync to local state
+  useEffect(() => {
+    if (!humeMessages || humeMessages.length === 0) return;
 
-  const getAudioContext = useCallback((): AudioContext => {
-    if (!audioCtxRef.current || audioCtxRef.current.state === "closed") {
-      audioCtxRef.current = new AudioContext({ sampleRate: 16000 });
-    }
-    return audioCtxRef.current;
-  }, []);
+    const lastHumeMsg = humeMessages[humeMessages.length - 1];
+    const lastLocalMsg = messages[messages.length - 1];
+    const msg = lastHumeMsg as any;
 
-  const enqueueAudio = useCallback((buffer: ArrayBuffer) => {
-    audioQueueRef.current.push(buffer);
-    if (!isPlayingRef.current) playNext();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // Only process messages with id, role, and content
+    if (!msg.id || !msg.role || !msg.message?.content) return;
 
-  const playNext = useCallback(async () => {
-    if (audioQueueRef.current.length === 0) {
-      isPlayingRef.current = false;
+    // Avoid duplicates
+    if (lastLocalMsg?.id === `hume-${msg.id}`) return;
+
+    const newMsg: Message = {
+      id: `hume-${msg.id}`,
+      role: msg.role === "user" ? "user" : "assistant",
+      content: msg.message?.content || "",
+      emotions: msg.models?.prosody?.scores
+        ? Object.entries(msg.models.prosody.scores as Record<string, number>)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3)
+            .map(([name, score]) => ({ name, score }))
+        : undefined,
+      timestamp: Date.now(),
+    };
+
+    // Check for crisis content
+    if (newMsg.role === "user" && hasCrisisContent(newMsg.content)) {
+      triggerKillSwitch();
       return;
     }
-    isPlayingRef.current = true;
-    const buf = audioQueueRef.current.shift()!;
-    try {
-      const ctx = getAudioContext();
-      const decoded = await ctx.decodeAudioData(buf.slice(0));
-      const source = ctx.createBufferSource();
-      source.buffer = decoded;
-      source.connect(ctx.destination);
-      source.onended = () => playNext();
-      source.start();
-    } catch {
-      playNext();
-    }
-  }, [getAudioContext]);
 
-  const stopPlayback = useCallback(() => {
-    audioQueueRef.current = [];
-    isPlayingRef.current = false;
-    if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
-      audioCtxRef.current.close().catch(() => {});
-      audioCtxRef.current = null;
-    }
-  }, []);
+    setMessages((prev) => [...prev, newMsg]);
 
-  // ── Mic capture ─────────────────────────────────────────────────────────────
-
-  const startRecording = useCallback(() => {
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
-    navigator.mediaDevices
-      .getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 } })
-      .then((stream) => {
-        mediaStreamRef.current = stream;
-        const ctx = getAudioContext();
-        const source = ctx.createMediaStreamSource(stream);
-        const processor = ctx.createScriptProcessor(4096, 1, 1);
-        processorRef.current = processor;
-        processor.onaudioprocess = (e) => {
-          if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
-          const pcm = e.inputBuffer.getChannelData(0);
-          const int16 = new Int16Array(pcm.length);
-          for (let i = 0; i < pcm.length; i++) {
-            int16[i] = Math.max(-32768, Math.min(32767, Math.round(pcm[i] * 32767)));
-          }
-          wsRef.current.send(
-            JSON.stringify({
-              type: "audio_input",
-              data: btoa(Array.from(new Uint8Array(int16.buffer), (b) => String.fromCharCode(b)).join("")),
-            })
-          );
-        };
-        source.connect(processor);
-        processor.connect(ctx.destination);
-        setIsRecording(true);
-      })
-      .catch(() => {
-        toast.error("Microphone access denied. Please allow mic access and try again.");
+    // Save to DB
+    if (sessionId && newMsg.content) {
+      saveMessageMut.mutate({
+        sessionId,
+        role: newMsg.role,
+        content: newMsg.content,
+        emotions: newMsg.emotions,
       });
-  }, [getAudioContext]);
+    }
+  }, [humeMessages, messages, sessionId, saveMessageMut]);
 
-  const stopRecording = useCallback(() => {
-    processorRef.current?.disconnect();
-    processorRef.current = null;
-    mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
-    mediaStreamRef.current = null;
-    setIsRecording(false);
-  }, []);
-
-  // ── Kill switch ──────────────────────────────────────────────────────────────
+  // Monitor Hume SDK errors
+  useEffect(() => {
+    if (humeError) {
+      console.error("[Hume SDK Error]", humeError);
+      const errorDetails = humeError instanceof Error ? humeError.message : String(humeError);
+      setErrorMsg(`Connection error: ${errorDetails}`);
+      setStatus("error");
+      toast.error(`Voice connection failed: ${errorDetails}`);
+    }
+  }, [humeError]);
 
   const triggerKillSwitch = useCallback(() => {
     setKillSwitch(true);
-    stopRecording();
-    stopPlayback();
-    if (wsRef.current) {
-      wsRef.current.close(1000, "kill_switch");
-      wsRef.current = null;
-    }
+    disconnect();
     setStatus("ended");
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `crisis-${Date.now()}`,
-        role: "assistant",
-        content:
-          "I'm pausing our conversation because your safety matters most. If you're in crisis, please reach out to the 988 Suicide & Crisis Lifeline by calling or texting **988**. You are not alone.",
-        timestamp: Date.now(),
-      },
-    ]);
-  }, [stopRecording, stopPlayback]);
+    toast.error("Crisis detected. Session ended. Please seek professional help.");
+  }, [disconnect]);
 
-  // ── Connect ──────────────────────────────────────────────────────────────────
+  const handleConnect = useCallback(async () => {
+    if (!user) {
+      toast.error("Please log in first");
+      return;
+    }
 
-  const connect = useCallback(async () => {
-    if (!user) return;
     setStatus("connecting");
     setErrorMsg(null);
     setMessages([]);
@@ -259,212 +216,97 @@ export default function Voice() {
       const { sessionId: sid } = await createSessionMut.mutateAsync();
       setSessionId(sid);
 
-      // 3. Open WebSocket directly to Hume EVI using API key
-      const params = new URLSearchParams({ api_key: apiKey });
-      if (configId) params.set("config_id", configId);
-      const wsUrl = `wss://api.hume.ai/v0/evi/chat?${params.toString()}`;
-      const ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
-      ws.binaryType = "arraybuffer";
-
-      ws.onopen = () => {
-        setStatus("live");
-        startRecording();
+      // 3. Connect using Hume SDK
+      console.log("[Voice] Connecting to Hume EVI with config:", configId);
+      const connectOptions: any = {
+        auth: { type: "apiKey", value: apiKey },
+        hostname: "api.hume.ai",
       };
+      if (configId) {
+        connectOptions.sessionSettings = { configId };
+      }
+      await connect(connectOptions);
 
-      ws.onmessage = (event) => {
-        if (event.data instanceof ArrayBuffer) {
-          enqueueAudio(event.data);
-          return;
-        }
-        try {
-          const msg = JSON.parse(event.data as string);
-
-          if (msg.type === "audio_output" && msg.data) {
-            const binary = atob(msg.data);
-            const buf = new ArrayBuffer(binary.length);
-            const view = new Uint8Array(buf);
-            for (let i = 0; i < binary.length; i++) view[i] = binary.charCodeAt(i) & 0xff;
-            enqueueAudio(buf);
-          }
-
-          if (msg.type === "user_message" && msg.message?.content) {
-            const content: string = msg.message.content;
-            if (hasCrisisContent(content)) {
-              triggerKillSwitch();
-              return;
-            }
-            const emotions: Emotion[] = (msg.models?.prosody?.scores
-              ? Object.entries(msg.models.prosody.scores as Record<string, number>)
-                  .sort((a, b) => b[1] - a[1])
-                  .slice(0, 3)
-                  .map(([name, score]) => ({ name, score }))
-              : []);
-            const newMsg: Message = {
-              id: `u-${Date.now()}`,
-              role: "user",
-              content,
-              emotions,
-              timestamp: Date.now(),
-            };
-            setMessages((prev) => [...prev, newMsg]);
-            if (sessionId) {
-              saveMessageMut.mutate({ sessionId, role: "user", content, emotions });
-            }
-          }
-
-          if (msg.type === "assistant_message" && msg.message?.content) {
-            const content: string = msg.message.content;
-            const newMsg: Message = {
-              id: `a-${Date.now()}`,
-              role: "assistant",
-              content,
-              timestamp: Date.now(),
-            };
-            setMessages((prev) => [...prev, newMsg]);
-            if (sessionId) {
-              saveMessageMut.mutate({ sessionId, role: "assistant", content });
-            }
-          }
-
-          if (msg.type === "error") {
-            setErrorMsg(msg.message || "An error occurred during the session.");
-            setStatus("error");
-          }
-        } catch {
-          // non-JSON message — ignore
-        }
-      };
-
-      ws.onerror = () => {
-        setErrorMsg("Could not connect to the voice server. Please try again.");
-        setStatus("error");
-      };
-
-      ws.onclose = (e) => {
-          if (!killSwitch && e.code !== 1000) {
-          setErrorMsg("The connection ended unexpectedly. Please try again.");
-          setStatus("ended");
-        } else if (e.code === 1000) {
-          setStatus("ended");
-        }
-        stopRecording();
-        stopPlayback();
-        if (sessionId) {
-          endSessionMut.mutate({ sessionId });
-        }
-      };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to start voice session.";
-      setErrorMsg(message);
+      setStatus("live");
+      toast.success("Connected to your Mirror");
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.error("[Voice] Connection failed:", errorMsg);
+      setErrorMsg(errorMsg);
       setStatus("error");
+      toast.error(`Failed to connect: ${errorMsg}`);
     }
-  }, [user, mintTokenMut, createSessionMut, sessionId, saveMessageMut, endSessionMut, startRecording, enqueueAudio, triggerKillSwitch, stopRecording, stopPlayback, killSwitch, status]);
+  }, [user, connect, mintTokenMut, createSessionMut]);
 
-  const disconnect = useCallback(() => {
-    stopRecording();
-    stopPlayback();
-    if (wsRef.current) {
-      wsRef.current.close(1000, "user_disconnect");
-      wsRef.current = null;
-    }
-    if (sessionId) {
-      endSessionMut.mutate({ sessionId });
-    }
+  const handleDisconnect = useCallback(() => {
+    disconnect();
     setStatus("ended");
-  }, [stopRecording, stopPlayback, sessionId, endSessionMut]);
+    toast.success("Session ended");
+  }, [disconnect]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      disconnect();
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const handleToggleMic = useCallback(() => {
+    setIsMuted(!isMuted);
+    // Hume SDK handles mic state internally
+  }, [isMuted]);
 
-  // ── Render ───────────────────────────────────────────────────────────────────
-
-  const pulseScale = status === "live" && isRecording ? [1, 1.18, 1] : [1, 1, 1];
+  if (!user) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-4">Please log in to use the Mirror</p>
+            <Button onClick={() => setLocation("/")}>Go Home</Button>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
-      <div className="flex flex-col h-[calc(100dvh-4rem)] max-w-2xl mx-auto">
+      <div className="flex flex-col h-screen bg-background">
         {/* Header */}
-        <header className="flex items-center gap-3 px-4 py-3 border-b border-border/40">
+        <div className="flex items-center justify-between p-4 border-b border-border">
           <button
-            onClick={() => navigate("/chat")}
-            className="p-2 rounded-full hover:bg-secondary/60 transition-colors"
+            onClick={() => setLocation("/")}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+            <ArrowLeft className="w-5 h-5" />
+            Back
           </button>
-          <div className="flex-1">
-            <h1 className="text-lg font-semibold text-foreground">Voice Mirror</h1>
-            <p className="text-xs text-muted-foreground">
-              Real-time voice conversation
-              {status === "live" && (
-                <span className="ml-2 inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Live
-                </span>
-              )}
-            </p>
-          </div>
+          <h1 className="text-xl font-semibold">Your Mirror</h1>
           <button
-            onClick={() => navigate("/voice/history")}
-            className="p-2 rounded-full hover:bg-secondary/60 transition-colors"
-            title="Session history"
+            onClick={() => setLocation("/voice/history")}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
-            <History className="w-5 h-5 text-muted-foreground" />
+            <History className="w-5 h-5" />
+            History
           </button>
-        </header>
+        </div>
 
         {/* Messages */}
-        <main className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-          {messages.length === 0 && status === "idle" && (
-            <div className="flex flex-col items-center justify-center h-full text-center gap-4">
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-                <Mic className="w-10 h-10 text-primary" />
-              </div>
-              <div>
-                <p className="text-foreground font-medium">Voice Mirror</p>
-                <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-                  Speak naturally. Your Mirror listens, reflects, and responds in real time.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {messages.length === 0 && status === "connecting" && (
-            <div className="flex flex-col items-center justify-center h-full gap-3">
-              <div className="w-16 h-16 rounded-full border-2 border-primary/40 border-t-primary animate-spin" />
-              <p className="text-sm text-muted-foreground">Connecting to your Mirror…</p>
-            </div>
-          )}
-
-          <AnimatePresence initial={false}>
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <AnimatePresence>
             {messages.map((msg) => (
               <motion.div
                 key={msg.id}
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
+                  className={`max-w-xs px-4 py-3 rounded-lg ${
                     msg.role === "user"
-                      ? "bg-primary text-primary-foreground rounded-br-sm"
-                      : "bg-secondary text-secondary-foreground rounded-bl-sm"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-foreground"
                   }`}
                 >
-                  <p>{msg.content}</p>
+                  <p className="text-sm">{msg.content}</p>
                   {msg.emotions && msg.emotions.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
+                    <div className="flex gap-2 mt-2 flex-wrap">
                       {msg.emotions.map((e) => (
-                        <span
-                          key={e.name}
-                          className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${emotionColor(e.name)}`}
-                        >
-                          {e.name} {Math.round(e.score * 100)}%
+                        <span key={e.name} className={`text-xs px-2 py-1 rounded ${emotionColor(e.name)}`}>
+                          {e.name} {(e.score * 100).toFixed(0)}%
                         </span>
                       ))}
                     </div>
@@ -474,93 +316,91 @@ export default function Voice() {
             ))}
           </AnimatePresence>
           <div ref={messagesEndRef} />
-        </main>
+        </div>
 
-        {/* Error / ended state */}
-        {(status === "ended" || status === "error") && errorMsg && (
-          <div className="mx-4 mb-3 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm text-amber-200">{errorMsg}</p>
-                <button
-                  onClick={() => { setStatus("idle"); setErrorMsg(null); }}
-                  className="text-xs text-amber-400 underline mt-1"
-                >
-                  Try again
-                </button>
-              </div>
+        {/* Error Display */}
+        {errorMsg && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mx-4 mb-4 p-4 rounded-lg bg-destructive/10 border border-destructive/30 flex gap-3"
+          >
+            <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-destructive">Connection Error</p>
+              <p className="text-xs text-destructive/80 mt-1">{errorMsg}</p>
             </div>
-          </div>
+          </motion.div>
         )}
 
-        {/* Kill switch banner */}
+        {/* Kill Switch Alert */}
         {killSwitch && (
-          <div className="mx-4 mb-3 p-4 rounded-xl border border-red-500/40 bg-red-500/10">
-            <p className="text-sm font-semibold text-red-300">Crisis resources</p>
-            <p className="text-xs text-red-200 mt-1">
-              Call or text <strong>988</strong> (Suicide & Crisis Lifeline) · 24/7 · Free & confidential
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mx-4 mb-4 p-4 rounded-lg bg-red-500/10 border border-red-500/30"
+          >
+            <p className="text-sm font-medium text-red-500">
+              Crisis detected. Please reach out to a mental health professional.
             </p>
-          </div>
+            <p className="text-xs text-red-500/80 mt-2">
+              National Suicide Prevention Lifeline: 1-800-273-8255
+            </p>
+          </motion.div>
         )}
 
-        {/* Save to Journal (after session ends) */}
-        {status === "ended" && sessionId && messages.length > 0 && (
-          <div className="mx-4 mb-3">
+        {/* Session End Options */}
+        {status === "ended" && sessionId && (
+          <div className="mx-4 mb-4">
             <SaveToJournalButton sessionId={sessionId} />
           </div>
         )}
 
         {/* Controls */}
-        <footer className="px-4 py-4 border-t border-border/40">
-          {status === "idle" || status === "error" || status === "ended" ? (
+        <div className="p-4 border-t border-border space-y-3">
+          {status === "idle" || status === "error" || status === "ended" || status === "connecting" ? (
             <Button
-              onClick={connect}
-              disabled={false}
-              className="w-full h-14 text-base font-semibold gap-2 bg-primary hover:bg-primary/90"
+              onClick={handleConnect}
+              disabled={status === "connecting"}
+              className="w-full h-12 text-lg"
             >
-              <Mic className="w-5 h-5" />
-              {status === "ended" ? "Start New Session" : "Start Voice Session"}
+                {status === "connecting" ? "Connecting..." : "Start New Session"}
             </Button>
-          ) : status === "connecting" ? (
-            <Button disabled className="w-full h-14 text-base">
-              <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin mr-2" />
-              Connecting…
-            </Button>
-          ) : (
-            <div className="flex items-center gap-3">
-              {/* Mic toggle */}
-              <button
-                onClick={() => {
-                  if (isRecording) stopRecording();
-                  else startRecording();
-                }}
-                className={`flex-1 h-14 rounded-xl flex items-center justify-center gap-2 font-medium transition-colors ${
-                  isRecording
-                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-                    : "bg-secondary text-muted-foreground border border-border"
-                }`}
+          ) : status === "live" ? (
+            <div className="flex gap-3">
+              <Button
+                onClick={handleToggleMic}
+                variant={isMuted ? "destructive" : "default"}
+                className="flex-1 h-12"
               >
-                {/* Pulsing orb */}
-                <motion.div
-                  animate={{ scale: pulseScale }}
-                  transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
-                  className={`w-3 h-3 rounded-full ${isRecording ? "bg-emerald-400" : "bg-muted-foreground"}`}
-                />
-                {isRecording ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
-                <span className="text-sm">{isRecording ? "Listening" : "Muted"}</span>
-              </button>
-
-              {/* End call */}
-              <button
-                onClick={disconnect}
-                className="w-14 h-14 rounded-xl bg-red-500/20 text-red-400 border border-red-500/40 flex items-center justify-center hover:bg-red-500/30 transition-colors"
+                {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              </Button>
+              <Button
+                onClick={handleDisconnect}
+                variant="destructive"
+                className="flex-1 h-12"
               >
                 <PhoneOff className="w-5 h-5" />
-              </button>
+                End
+              </Button>
             </div>
+          ) : (
+            <Button
+              onClick={handleConnect}
+              className="w-full h-12 text-lg"
+            >
+              Start New Session
+            </Button>
           )}
-        </footer>
+        </div>
+
+        {/* Status Indicator */}
+        {status === "live" && (
+          <div className="flex items-center justify-center gap-2 py-2 text-sm text-emerald-400">
+            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+            Live
+          </div>
+        )}
       </div>
     </AppShell>
   );
