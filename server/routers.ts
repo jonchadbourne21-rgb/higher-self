@@ -699,18 +699,17 @@ export const appRouter = router({
           messages: [
             {
               role: "system",
-              content: `You are a deeply perceptive journal title writer. Your job is to read a person's raw journal entry and generate 3 distinct, creative title options that feel like they were written BY that person — not about them.
+              content: `You are a deeply perceptive journal title writer. Read the journal entry and generate 3 title options, max 5 words each.
 
-Each title should come from a completely different creative angle:
-1. **Metaphorical / poetic** — use imagery, nature, or a striking metaphor that captures the emotional undercurrent
-2. **Raw / direct** — name the real thing the person is wrestling with, no softening, like a song title that hits you in the chest
-3. **Transformational / forward-looking** — hint at the shift, the realization, or the becoming that's happening
+Option 1: Extract a phrase the user actually wrote — something raw or specific they said. Use their own words as the title.
+Option 2: Create a metaphor for the feeling or experience. Use imagery, nature, or a striking metaphor that captures the emotional undercurrent. Avoid clichés like sunrise, journey, becoming.
+Option 3: Name the deeper need or shift the Mirror sees. What is the user really reaching for? What's the core change or realization? Name it directly.
 
 Rules:
-- 3–7 words per title
-- No generic phrases like "My Journey", "Reflections", "Today's Thoughts"
+- Max 5 words per title
+- No generic phrases like "My Journey", "Reflections", "Today's Thoughts", "A New Beginning"
 - Draw from the specific language, emotions, and details in the entry
-- Make each title feel like it could be the title of a chapter in their memoir
+- Each title should feel like it could be the title of a chapter in their memoir
 - No quotes, no numbering, no explanation in the output`,
             },
             {
