@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch, useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
+import { VoiceProvider } from "@humeai/voice-react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Landing from "./pages/Landing";
@@ -139,21 +140,23 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="dark">
-        <TooltipProvider>
-          <Toaster
-            theme="dark"
-            toastOptions={{
-              style: {
-                background: "oklch(0.17 0.04 280)",
-                border: "1px solid oklch(0.28 0.05 280)",
-                color: "oklch(0.93 0.01 270)",
-              },
-            }}
-          />
-          <AnimatedRouter />
-        </TooltipProvider>
-      </ThemeProvider>
+      <VoiceProvider>
+        <ThemeProvider defaultTheme="dark">
+          <TooltipProvider>
+            <Toaster
+              theme="dark"
+              toastOptions={{
+                style: {
+                  background: "oklch(0.17 0.04 280)",
+                  border: "1px solid oklch(0.28 0.05 280)",
+                  color: "oklch(0.93 0.01 270)",
+                },
+              }}
+            />
+            <AnimatedRouter />
+          </TooltipProvider>
+        </ThemeProvider>
+      </VoiceProvider>
     </ErrorBoundary>
   );
 }
