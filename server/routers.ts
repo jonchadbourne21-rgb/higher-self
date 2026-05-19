@@ -287,6 +287,7 @@ export const appRouter = router({
       const theme = themes[dayOfYear % themes.length];
 
       try {
+        // Route to Claude Sonnet for user-facing features
         const res = await invokeLLM({
           messages: [
             {
@@ -317,7 +318,8 @@ export const appRouter = router({
         const profile = await getUserProfile(ctx.user.id);
         const name = profile?.preferredName || "friend";
         try {
-          const res = await invokeLLM({
+          // Route to Claude Sonnet for user-facing features
+        const res = await invokeLLM({
             messages: [
               {
                 role: "system",
@@ -419,6 +421,7 @@ export const appRouter = router({
             input.reflection ? `Reflection: ${input.reflection}` : "",
           ].filter(Boolean).join("\n");
 
+          // Route to Claude Sonnet for user-facing reflection
           const aiRes = await invokeLLM({
             messages: [
               { role: "system", content: systemPrompt },
@@ -638,6 +641,7 @@ export const appRouter = router({
         // Generate AI perspective asynchronously
         try {
           const systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id);
+          // Route to Claude Sonnet for user-facing reflection
           const aiRes = await invokeLLM({
             messages: [
               { role: "system", content: systemPrompt },
@@ -695,6 +699,7 @@ export const appRouter = router({
     suggestTitle: protectedProcedure
       .input(z.object({ content: z.string().min(30) }))
       .mutation(async ({ input }) => {
+        // Route to Claude Sonnet for user-facing features
         const res = await invokeLLM({
           messages: [
             {
@@ -928,7 +933,8 @@ Rules:
             content: m.content,
           })),
         ];
-        const aiRes = await invokeLLM({ messages });
+        // Route to Claude Sonnet for user-facing conversation (Mirror chat)
+        const aiRes = await invokeLLM({ messages, model: "sonnet" });
         const rawAiContent = aiRes.choices[0]?.message?.content;
         const aiContent = typeof rawAiContent === 'string' ? rawAiContent : "I'm here with you.";
         // Save AI response with context snapshot
