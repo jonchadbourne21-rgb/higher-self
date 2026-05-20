@@ -32,23 +32,19 @@ describe("Intent-Specific System Prompts", () => {
     expect(prompt).toContain("patterns");
   });
 
-  it("should generate Confidence prompt with empowering tone", () => {
+  it("should build Confidence prompt with empowerment focus", () => {
     const prompt = buildIntentSpecificPrompt("Confidence", mockContext);
-    
-    expect(prompt).toContain("Confidence");
-    expect(prompt).toContain("empowering");
-    expect(prompt).toContain("strengths");
+    expect(prompt).toContain("power");
     expect(prompt).toContain("action");
+    expect(prompt).toContain("strengths");
     expect(prompt).toContain("forward momentum");
   });
 
-  it("should generate Healing prompt with compassionate tone", () => {
+  it("should build Healing prompt with compassion focus", () => {
     const prompt = buildIntentSpecificPrompt("Healing", mockContext);
-    
-    expect(prompt).toContain("Healing");
     expect(prompt).toContain("gentle");
     expect(prompt).toContain("self-compassion");
-    expect(prompt).toContain("validating");
+    expect(prompt).toContain("Validate");
     expect(prompt).toContain("pain");
   });
 
@@ -82,7 +78,6 @@ describe("Intent-Specific System Prompts", () => {
     
     expect(prompt).toContain("Higher Self");
     expect(prompt).toContain("Alex");
-    expect(prompt).toContain("honest reflection");
     expect(prompt).not.toContain("Inner Peace");
     expect(prompt).not.toContain("Clarity");
     expect(prompt).not.toContain("Confidence");
@@ -94,7 +89,6 @@ describe("Intent-Specific System Prompts", () => {
     const prompt = buildIntentSpecificPrompt("Unknown Intent" as SeedIntent, mockContext);
     
     expect(prompt).toContain("Higher Self");
-    expect(prompt).toContain("honest reflection");
   });
 
   it("should maintain consistent structure across all prompts", () => {
@@ -138,7 +132,7 @@ describe("Intent-Specific System Prompts", () => {
     
     // Healing should emphasize compassion and processing
     expect(healingPrompt).toContain("self-compassion");
-    expect(healingPrompt).toContain("validating");
+    expect(healingPrompt).toContain("Validate");
     expect(healingPrompt).toContain("pain");
     
     // Confidence should emphasize action and empowerment

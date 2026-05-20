@@ -258,10 +258,10 @@ const normalizeResponseFormat = ({
 
 const getModelName = (modelType?: "sonnet" | "haiku"): string => {
   if (modelType === "haiku") {
-    return "claude-3-5-haiku-20241022";
+    return "claude-haiku-4-5-20251001";
   }
   // Default to Sonnet for user-facing features
-  return "claude-3-5-sonnet-20241022";
+  return "claude-sonnet-4-6";
 };
 
 const assertApiKey = () => {
