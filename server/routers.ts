@@ -103,6 +103,19 @@ async function buildHigherSelfSystemPrompt(userId: number, seedIntent?: string):
     .map((d) => `${d!.domain}: ${d!.score}/10`)
     .join(", ");
 
+  // Debug: Log compiled prompt context
+  console.log("[DEBUG] Compiled Prompt Context:", {
+    userId,
+    seedIntent,
+    name,
+    valuesStr,
+    goalsStr,
+    visionStr,
+    beliefsStr,
+    avgMood,
+    domainStr,
+  });
+
   // Use intent-specific prompts if seedIntent is provided
   return buildIntentSpecificPrompt(seedIntent, {
     name,

@@ -361,7 +361,9 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
       tools
     );
 
-    if (normalizedToolChoice && normalizedToolChoice !== "none" && normalizedToolChoice !== "auto") {
+    if (normalizedToolChoice === "auto" || normalizedToolChoice === "none") {
+      requestPayload.tool_choice = normalizedToolChoice;
+    } else if (normalizedToolChoice && "function" in normalizedToolChoice) {
       requestPayload.tool_choice = {
         type: "tool",
         name: normalizedToolChoice.function.name,
@@ -370,7 +372,8 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
   }
 
   try {
-    const response = await (client.messages.create as any)(requestPayload);
+    console.log("[DEBUG] Anthropic Request Payload:", JSON.stringify(requestPayload, null, 2));
+    const response = await client.messages.create(requestPayload as any);
 
     // Transform Anthropic response to InvokeResult format
     const responseData = response as any;
@@ -414,6 +417,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
       },
     };
   } catch (error) {
+    console.error("[ERROR] Anthropic API call failed:", error);
     if (error instanceof Anthropic.APIError) {
       throw new Error(
         `LLM invoke failed: ${error.status} ${error.message}`
