@@ -216,22 +216,18 @@ export default function Voice() {
       const { sessionId: sid } = await createSessionMut.mutateAsync();
       setSessionId(sid);
 
-      // 3. Connect using Hume SDK with Male Protagonist voice
+      // 3. Connect using Hume SDK with casual podcast host voice
       console.log("[Voice] Connecting to Hume EVI with config:", configId);
       const connectOptions: any = {
         auth: { type: "apiKey", value: apiKey },
         hostname: "api.hume.ai",
       };
-      if (configId) {
-        connectOptions.sessionSettings = { configId };
-      }
-      // Override voice to Male Protagonist (82a76fb8-3524-4e87-9265-9795c8e4ede6)
-      connectOptions.sessionSettings = connectOptions.sessionSettings || {};
-      connectOptions.sessionSettings.voiceId = "82a76fb8-3524-4e87-9265-9795c8e4ede6";
+      // Use the casual podcast host configuration
+      connectOptions.sessionSettings = { configId: "bd241668-01df-4d8b-90ea-c55448f8a6fa" };
       await connect(connectOptions);
 
       setStatus("live");
-      toast.success("Connected to your Mirror");
+      toast.success("Connected to your AI Coach");
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       console.error("[Voice] Connection failed:", errorMsg);
@@ -277,7 +273,7 @@ export default function Voice() {
             <ArrowLeft className="w-5 h-5" />
             Back
           </button>
-          <h1 className="text-xl font-semibold">Your Mirror</h1>
+          <h1 className="text-xl font-semibold">AI Coach</h1>
           <button
             onClick={() => setLocation("/voice/history")}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
