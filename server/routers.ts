@@ -946,8 +946,8 @@ Rules:
             content: m.content,
           })),
         ];
-        // Route to Claude Sonnet for user-facing conversation (Mirror chat)
-        const aiRes = await invokeLLM({ messages, model: "sonnet" });
+        // Route to OpenAI for user-facing conversation (Mirror chat)
+        const aiRes = await invokeLLM({ messages });
         const rawAiContent = aiRes.choices[0]?.message?.content;
         const aiContent = typeof rawAiContent === 'string' ? rawAiContent : "I'm here with you.";
         // Save AI response with context snapshot
