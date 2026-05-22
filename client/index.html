@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 
   <head>
     <meta charset="UTF-8" />
@@ -44,6 +44,35 @@
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#0F0A2E" />
+    
+    <!-- Dark theme CSS preload — prevents white flash during OAuth redirect -->
+    <style>
+      :root {
+        --background: oklch(0.08 0.02 280);              /* #0B0B0F equivalent */
+        --foreground: oklch(0.93 0.01 270);              /* soft white */
+        --card: oklch(0.12 0.03 280);
+        --card-foreground: oklch(0.93 0.01 270);
+        --primary: oklch(0.65 0.16 185);                 /* teal */
+        --primary-foreground: oklch(0.99 0.00 0);
+        --muted: oklch(0.20 0.03 280);
+        --muted-foreground: oklch(0.58 0.03 270);
+        --border: oklch(0.24 0.04 280);
+      }
+      
+      html, body {
+        background-color: #0B0B0F;
+        background-color: oklch(0.08 0.02 280);
+        color: oklch(0.93 0.01 270);
+        color-scheme: dark;
+      }
+      
+      #root {
+        background-color: #0B0B0F;
+        background-color: oklch(0.08 0.02 280);
+        color: oklch(0.93 0.01 270);
+      }
+    </style>
+    
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Mentrove" />

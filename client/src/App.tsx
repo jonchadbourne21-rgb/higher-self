@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { VoiceProvider } from "@humeai/voice-react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import LoadingOverlay from "./components/LoadingOverlay";
 import Landing from "./pages/Landing";
 import Onboarding from "./pages/Onboarding";
 import Home from "./pages/Home";
@@ -33,9 +34,10 @@ import ProgramDetail from "./pages/ProgramDetail";
 import ProgramInsight from "./pages/ProgramInsight";
 import Voice from "./pages/Voice";
 import VoiceHistory from "./pages/VoiceHistory";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { usePageMetadata } from "@/lib/metadata";
 import { injectStructuredData } from "@/lib/structuredData";
+import { trpc } from "@/lib/trpc";
 
 // Tab order — used to determine slide direction
 const TAB_ORDER = ["/home", "/domains", "/chat", "/journal", "/calendar", "/dashboard"];
@@ -138,8 +140,41 @@ function App() {
     injectStructuredData();
   }, []);
 
+  // OAuth redirect detection and loading overlay state
+  const [showOAuthOverlay, setShowOAuthOverlay] = useState(false);
+  const authCompleteRef = useRef(false);
+  
+  // Query auth state to detect when OAuth flow completes
+  const { data: user, isLoading: authLoading } = trpc.auth.me.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
+  // Check for OAuth redirect parameters (?code= or ?state=) on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hasOAuthParams = params.has("code") || params.has("state");
+    
+    if (hasOAuthParams) {
+      setShowOAuthOverlay(true);
+    }
+  }, []);
+
+  // Hide overlay once auth is complete and user data is loaded
+  useEffect(() => {
+    if (!authLoading && user && showOAuthOverlay && !authCompleteRef.current) {
+      authCompleteRef.current = true;
+      // Small delay to ensure smooth transition
+      const timer = setTimeout(() => {
+        setShowOAuthOverlay(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [authLoading, user, showOAuthOverlay]);
+
   return (
     <ErrorBoundary>
+      <LoadingOverlay visible={showOAuthOverlay} />
       <VoiceProvider>
         <ThemeProvider defaultTheme="dark">
           <TooltipProvider>
