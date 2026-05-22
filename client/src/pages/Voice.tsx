@@ -216,7 +216,7 @@ export default function Voice() {
       const { sessionId: sid } = await createSessionMut.mutateAsync();
       setSessionId(sid);
 
-      // 3. Connect using Hume SDK
+      // 3. Connect using Hume SDK with Male Protagonist voice
       console.log("[Voice] Connecting to Hume EVI with config:", configId);
       const connectOptions: any = {
         auth: { type: "apiKey", value: apiKey },
@@ -225,6 +225,9 @@ export default function Voice() {
       if (configId) {
         connectOptions.sessionSettings = { configId };
       }
+      // Override voice to Male Protagonist (82a76fb8-3524-4e87-9265-9795c8e4ede6)
+      connectOptions.sessionSettings = connectOptions.sessionSettings || {};
+      connectOptions.sessionSettings.voiceId = "82a76fb8-3524-4e87-9265-9795c8e4ede6";
       await connect(connectOptions);
 
       setStatus("live");
