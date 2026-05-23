@@ -58,6 +58,86 @@ function emotionColor(name: string): string {
   return "bg-primary/20 text-primary";
 }
 
+// ── Glowing Orb Component ────────────────────────────────────────────────────
+
+function GlowingOrb({ status, isMuted }: { status: Status; isMuted: boolean }) {
+  const isActive = status === "live";
+  const isListening = isActive && !isMuted;
+  
+  return (
+    <div className="flex justify-center mb-6">
+      <div className="relative w-24 h-24">
+        {/* Outer glow rings */}
+        {isActive && (
+          <>
+            <motion.div
+              className="absolute inset-0 rounded-full border-2 border-primary/40"
+              animate={{
+                scale: [1, 1.3],
+                opacity: [0.5, 0],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+              }}
+            />
+            <motion.div
+              className="absolute inset-0 rounded-full border-2 border-primary/60"
+              animate={{
+                scale: [1, 1.15],
+                opacity: [0.7, 0],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+              }}
+            />
+          </>
+        )}
+        
+        {/* Main orb */}
+        <motion.div
+          className={`absolute inset-0 rounded-full flex items-center justify-center ${
+            isListening
+              ? "bg-gradient-to-br from-primary to-primary/60"
+              : isActive
+              ? "bg-gradient-to-br from-primary/80 to-primary/40"
+              : "bg-gradient-to-br from-muted to-muted/60"
+          }`}
+          animate={{
+            scale: isListening ? [1, 1.05] : 1,
+            boxShadow: isListening
+              ? [
+                  "0 0 20px rgba(0, 200, 200, 0.5)",
+                  "0 0 40px rgba(0, 200, 200, 0.8)",
+                  "0 0 20px rgba(0, 200, 200, 0.5)",
+                ]
+              : isActive
+              ? ["0 0 15px rgba(0, 200, 200, 0.3)", "0 0 25px rgba(0, 200, 200, 0.5)", "0 0 15px rgba(0, 200, 200, 0.3)"]
+              : "0 0 0px rgba(0, 200, 200, 0)",
+          }}
+          transition={{
+            duration: isListening ? 1 : 2,
+            repeat: Infinity,
+          }}
+        >
+          <div className="text-3xl">✨</div>
+        </motion.div>
+        
+        {/* Status text */}
+        <motion.div
+          className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs font-medium whitespace-nowrap"
+          animate={{
+            opacity: isActive ? 1 : 0.5,
+          }}
+        >
+          {isListening ? "Listening..." : isActive ? "Ready" : "Idle"}
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
 // ── Save to Journal button ───────────────────────────────────────────────────
 
 function SaveToJournalButton({ sessionId }: { sessionId: number }) {
@@ -331,7 +411,7 @@ export default function Voice() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
           <AnimatePresence>
             {messages.map((msg) => (
               <motion.div
@@ -399,6 +479,13 @@ export default function Voice() {
         {status === "ended" && sessionId && (
           <div className="mx-4 mb-4">
             <SaveToJournalButton sessionId={sessionId} />
+          </div>
+        )}
+
+        {/* Glowing Orb */}
+        {status === "live" && (
+          <div className="px-4 pt-2">
+            <GlowingOrb status={status} isMuted={isMuted} />
           </div>
         )}
 
