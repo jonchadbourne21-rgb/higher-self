@@ -65,73 +65,98 @@ function GlowingOrb({ status, isMuted }: { status: Status; isMuted: boolean }) {
   const isListening = isActive && !isMuted;
   
   return (
-    <div className="flex justify-center mb-6">
-      <div className="relative w-24 h-24">
-        {/* Outer glow rings */}
+    <div className="flex justify-center mb-8">
+      <div className="relative w-32 h-32">
+        {/* Outer expanding rings */}
         {isActive && (
           <>
+            {/* Ring 1 - Outermost */}
             <motion.div
-              className="absolute inset-0 rounded-full border-2 border-primary/40"
+              className="absolute inset-0 rounded-full border border-cyan-400/30"
               animate={{
-                scale: [1, 1.3],
-                opacity: [0.5, 0],
+                scale: [1, 1.4],
+                opacity: [0.6, 0],
+              }}
+              transition={{
+                duration: 2.5,
+                repeat: Infinity,
+                ease: "easeOut",
+              }}
+            />
+            {/* Ring 2 - Mid */}
+            <motion.div
+              className="absolute inset-0 rounded-full border border-cyan-400/50"
+              animate={{
+                scale: [1, 1.25],
+                opacity: [0.8, 0],
               }}
               transition={{
                 duration: 2,
                 repeat: Infinity,
+                ease: "easeOut",
               }}
             />
+            {/* Ring 3 - Inner */}
             <motion.div
-              className="absolute inset-0 rounded-full border-2 border-primary/60"
+              className="absolute inset-0 rounded-full border border-cyan-300/70"
               animate={{
-                scale: [1, 1.15],
-                opacity: [0.7, 0],
+                scale: [1, 1.1],
+                opacity: [1, 0.2],
               }}
               transition={{
                 duration: 1.5,
                 repeat: Infinity,
+                ease: "easeOut",
               }}
             />
           </>
         )}
         
-        {/* Main orb */}
+        {/* Main orb - Bright cyan center */}
         <motion.div
           className={`absolute inset-0 rounded-full flex items-center justify-center ${
             isListening
-              ? "bg-gradient-to-br from-primary to-primary/60"
+              ? "bg-gradient-to-br from-cyan-300 via-cyan-400 to-cyan-500"
               : isActive
-              ? "bg-gradient-to-br from-primary/80 to-primary/40"
-              : "bg-gradient-to-br from-muted to-muted/60"
+              ? "bg-gradient-to-br from-cyan-400/90 via-cyan-500/80 to-cyan-600/70"
+              : "bg-gradient-to-br from-slate-600 to-slate-700"
           }`}
           animate={{
-            scale: isListening ? [1, 1.05] : 1,
+            scale: isListening ? [1, 1.08] : 1,
             boxShadow: isListening
               ? [
-                  "0 0 20px rgba(0, 200, 200, 0.5)",
-                  "0 0 40px rgba(0, 200, 200, 0.8)",
-                  "0 0 20px rgba(0, 200, 200, 0.5)",
+                  "0 0 30px rgba(34, 211, 238, 0.6), inset 0 0 20px rgba(34, 211, 238, 0.3)",
+                  "0 0 60px rgba(34, 211, 238, 1), inset 0 0 30px rgba(34, 211, 238, 0.5)",
+                  "0 0 30px rgba(34, 211, 238, 0.6), inset 0 0 20px rgba(34, 211, 238, 0.3)",
                 ]
               : isActive
-              ? ["0 0 15px rgba(0, 200, 200, 0.3)", "0 0 25px rgba(0, 200, 200, 0.5)", "0 0 15px rgba(0, 200, 200, 0.3)"]
-              : "0 0 0px rgba(0, 200, 200, 0)",
+              ? [
+                  "0 0 20px rgba(34, 211, 238, 0.4), inset 0 0 15px rgba(34, 211, 238, 0.2)",
+                  "0 0 40px rgba(34, 211, 238, 0.6), inset 0 0 25px rgba(34, 211, 238, 0.3)",
+                  "0 0 20px rgba(34, 211, 238, 0.4), inset 0 0 15px rgba(34, 211, 238, 0.2)",
+                ]
+              : "0 0 0px rgba(34, 211, 238, 0)",
           }}
           transition={{
-            duration: isListening ? 1 : 2,
+            duration: isListening ? 1.2 : 2.5,
             repeat: Infinity,
+            ease: "easeInOut",
           }}
         >
-          <div className="text-3xl">✨</div>
+          {/* Inner bright spot */}
+          <div className="absolute w-8 h-8 bg-white rounded-full blur-sm opacity-40" />
+          <div className="absolute w-4 h-4 bg-cyan-100 rounded-full blur-xs opacity-60" />
         </motion.div>
         
         {/* Status text */}
         <motion.div
-          className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs font-medium whitespace-nowrap"
+          className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-xs font-semibold whitespace-nowrap tracking-wider"
           animate={{
-            opacity: isActive ? 1 : 0.5,
+            opacity: isActive ? 1 : 0.4,
+            color: isListening ? "#22d3ee" : isActive ? "#06b6d4" : "#64748b",
           }}
         >
-          {isListening ? "Listening..." : isActive ? "Ready" : "Idle"}
+          {isListening ? "LISTENING" : isActive ? "READY" : "IDLE"}
         </motion.div>
       </div>
     </div>
