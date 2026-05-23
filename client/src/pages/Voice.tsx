@@ -104,6 +104,18 @@ function SaveToJournalButton({ sessionId }: { sessionId: number }) {
 
 // ── Main Voice Component ───────────────────────────────────────────────────────
 
+// Voice configuration options
+const VOICE_OPTIONS = {
+  female: {
+    id: "bd241668-01df-4d8b-90ea-c55448f8a6fa",
+    label: "Female (Casual Podcast Host)",
+  },
+  male: {
+    id: "65b1e86f-f43c-40f6-86e6-12bfc5ca052b",
+    label: "Male",
+  },
+};
+
 export default function Voice() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
@@ -113,6 +125,7 @@ export default function Voice() {
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [killSwitch, setKillSwitch] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useState<"female" | "male">("female");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -216,14 +229,15 @@ export default function Voice() {
       const { sessionId: sid } = await createSessionMut.mutateAsync();
       setSessionId(sid);
 
-      // 3. Connect using Hume SDK with casual podcast host voice
-      console.log("[Voice] Connecting to Hume EVI with config:", configId);
+      // 3. Connect using Hume SDK with selected voice
+      const selectedVoiceConfig = VOICE_OPTIONS[selectedVoice];
+      console.log("[Voice] Connecting to Hume EVI with voice:", selectedVoice, selectedVoiceConfig.id);
       const connectOptions: any = {
         auth: { type: "apiKey", value: apiKey },
         hostname: "api.hume.ai",
       };
-      // Use the casual podcast host configuration
-      connectOptions.sessionSettings = { configId: "bd241668-01df-4d8b-90ea-c55448f8a6fa" };
+      // Use the selected voice configuration
+      connectOptions.sessionSettings = { configId: selectedVoiceConfig.id };
       await connect(connectOptions);
 
       setStatus("live");
@@ -235,7 +249,7 @@ export default function Voice() {
       setStatus("error");
       toast.error(`Failed to connect: ${errorMsg}`);
     }
-  }, [user, connect, mintTokenMut, createSessionMut]);
+  }, [user, connect, mintTokenMut, createSessionMut, selectedVoice]);
 
   const handleDisconnect = useCallback(() => {
     disconnect();
@@ -247,6 +261,14 @@ export default function Voice() {
     setIsMuted(!isMuted);
     // Hume SDK handles mic state internally
   }, [isMuted]);
+
+  const handleVoiceChange = (voice: "female" | "male") => {
+    if (status === "idle" || status === "ended" || status === "error") {
+      setSelectedVoice(voice);
+    } else {
+      toast.error("Cannot change voice while connected. Please disconnect first.");
+    }
+  };
 
   if (!user) {
     return (
@@ -274,13 +296,33 @@ export default function Voice() {
             Back
           </button>
           <h1 className="text-xl font-semibold">AI Coach</h1>
-          <button
-            onClick={() => setLocation("/voice/history")}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <History className="w-5 h-5" />
-            History
-          </button>
+          <div className="flex items-center gap-3">
+            {status === "idle" && (
+              <div className="flex items-center gap-1 bg-background/50 rounded-lg p-1 border border-border/50">
+                {Object.entries(VOICE_OPTIONS).map(([key, value]) => (
+                  <button
+                    key={key}
+                    onClick={() => handleVoiceChange(key as "female" | "male")}
+                    className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                      selectedVoice === key
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                    title={value.label}
+                  >
+                    {key === "female" ? "♀" : "♂"}
+                  </button>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => setLocation("/voice/history")}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <History className="w-5 h-5" />
+              History
+            </button>
+          </div>
         </div>
 
         {/* Messages */}
