@@ -653,7 +653,7 @@ export const appRouter = router({
 
         // Generate AI perspective asynchronously
         try {
-          const systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id);
+          const systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id, ctx.user.seedIntent || undefined);
           // Route to Claude Sonnet for user-facing reflection
           const aiRes = await invokeLLM({
             messages: [
@@ -996,7 +996,7 @@ Rules:
         getUserProfile(ctx.user.id),
       ]);
 
-      const systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id);
+      const systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id, ctx.user.seedIntent || undefined);
 
       const contextStr = `
 Recent check-ins (${recentCheckIns.length} this week):
