@@ -232,13 +232,18 @@ export default function Voice() {
       // 3. Connect using Hume SDK with selected voice
       const selectedVoiceConfig = VOICE_OPTIONS[selectedVoice];
       console.log("[Voice] Connecting to Hume EVI with voice:", selectedVoice, selectedVoiceConfig.id);
-      const connectOptions: any = {
-        auth: { type: "apiKey", value: apiKey },
+      const connectOptions = {
+        auth: { type: "apiKey" as const, value: apiKey },
         hostname: "api.hume.ai",
+        configId, // Use the config ID from server
       };
-      // Use the selected voice configuration
-      connectOptions.sessionSettings = { configId: selectedVoiceConfig.id };
-      await connect(connectOptions);
+      // Pass voice ID via sessionSettings (system prompt will be sent by v2vRelay)
+      const sessionSettings = {
+        voice: {
+          id: selectedVoiceConfig.id,
+        },
+      };
+      await (connect as any)(connectOptions, sessionSettings);
 
       setStatus("live");
       toast.success("Connected to your AI Coach");
