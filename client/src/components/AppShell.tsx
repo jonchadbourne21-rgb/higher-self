@@ -128,7 +128,7 @@ export default function AppShell({ children, noScroll }: AppShellProps) {
 
       {/* Main content — inner scroll only */}
       <main
-        className={noScroll ? "flex-1 overflow-hidden" : "flex-1 overflow-y-auto pb-24 scrollbar-hide"}
+        className={noScroll ? "flex-1 overflow-hidden" : "flex-1 overflow-y-auto scrollbar-hide"}
         onScroll={noScroll ? undefined : handleScroll}
       >
         {children}
