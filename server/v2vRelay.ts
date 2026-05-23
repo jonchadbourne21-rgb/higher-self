@@ -19,6 +19,10 @@ import { WebSocketServer, WebSocket } from "ws";
 import { getDb } from "./db";
 import { v2vSessions, v2vMessages } from "../drizzle/schema";
 import { randomUUID } from "crypto";
+import { getUserProfile, getRecentCheckIns, getLatestDomainScores } from "./db";
+import { buildIntentSpecificPrompt } from "./intentPrompts";
+import { users } from "../drizzle/schema";
+import { eq } from "drizzle-orm";
 
 // ─── Env ─────────────────────────────────────────────────────────────────────
 
@@ -61,6 +65,51 @@ function top3Emotions(scores: Record<string, number> | undefined): Emotion[] {
 }
 
 // ─── DB persistence ──────────────────────────────────────────────────────────
+
+// ─── Build dynamic system prompt for voice sessions ──────────────────────────
+
+async function buildVoiceSystemPrompt(userId: number): Promise<string> {
+  try {
+    const db = await getDb();
+    if (!db) throw new Error("Database unavailable");
+    
+    const profile = await getUserProfile(userId);
+    const recentCheckIns = await getRecentCheckIns(userId, 7);
+    const domainScores = await getLatestDomainScores(userId);
+    
+    // Fetch seedIntent from users table
+    const userResult = await db.select({ seedIntent: users.seedIntent }).from(users).where(eq(users.id, userId)).limit(1);
+    const seedIntent = userResult[0]?.seedIntent || "Inner Peace";
+    
+    const valuesStr = profile?.coreValues?.join(", ") || "not yet defined";
+    const goalsStr = profile?.shortTermGoals || "not yet set";
+    const visionStr = profile?.longTermVision || "not yet defined";
+    const beliefsStr = profile?.beliefs || "not yet shared";
+    const name = profile?.preferredName || "friend";
+    
+    const avgMood = recentCheckIns.length > 0
+      ? Math.round(recentCheckIns.reduce((sum, c) => sum + c.mood, 0) / recentCheckIns.length)
+      : "not yet assessed";
+    
+    const domainStr = domainScores
+      .map((d) => `${d!.domain}: ${d!.score}/10`)
+      .join(", ");
+    
+    return buildIntentSpecificPrompt(seedIntent, {
+      name,
+      valuesStr,
+      goalsStr,
+      visionStr,
+      beliefsStr,
+      avgMood: avgMood.toString(),
+      domainStr: domainStr || "not yet assessed",
+    });
+  } catch (err) {
+    console.error("[v2v-relay] Failed to build voice system prompt:", err);
+    // Fallback to minimal prompt
+    return `You are Mentrove, an AI mirror for personal growth. Speak with authentic compassion and uncompromising honesty. Match the user's tone and vocabulary. Ask powerful questions. Keep responses concise. No toxic positivity.`;
+  }
+}
 
 async function createSession(userId: number): Promise<number | null> {
   const db = await getDb();
@@ -139,7 +188,23 @@ export function attachV2VRelay(server: HttpServer): void {
       return;
     }
 
-    upstream.on("open", () => {
+    upstream.on("open", async () => {
+      // Send dynamic system prompt via session_settings
+      try {
+        const systemPrompt = await buildVoiceSystemPrompt(userId);
+        const sessionSettings = {
+          type: "session_settings",
+          session_settings: {
+            prompt: {
+              text: systemPrompt,
+            },
+          },
+        };
+        upstream?.send(JSON.stringify(sessionSettings));
+        console.log("[v2v-relay] Sent dynamic system prompt to Hume");
+      } catch (err) {
+        console.error("[v2v-relay] Failed to send session_settings:", err);
+      }
       clientWs.send(JSON.stringify({ type: "relay_status", status: "connected" }));
     });
 
