@@ -3,7 +3,6 @@ import { trpc } from "@/lib/trpc";
 import { motion } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
 import { useLocation, Link } from "wouter";
-import AppShell from "@/components/AppShell";
 import { Sparkles, Sun, Moon, Bell, User, ChevronRight } from "lucide-react";
 import WelcomeSpinModal from "@/components/WelcomeSpinModal";
 import { format } from "date-fns";
@@ -235,8 +234,7 @@ export default function Home() {
 
   return (
     <>
-      <AppShell>
-        <div className="px-4 pt-2 pb-2 space-y-2">
+      <div className="px-4 pt-2 pb-2 space-y-2">
 
           {/* ── Greeting header ─────────────────────────────────────────── */}
           <motion.div
@@ -594,9 +592,7 @@ export default function Home() {
             </Link>
           </motion.div>
 
-        </div>
-      </AppShell>
-
+      </div>
       {/* Welcome spin modal */}
       <WelcomeSpinModal open={showWelcomeSpin} onClose={() => setShowWelcomeSpin(false)} />
     </>

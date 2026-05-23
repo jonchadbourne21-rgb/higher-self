@@ -246,7 +246,7 @@ export default function Voice() {
       await (connect as any)(connectOptions, sessionSettings);
 
       setStatus("live");
-      toast.success("Connected to your AI Coach");
+      toast.success("Connected to your Mirror");
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       console.error("[Voice] Connection failed:", errorMsg);
@@ -300,7 +300,7 @@ export default function Voice() {
             <ArrowLeft className="w-5 h-5" />
             Back
           </button>
-          <h1 className="text-xl font-semibold">AI Coach</h1>
+          <h1 className="text-xl font-semibold">Mirror</h1>
           <div className="flex items-center gap-3">
             {status === "idle" && (
               <div className="flex items-center gap-1 bg-background/50 rounded-lg p-1 border border-border/50">

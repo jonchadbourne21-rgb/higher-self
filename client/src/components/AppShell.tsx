@@ -18,7 +18,7 @@ import MentroveHeader from "./MentroveHeader";
 const navItems = [
   { path: "/home", icon: Home, label: "Dashboard" },
   { path: "/domains", icon: Flame, label: "Habits" },
-  { path: "/chat", icon: Sparkles, label: "AI Coach" },
+  { path: "/chat", icon: Sparkles, label: "Mirror" },
   { path: "/journal", icon: BookOpen, label: "Journal" },
   { path: "/programs", icon: GraduationCap, label: "Programs" },
 ];
@@ -34,7 +34,7 @@ function haptic(ms = 8) {
 
 /** Get subtitle for the header based on current page */
 function getSubtitle(path: string): string {
-  if (path.startsWith("/chat")) return "AI MIRROR";
+  if (path.startsWith("/chat")) return "MIRROR";
   if (path.startsWith("/domains")) return "HABIT TRACKER";
   if (path.startsWith("/journal")) return "JOURNAL";
   if (path.startsWith("/dashboard")) return "DASHBOARD";

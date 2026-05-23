@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { VoiceProvider } from "@humeai/voice-react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import AppShell from "./components/AppShell";
 import Landing from "./pages/Landing";
 import Onboarding from "./pages/Onboarding";
 import Home from "./pages/Home";
@@ -38,7 +39,7 @@ import { usePageMetadata } from "@/lib/metadata";
 import { injectStructuredData } from "@/lib/structuredData";
 
 // Tab order — used to determine slide direction
-const TAB_ORDER = ["/home", "/domains", "/chat", "/journal", "/calendar", "/dashboard"];
+const TAB_ORDER = ["/home", "/domains", "/chat", "/journal", "/programs", "/dashboard"];
 
 function getTabIndex(path: string) {
   return TAB_ORDER.findIndex(
@@ -56,7 +57,7 @@ function makeVariants(direction: number) {
   };
 }
 
-function AnimatedRouter() {
+function AuthenticatedRouter() {
   const [location] = useLocation();
   
   // Update meta tags on route change
@@ -81,54 +82,83 @@ function AnimatedRouter() {
 
   const variants = makeVariants(directionRef.current);
 
+  // Check if we're on an authenticated route that needs AppShell
+  const isAuthenticatedRoute = !["/", "/onboarding", "/quick-onboarding", "/full-onboarding", "/faq", "/privacy", "/terms", "/pricing"].includes(location);
+
   return (
-    // overflow-hidden on the outer wrapper prevents the sliding page from
-    // being visible outside the viewport during the transition
-    <div className="overflow-hidden w-full">
-      <AnimatePresence mode="popLayout" initial={false}>
-        <motion.div
-          key={location}
-          variants={variants}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          transition={{ type: "spring", stiffness: 340, damping: 34, mass: 0.9 }}
-          style={{ willChange: "transform, opacity" }}
-        >
-          <Switch location={location}>
-            <Route path="/" component={Landing} />
-            <Route path="/onboarding" component={Onboarding} />
-            <Route path="/quick-onboarding" component={QuickOnboarding} />
-            <Route path="/full-onboarding" component={FullOnboarding} />
-            <Route path="/home" component={Home} />
-            <Route path="/checkin" component={CheckIn} />
-            <Route path="/check-in-insight" component={CheckInInsight} />
-            <Route path="/chat" component={Chat} />
-            <Route path="/journal" component={Journal} />
-            <Route path="/journal/:id" component={JournalEntry} />
-            <Route path="/domains" component={Domains} />
-            <Route path="/dashboard" component={Dashboard} />
-            <Route path="/timeline" component={Timeline} />
-            <Route path="/insights" component={Insights} />
-            <Route path="/notifications" component={Notifications} />
-            <Route path="/settings" component={Settings} />
-            <Route path="/calendar" component={Calendar} />
-            <Route path="/pricing" component={Pricing} />
-            <Route path="/rewards" component={Rewards} />
-            <Route path="/programs" component={Programs} />
-            <Route path="/programs/:id" component={ProgramDetail} />
-            <Route path="/programs/:id/insight/:day" component={ProgramInsight} />
-            <Route path="/voice" component={Voice} />
-            <Route path="/voice/history" component={VoiceHistory} />
-            <Route path="/faq" component={FAQ} />
-            <Route path="/privacy" component={Privacy} />
-            <Route path="/terms" component={Terms} />
-            <Route path="/404" component={NotFound} />
-            <Route component={NotFound} />
-          </Switch>
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <>
+      {isAuthenticatedRoute ? (
+        <AppShell>
+          {/* overflow-hidden on the outer wrapper prevents the sliding page from
+              being visible outside the viewport during the transition */}
+          <div className="overflow-hidden w-full">
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.div
+                key={location}
+                variants={variants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ type: "spring", stiffness: 340, damping: 34, mass: 0.9 }}
+                style={{ willChange: "transform, opacity" }}
+              >
+                <Switch location={location}>
+                  <Route path="/home" component={Home} />
+                  <Route path="/checkin" component={CheckIn} />
+                  <Route path="/check-in-insight" component={CheckInInsight} />
+                  <Route path="/chat" component={Chat} />
+                  <Route path="/journal" component={Journal} />
+                  <Route path="/journal/:id" component={JournalEntry} />
+                  <Route path="/domains" component={Domains} />
+                  <Route path="/dashboard" component={Dashboard} />
+                  <Route path="/timeline" component={Timeline} />
+                  <Route path="/insights" component={Insights} />
+                  <Route path="/notifications" component={Notifications} />
+                  <Route path="/settings" component={Settings} />
+                  <Route path="/calendar" component={Calendar} />
+                  <Route path="/rewards" component={Rewards} />
+                  <Route path="/programs" component={Programs} />
+                  <Route path="/programs/:id" component={ProgramDetail} />
+                  <Route path="/programs/:id/insight/:day" component={ProgramInsight} />
+                  <Route path="/voice" component={Voice} />
+                  <Route path="/voice/history" component={VoiceHistory} />
+                  <Route path="/404" component={NotFound} />
+                  <Route component={NotFound} />
+                </Switch>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </AppShell>
+      ) : (
+        /* Non-authenticated routes without AppShell */
+        <div className="overflow-hidden w-full">
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div
+              key={location}
+              variants={variants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ type: "spring", stiffness: 340, damping: 34, mass: 0.9 }}
+              style={{ willChange: "transform, opacity" }}
+            >
+              <Switch location={location}>
+                <Route path="/" component={Landing} />
+                <Route path="/onboarding" component={Onboarding} />
+                <Route path="/quick-onboarding" component={QuickOnboarding} />
+                <Route path="/full-onboarding" component={FullOnboarding} />
+                <Route path="/faq" component={FAQ} />
+                <Route path="/privacy" component={Privacy} />
+                <Route path="/terms" component={Terms} />
+                <Route path="/pricing" component={Pricing} />
+                <Route path="/404" component={NotFound} />
+                <Route component={NotFound} />
+              </Switch>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -153,7 +183,7 @@ function App() {
                 },
               }}
             />
-            <AnimatedRouter />
+            <AuthenticatedRouter />
           </TooltipProvider>
         </ThemeProvider>
       </VoiceProvider>
