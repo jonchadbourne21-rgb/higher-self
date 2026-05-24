@@ -71,6 +71,7 @@ function GlowingOrb({
 }) {
   const isActive = status === "live";
   const isListening = isActive && !isMuted;
+  const hasAudio = audioLevel > 0.05; // Only consider it audio if above threshold
   
   // Scale rings based on audio level (0-1)
   const audioScale = 1 + audioLevel * 0.3; // Max 1.3x scale
@@ -79,18 +80,18 @@ function GlowingOrb({
   return (
     <div className="flex justify-center mb-8">
       <div className="relative w-32 h-32">
-        {/* Outer expanding rings - animated by audio level */}
-        {isActive && (
+        {/* Outer expanding rings - only animate when there's audio */}
+        {isActive && isListening && hasAudio && (
           <>
             {/* Ring 1 - Outermost - responds to audio */}
             <motion.div
               className="absolute inset-0 rounded-full border border-cyan-400/30"
               animate={{
-                scale: isListening ? [1, audioScale * 1.4] : [1, 1.4],
-                opacity: isListening ? [audioOpacity * 0.6, 0] : [0.6, 0],
+                scale: [1, audioScale * 1.4],
+                opacity: [audioOpacity * 0.6, 0],
               }}
               transition={{
-                duration: isListening ? 1.2 : 2.5,
+                duration: 1.2,
                 repeat: Infinity,
                 ease: "easeOut",
               }}
@@ -99,11 +100,11 @@ function GlowingOrb({
             <motion.div
               className="absolute inset-0 rounded-full border border-cyan-400/50"
               animate={{
-                scale: isListening ? [1, audioScale * 1.25] : [1, 1.25],
-                opacity: isListening ? [audioOpacity * 0.8, 0] : [0.8, 0],
+                scale: [1, audioScale * 1.25],
+                opacity: [audioOpacity * 0.8, 0],
               }}
               transition={{
-                duration: isListening ? 1.0 : 2,
+                duration: 1.0,
                 repeat: Infinity,
                 ease: "easeOut",
               }}
@@ -112,11 +113,11 @@ function GlowingOrb({
             <motion.div
               className="absolute inset-0 rounded-full border border-cyan-300/70"
               animate={{
-                scale: isListening ? [1, audioScale * 1.1] : [1, 1.1],
-                opacity: isListening ? [audioOpacity, 0.2] : [1, 0.2],
+                scale: [1, audioScale * 1.1],
+                opacity: [audioOpacity, 0.2],
               }}
               transition={{
-                duration: isListening ? 0.8 : 1.5,
+                duration: 0.8,
                 repeat: Infinity,
                 ease: "easeOut",
               }}
@@ -127,15 +128,15 @@ function GlowingOrb({
         {/* Main orb - Bright cyan center */}
         <motion.div
           className={`absolute inset-0 rounded-full flex items-center justify-center ${
-            isListening
+            isListening && hasAudio
               ? "bg-gradient-to-br from-cyan-300 via-cyan-400 to-cyan-500"
               : isActive
               ? "bg-gradient-to-br from-cyan-400/90 via-cyan-500/80 to-cyan-600/70"
               : "bg-gradient-to-br from-slate-600 to-slate-700"
           }`}
           animate={{
-            scale: isListening ? [1, 1.08 + audioLevel * 0.05] : 1,
-            boxShadow: isListening
+            scale: isListening && hasAudio ? [1, 1.08 + audioLevel * 0.05] : 1,
+            boxShadow: isListening && hasAudio
               ? [
                   "0 0 30px rgba(34, 211, 238, 0.6), inset 0 0 20px rgba(34, 211, 238, 0.3)",
                   "0 0 60px rgba(34, 211, 238, 1), inset 0 0 30px rgba(34, 211, 238, 0.5)",
@@ -150,8 +151,8 @@ function GlowingOrb({
               : "0 0 0px rgba(34, 211, 238, 0)",
           }}
           transition={{
-            duration: isListening ? 0.3 : 2.5,
-            repeat: Infinity,
+            duration: isListening && hasAudio ? 0.3 : 2.5,
+            repeat: isListening && hasAudio ? Infinity : 0,
             ease: "easeInOut",
           }}
         >
