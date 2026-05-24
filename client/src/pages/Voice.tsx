@@ -396,47 +396,25 @@ export default function Voice() {
   return (
     <AppShell>
       <div className="flex flex-col h-screen bg-background">
-        {/* Header */}
+        {/* Minimal Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <button
             onClick={() => setLocation("/")}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            Back
           </button>
-          <h1 className="text-xl font-semibold">Mirror</h1>
-          <div className="flex items-center gap-3">
-            {status === "idle" && (
-              <div className="flex items-center gap-1 bg-background/50 rounded-lg p-1 border border-border/50">
-                {Object.entries(VOICE_OPTIONS).map(([key, value]) => (
-                  <button
-                    key={key}
-                    onClick={() => handleVoiceChange(key as "female" | "male")}
-                    className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                      selectedVoice === key
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                    title={value.label}
-                  >
-                    {key === "female" ? "♀" : "♂"}
-                  </button>
-                ))}
-              </div>
-            )}
-            <button
-              onClick={() => setLocation("/voice/history")}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <History className="w-5 h-5" />
-              History
-            </button>
-          </div>
+          <h1 className="text-lg font-semibold">Mirror</h1>
+          <button
+            onClick={() => setLocation("/voice/history")}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <History className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <AnimatePresence>
             {messages.map((msg) => (
               <motion.div
@@ -507,58 +485,97 @@ export default function Voice() {
           </div>
         )}
 
-        {/* Glowing Orb */}
-        {status === "live" && (
-          <div className="px-4 pt-2">
-            <GlowingOrb status={status} isMuted={isMuted} />
-          </div>
-        )}
-
-        {/* Controls */}
-        <div className="p-4 border-t border-border space-y-3">
-          {status === "idle" || status === "error" || status === "ended" || status === "connecting" ? (
-            <Button
-              onClick={handleConnect}
-              disabled={status === "connecting"}
-              className="w-full h-12 text-lg"
+        {/* Center Section: Orb, Voice Selection, and Start Button */}
+        <div className="flex-1 flex flex-col items-center justify-center px-4 pb-40">
+          {/* Glowing Orb - only show when live */}
+          {status === "live" && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
             >
-                {status === "connecting" ? "Connecting..." : "Start New Session"}
-            </Button>
+              <GlowingOrb status={status} isMuted={isMuted} />
+            </motion.div>
+          )}
+
+          {/* Voice Selection - only show when idle */}
+          {(status === "idle" || status === "error" || status === "ended") && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="mb-8 flex items-center gap-2 bg-background/50 rounded-full p-1 border border-border/50"
+            >
+              {Object.entries(VOICE_OPTIONS).map(([key, value]) => (
+                <button
+                  key={key}
+                  onClick={() => handleVoiceChange(key as "female" | "male")}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    selectedVoice === key
+                      ? "bg-primary text-primary-foreground shadow-lg"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }`}
+                  title={value.label}
+                >
+                  {key === "female" ? "♀ Female" : "♂ Male"}
+                </button>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Start/Control Button */}
+          {status === "idle" || status === "error" || status === "ended" || status === "connecting" ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="w-full max-w-xs"
+            >
+              <Button
+                onClick={handleConnect}
+                disabled={status === "connecting"}
+                className="w-full h-14 text-lg font-semibold rounded-full"
+              >
+                {status === "connecting" ? "Connecting..." : "Start Session"}
+              </Button>
+            </motion.div>
           ) : status === "live" ? (
-            <div className="flex gap-3">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="flex gap-3 w-full max-w-xs"
+            >
               <Button
                 onClick={handleToggleMic}
                 variant={isMuted ? "destructive" : "default"}
-                className="flex-1 h-12"
+                className="flex-1 h-12 rounded-full"
               >
                 {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
               </Button>
               <Button
                 onClick={handleDisconnect}
                 variant="destructive"
-                className="flex-1 h-12"
+                className="flex-1 h-12 rounded-full"
               >
                 <PhoneOff className="w-5 h-5" />
-                End
               </Button>
-            </div>
-          ) : (
-            <Button
-              onClick={handleConnect}
-              className="w-full h-12 text-lg"
+            </motion.div>
+          ) : null}
+
+          {/* Live Status Indicator */}
+          {status === "live" && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="mt-8 flex items-center justify-center gap-2 text-sm text-emerald-400"
             >
-              Start New Session
-            </Button>
+              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+              Live
+            </motion.div>
           )}
         </div>
-
-        {/* Status Indicator */}
-        {status === "live" && (
-          <div className="flex items-center justify-center gap-2 py-2 text-sm text-emerald-400">
-            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-            Live
-          </div>
-        )}
       </div>
     </AppShell>
   );
