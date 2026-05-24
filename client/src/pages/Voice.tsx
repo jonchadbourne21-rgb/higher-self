@@ -58,53 +58,65 @@ function emotionColor(name: string): string {
   return "bg-primary/20 text-primary";
 }
 
-// ── Glowing Orb Component ────────────────────────────────────────────────────
+// ── Glowing Orb Component with Audio Visualization ────────────────────────────
 
-function GlowingOrb({ status, isMuted }: { status: Status; isMuted: boolean }) {
+function GlowingOrb({ 
+  status, 
+  isMuted,
+  audioLevel = 0 
+}: { 
+  status: Status; 
+  isMuted: boolean;
+  audioLevel?: number;
+}) {
   const isActive = status === "live";
   const isListening = isActive && !isMuted;
+  
+  // Scale rings based on audio level (0-1)
+  const audioScale = 1 + audioLevel * 0.3; // Max 1.3x scale
+  const audioOpacity = 0.3 + audioLevel * 0.5; // 0.3 to 0.8
   
   return (
     <div className="flex justify-center mb-8">
       <div className="relative w-32 h-32">
-        {/* Outer expanding rings */}
+        {/* Outer expanding rings - animated by audio level */}
         {isActive && (
           <>
-            {/* Ring 1 - Outermost */}
+            {/* Ring 1 - Outermost - responds to audio */}
             <motion.div
               className="absolute inset-0 rounded-full border border-cyan-400/30"
               animate={{
-                scale: [1, 1.4],
-                opacity: [0.6, 0],
+                scale: isListening ? [1, audioScale * 1.4] : [1, 1.4],
+                opacity: isListening ? [audioOpacity * 0.6, 0] : [0.6, 0],
               }}
               transition={{
-                duration: 2.5,
+                duration: isListening ? 1.2 : 2.5,
                 repeat: Infinity,
                 ease: "easeOut",
               }}
             />
-            {/* Ring 2 - Mid */}
+            {/* Ring 2 - Mid - responds to audio */}
             <motion.div
               className="absolute inset-0 rounded-full border border-cyan-400/50"
               animate={{
-                scale: [1, 1.25],
-                opacity: [0.8, 0],
+                scale: isListening ? [1, audioScale * 1.25] : [1, 1.25],
+                opacity: isListening ? [audioOpacity * 0.8, 0] : [0.8, 0],
               }}
               transition={{
-                duration: 2,
+                duration: isListening ? 1.0 : 2,
                 repeat: Infinity,
                 ease: "easeOut",
               }}
             />
-            {/* Ring 3 - Inner */}
+            {/* Ring 3 - Inner - responds to audio */}
             <motion.div
               className="absolute inset-0 rounded-full border border-cyan-300/70"
               animate={{
-                scale: [1, 1.1],
-                opacity: [1, 0.2],
+                scale: isListening ? [1, audioScale * 1.1] : [1, 1.1],
+                opacity: isListening ? [audioOpacity, 0.2] : [1, 0.2],
               }}
               transition={{
-                duration: 1.5,
+                duration: isListening ? 0.8 : 1.5,
                 repeat: Infinity,
                 ease: "easeOut",
               }}
@@ -122,7 +134,7 @@ function GlowingOrb({ status, isMuted }: { status: Status; isMuted: boolean }) {
               : "bg-gradient-to-br from-slate-600 to-slate-700"
           }`}
           animate={{
-            scale: isListening ? [1, 1.08] : 1,
+            scale: isListening ? [1, 1.08 + audioLevel * 0.05] : 1,
             boxShadow: isListening
               ? [
                   "0 0 30px rgba(34, 211, 238, 0.6), inset 0 0 20px rgba(34, 211, 238, 0.3)",
@@ -138,7 +150,7 @@ function GlowingOrb({ status, isMuted }: { status: Status; isMuted: boolean }) {
               : "0 0 0px rgba(34, 211, 238, 0)",
           }}
           transition={{
-            duration: isListening ? 1.2 : 2.5,
+            duration: isListening ? 0.3 : 2.5,
             repeat: Infinity,
             ease: "easeInOut",
           }}
@@ -231,8 +243,11 @@ export default function Voice() {
   const [killSwitch, setKillSwitch] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState<"female" | "male">("female");
+  const [audioLevel, setAudioLevel] = useState(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const audioLevelRef = useRef(0);
+  const audioDecayIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Hume SDK hooks
   const {
@@ -251,7 +266,25 @@ export default function Voice() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Monitor Hume SDK messages and sync to local state
+  // Audio level decay effect - gradually reduce audio level when no new messages
+  useEffect(() => {
+    if (audioDecayIntervalRef.current) {
+      clearInterval(audioDecayIntervalRef.current);
+    }
+
+    audioDecayIntervalRef.current = setInterval(() => {
+      audioLevelRef.current = Math.max(0, audioLevelRef.current - 0.05);
+      setAudioLevel(audioLevelRef.current);
+    }, 50);
+
+    return () => {
+      if (audioDecayIntervalRef.current) {
+        clearInterval(audioDecayIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Monitor Hume SDK messages and sync to local state + update audio level
   useEffect(() => {
     if (!humeMessages || humeMessages.length === 0) return;
 
@@ -264,6 +297,15 @@ export default function Voice() {
 
     // Avoid duplicates
     if (lastLocalMsg?.id === `hume-${msg.id}`) return;
+
+    // Update audio level based on message role and content length
+    // User messages (speaking) get higher audio levels
+    if (msg.role === "user") {
+      const contentLength = msg.message?.content?.length || 0;
+      const level = Math.min(1, contentLength / 100); // Normalize to 0-1
+      audioLevelRef.current = level;
+      setAudioLevel(level);
+    }
 
     const newMsg: Message = {
       id: `hume-${msg.id}`,
@@ -325,6 +367,8 @@ export default function Voice() {
     setErrorMsg(null);
     setMessages([]);
     setKillSwitch(false);
+    setAudioLevel(0);
+    audioLevelRef.current = 0;
 
     try {
       // 1. Get API key and config from server
@@ -364,6 +408,8 @@ export default function Voice() {
   const handleDisconnect = useCallback(() => {
     disconnect();
     setStatus("ended");
+    setAudioLevel(0);
+    audioLevelRef.current = 0;
     toast.success("Session ended");
   }, [disconnect]);
 
@@ -494,7 +540,7 @@ export default function Voice() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
             >
-              <GlowingOrb status={status} isMuted={isMuted} />
+              <GlowingOrb status={status} isMuted={isMuted} audioLevel={audioLevel} />
             </motion.div>
           )}
 
