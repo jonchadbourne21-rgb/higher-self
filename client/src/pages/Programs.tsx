@@ -65,23 +65,12 @@ export default function Programs() {
 
   return (
     <AppShell>
-      <div className="max-w-2xl mx-auto px-4 py-8 pb-28">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-5 h-5 text-primary" />
-            <span className="text-xs font-semibold text-primary uppercase tracking-widest">Growth Programs</span>
-          </div>
-          <h1 className="text-3xl font-bold text-foreground">Your Growth Path</h1>
-          <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-            Structured journeys designed to help you understand yourself more deeply — one day at a time.
-          </p>
-        </div>
+      <div className="max-w-2xl mx-auto px-4 py-4 pb-28">
 
         {/* In Progress */}
         {enrollments && enrollments.filter((e) => e.status !== "completed").length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">In Progress</h2>
+          <div className="mb-6">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 mt-2">In Progress</h2>
             <div className="space-y-3">
               {enrollments
                 .filter((e) => e.status !== "completed")

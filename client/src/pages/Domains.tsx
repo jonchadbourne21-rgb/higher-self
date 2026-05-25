@@ -233,13 +233,9 @@ export default function Domains() {
       )}
 
       <AppShell>
-      <div className="px-5 pt-8 pb-4 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-serif font-light">Positive Habits</h1>
-            <p className="text-xs text-muted-foreground mt-1">Track every dimension of your growth</p>
-          </div>
+      <div className="px-5 pt-4 pb-4 space-y-6">
+        {/* Add Habit button */}
+        <div className="flex justify-end">
           <button
             onClick={() => setShowAddHabit(true)}
             className="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-center hover:bg-primary/20 transition-all"

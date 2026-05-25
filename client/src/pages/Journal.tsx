@@ -216,13 +216,8 @@ export default function Journal() {
       <AppShell>
       <div className="px-5 pt-8 pb-24 space-y-5">
 
-        {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-serif font-light">Journal</h1>
-            <p className="text-xs text-muted-foreground mt-1">Your inner world, witnessed</p>
-          </div>
-          <div className="flex items-center gap-2">
+        {/* ── Category + New Entry buttons ─────────────────────────────────── */}
+        <div className="flex items-center justify-end gap-2 pt-4">
             <button
               onClick={() => setShowCategoryManager(true)}
               className="w-9 h-9 rounded-xl bg-secondary/60 border border-border/40 flex items-center justify-center hover:bg-secondary transition-all"
@@ -238,7 +233,6 @@ export default function Journal() {
               <Plus size={16} className="text-primary" />
             </button>
           </div>
-        </div>
 
         {/* ── Write New Entry CTA (always visible) ───────────────────────── */}
         <button
@@ -484,9 +478,11 @@ export default function Journal() {
           </div>
         )}
       </div>
+      </AppShell>
 
       {/* ── New Entry Full-Screen Modal (outside AppShell so it covers the nav) ── */}
-      <AnimatePresence>      {isCreating && (
+      <AnimatePresence>
+        {isCreating && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -760,6 +756,7 @@ export default function Journal() {
           </motion.div>
         )}
       </AnimatePresence>
+
       <UpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
@@ -773,7 +770,6 @@ export default function Journal() {
           toast.success(`You won: ${prize}!`);
         }}
       />
-    </AppShell>
     </>
   );
 }

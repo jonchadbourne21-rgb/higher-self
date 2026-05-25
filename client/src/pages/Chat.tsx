@@ -533,56 +533,9 @@ export default function Chat() {
   return (
     <AppShell noScroll>
       <div className="flex flex-col h-full">
-        {/* Header with tabs */}
+        {/* Tab navigation */}
         <div className="flex flex-col border-b border-border/30 flex-shrink-0">
-          {/* Title bar */}
-          <div className="px-5 pt-8 pb-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center glow-gold flex-shrink-0">
-                <span className="text-lg">✦</span>
-              </div>
-              <div>
-                <h1 className="text-base font-medium text-foreground">Your Mirror</h1>
-                {intentInfo ? (
-                  <span
-                    className="text-[11px] font-semibold px-2 py-0.5 rounded-full inline-block mt-0.5"
-                    style={{
-                      background: `${intentInfo.color}22`,
-                      color: intentInfo.color,
-                      border: `1px solid ${intentInfo.color}44`,
-                    }}
-                  >
-                    ✦ {intentInfo.label} Mode
-                  </span>
-                ) : (
-                  <p className="text-xs text-muted-foreground">Always present, always honest</p>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5">
-              {/* Voice Mirror button */}
-              <button
-                onClick={() => navigate("/voice")}
-                title="Switch to Voice Mirror"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-primary border border-primary/40 hover:bg-primary/10 transition-all"
-              >
-                <Phone className="w-3.5 h-3.5" />
-                Voice
-              </button>
-              {/* New conversation button */}
-              <button
-                onClick={() => setShowClearConfirm(true)}
-                title="Start a fresh conversation"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-muted-foreground border border-border/40 hover:border-primary/30 hover:text-primary transition-all"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                New
-              </button>
-            </div>
-          </div>
-
-          {/* Tab navigation */}
-          <div className="px-4 flex items-center gap-1 border-t border-border/20">
+          <div className="px-4 flex items-center gap-1 border-border/20">
             {[
               { id: "chat", label: "Chat", icon: MessageCircle },
               { id: "history", label: "History", icon: History },
