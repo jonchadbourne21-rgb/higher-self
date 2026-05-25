@@ -13,6 +13,7 @@ import Home from "./pages/Home";
 import CheckIn from "./pages/CheckIn";
 import CheckInInsight from "./pages/CheckInInsight";
 import Chat from "./pages/Chat";
+import Voice from "./pages/Voice";
 import Journal from "./pages/Journal";
 import JournalEntry from "./pages/JournalEntry";
 import Domains from "./pages/Domains";
@@ -32,7 +33,6 @@ import Rewards from "./pages/Rewards";
 import Programs from "./pages/Programs";
 import ProgramDetail from "./pages/ProgramDetail";
 import ProgramInsight from "./pages/ProgramInsight";
-import Voice from "./pages/Voice";
 import VoiceHistory from "./pages/VoiceHistory";
 import { useRef, useEffect } from "react";
 import { usePageMetadata } from "@/lib/metadata";
@@ -107,6 +107,7 @@ function AuthenticatedRouter() {
                   <Route path="/checkin" component={CheckIn} />
                   <Route path="/check-in-insight" component={CheckInInsight} />
                   <Route path="/chat" component={Chat} />
+                  <Route path="/voice" component={Voice} />
                   <Route path="/journal" component={Journal} />
                   <Route path="/journal/:id" component={JournalEntry} />
                   <Route path="/domains" component={Domains} />
@@ -120,7 +121,6 @@ function AuthenticatedRouter() {
                   <Route path="/programs" component={Programs} />
                   <Route path="/programs/:id" component={ProgramDetail} />
                   <Route path="/programs/:id/insight/:day" component={ProgramInsight} />
-                  <Route path="/voice" component={Voice} />
                   <Route path="/voice/history" component={VoiceHistory} />
                   <Route path="/404" component={NotFound} />
                   <Route component={NotFound} />
