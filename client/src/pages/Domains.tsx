@@ -173,7 +173,7 @@ export default function Domains() {
   };
 
   return (
-    <>
+    <AppShell>
       {/* Habit completion animation overlay */}
       <HabitCompletionAnimation
         isCompleting={completingHabitId !== null}
@@ -205,174 +205,172 @@ export default function Domains() {
           onClick={() => setMilestoneReward(null)}
         >
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            className="rounded-3xl p-8 text-center space-y-6 max-w-sm" style={{ background: 'oklch(0.17 0.04 280)', border: '1px solid oklch(0.28 0.05 280)' }}
-            onClick={(e) => e.stopPropagation()}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.8, opacity: 0 }}
+          className="rounded-3xl p-8 text-center space-y-6 max-w-sm" style={{ background: 'oklch(0.17 0.04 280)', border: '1px solid oklch(0.28 0.05 280)' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="text-6xl">🎉</div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-serif font-semibold">
+              {milestoneReward.type === "30day" ? "30-Day Streak!" : "100-Day Streak!"}
+            </h2>
+            <p className="text-muted-foreground">
+              {milestoneReward.type === "30day" 
+                ? "You've earned 2 months of free Pro access!" 
+                : "You've earned 1 year of free Pro access!"}
+            </p>
+          </div>
+          <Button
+            onClick={() => setMilestoneReward(null)}
+            className="w-full rounded-2xl py-5"
           >
-            <div className="text-6xl">🎉</div>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-serif font-semibold">
-                {milestoneReward.type === "30day" ? "30-Day Streak!" : "100-Day Streak!"}
-              </h2>
-              <p className="text-muted-foreground">
-                {milestoneReward.type === "30day" 
-                  ? "You've earned 2 months of free Pro access!" 
-                  : "You've earned 1 year of free Pro access!"}
-              </p>
-            </div>
-            <Button
-              onClick={() => setMilestoneReward(null)}
-              className="w-full rounded-2xl py-5"
-            >
-              Awesome!
-            </Button>
-          </motion.div>
+            Awesome!
+          </Button>
         </motion.div>
+      </motion.div>
       )}
 
-      <AppShell>
       <div className="px-5 pt-4 pb-4 space-y-6">
-        {/* Add Habit button */}
-        <div className="flex justify-end">
-          <button
-            onClick={() => setShowAddHabit(true)}
-            className="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-center hover:bg-primary/20 transition-all"
-          >
-            <Plus size={18} className="text-primary" />
-          </button>
-        </div>
-
-        {/* Domain cards */}
-        <div className="space-y-4">
-          {(Object.entries(DOMAIN_INFO) as [Domain, typeof DOMAIN_INFO[Domain]][]).map(([domain, info], i) => {
-            const score = getScoreForDomain(domain);
-            const domainHabits = getHabitsForDomain(domain);
-            const completedCount = domainHabits.filter((h) => h.completedToday).length;
-
-            return (
-              <motion.div
-                key={domain}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.06 }}
-                className="rounded-3xl p-5 space-y-4"
-                style={{
-                  background: info.cardBg,
-                  border: `1px solid ${info.cardBorder}`,
-                  boxShadow: `0 4px 20px oklch(0.05 0 0 / 0.4)`,
-                }}
-              >
-                {/* Domain header */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {/* Colored emoji badge */}
-                    <div
-                      className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl"
-                      style={{ background: info.cardBg, border: `1px solid ${info.cardBorder}` }}
-                    >
-                      {info.emoji}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">{info.label}</p>
-                      <p className="text-xs text-muted-foreground">{info.desc}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => { setShowUpdateScore(domain); setNewScore(score || 5); }}
-                    className="flex flex-col items-center min-w-[40px]"
-                  >
-                    <span
-                      className="text-2xl font-serif font-semibold"
-                      style={{ color: info.barColor }}
-                    >
-                      {score > 0 ? score.toFixed(1) : "—"}
-                    </span>
-                    <span className="text-xs text-muted-foreground">/ 10</span>
-                  </button>
-                </div>
-
-                {/* Circular progress ring */}
-                {score > 0 && (
-                  <div className="flex items-center gap-3">
-                    <svg width="44" height="44" viewBox="0 0 44 44" className="-rotate-90">
-                      <circle cx="22" cy="22" r="18" fill="none" stroke="oklch(0.25 0.02 0)" strokeWidth="4" />
-                      <motion.circle
-                        cx="22" cy="22" r="18" fill="none"
-                        stroke={info.barColor}
-                        strokeWidth="4"
-                        strokeLinecap="round"
-                        strokeDasharray={`${2 * Math.PI * 18}`}
-                        initial={{ strokeDashoffset: 2 * Math.PI * 18 }}
-                        animate={{ strokeDashoffset: 2 * Math.PI * 18 * (1 - score / 10) }}
-                        transition={{ duration: 1, delay: i * 0.1 }}
-                      />
-                    </svg>
-                    <span className="text-xs text-muted-foreground">{Math.round(score * 10)}%</span>
-                  </div>
-                )}
-
-                {/* Habits */}
-                {domainHabits.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground uppercase tracking-widest">Habits</p>
-                      <span className="text-xs font-medium" style={{ color: info.barColor }}>
-                        {completedCount}/{domainHabits.length} today
-                      </span>
-                    </div>
-                    {domainHabits.map((habit) => (
-                      <div key={habit.id} className="flex items-center gap-3">
-                        <button
-                          onClick={() => toggleMutation.mutate({ habitId: habit.id })}
-                          className="w-7 h-7 rounded-lg border flex items-center justify-center transition-all"
-                          style={
-                            habit.completedToday
-                              ? { backgroundColor: info.barColor, borderColor: info.barColor }
-                              : { borderColor: info.cardBorder }
-                          }
-                        >
-                          {habit.completedToday && <Check size={14} className="text-white" />}
-                        </button>
-                        <span className="text-base">{habit.emoji}</span>
-                        <span className={`text-sm flex-1 ${habit.completedToday ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                          {habit.name}
-                        </span>
-                        {habit.streak > 0 && (
-                          <span className="text-xs" style={{ color: info.barColor }}>🔥 {habit.streak}</span>
-                        )}
-                        <button
-                          onClick={() => deleteHabitMutation.mutate({ habitId: habit.id })}
-                          className="text-muted-foreground hover:text-destructive transition-colors"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {domainHabits.length === 0 && (
-                  <button
-                    onClick={() => { setNewHabitDomain(domain); setShowAddHabit(true); }}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                  >
-                    <Plus size={12} /> Add a habit
-                  </button>
-                )}
-              </motion.div>
-            );
-          })}
-        </div>
+      {/* Add Habit button */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => setShowAddHabit(true)}
+          className="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-center hover:bg-primary/20 transition-all"
+        >
+          <Plus size={18} className="text-primary" />
+        </button>
       </div>
 
+      {/* Domain cards */}
+      <div className="space-y-4">
+        {(Object.entries(DOMAIN_INFO) as [Domain, typeof DOMAIN_INFO[Domain]][]).map(([domain, info], i) => {
+          const score = getScoreForDomain(domain);
+          const domainHabits = getHabitsForDomain(domain);
+          const completedCount = domainHabits.filter((h) => h.completedToday).length;
+
+          return (
+            <motion.div
+              key={domain}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.06 }}
+              className="rounded-3xl p-5 space-y-4"
+              style={{
+                background: info.cardBg,
+                border: `1px solid ${info.cardBorder}`,
+                boxShadow: `0 4px 20px oklch(0.05 0 0 / 0.4)`,
+              }}
+            >
+              {/* Domain header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {/* Colored emoji badge */}
+                  <div
+                    className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl"
+                    style={{ background: info.cardBg, border: `1px solid ${info.cardBorder}` }}
+                  >
+                    {info.emoji}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{info.label}</p>
+                    <p className="text-xs text-muted-foreground">{info.desc}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setShowUpdateScore(domain); setNewScore(score || 5); }}
+                  className="flex flex-col items-center min-w-[40px]"
+                >
+                  <span
+                    className="text-2xl font-serif font-semibold"
+                    style={{ color: info.barColor }}
+                  >
+                    {score > 0 ? score.toFixed(1) : "—"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">/ 10</span>
+                </button>
+              </div>
+
+              {/* Circular progress ring */}
+              {score > 0 && (
+                <div className="flex items-center gap-3">
+                  <svg width="44" height="44" viewBox="0 0 44 44" className="-rotate-90">
+                    <circle cx="22" cy="22" r="18" fill="none" stroke="oklch(0.25 0.02 0)" strokeWidth="4" />
+                    <motion.circle
+                      cx="22" cy="22" r="18" fill="none"
+                      stroke={info.barColor}
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      strokeDasharray={`${2 * Math.PI * 18}`}
+                      initial={{ strokeDashoffset: 2 * Math.PI * 18 }}
+                      animate={{ strokeDashoffset: 2 * Math.PI * 18 * (1 - score / 10) }}
+                      transition={{ duration: 1, delay: i * 0.1 }}
+                    />
+                  </svg>
+                  <span className="text-xs text-muted-foreground">{Math.round(score * 10)}%</span>
+                </div>
+              )}
+
+              {/* Habits */}
+              {domainHabits.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground uppercase tracking-widest">Habits</p>
+                    <span className="text-xs font-medium" style={{ color: info.barColor }}>
+                      {completedCount}/{domainHabits.length} today
+                    </span>
+                  </div>
+                  {domainHabits.map((habit) => (
+                    <div key={habit.id} className="flex items-center gap-3">
+                      <button
+                        onClick={() => toggleMutation.mutate({ habitId: habit.id })}
+                        className="w-7 h-7 rounded-lg border flex items-center justify-center transition-all"
+                        style={
+                          habit.completedToday
+                            ? { backgroundColor: info.barColor, borderColor: info.barColor }
+                            : { borderColor: info.cardBorder }
+                        }
+                      >
+                        {habit.completedToday && <Check size={14} className="text-white" />}
+                      </button>
+                      <span className="text-base">{habit.emoji}</span>
+                      <span className={`text-sm flex-1 ${habit.completedToday ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                        {habit.name}
+                      </span>
+                      {habit.streak > 0 && (
+                        <span className="text-xs" style={{ color: info.barColor }}>🔥 {habit.streak}</span>
+                      )}
+                      <button
+                        onClick={() => deleteHabitMutation.mutate({ habitId: habit.id })}
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {domainHabits.length === 0 && (
+                <button
+                  onClick={() => { setNewHabitDomain(domain); setShowAddHabit(true); }}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                >
+                  <Plus size={12} /> Add a habit
+                </button>
+              )}
+            </motion.div>
+          );
+        })}
+      </div>
+      </div>
     </AppShell>
 
-      {/* Add Habit Modal — outside AppShell so it covers the nav */}
-      <AnimatePresence>
-        {showAddHabit && (
-          <motion.div
+    {/* Add Habit Modal — outside AppShell so it covers the nav */}
+    <AnimatePresence>
+      {showAddHabit && (
+        <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -600,7 +598,6 @@ export default function Domains() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
-    </>
+    </AnimatePresence>
   );
 }

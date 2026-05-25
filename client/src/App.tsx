@@ -39,7 +39,7 @@ import { usePageMetadata } from "@/lib/metadata";
 import { injectStructuredData } from "@/lib/structuredData";
 
 // Tab order — used to determine slide direction
-const TAB_ORDER = ["/home", "/domains", "/chat", "/journal", "/programs", "/dashboard"];
+const TAB_ORDER = ["/home", "/domains", "/voice", "/journal", "/programs", "/dashboard"];
 
 function getTabIndex(path: string) {
   return TAB_ORDER.findIndex(

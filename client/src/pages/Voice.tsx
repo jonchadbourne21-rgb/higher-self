@@ -237,6 +237,7 @@ const VOICE_OPTIONS = {
 export default function Voice() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const [mirrorTab, setMirrorTab] = useState<"chat" | "voice">("voice");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -443,23 +444,45 @@ export default function Voice() {
   return (
     <AppShell>
       <div className="flex flex-col h-screen bg-background">
-        {/* Minimal Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        {/* Tab Navigation */}
+        <div className="flex gap-4 px-4 pt-4 border-b border-border">
           <button
-            onClick={() => setLocation("/")}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => setMirrorTab("chat")}
+            className={`pb-3 px-2 font-medium text-sm transition-colors ${
+              mirrorTab === "chat"
+                ? "text-primary border-b-2 border-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
           >
-            <ArrowLeft className="w-5 h-5" />
+            💬 Chat
           </button>
-          <h1 className="text-lg font-semibold">Mirror</h1>
           <button
-            onClick={() => setLocation("/voice/history")}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => setMirrorTab("voice")}
+            className={`pb-3 px-2 font-medium text-sm transition-colors ${
+              mirrorTab === "voice"
+                ? "text-primary border-b-2 border-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
           >
-            <History className="w-5 h-5" />
+            🎤 Voice
           </button>
         </div>
 
+        {/* Chat Tab Content */}
+        {mirrorTab === "chat" && (
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex items-center justify-center h-full text-center">
+              <div>
+                <p className="text-muted-foreground mb-4">Chat mode coming soon</p>
+                <Button onClick={() => setMirrorTab("voice")}>Go to Voice</Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Voice Tab Content */}
+        {mirrorTab === "voice" && (
+        <>
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <AnimatePresence>
@@ -623,6 +646,8 @@ export default function Voice() {
             </motion.div>
           )}
         </div>
+        </>
+        )}
       </div>
     </AppShell>
   );
