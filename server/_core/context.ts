@@ -1,6 +1,8 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import type { User } from "../../drizzle/schema";
 import { sdk } from "./sdk";
+import { verifySessionToken } from "../auth/validator";
+import { parse as parseCookieHeader } from "cookie";
 
 export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
@@ -8,13 +10,34 @@ export type TrpcContext = {
   user: User | null;
 };
 
+/**
+ * tRPC Context Builder — runs on every request.
+ * This is where the JWT validator is called.
+ *
+ * Flow:
+ * 1. Extract session cookie from request
+ * 2. Verify JWT signature
+ * 3. Check session in database (catches revocations)
+ * 4. Return user data or null
+ */
 export async function createContext(
   opts: CreateExpressContextOptions
 ): Promise<TrpcContext> {
   let user: User | null = null;
 
   try {
-    user = await sdk.authenticateRequest(opts.req);
+    // First try new JWT-based authentication
+    const cookies = parseCookieHeader(opts.req.headers.cookie || "");
+    const sessionToken = cookies.session_token;
+
+    if (sessionToken) {
+      user = await verifySessionToken(sessionToken);
+    }
+
+    // Fallback to legacy OAuth authentication if JWT fails
+    if (!user) {
+      user = await sdk.authenticateRequest(opts.req);
+    }
   } catch (error) {
     // Authentication is optional for public procedures.
     user = null;

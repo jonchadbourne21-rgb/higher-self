@@ -34,6 +34,21 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
+// ─── Auth Sessions (JWT + Revocation) ──────────────────────────────────────────
+
+export const sessions = mysqlTable("sessions", {
+  id: varchar("id", { length: 255 }).primaryKey(), // sess_xxxxx
+  userId: int("userId").notNull(),
+  expiresAt: timestamp("expiresAt").notNull(), // 30 days
+  revokedAt: timestamp("revokedAt"), // null = active, set = revoked
+  userAgent: text("userAgent"),
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Session = typeof sessions.$inferSelect;
+export type InsertSession = typeof sessions.$inferInsert;
+
 // ─── User Profile ─────────────────────────────────────────────────────────────
 
 export const userProfiles = mysqlTable("user_profiles", {

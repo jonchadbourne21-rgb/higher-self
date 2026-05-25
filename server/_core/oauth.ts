@@ -3,6 +3,7 @@ import type { Express, Request, Response } from "express";
 import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
+import { setAuthCookie } from "../auth/jwt";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -38,6 +39,7 @@ export function registerOAuthRoutes(app: Express) {
         return;
       }
 
+      // Upsert user in database
       await db.upsertUser({
         openId: userInfo.openId,
         name: userInfo.name || null,
@@ -46,13 +48,26 @@ export function registerOAuthRoutes(app: Express) {
         lastSignedIn: new Date(),
       });
 
+      // Get the user to retrieve their ID
+      const user = await db.getUserByOpenId(userInfo.openId);
+
+      if (!user) {
+        res.status(400).json({ error: "Failed to create or update user" });
+        return;
+      }
+
+      // NEW: Use JWT issuer to create session + issue short-lived JWT
+      // This creates a 30-day session row and a 10-minute JWT token
+      await setAuthCookie(res, user.id);
+
+      // Also set legacy session cookie for backwards compatibility
       const sessionToken = await sdk.createSessionToken(userInfo.openId, {
         name: userInfo.name || userInfo.openId,
         expiresInMs: ONE_YEAR_MS,
       });
 
       const cookieOptions = getSessionCookieOptions(req);
-      console.log("[OAuth] Setting cookie with options:", JSON.stringify(cookieOptions));
+      console.log("[OAuth] Setting legacy cookie with options:", JSON.stringify(cookieOptions));
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
       // Always redirect to relative root — the SPA router handles the rest
