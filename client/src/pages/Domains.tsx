@@ -173,6 +173,7 @@ export default function Domains() {
   };
 
   return (
+    <>
     <AppShell>
       {/* Habit completion animation overlay */}
       <HabitCompletionAnimation
@@ -599,5 +600,6 @@ export default function Domains() {
           </motion.div>
         )}
     </AnimatePresence>
+    </>
   );
 }
