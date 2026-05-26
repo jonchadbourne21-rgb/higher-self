@@ -12,8 +12,7 @@ import Onboarding from "./pages/Onboarding";
 import Home from "./pages/Home";
 import CheckIn from "./pages/CheckIn";
 import CheckInInsight from "./pages/CheckInInsight";
-import Chat from "./pages/Chat";
-import Voice from "./pages/Voice";
+import Mirror from "./pages/Mirror";
 import Journal from "./pages/Journal";
 import JournalEntry from "./pages/JournalEntry";
 import Domains from "./pages/Domains";
@@ -39,7 +38,7 @@ import { usePageMetadata } from "@/lib/metadata";
 import { injectStructuredData } from "@/lib/structuredData";
 
 // Tab order — used to determine slide direction
-const TAB_ORDER = ["/home", "/domains", "/voice", "/journal", "/programs", "/dashboard"];
+const TAB_ORDER = ["/home", "/domains", "/mirror", "/journal", "/programs", "/dashboard"];
 
 function getTabIndex(path: string) {
   return TAB_ORDER.findIndex(
@@ -106,8 +105,7 @@ function AuthenticatedRouter() {
                   <Route path="/home" component={Home} />
                   <Route path="/checkin" component={CheckIn} />
                   <Route path="/check-in-insight" component={CheckInInsight} />
-                  <Route path="/chat" component={Chat} />
-                  <Route path="/voice" component={Voice} />
+                  <Route path="/mirror" component={Mirror} />
                   <Route path="/journal" component={Journal} />
                   <Route path="/journal/:id" component={JournalEntry} />
                   <Route path="/domains" component={Domains} />

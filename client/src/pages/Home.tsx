@@ -158,7 +158,7 @@ export default function Home() {
 
   // Dynamic tile order based on engagement — most-used feature goes top-left
   const TILE_DEFS = useMemo(() => [
-    { key: "mirror",   href: "/chat",     emoji: "🪞", label: "Talk to Mirror",  sub: "Reflect & grow",   score: tileEngagement?.mirror ?? 0 },
+    { key: "mirror",   href: "/mirror",   emoji: "🪞", label: "Talk to Mirror",  sub: "Reflect & grow",   score: tileEngagement?.mirror ?? 0 },
     { key: "programs", href: "/programs", emoji: "🎓", label: "Programs",        sub: "Guided growth",   score: tileEngagement?.programs ?? 0 },
     { key: "habits",   href: "/domains",  emoji: "🧭", label: "Positive Habits", sub: "Build your habits", score: tileEngagement?.habits ?? 0 },
     { key: "journal",  href: "/journal",  emoji: "📝", label: "Journal",          sub: "Write your thoughts", score: tileEngagement?.journal ?? 0 },
