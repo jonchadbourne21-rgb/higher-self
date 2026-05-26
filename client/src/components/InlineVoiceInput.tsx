@@ -23,25 +23,43 @@ export function InlineVoiceInput({ onTranscriptionUpdate, currentContent }: Inli
   
   const [isRecording, setIsRecording] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
+  const [fullTranscription, setFullTranscription] = useState("");
   const recordingStartTimeRef = useRef<number | null>(null);
+  const previousMessagesLengthRef = useRef(0);
 
-  // ── Extract transcription from voice messages and update parent ────────────
+  // ── Extract and accumulate transcription from voice messages ──────────────
   useEffect(() => {
-    let fullTranscription = "";
-    
-    for (const msg of voiceMessages as any[]) {
+    if (!voiceMessages || voiceMessages.length === 0) return;
+
+    // Only process new messages since last check
+    const newMessages = voiceMessages.slice(previousMessagesLengthRef.current);
+    previousMessagesLengthRef.current = voiceMessages.length;
+
+    let accumulatedText = fullTranscription;
+
+    for (const msg of newMessages as any[]) {
+      // Extract user transcript messages
       if (msg.type === "user_transcript" && msg.message?.content) {
-        fullTranscription += msg.message.content + " ";
+        const content = msg.message.content;
+        const isFinal = msg.message.isFinal === true;
+        
+        // Only add final transcriptions to avoid duplicates
+        if (isFinal) {
+          // Add space between transcriptions if needed
+          if (accumulatedText && !accumulatedText.endsWith(" ")) {
+            accumulatedText += " ";
+          }
+          accumulatedText += content;
+        }
       }
     }
-    
-    const cleaned = fullTranscription.trim();
-    
-    // Update parent component with transcription (this will update the textarea)
-    if (cleaned) {
-      onTranscriptionUpdate(cleaned);
+
+    // Update state and notify parent
+    if (accumulatedText !== fullTranscription) {
+      setFullTranscription(accumulatedText);
+      onTranscriptionUpdate(accumulatedText);
     }
-  }, [voiceMessages, onTranscriptionUpdate]);
+  }, [voiceMessages, fullTranscription, onTranscriptionUpdate]);
 
   // ── Simulate audio level visualization ───────────────────────────────────
   useEffect(() => {
@@ -63,6 +81,10 @@ export function InlineVoiceInput({ onTranscriptionUpdate, currentContent }: Inli
   // ── Handle start recording ───────────────────────────────────────────────
   const handleStartRecording = useCallback(async () => {
     try {
+      // Reset transcription for new recording
+      setFullTranscription("");
+      previousMessagesLengthRef.current = 0;
+      
       recordingStartTimeRef.current = Date.now();
       await connect({ auth: { type: "accessToken" } as any });
       unmute();
@@ -81,12 +103,16 @@ export function InlineVoiceInput({ onTranscriptionUpdate, currentContent }: Inli
       await disconnect();
       setIsRecording(false);
       recordingStartTimeRef.current = null;
-      toast.success("Voice entry captured");
+      
+      // Show success message only if we have transcription
+      if (fullTranscription.trim()) {
+        toast.success("Voice entry captured");
+      }
     } catch (error) {
       console.error("Failed to stop recording:", error);
       toast.error("Failed to stop voice recording");
     }
-  }, [disconnect, mute]);
+  }, [disconnect, mute, fullTranscription]);
 
   return (
     <div className="space-y-2">
