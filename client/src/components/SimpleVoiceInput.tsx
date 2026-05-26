@@ -30,8 +30,9 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
   const shouldRestartRef = useRef(false);
   const recordingStartTimeRef = useRef<number | null>(null);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const accumulatedTranscriptRef = useRef("");
 
-  // ── Initialize Web Speech API ────────────────────────────────────────────
+  // ── Initialize Web Speech API (only once) ────────────────────────────────
   useEffect(() => {
     const SpeechRecognition = window.webkitSpeechRecognition || (window as any).SpeechRecognition;
     
@@ -49,26 +50,30 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
       setIsRecording(true);
       shouldRestartRef.current = true;
       recordingStartTimeRef.current = Date.now();
+      accumulatedTranscriptRef.current = "";
     };
 
     recognition.onresult = (event: any) => {
       let interim = "";
+      let finalText = "";
       
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         
         if (event.results[i].isFinal) {
-          // Add final transcript with space if needed
-          setFinalTranscript(prev => {
-            const newFinal = prev && !prev.endsWith(" ") ? prev + " " + transcript : (prev ? prev + transcript : transcript);
-            return newFinal;
-          });
+          finalText += transcript;
         } else {
           interim += transcript;
         }
       }
       
+      // Accumulate final transcripts
+      if (finalText) {
+        accumulatedTranscriptRef.current += (accumulatedTranscriptRef.current && !accumulatedTranscriptRef.current.endsWith(" ") ? " " : "") + finalText;
+      }
+      
       setInterimTranscript(interim);
+      setFinalTranscript(accumulatedTranscriptRef.current);
     };
 
     recognition.onerror = (event: any) => {
@@ -94,7 +99,7 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
           clearInterval(timerIntervalRef.current);
           timerIntervalRef.current = null;
         }
-        const combined = finalTranscript + (interimTranscript ? " " + interimTranscript : "");
+        const combined = accumulatedTranscriptRef.current + (interimTranscript ? " " + interimTranscript : "");
         if (combined.trim()) {
           onTranscriptionUpdate(combined.trim());
         }
@@ -112,17 +117,7 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
         clearInterval(timerIntervalRef.current);
       }
     };
-  }, [finalTranscript, interimTranscript, onTranscriptionUpdate]);
-
-  // ── Update parent whenever transcription changes ──────────────────────────
-  useEffect(() => {
-    if (isRecording) {
-      const combined = finalTranscript + (interimTranscript ? " " + interimTranscript : "");
-      if (combined.trim()) {
-        onTranscriptionUpdate(combined.trim());
-      }
-    }
-  }, [finalTranscript, interimTranscript, isRecording, onTranscriptionUpdate]);
+  }, []); // Empty dependency array - only initialize once
 
   // ── Recording duration timer ─────────────────────────────────────────────
   useEffect(() => {
@@ -182,6 +177,7 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
     }
 
     try {
+      accumulatedTranscriptRef.current = "";
       setFinalTranscript("");
       setInterimTranscript("");
       setRecordingDuration(0);
@@ -208,6 +204,7 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
 
   // ── Handle clear transcription ───────────────────────────────────────────
   const handleClear = useCallback(() => {
+    accumulatedTranscriptRef.current = "";
     setFinalTranscript("");
     setInterimTranscript("");
     onTranscriptionUpdate("");
