@@ -1139,3 +1139,17 @@
 - [x] Add Mic icon to transcript indicators for visual clarity
 - [x] Write 11 vitest tests for transcription display logic (all passing)
 - [x] Test message filtering, styling, and indicator text determination
+
+
+## Voice-to-Text Journal Entries (May 26) - COMPLETE
+- [x] Create VoiceJournalEntry component with Hume voice capture
+- [x] Implement real-time transcription display with inline editing capability
+- [x] Add voice input toggle button to Journal page (Mic icon in header)
+- [x] Show transcription text area with live updates as user speaks
+- [x] Allow users to edit transcribed text in real-time with keyboard
+- [x] Add visual indicator for recording status (animated orb with audio level)
+- [x] Implement voice-to-text submission (transcription becomes journal content)
+- [x] Handle voice session cleanup on modal close
+- [x] Write vitest tests for voice journal transcription logic (23 tests passing)
+- [x] Integrate with Journal page: voice and text entry buttons in 2-column grid
+- [x] Auto-trigger title suggestion when transcription submitted (if 60+ chars)
