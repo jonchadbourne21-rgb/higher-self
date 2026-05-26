@@ -1114,3 +1114,28 @@
 - [x] Verified endpoint returns {"status":"ok"} for both chat_started and chat_ended test payloads
 - [ ] Add HUME_WEBHOOK_SIGNING_KEY secret (from Hume Developers page → Generate signing key)
 - [ ] Update Hume EVI config webhook URL to https://mentrove.manus.space/api/hume/webhook
+
+
+## Unified Mirror Page (May 26) - COMPLETE
+- [x] Consolidate Chat and Voice modes into single /mirror page with tab navigation
+- [x] Update App.tsx routing to use /mirror instead of separate /chat and /voice routes
+- [x] Update AppShell.tsx navigation to route Mirror button to /mirror
+- [x] Update Home.tsx "Talk to Mirror" card to route to /mirror
+- [x] Fix Hume VoiceStatus type compatibility (use .value property)
+- [x] Both Chat and Voice modes accessible from single page with tab switcher
+- [x] Chat mode: text-based conversation with starter prompts and upgrade modal
+- [x] Voice mode: Hume EVI voice-to-voice with audio visualization orb
+- [x] Write 13 vitest tests for unified Mirror page (all passing)
+
+## Voice Transcription Display (May 26) - COMPLETE
+- [x] Implement real-time transcription display in voice mode
+- [x] Add message type detection (user_transcript, assistant_message, user_message)
+- [x] Display "Listening..." indicator for partial/streaming transcripts
+- [x] Display "Transcribed" indicator for final transcripts
+- [x] Add visual feedback for partial transcripts (opacity-70 + pulsing dot indicator)
+- [x] Implement smooth message animations with framer-motion (spring layout)
+- [x] Expand transcription container with border and background styling
+- [x] Handle different Hume message types correctly (isFinal flag for partial detection)
+- [x] Add Mic icon to transcript indicators for visual clarity
+- [x] Write 11 vitest tests for transcription display logic (all passing)
+- [x] Test message filtering, styling, and indicator text determination

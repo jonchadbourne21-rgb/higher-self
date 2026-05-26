@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
-import { MessageCircle, Mic, MicOff, PhoneOff } from "lucide-react";
-import { motion } from "framer-motion";
+import { MessageCircle, Mic, MicOff, PhoneOff, Volume2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -422,49 +422,101 @@ export default function Mirror() {
               <>
                 <GlowingOrb status={status} isMuted={isMuted} audioLevel={audioLevel} />
 
+                {/* Transcription display */}
                 {voiceMessages.length > 0 && (
-                  <div className="mt-8 w-full max-w-md max-h-48 overflow-y-auto space-y-2">
-                    {voiceMessages.map((msg: any, idx: number) => {
-                      let content = '';
-                      let role = 'assistant';
-                      
-                      if (msg.type === 'user_message' && msg.message?.content) {
-                        content = msg.message.content;
-                        role = 'user';
-                      } else if (msg.type === 'assistant_message' && msg.message?.content) {
-                        content = msg.message.content;
-                        role = 'assistant';
-                      } else if (msg.message?.content) {
-                        content = msg.message.content;
-                        role = msg.role || 'assistant';
-                      }
-                      
-                      if (!content) return null;
-                      
-                      return (
-                        <div
-                          key={msg.id || idx}
-                          className={`p-3 rounded-lg ${
-                            role === "user"
-                              ? "bg-primary text-primary-foreground ml-auto"
-                              : "bg-secondary text-secondary-foreground"
-                          } max-w-xs`}
-                        >
-                          <p className="text-sm">{content}</p>
-                        </div>
-                      );
-                    })}
+                  <div className="mt-8 w-full max-w-2xl max-h-80 overflow-y-auto space-y-3 px-2 rounded-lg border border-border/50 bg-background/50 p-4">
+                    <AnimatePresence mode="popLayout">
+                      {voiceMessages.map((msg: any, idx: number) => {
+                        let content = '';
+                        let role = 'assistant';
+                        let messageType = '';
+                        let isPartial = false;
+                        
+                        // Handle different message types from Hume SDK
+                        if (msg.type === 'user_transcript') {
+                          content = msg.message?.content || '';
+                          role = 'user';
+                          messageType = 'transcript';
+                          isPartial = msg.message?.isFinal === false;
+                        } else if (msg.type === 'assistant_message') {
+                          content = msg.message?.content || '';
+                          role = 'assistant';
+                          messageType = 'message';
+                        } else if (msg.type === 'user_message') {
+                          content = msg.message?.content || '';
+                          role = 'user';
+                          messageType = 'message';
+                        } else if (msg.message?.content) {
+                          content = msg.message.content;
+                          role = msg.role || 'assistant';
+                        }
+                        
+                        if (!content) return null;
+                        
+                        return (
+                          <motion.div
+                            key={msg.id || idx}
+                            layout
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            className={`flex ${
+                              role === "user" ? "justify-end" : "justify-start"
+                            }`}
+                          >
+                            <div
+                              className={`max-w-sm px-4 py-3 rounded-lg transition-all ${
+                                role === "user"
+                                  ? `bg-primary text-primary-foreground ${
+                                      isPartial ? "opacity-70" : ""
+                                    }`
+                                  : "bg-secondary text-secondary-foreground"
+                              }`}
+                            >
+                              {/* Message type indicator */}
+                              {messageType === 'transcript' && (
+                                <div className="flex items-center gap-1 mb-1 text-xs opacity-75">
+                                  <Mic size={12} />
+                                  <span>{isPartial ? "Listening..." : "Transcribed"}</span>
+                                </div>
+                              )}
+                              
+                              {/* Message content */}
+                              {role === "assistant" ? (
+                                <Streamdown>{content}</Streamdown>
+                              ) : (
+                                <p className="text-sm leading-relaxed">{content}</p>
+                              )}
+                              
+                              {/* Partial indicator */}
+                              {isPartial && (
+                                <motion.div
+                                  className="mt-1 text-xs opacity-60"
+                                  animate={{ opacity: [0.6, 1, 0.6] }}
+                                  transition={{ duration: 1.5, repeat: Infinity }}
+                                >
+                                  ●
+                                </motion.div>
+                              )}
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
                     <div ref={voiceEndRef} />
                   </div>
                 )}
 
-                <button
-                  onClick={handleEndVoice}
-                  className="mt-8 px-6 py-2 bg-red-500/20 text-red-300 rounded-lg hover:bg-red-500/30 transition-colors flex items-center gap-2"
-                >
-                  <PhoneOff size={18} />
-                  End Session
-                </button>
+                <div className="mt-8 flex gap-3">
+                  <button
+                    onClick={handleEndVoice}
+                    className="px-6 py-2 bg-red-500/20 text-red-300 rounded-lg hover:bg-red-500/30 transition-colors flex items-center gap-2"
+                  >
+                    <PhoneOff size={18} />
+                    End Session
+                  </button>
+                </div>
               </>
             )}
           </div>
