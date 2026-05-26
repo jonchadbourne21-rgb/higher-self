@@ -14,7 +14,7 @@ interface SimpleVoiceInputProps {
  * Uses Web Speech API for simple, straightforward voice-to-text:
  * - Click "Speak" to start recording
  * - Real-time transcription appears in textarea
- * - Click "Stop Recording" to finish
+ * - Keeps listening continuously until user clicks "Stop Recording"
  * - No external dependencies, works in modern browsers
  */
 export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: SimpleVoiceInputProps) {
@@ -24,8 +24,7 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
   const [finalTranscript, setFinalTranscript] = useState("");
   
   const recognitionRef = useRef<any>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
+  const shouldRestartRef = useRef(false);
   const animationFrameRef = useRef<number | null>(null);
 
   // ── Initialize Web Speech API ────────────────────────────────────────────
@@ -44,8 +43,7 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
 
     recognition.onstart = () => {
       setIsRecording(true);
-      setInterimTranscript("");
-      setFinalTranscript("");
+      shouldRestartRef.current = true;
     };
 
     recognition.onresult = (event: any) => {
@@ -56,11 +54,10 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
         
         if (event.results[i].isFinal) {
           // Add final transcript with space if needed
-          if (finalTranscript && !finalTranscript.endsWith(" ")) {
-            setFinalTranscript(prev => prev + " " + transcript);
-          } else {
-            setFinalTranscript(prev => prev + transcript);
-          }
+          setFinalTranscript(prev => {
+            const newFinal = prev && !prev.endsWith(" ") ? prev + " " + transcript : (prev ? prev + transcript : transcript);
+            return newFinal;
+          });
         } else {
           interim += transcript;
         }
@@ -77,18 +74,27 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
     };
 
     recognition.onend = () => {
-      setIsRecording(false);
-      setInterimTranscript("");
-      // Update parent with final transcript
-      const combined = finalTranscript + interimTranscript;
-      if (combined.trim()) {
-        onTranscriptionUpdate(combined.trim());
+      // If user hasn't explicitly stopped, restart listening
+      if (shouldRestartRef.current) {
+        try {
+          recognition.start();
+        } catch (error) {
+          console.error("Failed to restart recognition:", error);
+        }
+      } else {
+        // User explicitly stopped
+        setIsRecording(false);
+        const combined = finalTranscript + (interimTranscript ? " " + interimTranscript : "");
+        if (combined.trim()) {
+          onTranscriptionUpdate(combined.trim());
+        }
       }
     };
 
     recognitionRef.current = recognition;
 
     return () => {
+      shouldRestartRef.current = false;
       if (recognitionRef.current) {
         recognitionRef.current.abort();
       }
@@ -97,11 +103,13 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
 
   // ── Update parent whenever transcription changes ──────────────────────────
   useEffect(() => {
-    const combined = finalTranscript + (interimTranscript ? " " + interimTranscript : "");
-    if (combined.trim()) {
-      onTranscriptionUpdate(combined.trim());
+    if (isRecording) {
+      const combined = finalTranscript + (interimTranscript ? " " + interimTranscript : "");
+      if (combined.trim()) {
+        onTranscriptionUpdate(combined.trim());
+      }
     }
-  }, [finalTranscript, interimTranscript, onTranscriptionUpdate]);
+  }, [finalTranscript, interimTranscript, isRecording, onTranscriptionUpdate]);
 
   // ── Simulate audio level visualization ───────────────────────────────────
   useEffect(() => {
@@ -130,6 +138,7 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
     try {
       setFinalTranscript("");
       setInterimTranscript("");
+      shouldRestartRef.current = true;
       recognitionRef.current.start();
     } catch (error) {
       console.error("Failed to start recording:", error);
@@ -142,6 +151,7 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
     if (!recognitionRef.current) return;
 
     try {
+      shouldRestartRef.current = false;
       recognitionRef.current.stop();
     } catch (error) {
       console.error("Failed to stop recording:", error);
