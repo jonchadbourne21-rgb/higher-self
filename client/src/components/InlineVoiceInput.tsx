@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useVoice } from "@humeai/voice-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, MicOff, Square } from "lucide-react";
+import { Mic, Square } from "lucide-react";
 import { toast } from "sonner";
 
 interface InlineVoiceInputProps {
@@ -14,7 +14,7 @@ interface InlineVoiceInputProps {
  * 
  * Provides voice-to-text input within the journal entry modal with:
  * - Toggle button to start/stop recording
- * - Real-time transcription display
+ * - Real-time transcription directly in the textarea
  * - Seamless integration with existing text input
  * - Recording status indicator
  */
@@ -22,11 +22,10 @@ export function InlineVoiceInput({ onTranscriptionUpdate, currentContent }: Inli
   const { connect, disconnect, status, messages: voiceMessages, isMuted, mute, unmute } = useVoice();
   
   const [isRecording, setIsRecording] = useState(false);
-  const [transcribedText, setTranscribedText] = useState("");
   const [audioLevel, setAudioLevel] = useState(0);
   const recordingStartTimeRef = useRef<number | null>(null);
 
-  // ── Extract transcription from voice messages ────────────────────────────
+  // ── Extract transcription from voice messages and update parent ────────────
   useEffect(() => {
     let fullTranscription = "";
     
@@ -37,9 +36,8 @@ export function InlineVoiceInput({ onTranscriptionUpdate, currentContent }: Inli
     }
     
     const cleaned = fullTranscription.trim();
-    setTranscribedText(cleaned);
     
-    // Update parent component with transcription
+    // Update parent component with transcription (this will update the textarea)
     if (cleaned) {
       onTranscriptionUpdate(cleaned);
     }
@@ -65,7 +63,6 @@ export function InlineVoiceInput({ onTranscriptionUpdate, currentContent }: Inli
   // ── Handle start recording ───────────────────────────────────────────────
   const handleStartRecording = useCallback(async () => {
     try {
-      setTranscribedText("");
       recordingStartTimeRef.current = Date.now();
       await connect({ auth: { type: "accessToken" } as any });
       unmute();
@@ -84,19 +81,12 @@ export function InlineVoiceInput({ onTranscriptionUpdate, currentContent }: Inli
       await disconnect();
       setIsRecording(false);
       recordingStartTimeRef.current = null;
-      
-      if (transcribedText) {
-        toast.success("Transcription added to your entry");
-      }
+      toast.success("Voice entry captured");
     } catch (error) {
       console.error("Failed to stop recording:", error);
       toast.error("Failed to stop voice recording");
     }
-  }, [disconnect, mute, transcribedText]);
-
-  const recordingDuration = recordingStartTimeRef.current 
-    ? Math.floor((Date.now() - recordingStartTimeRef.current) / 1000)
-    : 0;
+  }, [disconnect, mute]);
 
   return (
     <div className="space-y-2">
@@ -125,17 +115,10 @@ export function InlineVoiceInput({ onTranscriptionUpdate, currentContent }: Inli
           ) : (
             <>
               <Mic size={14} />
-              Start Voice Input
+              Speak
             </>
           )}
         </motion.button>
-
-        {/* Recording duration */}
-        {isRecording && (
-          <span className="text-xs text-muted-foreground font-mono">
-            {recordingDuration}s
-          </span>
-        )}
 
         {/* Recording indicator */}
         {isRecording && (
@@ -147,64 +130,35 @@ export function InlineVoiceInput({ onTranscriptionUpdate, currentContent }: Inli
         )}
       </div>
 
-      {/* Real-time transcription display */}
+      {/* Audio visualization and status indicator when recording */}
       <AnimatePresence>
         {isRecording && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-secondary/30 border border-primary/30 rounded-lg p-3 space-y-2"
+            className="flex items-center gap-2 text-xs text-muted-foreground"
           >
-            <p className="text-xs font-medium text-muted-foreground">Listening...</p>
-            
             {/* Audio visualization */}
-            <div className="flex items-center gap-1 h-6">
+            <div className="flex items-center gap-1 h-5">
               {[...Array(5)].map((_, i) => (
                 <motion.div
                   key={i}
                   animate={{
-                    height: isRecording ? `${20 + audioLevel * 20}px` : "4px",
+                    height: isRecording ? `${12 + audioLevel * 12}px` : "3px",
                   }}
                   transition={{
                     duration: 0.1,
                     delay: i * 0.05,
                   }}
-                  className="w-1 bg-primary/60 rounded-full"
+                  className="w-0.5 bg-primary/60 rounded-full"
                 />
               ))}
             </div>
-
-            {/* Transcription text */}
-            {transcribedText && (
-              <div className="bg-background/50 rounded p-2 min-h-[40px]">
-                <p className="text-sm text-foreground leading-relaxed">
-                  {transcribedText}
-                  <motion.span
-                    animate={{ opacity: [1, 0.3, 1] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                    className="ml-1"
-                  >
-                    |
-                  </motion.span>
-                </p>
-              </div>
-            )}
+            <span>Listening...</span>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Transcription preview when not recording */}
-      {!isRecording && transcribedText && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="bg-secondary/20 border border-border/40 rounded-lg p-2"
-        >
-          <p className="text-xs text-muted-foreground mb-1">Transcribed text:</p>
-          <p className="text-sm text-foreground">{transcribedText}</p>
-        </motion.div>
-      )}
     </div>
   );
 }
