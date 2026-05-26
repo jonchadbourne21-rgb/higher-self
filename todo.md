@@ -1142,14 +1142,14 @@
 
 
 ## Voice-to-Text Journal Entries (May 26) - COMPLETE
-- [x] Create VoiceJournalEntry component with Hume voice capture
-- [x] Implement real-time transcription display with inline editing capability
-- [x] Add voice input toggle button to Journal page (Mic icon in header)
-- [x] Show transcription text area with live updates as user speaks
-- [x] Allow users to edit transcribed text in real-time with keyboard
-- [x] Add visual indicator for recording status (animated orb with audio level)
-- [x] Implement voice-to-text submission (transcription becomes journal content)
-- [x] Handle voice session cleanup on modal close
-- [x] Write vitest tests for voice journal transcription logic (23 tests passing)
-- [x] Integrate with Journal page: voice and text entry buttons in 2-column grid
-- [x] Auto-trigger title suggestion when transcription submitted (if 60+ chars)
+- [x] Remove standalone VoiceJournalEntry component and related UI
+- [x] Create inline voice input component for New Entry modal
+- [x] Add microphone toggle button within the content textarea area
+- [x] Show real-time transcription as user speaks directly in content field
+- [x] Allow users to switch between typing and voice input seamlessly
+- [x] Display recording status indicator (Listening, Ready states)
+- [x] Integrate voice transcription into existing content field
+- [x] Keep all other Journal modal features unchanged (title, mood tags, categories)
+- [x] Write vitest tests for inline voice input logic (20 tests passing)
+- [x] Test end-to-end: toggle voice → speak → transcription appears in content field
+- [x] Auto-trigger title suggestion when voice transcription submitted (if 60+ chars)

@@ -6,14 +6,14 @@ import { useLocation, Link } from "wouter";
 import AppShell from "@/components/AppShell";
 import {
   Plus, X, ChevronRight, Sparkles, Wand2, Search, Filter,
-  Tag, Trash2, FolderPlus, Calendar, ChevronDown, SlidersHorizontal, Mic,
+  Tag, Trash2, FolderPlus, Calendar, ChevronDown, SlidersHorizontal,
 } from "lucide-react";
 import { format, isToday, isYesterday, isThisWeek, isThisMonth } from "date-fns";
 import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { RewardWheel } from "@/components/RewardWheel";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { VoiceJournalEntry } from "@/components/VoiceJournalEntry";
+import { InlineVoiceInput } from "@/components/InlineVoiceInput";
 
 const MOOD_TAGS = ["Reflective", "Grateful", "Anxious", "Hopeful", "Sad", "Peaceful", "Confused", "Inspired", "Tired", "Joyful"];
 const CATEGORY_COLORS = [
@@ -80,8 +80,7 @@ export default function Journal() {
   const [showRewardWheel, setShowRewardWheel] = useState(false);
   const [wheelPrize, setWheelPrize] = useState<string | null>(null);
   
-  // ── Voice journal state ──────────────────────────────────────────────────
-  const [showVoiceEntry, setShowVoiceEntry] = useState(false);
+
 
   // ── Queries ──────────────────────────────────────────────────────────────
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -198,16 +197,7 @@ export default function Journal() {
     }
   };
 
-  const handleVoiceTranscriptionComplete = useCallback((transcribedText: string) => {
-    setContent(transcribedText);
-    setShowVoiceEntry(false);
-    if (transcribedText.length >= MIN_CONTENT_FOR_SUGGESTION) {
-      setIsSuggesting(true);
-      setSuggestedTitle(null);
-      setSuggestedTitles([]);
-      suggestTitleMutation.mutate({ content: transcribedText });
-    }
-  }, [suggestTitleMutation]);
+
 
   const handleCreate = () => {
     if (!content.trim()) return;
@@ -241,13 +231,6 @@ export default function Journal() {
               <Tag size={15} className="text-muted-foreground" />
             </button>
             <button
-              onClick={() => setShowVoiceEntry(true)}
-              className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center hover:bg-primary/20 transition-all"
-              title="Voice entry"
-            >
-              <Mic size={16} className="text-primary" />
-            </button>
-            <button
               onClick={() => setIsCreating(true)}
               className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center hover:bg-primary/20 transition-all"
               title="New entry"
@@ -256,33 +239,17 @@ export default function Journal() {
             </button>
           </div>
 
-        {/* ── Voice or Text Entry CTA ───────────────────────────────────────── */}
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() => setShowVoiceEntry(true)}
-            className="glass rounded-2xl px-4 py-3.5 flex items-center gap-2 text-left hover:border-primary/30 transition-all group"
-          >
-            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
-              <Mic size={15} className="text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <span className="text-sm text-muted-foreground block truncate">Voice entry</span>
-              <span className="text-xs text-muted-foreground">Speak →</span>
-            </div>
-          </button>
-          <button
-            onClick={() => setIsCreating(true)}
-            className="glass rounded-2xl px-4 py-3.5 flex items-center gap-2 text-left hover:border-primary/30 transition-all group"
-          >
-            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
-              <Plus size={15} className="text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <span className="text-sm text-muted-foreground block truncate">Text entry</span>
-              <span className="text-xs text-muted-foreground">Write →</span>
-            </div>
-          </button>
-        </div>
+        {/* ── Write New Entry CTA (always visible) ───────────────────────── */}
+        <button
+          onClick={() => setIsCreating(true)}
+          className="w-full glass rounded-2xl px-4 py-3.5 flex items-center gap-3 text-left hover:border-primary/30 transition-all group"
+        >
+          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+            <Plus size={15} className="text-primary" />
+          </div>
+          <span className="text-sm text-muted-foreground">What's on your mind today?</span>
+          <span className="ml-auto text-xs text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">Write →</span>
+        </button>
 
         {/* ── Search + Filter bar ─────────────────────────────────────────── */}
         <div className="space-y-2">
@@ -608,6 +575,23 @@ export default function Journal() {
                 </AnimatePresence>
               </div>
 
+              {/* Voice input option */}
+              <InlineVoiceInput
+                onTranscriptionUpdate={(text) => {
+                  if (text) {
+                    setContent(text);
+                    // Trigger title suggestion if content is long enough
+                    if (text.length >= MIN_CONTENT_FOR_SUGGESTION) {
+                      setIsSuggesting(true);
+                      setSuggestedTitle(null);
+                      setSuggestedTitles([]);
+                      suggestTitleMutation.mutate({ content: text });
+                    }
+                  }
+                }}
+                currentContent={content}
+              />
+
               {/* Content textarea */}
               <textarea
                 value={content}
@@ -795,15 +779,7 @@ export default function Journal() {
         )}
       </AnimatePresence>
 
-      {/* ── Voice Journal Entry Modal ──────────────────────────────────────── */}
-      <AnimatePresence>
-        {showVoiceEntry && (
-          <VoiceJournalEntry
-            onTranscriptionComplete={handleVoiceTranscriptionComplete}
-            onClose={() => setShowVoiceEntry(false)}
-          />
-        )}
-      </AnimatePresence>
+
 
       <UpgradeModal
         isOpen={showUpgradeModal}
