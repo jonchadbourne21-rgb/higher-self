@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Square, RotateCcw } from "lucide-react";
+import { Mic, Square, RotateCcw, Pause, Play } from "lucide-react";
 import { toast } from "sonner";
 
 interface SimpleVoiceInputProps {
@@ -13,18 +13,21 @@ interface SimpleVoiceInputProps {
  * 
  * Uses Web Speech API for simple, straightforward voice-to-text:
  * - Click "Speak" to start recording
- * - Real-time transcription appears in textarea
- * - Keeps listening continuously until user clicks "Stop Recording"
+ * - Real-time transcription display shows words as user speaks
+ * - Pause/Continue button to pause and resume without losing text
+ * - Keeps listening continuously until user stops
  * - Shows recording duration timer
  * - Clear button to reset transcription
  * - No external dependencies, works in modern browsers
  */
 export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: SimpleVoiceInputProps) {
   const [isRecording, setIsRecording] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [interimTranscript, setInterimTranscript] = useState("");
   const [finalTranscript, setFinalTranscript] = useState("");
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const [showTranscriptionBox, setShowTranscriptionBox] = useState(false);
   
   const recognitionRef = useRef<any>(null);
   const shouldRestartRef = useRef(false);
@@ -48,9 +51,11 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
 
     recognition.onstart = () => {
       setIsRecording(true);
+      setIsPaused(false);
       shouldRestartRef.current = true;
       recordingStartTimeRef.current = Date.now();
       accumulatedTranscriptRef.current = "";
+      setShowTranscriptionBox(true);
     };
 
     recognition.onresult = (event: any) => {
@@ -84,16 +89,17 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
     };
 
     recognition.onend = () => {
-      // If user hasn't explicitly stopped, restart listening
-      if (shouldRestartRef.current) {
+      // If user hasn't explicitly stopped and isn't paused, restart listening
+      if (shouldRestartRef.current && !isPaused) {
         try {
           recognition.start();
         } catch (error) {
           console.error("Failed to restart recognition:", error);
         }
-      } else {
+      } else if (!shouldRestartRef.current) {
         // User explicitly stopped
         setIsRecording(false);
+        setIsPaused(false);
         recordingStartTimeRef.current = null;
         if (timerIntervalRef.current) {
           clearInterval(timerIntervalRef.current);
@@ -103,6 +109,7 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
         if (combined.trim()) {
           onTranscriptionUpdate(combined.trim());
         }
+        setShowTranscriptionBox(false);
       }
     };
 
@@ -117,7 +124,7 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
         clearInterval(timerIntervalRef.current);
       }
     };
-  }, []); // Empty dependency array - only initialize once
+  }, [isPaused, interimTranscript, onTranscriptionUpdate]);
 
   // ── Recording duration timer ─────────────────────────────────────────────
   useEffect(() => {
@@ -147,7 +154,7 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
 
   // ── Simulate audio level visualization ───────────────────────────────────
   useEffect(() => {
-    if (!isRecording) {
+    if (!isRecording || isPaused) {
       setAudioLevel(0);
       return;
     }
@@ -160,7 +167,7 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
     }, 100);
 
     return () => clearInterval(interval);
-  }, [isRecording]);
+  }, [isRecording, isPaused]);
 
   // ── Format duration as MM:SS ─────────────────────────────────────────────
   const formatDuration = (seconds: number): string => {
@@ -181,11 +188,40 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
       setFinalTranscript("");
       setInterimTranscript("");
       setRecordingDuration(0);
+      setIsPaused(false);
       shouldRestartRef.current = true;
       recognitionRef.current.start();
     } catch (error) {
       console.error("Failed to start recording:", error);
       toast.error("Failed to start voice recording");
+    }
+  }, []);
+
+  // ── Handle pause recording ───────────────────────────────────────────────
+  const handlePauseRecording = useCallback(() => {
+    if (!recognitionRef.current) return;
+
+    try {
+      setIsPaused(true);
+      shouldRestartRef.current = false;
+      recognitionRef.current.stop();
+    } catch (error) {
+      console.error("Failed to pause recording:", error);
+      toast.error("Failed to pause voice recording");
+    }
+  }, []);
+
+  // ── Handle continue recording ────────────────────────────────────────────
+  const handleContinueRecording = useCallback(() => {
+    if (!recognitionRef.current) return;
+
+    try {
+      setIsPaused(false);
+      shouldRestartRef.current = true;
+      recognitionRef.current.start();
+    } catch (error) {
+      console.error("Failed to continue recording:", error);
+      toast.error("Failed to continue voice recording");
     }
   }, []);
 
@@ -211,44 +247,81 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
     toast.success("Transcription cleared");
   }, [onTranscriptionUpdate]);
 
+  const displayText = finalTranscript + (interimTranscript ? " " + interimTranscript : "");
+
   return (
     <div className="space-y-2">
       {/* Voice input button and status */}
-      <div className="flex items-center gap-2">
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={isRecording ? handleStopRecording : handleStartRecording}
-          className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-2 text-sm ${
-            isRecording
-              ? "bg-red-500/20 text-red-300 hover:bg-red-500/30"
-              : "bg-primary/10 text-primary hover:bg-primary/20"
-          }`}
-        >
-          {isRecording ? (
-            <>
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
-              >
-                <Square size={14} fill="currentColor" />
-              </motion.div>
-              Stop Recording
-            </>
-          ) : (
-            <>
-              <Mic size={14} />
-              Speak
-            </>
-          )}
-        </motion.button>
+      <div className="flex items-center gap-2 flex-wrap">
+        {!isRecording ? (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleStartRecording}
+            className="px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-2 text-sm bg-primary/10 text-primary hover:bg-primary/20"
+          >
+            <Mic size={14} />
+            Speak
+          </motion.button>
+        ) : isPaused ? (
+          <>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleContinueRecording}
+              className="px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-2 text-sm bg-primary/10 text-primary hover:bg-primary/20"
+            >
+              <Play size={14} />
+              Continue
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleStopRecording}
+              className="px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-2 text-sm bg-red-500/20 text-red-300 hover:bg-red-500/30"
+            >
+              <Square size={14} fill="currentColor" />
+              Stop
+            </motion.button>
+          </>
+        ) : (
+          <>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handlePauseRecording}
+              className="px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-2 text-sm bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30"
+            >
+              <Pause size={14} />
+              Pause
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleStopRecording}
+              className="px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-2 text-sm bg-red-500/20 text-red-300 hover:bg-red-500/30"
+            >
+              <Square size={14} fill="currentColor" />
+              Stop
+            </motion.button>
+          </>
+        )}
 
         {/* Recording indicator */}
-        {isRecording && (
+        {isRecording && !isPaused && (
           <motion.div
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 1.5, repeat: Infinity }}
             className="w-2 h-2 rounded-full bg-red-500"
+          />
+        )}
+
+        {/* Paused indicator */}
+        {isPaused && (
+          <motion.div
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            className="w-2 h-2 rounded-full bg-yellow-500"
           />
         )}
 
@@ -287,7 +360,7 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
 
       {/* Audio visualization and status indicator when recording */}
       <AnimatePresence>
-        {isRecording && (
+        {isRecording && !isPaused && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -300,7 +373,7 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
                 <motion.div
                   key={i}
                   animate={{
-                    height: isRecording ? `${12 + audioLevel * 12}px` : "3px",
+                    height: isRecording && !isPaused ? `${12 + audioLevel * 12}px` : "3px",
                   }}
                   transition={{
                     duration: 0.1,
@@ -311,6 +384,46 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
               ))}
             </div>
             <span>Listening...</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Paused status */}
+      <AnimatePresence>
+        {isPaused && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="text-xs text-yellow-500 font-medium"
+          >
+            Recording paused • Click "Continue" to resume
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Real-time transcription display box */}
+      <AnimatePresence>
+        {showTranscriptionBox && displayText && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm text-foreground"
+          >
+            <div className="flex items-start gap-2">
+              <span className="text-xs text-muted-foreground mt-0.5 flex-shrink-0">Transcribing:</span>
+              <div className="flex-1">
+                <p className="leading-relaxed">
+                  {finalTranscript}
+                  {interimTranscript && (
+                    <span className="italic text-muted-foreground opacity-70">
+                      {finalTranscript ? " " : ""}{interimTranscript}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
