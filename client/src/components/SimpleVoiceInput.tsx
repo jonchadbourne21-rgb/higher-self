@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Square } from "lucide-react";
+import { Mic, Square, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 interface SimpleVoiceInputProps {
@@ -15,6 +15,8 @@ interface SimpleVoiceInputProps {
  * - Click "Speak" to start recording
  * - Real-time transcription appears in textarea
  * - Keeps listening continuously until user clicks "Stop Recording"
+ * - Shows recording duration timer
+ * - Clear button to reset transcription
  * - No external dependencies, works in modern browsers
  */
 export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: SimpleVoiceInputProps) {
@@ -22,10 +24,12 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
   const [audioLevel, setAudioLevel] = useState(0);
   const [interimTranscript, setInterimTranscript] = useState("");
   const [finalTranscript, setFinalTranscript] = useState("");
+  const [recordingDuration, setRecordingDuration] = useState(0);
   
   const recognitionRef = useRef<any>(null);
   const shouldRestartRef = useRef(false);
-  const animationFrameRef = useRef<number | null>(null);
+  const recordingStartTimeRef = useRef<number | null>(null);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // ── Initialize Web Speech API ────────────────────────────────────────────
   useEffect(() => {
@@ -44,6 +48,7 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
     recognition.onstart = () => {
       setIsRecording(true);
       shouldRestartRef.current = true;
+      recordingStartTimeRef.current = Date.now();
     };
 
     recognition.onresult = (event: any) => {
@@ -84,6 +89,11 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
       } else {
         // User explicitly stopped
         setIsRecording(false);
+        recordingStartTimeRef.current = null;
+        if (timerIntervalRef.current) {
+          clearInterval(timerIntervalRef.current);
+          timerIntervalRef.current = null;
+        }
         const combined = finalTranscript + (interimTranscript ? " " + interimTranscript : "");
         if (combined.trim()) {
           onTranscriptionUpdate(combined.trim());
@@ -98,6 +108,9 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
       if (recognitionRef.current) {
         recognitionRef.current.abort();
       }
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
     };
   }, [finalTranscript, interimTranscript, onTranscriptionUpdate]);
 
@@ -110,6 +123,32 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
       }
     }
   }, [finalTranscript, interimTranscript, isRecording, onTranscriptionUpdate]);
+
+  // ── Recording duration timer ─────────────────────────────────────────────
+  useEffect(() => {
+    if (!isRecording) {
+      setRecordingDuration(0);
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+      return;
+    }
+
+    timerIntervalRef.current = setInterval(() => {
+      if (recordingStartTimeRef.current) {
+        const elapsed = Math.floor((Date.now() - recordingStartTimeRef.current) / 1000);
+        setRecordingDuration(elapsed);
+      }
+    }, 100);
+
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+    };
+  }, [isRecording]);
 
   // ── Simulate audio level visualization ───────────────────────────────────
   useEffect(() => {
@@ -128,6 +167,13 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
     return () => clearInterval(interval);
   }, [isRecording]);
 
+  // ── Format duration as MM:SS ─────────────────────────────────────────────
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
   // ── Handle start recording ───────────────────────────────────────────────
   const handleStartRecording = useCallback(() => {
     if (!recognitionRef.current) {
@@ -138,6 +184,7 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
     try {
       setFinalTranscript("");
       setInterimTranscript("");
+      setRecordingDuration(0);
       shouldRestartRef.current = true;
       recognitionRef.current.start();
     } catch (error) {
@@ -158,6 +205,14 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
       toast.error("Failed to stop voice recording");
     }
   }, []);
+
+  // ── Handle clear transcription ───────────────────────────────────────────
+  const handleClear = useCallback(() => {
+    setFinalTranscript("");
+    setInterimTranscript("");
+    onTranscriptionUpdate("");
+    toast.success("Transcription cleared");
+  }, [onTranscriptionUpdate]);
 
   return (
     <div className="space-y-2">
@@ -199,6 +254,38 @@ export function SimpleVoiceInput({ onTranscriptionUpdate, currentContent }: Simp
             className="w-2 h-2 rounded-full bg-red-500"
           />
         )}
+
+        {/* Recording duration timer */}
+        <AnimatePresence>
+          {isRecording && (
+            <motion.div
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: "auto" }}
+              exit={{ opacity: 0, width: 0 }}
+              className="text-xs font-mono text-muted-foreground"
+            >
+              {formatDuration(recordingDuration)}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Clear button - show when there's transcription */}
+        <AnimatePresence>
+          {(finalTranscript || interimTranscript) && !isRecording && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleClear}
+              className="p-1.5 rounded-lg bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title="Clear transcription"
+            >
+              <RotateCcw size={14} />
+            </motion.button>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Audio visualization and status indicator when recording */}
