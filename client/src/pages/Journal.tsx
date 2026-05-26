@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { RewardWheel } from "@/components/RewardWheel";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { InlineVoiceInput } from "@/components/InlineVoiceInput";
+import { SimpleVoiceInput } from "@/components/SimpleVoiceInput";
 
 const MOOD_TAGS = ["Reflective", "Grateful", "Anxious", "Hopeful", "Sad", "Peaceful", "Confused", "Inspired", "Tired", "Joyful"];
 const CATEGORY_COLORS = [
@@ -576,7 +576,7 @@ export default function Journal() {
               </div>
 
               {/* Voice input option */}
-              <InlineVoiceInput
+              <SimpleVoiceInput
                 onTranscriptionUpdate={(text) => {
                   if (text) {
                     setContent(text);
