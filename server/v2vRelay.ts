@@ -1,5 +1,5 @@
 /**
- * Mentrove V2V WebSocket Relay
+ * Mirrored V2V WebSocket Relay
  *
  * Attaches to the existing HTTP server (from Express) and proxies
  * browser ↔ Hume EVI WebSocket traffic at the /ws path.
@@ -107,7 +107,7 @@ async function buildVoiceSystemPrompt(userId: number): Promise<string> {
   } catch (err) {
     console.error("[v2v-relay] Failed to build voice system prompt:", err);
     // Fallback to minimal prompt
-    return `You are Mentrove, an AI mirror for personal growth. Speak with authentic compassion and uncompromising honesty. Match the user's tone and vocabulary. Ask powerful questions. Keep responses concise. No toxic positivity.`;
+    return `You are Mirrored, an AI mirror for personal growth. Speak with authentic compassion and uncompromising honesty. Match the user's tone and vocabulary. Ask powerful questions. Keep responses concise. No toxic positivity.`;
   }
 }
 

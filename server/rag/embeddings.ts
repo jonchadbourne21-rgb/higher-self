@@ -1,5 +1,5 @@
 /**
- * RAG Embeddings Utility for Mentrove
+ * RAG Embeddings Utility for Mirrored
  * Handles embedding generation, Pinecone storage, and semantic search
  */
 

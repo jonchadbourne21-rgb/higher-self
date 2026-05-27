@@ -13,7 +13,7 @@ import {
 import { useLocation, Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { useRef, useCallback, useState } from "react";
-import MentroveHeader from "./MentroveHeader";
+import MirroredHeader from "./MirroredHeader";
 
 const navItems = [
   { path: "/home", icon: Home, label: "Dashboard" },
@@ -123,8 +123,8 @@ export default function AppShell({ children, noScroll }: AppShellProps) {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* MENTROVE Wordmark Header */}
-      <MentroveHeader subtitle={getSubtitle(location)} />
+      {/* Mirrored Wordmark Header */}
+      <MirroredHeader subtitle={getSubtitle(location)} />
 
       {/* Main content — inner scroll only */}
       <main
