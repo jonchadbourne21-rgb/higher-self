@@ -134,10 +134,9 @@ export default function AppShell({ children, noScroll }: AppShellProps) {
         {children}
       </main>
 
-
-      {/* Floating pill nav — dark glass, auto-hides on scroll down */}
+      {/* Bottom Navigation — part of normal flow, not fixed */}
       <motion.nav
-        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-50 px-4 pb-3 pt-1 pointer-events-none"
+        className="w-full px-4 pb-3 pt-1 pointer-events-none"
         animate={{ y: navVisible ? 0 : 90, opacity: navVisible ? 1 : 0 }}
         transition={{ type: "spring", stiffness: 380, damping: 36, mass: 0.8 }}
       >
