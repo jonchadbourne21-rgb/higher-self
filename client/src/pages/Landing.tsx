@@ -112,7 +112,7 @@ export default function Landing() {
             className="text-base font-light leading-relaxed max-w-xs mx-auto"
             style={{ color: "oklch(0.72 0.06 295)", letterSpacing: "0.05em" }}
           >
-            Your AI mirror guides you toward inner peace, emotional maturity, and authentic living.
+            AI SELF-REFLECTION
           </p>
         </div>
       </motion.div>
