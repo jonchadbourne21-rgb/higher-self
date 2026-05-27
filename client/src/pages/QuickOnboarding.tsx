@@ -94,7 +94,7 @@ export default function QuickOnboarding() {
   const progressPct = ((stepIndex + 1) / (totalSteps + 1)) * 100; // +1 for full onboarding ahead
 
   return (
-    <div className="h-dvh bg-background flex flex-col max-w-[480px] mx-auto px-6 py-10 overflow-y-auto">
+    <div className="h-dvh bg-background flex flex-col max-w-[480px] mx-auto px-6 py-10 overflow-y-auto" style={{ paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom))' }}>
       {/* Progress */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
@@ -134,7 +134,7 @@ export default function QuickOnboarding() {
               </p>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 flex-1 flex flex-col">
               <Input
                 placeholder="Your first name or nickname"
                 value={preferredName}
@@ -147,7 +147,7 @@ export default function QuickOnboarding() {
               <Button
                 onClick={handleNameSubmit}
                 disabled={isSubmitting || !preferredName.trim()}
-                className="w-full h-12 text-base font-semibold"
+                className="w-full h-12 text-base font-semibold mt-auto"
               >
                 {isSubmitting ? "Saving…" : "Continue →"}
               </Button>
