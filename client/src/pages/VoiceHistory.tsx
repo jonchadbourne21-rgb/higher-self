@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
-import { ArrowLeft, Mic, ChevronDown, ChevronUp, BookOpen, Clock, MessageSquare } from "lucide-react";
+import { Link } from "wouter";
+import { Mic, ChevronDown, ChevronUp, BookOpen, Clock, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -156,7 +156,6 @@ function SessionDetail({ sessionId, onSaveToJournal, savingId }: SessionDetailPr
 // ── Main Component ─────────────────────────────────────────────────────────────
 
 export default function VoiceHistory() {
-  const [, navigate] = useLocation();
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [savingId, setSavingId] = useState<number | null>(null);
 
@@ -179,26 +178,9 @@ export default function VoiceHistory() {
 
   return (
     <AppShell>
-      <div className="flex flex-col min-h-[calc(100dvh-4rem)] max-w-2xl mx-auto">
-        {/* Header */}
-        <header className="flex items-center gap-3 px-4 py-3 border-b border-border/40 sticky top-0 bg-background/95 backdrop-blur z-10">
-          <button
-            onClick={() => navigate("/voice")}
-            className="p-2 rounded-full hover:bg-secondary/60 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-          </button>
-          <div className="flex-1">
-            <h1 className="text-lg font-semibold text-foreground">Voice Sessions</h1>
-            <p className="text-xs text-muted-foreground">Your past Mirror conversations</p>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-            <Mic className="w-4 h-4 text-primary" />
-          </div>
-        </header>
-
+      <div className="flex flex-col w-full px-4 py-4">
         {/* Content */}
-        <main className="flex-1 px-4 py-4">
+        <main className="flex-1">
           {isLoading && (
             <div className="flex items-center justify-center py-16">
               <div className="w-8 h-8 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
@@ -216,13 +198,12 @@ export default function VoiceHistory() {
                   Start a Voice Mirror session to see your history here.
                 </p>
               </div>
-              <Button
-                onClick={() => navigate("/voice")}
-                className="mt-2 gap-2"
-              >
-                <Mic className="w-4 h-4" />
-                Start a Session
-              </Button>
+              <Link href="/mirror">
+                <Button className="mt-2 gap-2">
+                  <Mic className="w-4 h-4" />
+                  Start a Session
+                </Button>
+              </Link>
             </div>
           )}
 
