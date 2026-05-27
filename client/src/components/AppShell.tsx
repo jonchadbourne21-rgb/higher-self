@@ -42,7 +42,7 @@ function getSubtitle(path: string): string {
   if (path.startsWith("/settings")) return "PROFILE";
   if (path.startsWith("/rewards")) return "REWARDS";
   if (path.startsWith("/programs")) return "GROWTH PROGRAMS";
-  return "AI GUIDANCE. REAL GROWTH. INNER YOU.";
+  return "AI SELF-REFLECTION";
 }
 
 interface AppShellProps {
