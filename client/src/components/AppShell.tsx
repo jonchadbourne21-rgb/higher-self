@@ -126,18 +126,18 @@ export default function AppShell({ children, noScroll }: AppShellProps) {
       {/* Mirrored Wordmark Header */}
       <MirroredHeader subtitle={getSubtitle(location)} />
 
-      {/* Main content — inner scroll only */}
+      {/* Main content — inner scroll only, with bottom padding for fixed nav */}
       <main
-        className={noScroll ? "flex-1 overflow-hidden" : "flex-1 overflow-y-auto scrollbar-hide"}
+        className={noScroll ? "flex-1 overflow-hidden" : "flex-1 overflow-y-auto scrollbar-hide pb-20"}
         onScroll={noScroll ? undefined : handleScroll}
       >
         {children}
       </main>
 
-      {/* Bottom Navigation — part of normal flow, not fixed */}
+      {/* Bottom Navigation — FIXED at bottom, outside scrollable area */}
       <motion.nav
-        className="w-full px-4 pb-3 pt-1 pointer-events-none"
-        animate={{ y: navVisible ? 0 : 90, opacity: navVisible ? 1 : 0 }}
+        className="fixed bottom-0 left-0 right-0 w-full max-w-[480px] mx-auto px-4 pb-3 pt-1 pointer-events-none z-40"
+        animate={{ y: navVisible ? 0 : 100, opacity: navVisible ? 1 : 0 }}
         transition={{ type: "spring", stiffness: 380, damping: 36, mass: 0.8 }}
       >
         <div
