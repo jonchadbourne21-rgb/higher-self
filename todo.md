@@ -340,9 +340,9 @@
 
 ## Disclaimer Footer (Apr 13) - COMPLETE
 - [x] Search git history for previous disclaimer content
-- [x] Create CrisisDisclaimerFooter component with Mirrored info and emergency contacts
+- [x] Create CrisisDisclaimerFooter component with Mentrove info and emergency contacts
 - [x] Integrate disclaimer footer into AppShell layout (displays on all pages)
-- [x] Styled with clean, organized layout (3 sections: What Mirrored Is, What It's NOT, Crisis Help)
+- [x] Styled with clean, organized layout (3 sections: What Mentrove Is, What It's NOT, Crisis Help)
 - [x] Emergency numbers: 988, 1-800-273-8255, 911 (clickable tel: links)
 
 
@@ -533,7 +533,7 @@
 - [ ] Test all crisis scenarios end-to-end
 
 ## Social Media Preview Image — Open Graph (May 3) - COMPLETE
-- [x] Generate custom Open Graph preview image (1200×630px) showing app home page (Mirrored - Higher Self branding)
+- [x] Generate custom Open Graph preview image (1200×630px) showing app home page (Mentrove - Higher Self branding)
 - [x] Upload preview image to S3 and get public URL (webp format, 1200x630px)
 - [x] Update meta tags with og:image URL in index.html
 - [x] Test social media preview display (meta tags verified)
@@ -657,39 +657,39 @@
 - [ ] Deploy to production
 
 
-## App Rebranding: Synapset → Mirrored (May 13) - COMPLETE
+## App Rebranding: Synapset → Mentrove (May 13) - COMPLETE
 - [x] Audit all Synapset references in codebase
 - [x] Update frontend components (AppShell.tsx, CrisisDisclaimerFooter.tsx, LandingFAQ.tsx, FAQ.tsx)
 - [x] Update backend configuration (stripe-products.ts, embeddings.ts)
 - [x] Update documentation (todo.md, REBRANDING_WORKFLOW.md)
-- [x] Replace all "Synapset" with "Mirrored" in disclaimers and descriptions
-- [x] Update Stripe product name to "Mirrored Pro"
+- [x] Replace all "Synapset" with "Mentrove" in disclaimers and descriptions
+- [x] Update Stripe product name to "Mentrove Pro"
 - [x] Verify zero TypeScript errors
 - [x] Verify all 320 tests passing
 - [x] Dev server running and stable
 - [x] Create REBRANDING_WORKFLOW.md for future rebranding tasks
 
-## Mirrored Logo & Branding Implementation (May 13) - IN PROGRESS
-- [x] Design 4 logo concepts for Mirrored
+## Mentrove Logo & Branding Implementation (May 13) - IN PROGRESS
+- [x] Design 4 logo concepts for Mentrove
 - [x] User selected Concept 4 (Sacred Geometry Mandala, deep purple/silver)
 - [x] Generate final high-res logo (transparent background, icon-only version)
 - [x] Generate favicon (32x32, 16x16, 48x48, 64x64) from logo icon
 - [x] Generate app icon (512x512) for App Store
-- [x] Generate Open Graph preview image (1200x630) with Mirrored branding
+- [x] Generate Open Graph preview image (1200x630) with Mentrove branding
 - [x] Generate full brand lockup (icon + wordmark + tagline)
 - [x] Assets uploaded to CDN (CloudFront)
 - [x] Update index.html meta tags (title, og:title, og:site_name, og:image, favicon)
-- [x] Create PWA manifest.json with Mirrored branding
+- [x] Create PWA manifest.json with Mentrove branding
 - [x] Add logo to Landing page (replaces ✦ placeholder)
 - [x] Add logo to Home page header
 - [x] Add logo to Settings page header
 - [x] Add logo to Pricing page header
 - [x] All 320 tests still passing
 - [x] TypeScript: 0 errors
-- [ ] Update VITE_APP_TITLE to Mirrored (requires Management UI > Settings > General)
+- [ ] Update VITE_APP_TITLE to Mentrove (requires Management UI > Settings > General)
 - [ ] Update VITE_APP_LOGO to new logo URL (requires Management UI > Settings > General)
 
-## Mirrored Landing Page Redesign (May 14) - COMPLETE
+## Mentrove Landing Page Redesign (May 14) - COMPLETE
 - [x] Rewrite Landing.tsx with dark midnight radial gradient background
 - [x] Add sacred geometry mandala with pulsing glow rings
 - [x] Add MENTROVE wordmark in serif font with purple glow shadow
@@ -700,24 +700,24 @@
 - [x] All 320 tests still passing
 - [x] TypeScript: 0 errors
 
-## Mirrored Onboarding Splash Screen (May 14) - COMPLETE
+## Mentrove Onboarding Splash Screen (May 14) - COMPLETE
 - [x] Replace Step 0 welcome card in Onboarding.tsx with full-screen dark midnight splash
 - [x] Add sacred geometry mandala image to onboarding Step 0 (with pulsing glow rings)
 - [x] Add MENTROVE wordmark in serif font with purple glow shadow
 - [x] Add tagline 'Reflect. Grow. Become.' with decorative divider line
 - [x] Add 'Start My Journey →' CTA button (teal gradient, disabled until name entered)
 - [x] Add themed 'Safety & FAQ' link at bottom (matches dark theme)
-- [x] Update FAQ.tsx with full Mirrored disclaimer section and dark midnight theme
+- [x] Update FAQ.tsx with full Mentrove disclaimer section and dark midnight theme
 - [x] FAQ includes crisis hotlines (988, 1-800-273-8255, 911) in red-themed box
 - [x] FAQ includes 8 questions including streak rewards and Pro subscription
-- [x] FAQ header includes Mirrored logo and themed back navigation
+- [x] FAQ header includes Mentrove logo and themed back navigation
 - [x] All 320 tests still passing
 - [x] TypeScript: 0 errors
 
 ## UI Redesign: Match App Store Screenshots (May 14) - COMPLETE
 - [x] Update index.css with dark midnight purple theme (oklch color palette)
 - [x] Switch ThemeProvider to dark mode as default
-- [x] Create MirroredHeader component with serif wordmark and mandala O
+- [x] Create MentroveHeader component with serif wordmark and mandala O
 - [x] Rewrite AppShell with MENTROVE header and dark bottom navigation
 - [x] Rewrite Home.tsx with dark theme cards (teal gradient CTA, dark quick access cards)
 - [x] Update Domains.tsx card colors to dark theme (all 6 domains)
@@ -737,7 +737,7 @@
 - [x] Replace plain "O" in MENTROVE with ornate mandala SVG (thick outer ring, inner ring, 4-pointed star sparkle) matching twitter banner
 - [x] Apply mandala O to Landing.tsx wordmark
 - [x] Apply mandala O to Onboarding.tsx wordmark
-- [x] MirroredHeader.tsx updated with new MandalaO component used across all app pages
+- [x] MentroveHeader.tsx updated with new MandalaO component used across all app pages
 
 ## Pricing Page Redesign
 - [x] Fix Pricing page to use dark midnight theme (no white cards)
@@ -969,7 +969,7 @@
 - [x] Replace 5% annual wheel prize with a fun positive dare
 
 ## FAQ Page & Support Email
-- [x] Create FAQ page with About Mirrored / What It Is / What It's NOT / Crisis Resources at top
+- [x] Create FAQ page with About Mentrove / What It Is / What It's NOT / Crisis Resources at top
 - [x] Add existing FAQ content below the About section
 - [x] Add support email section on FAQ page
 - [x] Add FAQ link below tiles on Home.tsx
@@ -1113,7 +1113,7 @@
 - [x] Register route in server/_core/index.ts before tRPC middleware
 - [x] Verified endpoint returns {"status":"ok"} for both chat_started and chat_ended test payloads
 - [ ] Add HUME_WEBHOOK_SIGNING_KEY secret (from Hume Developers page → Generate signing key)
-- [ ] Update Hume EVI config webhook URL to https://mirrored.manus.space/api/hume/webhook
+- [ ] Update Hume EVI config webhook URL to https://mentrove.manus.space/api/hume/webhook
 
 
 ## Unified Mirror Page (May 26) - COMPLETE

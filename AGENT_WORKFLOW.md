@@ -31,4 +31,4 @@ Deliver in highly structured, dense format. Omit pleasantries, lengthy introduct
 
 ---
 
-*Saved: May 14, 2026 — Applies to all Mirrored/Higher Self project operations*
+*Saved: May 14, 2026 — Applies to all Mentrove/Higher Self project operations*

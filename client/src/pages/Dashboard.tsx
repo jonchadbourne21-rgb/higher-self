@@ -130,18 +130,13 @@ export default function Dashboard() {
                       <ChevronRight size={14} className="text-muted-foreground" />
                     </div>
                     <p className="text-sm text-foreground leading-relaxed line-clamp-3">
-                      {typeof latestInsight.insightText === 'string' ? latestInsight.insightText : JSON.stringify(latestInsight.insightText)}
+                      {latestInsight.insightText}
                     </p>
-                    {(() => {
-                      const steps = typeof latestInsight.actionableSteps === 'string' 
-                        ? JSON.parse(latestInsight.actionableSteps) 
-                        : latestInsight.actionableSteps;
-                      return Array.isArray(steps) && steps.length > 0 && (
-                        <span className="text-xs text-primary font-medium">
-                          {steps.length} action steps →
-                        </span>
-                      );
-                    })()}
+                    {Array.isArray(latestInsight.actionableSteps) && latestInsight.actionableSteps.length > 0 && (
+                      <span className="text-xs text-primary font-medium">
+                        {latestInsight.actionableSteps.length} action steps →
+                      </span>
+                    )}
                   </div>
                 </Link>
               ) : (

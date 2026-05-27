@@ -176,7 +176,7 @@ ${profile?.shortTermGoals ? `\nUser's current goals: ${profile.shortTermGoals}` 
 ${profile?.coreValues && Array.isArray(profile.coreValues) && profile.coreValues.length > 0 ? `\nCore values: ${(profile.coreValues as string[]).join(", ")}` : ""}
 `;
 
-    const systemPrompt = `You are a deeply empathetic, psychologically insightful AI mirror named Mirrored. You help people grow through radical self-awareness.
+    const systemPrompt = `You are a deeply empathetic, psychologically insightful AI mirror named Mentrove. You help people grow through radical self-awareness.
 
 Your role: Write a warm, personal Sunday reflection for ${profile?.name || "this user"} based on their week's data. 
 

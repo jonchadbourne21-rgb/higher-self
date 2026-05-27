@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 
-interface MirroredHeaderProps {
+interface MentroveHeaderProps {
   subtitle?: string;
   showMenu?: boolean;
   rightAction?: React.ReactNode;
@@ -43,11 +43,11 @@ function MandalaO({ size = 20 }: { size?: number }) {
  * Matches the App Store screenshot aesthetic: serif wordmark with ornate mandala "O",
  * optional subtitle, and optional right action button.
  */
-export default function MirroredHeader({
+export default function MentroveHeader({
   subtitle = "AI MIRROR",
   showMenu = false,
   rightAction,
-}: MirroredHeaderProps) {
+}: MentroveHeaderProps) {
   return (
     <header className="flex items-center justify-between px-4 pt-4 pb-2">
       {/* Left action — menu or spacer */}
@@ -64,11 +64,11 @@ export default function MirroredHeader({
       {/* Center — MENTROVE wordmark */}
       <Link href="/home">
         <div className="flex flex-col items-center">
-          <h1 className="mirrored-wordmark text-lg tracking-[0.18em] m-0 leading-tight">
+          <h1 className="mentrove-wordmark text-lg tracking-[0.18em] m-0 leading-tight">
             MENTR<MandalaO size={19} />VE
           </h1>
           {subtitle && (
-            <span className="mirrored-subtitle mt-0.5 whitespace-nowrap">{subtitle}</span>
+            <span className="mentrove-subtitle mt-0.5 whitespace-nowrap">{subtitle}</span>
           )}
         </div>
       </Link>

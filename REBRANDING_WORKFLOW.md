@@ -1,32 +1,32 @@
-# Mirrored Rebranding Workflow
+# Mentrove Rebranding Workflow
 
 **Date:** May 13, 2026  
-**Project:** Higher Self → Mirrored  
-**Status:** Comprehensive rebranding from Synapset to Mirrored
+**Project:** Higher Self → Mentrove  
+**Status:** Comprehensive rebranding from Synapset to Mentrove
 
 ## Overview
 
-This document outlines the complete rebranding workflow for changing the app name from **Synapset** to **Mirrored**. This workflow can be reused for future rebranding tasks.
+This document outlines the complete rebranding workflow for changing the app name from **Synapset** to **Mentrove**. This workflow can be reused for future rebranding tasks.
 
 ## Files Updated
 
 ### 1. Frontend Components & Pages
 
 #### AppShell.tsx
-- Updated: "About Synapset" → "About Mirrored"
-- Updated: "What Synapset Is" → "What Mirrored Is"
-- Updated: All Synapset descriptions to Mirrored descriptions
-- Updated: "What Synapset Is NOT" → "What Mirrored Is NOT"
+- Updated: "About Synapset" → "About Mentrove"
+- Updated: "What Synapset Is" → "What Mentrove Is"
+- Updated: All Synapset descriptions to Mentrove descriptions
+- Updated: "What Synapset Is NOT" → "What Mentrove Is NOT"
 
 #### CrisisDisclaimerFooter.tsx
-- Updated: All "Synapset" references to "Mirrored"
+- Updated: All "Synapset" references to "Mentrove"
 - Updated: Component descriptions and disclaimers
 - Maintained: Crisis support information and emergency contacts
 
 #### LandingFAQ.tsx
-- Updated: FAQ questions mentioning Synapset to Mirrored
-- Updated: "Is Mirrored a replacement for therapy?"
-- Updated: "Can I use Mirrored on mobile?"
+- Updated: FAQ questions mentioning Synapset to Mentrove
+- Updated: "Is Mentrove a replacement for therapy?"
+- Updated: "Can I use Mentrove on mobile?"
 - Updated: FAQ header text
 - Updated: Important disclaimer text
 
@@ -38,7 +38,7 @@ This document outlines the complete rebranding workflow for changing the app nam
 ### 2. Backend Configuration
 
 #### server/_core/stripe-products.ts
-- Updated: Product name "Synapset Pro" → "Mirrored Pro"
+- Updated: Product name "Synapset Pro" → "Mentrove Pro"
 
 #### server/rag/embeddings.ts
 - Updated: RAG Embeddings Utility header comment
@@ -67,7 +67,7 @@ This document outlines the complete rebranding workflow for changing the app nam
 1. **TypeScript Compilation:** 0 errors
 2. **Test Suite:** 320 tests passing
 3. **Dev Server:** Running and stable
-4. **UI Verification:** All pages display correctly with Mirrored branding
+4. **UI Verification:** All pages display correctly with Mentrove branding
 
 ## Reusable Workflow Steps
 
@@ -95,9 +95,9 @@ For future rebranding tasks, follow these steps:
 
 ## Notes
 
-- All references to "Synapset" have been systematically replaced with "Mirrored"
+- All references to "Synapset" have been systematically replaced with "Mentrove"
 - Crisis support information and emergency contacts remain unchanged
-- Medical disclaimers updated to reference Mirrored instead of Synapset
+- Medical disclaimers updated to reference Mentrove instead of Synapset
 - No functionality changes—purely rebranding updates
 - All tests continue to pass with new branding
 
@@ -105,9 +105,9 @@ For future rebranding tasks, follow these steps:
 
 1. Verify all pages display correctly in browser
 2. Test user flows (login, chat, journal, habits)
-3. Verify Stripe integration shows "Mirrored Pro"
+3. Verify Stripe integration shows "Mentrove Pro"
 4. Deploy to production with new branding
-5. Update App Store listings with Mirrored name
+5. Update App Store listings with Mentrove name
 
 ---
 

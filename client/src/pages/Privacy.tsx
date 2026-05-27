@@ -32,15 +32,15 @@ export default function Privacy() {
           </button>
           <div className="flex items-center gap-2">
             <img
-              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mirrored-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
-              alt="Mirrored"
+              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
+              alt="Mentrove"
               className="w-6 h-6 rounded-full object-cover"
             />
             <span
               className="text-sm font-light tracking-[0.2em] uppercase"
               style={{ color: "oklch(0.85 0.04 80)" }}
             >
-              Mirrored
+              Mentrove
             </span>
           </div>
           <div className="w-16" />
@@ -89,7 +89,7 @@ export default function Privacy() {
         {/* Sections */}
         <div className="space-y-6">
           <Section title="Your Privacy Matters">
-            Mirrored is built on the principle that your inner world belongs to you. We collect only what
+            Mentrove is built on the principle that your inner world belongs to you. We collect only what
             is necessary to deliver a personalized self-reflection experience, and we never sell, rent, or
             share your personal data with third parties for advertising purposes.
           </Section>
@@ -114,7 +114,7 @@ export default function Privacy() {
 
           <Section title="Data Retention & Deletion">
             Your data is retained as long as your account is active. You may request full deletion of your
-            account and all associated data at any time by contacting support@mirrored.com. Upon deletion
+            account and all associated data at any time by contacting support@mentrove.com. Upon deletion
             request, all personal data is permanently removed within 30 days, including backups.
           </Section>
 
@@ -133,17 +133,17 @@ export default function Privacy() {
           <Section title="Your Rights">
             You have the right to access, correct, export, or delete your personal data. You may withdraw
             consent for data processing at any time. To exercise these rights, contact us at
-            support@mirrored.com.
+            support@mentrove.com.
           </Section>
 
           <Section title="Contact">
             For privacy-related questions or concerns, reach us at{" "}
             <a
-              href="mailto:support@mirrored.com"
+              href="mailto:support@mentrove.com"
               className="underline underline-offset-2"
               style={{ color: "oklch(0.75 0.16 185)" }}
             >
-              support@mirrored.com
+              support@mentrove.com
             </a>
             .
           </Section>
