@@ -10,7 +10,7 @@ export default function Landing() {
   const [, navigate] = useLocation();
 
   useEffect(() => {
-    document.title = "Mentrove — Your AI Mirror for Personal Growth";
+    document.title = "Mirrored — Your AI Mirror for Personal Growth";
   }, []);
 
   useEffect(() => {
@@ -99,7 +99,7 @@ export default function Landing() {
               textShadow: "0 0 30px oklch(0.55 0.18 295 / 0.4)",
             }}
           >
-            MENTROVE
+            MIRRORED
           </h1>
           <div
             className="h-px w-48 mx-auto"
