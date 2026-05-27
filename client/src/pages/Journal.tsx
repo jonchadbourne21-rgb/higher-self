@@ -13,7 +13,6 @@ import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { RewardWheel } from "@/components/RewardWheel";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { SimpleVoiceInput } from "@/components/SimpleVoiceInput";
 
 const MOOD_TAGS = ["Reflective", "Grateful", "Anxious", "Hopeful", "Sad", "Peaceful", "Confused", "Inspired", "Tired", "Joyful"];
 const CATEGORY_COLORS = [
@@ -79,8 +78,6 @@ export default function Journal() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showRewardWheel, setShowRewardWheel] = useState(false);
   const [wheelPrize, setWheelPrize] = useState<string | null>(null);
-  
-
 
   // ── Queries ──────────────────────────────────────────────────────────────
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -196,8 +193,6 @@ export default function Journal() {
       suggestTitleMutation.mutate({ content });
     }
   };
-
-
 
   const handleCreate = () => {
     if (!content.trim()) return;
@@ -575,23 +570,6 @@ export default function Journal() {
                 </AnimatePresence>
               </div>
 
-              {/* Voice input option */}
-              <SimpleVoiceInput
-                onTranscriptionUpdate={(text) => {
-                  if (text) {
-                    setContent(text);
-                    // Trigger title suggestion if content is long enough
-                    if (text.length >= MIN_CONTENT_FOR_SUGGESTION) {
-                      setIsSuggesting(true);
-                      setSuggestedTitle(null);
-                      setSuggestedTitles([]);
-                      suggestTitleMutation.mutate({ content: text });
-                    }
-                  }
-                }}
-                currentContent={content}
-              />
-
               {/* Content textarea */}
               <textarea
                 value={content}
@@ -778,8 +756,6 @@ export default function Journal() {
           </motion.div>
         )}
       </AnimatePresence>
-
-
 
       <UpgradeModal
         isOpen={showUpgradeModal}

@@ -1,4 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
 
 /**
  * Test suite for Mirror.tsx transcription display
@@ -8,7 +10,7 @@ import { describe, it, expect } from 'vitest';
  * 2. Partial transcripts show visual feedback (opacity and pulsing indicator)
  * 3. Final transcripts show "Transcribed" indicator
  * 4. Assistant messages are rendered separately
- * 5. Message type detection works correctly
+ * 5. Message animations are applied
  */
 
 describe('Mirror Voice Transcription Display', () => {
@@ -134,7 +136,7 @@ describe('Mirror Voice Transcription Display', () => {
     const emptyMessage = {
       type: 'user_transcript',
       id: 'msg-empty',
-      message: {} as any,
+      message: {},
     };
 
     let content = '';
@@ -183,7 +185,7 @@ describe('Mirror Voice Transcription Display', () => {
   });
 
   it('should handle message array with mixed types', () => {
-    const messages: any[] = [
+    const messages = [
       mockUserTranscript,
       mockAssistantMessage,
       mockFinalUserTranscript,
