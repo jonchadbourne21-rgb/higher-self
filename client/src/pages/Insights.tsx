@@ -10,6 +10,20 @@ import { format } from "date-fns";
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
 
+// Helper function to safely parse JSON arrays
+function parseArray(value: unknown): string[] {
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
 export default function Insights() {
   const { isAuthenticated, loading } = useAuth();
   const [, navigate] = useLocation();
@@ -111,41 +125,47 @@ export default function Insights() {
               </div>
 
               <div className="streamdown-content">
-                <Streamdown>{latest.insightText}</Streamdown>
+                <Streamdown>{typeof latest.insightText === 'string' ? latest.insightText : JSON.stringify(latest.insightText)}</Streamdown>
               </div>
             </div>
 
             {/* Patterns */}
-            {Array.isArray(latest.patterns) && latest.patterns.length > 0 && (
-              <div className="glass rounded-3xl p-5 space-y-3">
-                <p className="text-xs text-muted-foreground uppercase tracking-widest">Patterns Observed</p>
-                <div className="space-y-2">
-                  {(latest.patterns as string[]).map((pattern, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <span className="text-primary text-sm mt-0.5">◆</span>
-                      <p className="text-sm text-foreground leading-relaxed">{pattern}</p>
-                    </div>
-                  ))}
+            {(() => {
+              const patterns = parseArray(latest.patterns);
+              return patterns.length > 0 && (
+                <div className="glass rounded-3xl p-5 space-y-3">
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest">Patterns Observed</p>
+                  <div className="space-y-2">
+                    {patterns.map((pattern, i) => (
+                      <div key={i} className="flex items-start gap-3">
+                        <span className="text-primary text-sm mt-0.5">◆</span>
+                        <p className="text-sm text-foreground leading-relaxed">{pattern}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Actionable steps */}
-            {Array.isArray(latest.actionableSteps) && latest.actionableSteps.length > 0 && (
-              <div className="glass rounded-3xl p-5 space-y-3">
-                <p className="text-xs text-muted-foreground uppercase tracking-widest">This Week's Actions</p>
-                <div className="space-y-3">
-                  {(latest.actionableSteps as string[]).map((step, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-xs text-primary font-medium">{i + 1}</span>
+            {(() => {
+              const steps = parseArray(latest.actionableSteps);
+              return steps.length > 0 && (
+                <div className="glass rounded-3xl p-5 space-y-3">
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest">This Week's Actions</p>
+                  <div className="space-y-3">
+                    {steps.map((step, i) => (
+                      <div key={i} className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs text-primary font-medium">{i + 1}</span>
+                        </div>
+                        <p className="text-sm text-foreground leading-relaxed">{step}</p>
                       </div>
-                      <p className="text-sm text-foreground leading-relaxed">{step}</p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Refresh */}
             <Button
@@ -173,7 +193,7 @@ export default function Insights() {
                   <p className="text-xs text-muted-foreground">{format(new Date(insight.createdAt), "MMMM d, yyyy")}</p>
                   <span className="text-xs text-primary">{Math.round(insight.growthScore || 0)} score</span>
                 </div>
-                <p className="text-sm text-foreground line-clamp-2 leading-relaxed">{insight.insightText}</p>
+                <p className="text-sm text-foreground line-clamp-2 leading-relaxed">{typeof insight.insightText === 'string' ? insight.insightText : JSON.stringify(insight.insightText)}</p>
               </div>
             ))}
           </div>

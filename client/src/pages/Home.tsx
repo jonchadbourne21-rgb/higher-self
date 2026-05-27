@@ -93,13 +93,13 @@ export default function Home() {
 
   // Show FAQ pulse for new users (first 3 visits only)
   useEffect(() => {
-    const key = "mentrove_faq_pulse_dismissed";
+    const key = "mirrored_faq_pulse_dismissed";
     const dismissed = localStorage.getItem(key);
     if (!dismissed) {
-      const count = parseInt(localStorage.getItem("mentrove_faq_pulse_count") || "0", 10);
+      const count = parseInt(localStorage.getItem("mirrored_faq_pulse_count") || "0", 10);
       if (count < 3) {
         setShowFaqPulse(true);
-        localStorage.setItem("mentrove_faq_pulse_count", String(count + 1));
+        localStorage.setItem("mirrored_faq_pulse_count", String(count + 1));
       } else {
         localStorage.setItem(key, "1");
       }
@@ -558,7 +558,7 @@ export default function Home() {
               <button
                 onClick={() => {
                   setShowFaqPulse(false);
-                  localStorage.setItem("mentrove_faq_pulse_dismissed", "1");
+                  localStorage.setItem("mirrored_faq_pulse_dismissed", "1");
                 }}
                 className="text-xs transition-opacity hover:opacity-70 relative"
                 style={{ color: "oklch(0.50 0.08 295)" }}

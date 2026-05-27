@@ -10,7 +10,7 @@ export default function Landing() {
   const [, navigate] = useLocation();
 
   useEffect(() => {
-    document.title = "Mentrove — Your AI Mirror for Personal Growth";
+    document.title = "Mirrored — Your AI Mirror for Personal Growth";
   }, []);
 
   useEffect(() => {
@@ -38,8 +38,8 @@ export default function Landing() {
         style={{ background: "oklch(0.05 0.02 260)" }}
       >
         <motion.img
-          src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
-          alt="Mentrove"
+          src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mirrored-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
+          alt="Mirrored"
           className="w-20 h-20 rounded-full object-cover"
           animate={{ opacity: [0.4, 1, 0.4], scale: [0.92, 1.08, 0.92] }}
           transition={{ repeat: Infinity, duration: 2.4 }}
@@ -70,8 +70,8 @@ export default function Landing() {
         {/* Mandala with pulsing rings */}
         <div className="relative">
           <motion.img
-            src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
-            alt="Mentrove"
+            src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mirrored-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
+            alt="Mirrored"
             className="w-44 h-44 object-cover rounded-full"
             style={{ filter: "drop-shadow(0 0 40px oklch(0.55 0.18 295 / 0.7))" }}
           />
