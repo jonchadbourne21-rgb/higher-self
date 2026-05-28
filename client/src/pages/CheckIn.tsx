@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
+import AppShell from "@/components/AppShell";
 import { ChevronLeft, ChevronRight, Sparkles, BellRing, BellOff, Loader2 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Streamdown } from "streamdown";
@@ -131,9 +132,11 @@ export default function CheckIn() {
   // ── Loading guard — prevents flash of form while fetching today's check-in ────
   if ((loading || checkInLoading) && !done) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <AppShell>
+        <div className="flex items-center justify-center h-64">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         </div>
+      </AppShell>
     );
   }
 
@@ -141,7 +144,8 @@ export default function CheckIn() {
   if ((done || !!todayCheckIn) && !submitMutation.isPending) {
     const ci = todayCheckIn ?? null;
     return (
-      <div className="px-5 pt-8 pb-4 space-y-6">
+      <AppShell>
+        <div className="px-5 pt-8 pb-4 space-y-6">
           <div className="flex items-center gap-3">
             <button onClick={() => navigate("/home")} className="text-muted-foreground">
               <ChevronLeft size={20} />
@@ -240,12 +244,14 @@ export default function CheckIn() {
             Return Home
           </Button>
         </div>
+      </AppShell>
     );
   }
 
   // ── 3-step flow ──────────────────────────────────────────────────────────────
   return (
-    <div className="px-5 pt-8 pb-4 flex flex-col min-h-[calc(100dvh-4rem)]">
+    <AppShell>
+      <div className="px-5 pt-8 pb-4 flex flex-col min-h-[calc(100dvh-4rem)]">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <button
@@ -454,5 +460,6 @@ export default function CheckIn() {
           )}
         </div>
       </div>
+    </AppShell>
   );
 }

@@ -4,6 +4,7 @@ import { Mic, ChevronDown, ChevronUp, BookOpen, Clock, MessageSquare } from "luc
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import AppShell from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 
 // ── Emotion badge color ────────────────────────────────────────────────────────
@@ -176,7 +177,8 @@ export default function VoiceHistory() {
   };
 
   return (
-    <div className="flex flex-col w-full px-4 py-4">
+    <AppShell>
+      <div className="flex flex-col w-full px-4 py-4">
         {/* Content */}
         <main className="flex-1">
           {isLoading && (
@@ -286,5 +288,6 @@ export default function VoiceHistory() {
           )}
         </main>
       </div>
+    </AppShell>
   );
 }

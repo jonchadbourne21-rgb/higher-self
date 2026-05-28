@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useLocation, useParams } from "wouter";
 import { motion } from "framer-motion";
 import { trpc } from "@/lib/trpc";
+import AppShell from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
@@ -100,7 +101,8 @@ export default function ProgramInsight() {
   const nextLesson = storedInsight?.nextLesson ?? null;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 pb-28">
+    <AppShell>
+      <div className="max-w-2xl mx-auto px-4 py-8 pb-28">
         {/* Back */}
         <button
           onClick={() => navigate(`/programs/${programId}`)}
@@ -273,5 +275,6 @@ export default function ProgramInsight() {
           )}
         </div>
       </div>
+    </AppShell>
   );
 }

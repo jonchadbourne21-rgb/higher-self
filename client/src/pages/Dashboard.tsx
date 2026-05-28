@@ -3,6 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { motion } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
 import { useLocation, Link } from "wouter";
+import AppShell from "@/components/AppShell";
 import { ChevronRight, Star, Sparkles, Lock, Crown } from "lucide-react";
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
@@ -87,7 +88,8 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="px-5 pt-8 pb-4 space-y-6">
+    <AppShell>
+      <div className="px-5 pt-8 pb-4 space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-serif font-light">Growth</h1>
@@ -455,5 +457,6 @@ export default function Dashboard() {
           </>
         )}
       </div>
+    </AppShell>
   );
 }

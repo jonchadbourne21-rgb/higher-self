@@ -14,6 +14,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import AppShell from "@/components/AppShell";
 
 const TYPE_CONFIG = {
   therapy:  { label: "Therapy",  icon: Heart,    color: "#f43f5e", bg: "bg-rose-100 dark:bg-rose-900/30",     text: "text-rose-600 dark:text-rose-400" },
@@ -169,7 +170,8 @@ export default function Calendar() {
   };
 
   return (
-    <div className="pb-32">
+    <AppShell>
+      <div className="pb-32">
 
         {/* Header */}
         <div className="px-5 pt-6 pb-4 flex items-center justify-between">
@@ -463,5 +465,6 @@ export default function Calendar() {
           </motion.div>
         )}
       </AnimatePresence>
+    </AppShell>
   );
 }

@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import AppShell from "@/components/AppShell";
 import { Plus, X } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -63,7 +64,8 @@ export default function Timeline() {
 
   return (
     <>
-    <div className="px-5 pt-8 pb-4 space-y-6">
+    <AppShell>
+      <div className="px-5 pt-8 pb-4 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -137,6 +139,8 @@ export default function Timeline() {
           </div>
         )}
       </div>
+
+    </AppShell>
 
       {/* Add Milestone Modal — outside AppShell so it covers the nav */}
       <AnimatePresence>

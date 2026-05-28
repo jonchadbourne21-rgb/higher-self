@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import AppShell from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { useVoice } from "@humeai/voice-react";
 
@@ -429,17 +430,20 @@ export default function Voice() {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <AppShell>
+        <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <p className="text-muted-foreground mb-4">Please log in to use the Mirror</p>
             <Button onClick={() => setLocation("/")}>Go Home</Button>
           </div>
         </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <AppShell>
+      <div className="flex flex-col h-screen bg-background">
         {/* Tab Navigation */}
         <div className="flex gap-4 px-4 pt-4 border-b border-border">
           <button
@@ -645,5 +649,6 @@ export default function Voice() {
         </>
         )}
       </div>
+    </AppShell>
   );
 }

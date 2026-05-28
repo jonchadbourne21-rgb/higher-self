@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
+import AppShell from "@/components/AppShell";
 import { Send, RefreshCw, X, History, ChevronRight, Pencil, Check, MessageCircle, Mic, MicOff, Volume2, ChevronDown, Phone } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
@@ -1143,5 +1144,6 @@ export default function Chat() {
           toast.success(`You won: ${prize}!`);
         }}
       />
+    </AppShell>
   );
 }

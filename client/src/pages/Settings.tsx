@@ -4,6 +4,7 @@ import { User, Phone, Mail, Heart, Save, ArrowLeft, CheckCircle, PhoneCall, AtSi
 import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import AppShell from "@/components/AppShell";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { MilestonesList } from "@/components/MilestoneCard";
@@ -127,14 +128,17 @@ export default function Settings() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <AppShell>
+        <div className="flex items-center justify-center h-full">
           <div className="animate-pulse">Loading...</div>
         </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <AppShell>
+      <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-8">
           <Link href="/home">
             <ArrowLeft className="w-5 h-5 cursor-pointer" />
@@ -370,5 +374,6 @@ export default function Settings() {
           </DialogContent>
         </Dialog>
       </div>
+    </AppShell>
   );
 }

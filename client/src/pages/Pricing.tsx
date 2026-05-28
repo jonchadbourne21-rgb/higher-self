@@ -3,6 +3,7 @@ import { Check, X, Sparkles, Zap, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
+import AppShell from "@/components/AppShell";
 
 const STRIPE_CHECKOUT_MONTHLY = "https://buy.stripe.com/test_14A5kC1EB85s5SQe9fco000";
 const STRIPE_CHECKOUT_YEARLY = "https://buy.stripe.com/test_7sYdR8dnj71o1CA5CJco001";
@@ -58,9 +59,11 @@ export default function Pricing() {
 
   if (loading) {
     return (
-      <div className="px-4 pt-6 pb-4 space-y-6">
+      <AppShell>
+        <div className="px-4 pt-6 pb-4 space-y-6">
           <div className="h-96 rounded-2xl animate-pulse" style={{ background: "oklch(0.18 0.04 280)" }} />
         </div>
+      </AppShell>
     );
   }
 
@@ -70,7 +73,8 @@ export default function Pricing() {
   };
 
   return (
-    <div className="px-4 pt-4 pb-4 space-y-8">
+    <AppShell>
+      <div className="px-4 pt-4 pb-4 space-y-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -343,5 +347,6 @@ export default function Pricing() {
           </p>
         </motion.div>
       </div>
+    </AppShell>
   );
 }

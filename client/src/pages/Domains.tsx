@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import AppShell from "@/components/AppShell";
 import { Plus, X, Check, Trash2, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 import { HabitCompletionAnimation } from "@/components/HabitCompletionAnimation";
@@ -173,7 +174,8 @@ export default function Domains() {
 
   return (
     <>
-    {/* Habit completion animation overlay */}
+    <AppShell>
+      {/* Habit completion animation overlay */}
       <HabitCompletionAnimation
         isCompleting={completingHabitId !== null}
         isMilestone={milestoneStreak !== null}
@@ -364,6 +366,7 @@ export default function Domains() {
         })}
       </div>
       </div>
+    </AppShell>
 
     {/* Add Habit Modal — outside AppShell so it covers the nav */}
     <AnimatePresence>

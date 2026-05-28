@@ -3,6 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import AppShell from "@/components/AppShell";
 import { Heart, Star, Trash2, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
@@ -35,7 +36,8 @@ export default function SavedInsights() {
   };
 
   return (
-    <div className="flex flex-col pb-24">
+    <AppShell>
+      <div className="flex flex-col pb-24">
         {/* Header */}
         <div className="px-5 pt-8 pb-4 border-b border-border/30">
           <div className="flex items-center gap-3 mb-4">
@@ -170,5 +172,6 @@ export default function SavedInsights() {
           </AnimatePresence>
         </div>
       </div>
+    </AppShell>
   );
 }

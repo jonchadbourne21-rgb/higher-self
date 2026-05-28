@@ -2,6 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useEffect } from "react";
 import { useLocation, useParams } from "wouter";
+import AppShell from "@/components/AppShell";
 import { ChevronLeft } from "lucide-react";
 import { format } from "date-fns";
 import { Streamdown } from "streamdown";
@@ -22,7 +23,8 @@ export default function JournalEntry() {
   }, [isAuthenticated, loading]);
 
   return (
-    <div className="px-5 pt-8 pb-4 space-y-6">
+    <AppShell>
+      <div className="px-5 pt-8 pb-4 space-y-6">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate("/journal")} className="text-muted-foreground">
             <ChevronLeft size={20} />
@@ -100,5 +102,6 @@ export default function JournalEntry() {
           </div>
         )}
       </div>
+    </AppShell>
   );
 }

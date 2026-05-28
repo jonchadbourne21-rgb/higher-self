@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { useLocation } from "wouter";
+import AppShell from "@/components/AppShell";
 import { Sparkles, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { Streamdown } from "streamdown";
@@ -30,7 +31,8 @@ export default function Insights() {
   const latest = allInsights?.[0];
 
   return (
-    <div className="px-5 pt-8 pb-4 space-y-6">
+    <AppShell>
+      <div className="px-5 pt-8 pb-4 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -177,5 +179,6 @@ export default function Insights() {
           </div>
         )}
       </div>
+    </AppShell>
   );
 }

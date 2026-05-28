@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import AppShell from "@/components/AppShell";
 import { ArrowLeft, Loader2, TrendingUp } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { trpc } from "@/lib/trpc";
@@ -70,7 +71,8 @@ export default function CheckInInsight() {
   const isToday = new Date().getDay() === 0; // Sunday
 
   return (
-    <div className="px-5 pt-6 pb-20 max-w-3xl mx-auto">
+    <AppShell>
+      <div className="px-5 pt-6 pb-20 max-w-3xl mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -8 }}
@@ -226,5 +228,6 @@ export default function CheckInInsight() {
           Your insights highlight patterns and growth across all your Mirror sessions, journals, and habits
         </motion.p>
       </div>
+    </AppShell>
   );
 }
