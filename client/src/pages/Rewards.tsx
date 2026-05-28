@@ -3,7 +3,6 @@ import { trpc } from "@/lib/trpc";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useLocation } from "wouter";
-import AppShell from "@/components/AppShell";
 import { Gift, Star, Zap, Trophy, ChevronRight, Sparkles, RotateCcw, Crown, History } from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
@@ -512,8 +511,7 @@ export default function Rewards() {
   ];
 
   return (
-    <AppShell>
-      <div className="px-5 pt-4 pb-6 space-y-5">
+    <div className="px-5 pt-4 pb-6 space-y-5">
         {/* ── Pro Status Banner ──────────────────────────────────────── */}
         {dashboard?.isPro && dashboard.activeGrant && (
           <motion.div
@@ -999,6 +997,5 @@ export default function Rewards() {
         grantActivated={prizeModal.grantActivated}
         onClose={() => setPrizeModal({ open: false, label: null, isWelcome: false, grantActivated: false })}
       />
-    </AppShell>
   );
 }

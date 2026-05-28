@@ -1,5 +1,4 @@
 import { useState } from "react";
-import AppShell from "@/components/AppShell";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Bell, BellOff, BellRing, ChevronLeft, Clock, Loader2, Send } from "lucide-react";
 import { Link } from "wouter";
@@ -66,8 +65,7 @@ export default function Notifications() {
   }
 
   return (
-    <AppShell>
-      <div className="px-4 pt-6 pb-32 max-w-lg mx-auto">
+    <div className="px-4 pt-6 pb-32 max-w-lg mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <Link href="/home">
@@ -228,6 +226,5 @@ export default function Notifications() {
           </div>
         )}
       </div>
-    </AppShell>
   );
 }

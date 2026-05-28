@@ -1,7 +1,6 @@
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { trpc } from "@/lib/trpc";
-import AppShell from "@/components/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Clock, ChevronRight, Sparkles, CheckCircle2 } from "lucide-react";
 
@@ -64,8 +63,7 @@ export default function Programs() {
   const enrolledIds = new Set(enrollments?.map((e) => e.programId) ?? []);
 
   return (
-    <AppShell>
-      <div className="max-w-2xl mx-auto px-4 py-4 pb-28">
+    <div className="max-w-2xl mx-auto px-4 py-4 pb-28">
 
         {/* In Progress */}
         {enrollments && enrollments.filter((e) => e.status !== "completed").length > 0 && (
@@ -211,6 +209,5 @@ export default function Programs() {
           </div>
         )}
       </div>
-    </AppShell>
   );
 }

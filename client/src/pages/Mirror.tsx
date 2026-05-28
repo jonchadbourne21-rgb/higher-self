@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
-import AppShell from "@/components/AppShell";
 import { MessageCircle, Mic, MicOff, PhoneOff, Volume2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -257,19 +256,16 @@ export default function Mirror() {
 
   if (!user) {
     return (
-      <AppShell>
-        <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <p className="text-muted-foreground mb-4">Please log in to use the Mirror</p>
           </div>
         </div>
-      </AppShell>
     );
   }
 
   return (
-    <AppShell>
-      <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full bg-background">
         {/* Mode tabs */}
         <div className="flex gap-4 px-4 py-4 border-b border-border">
           <button
@@ -525,6 +521,5 @@ export default function Mirror() {
 
       {/* Modals */}
       <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} limitType="chat" />
-    </AppShell>
   );
 }

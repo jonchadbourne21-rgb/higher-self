@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
-import AppShell from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -164,28 +163,24 @@ export default function ProgramDetail() {
 
   if (isLoading) {
     return (
-      <AppShell>
-        <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto px-4 py-8">
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-24 rounded-xl bg-muted/40 animate-pulse" />
             ))}
           </div>
         </div>
-      </AppShell>
     );
   }
 
   if (!data) {
     return (
-      <AppShell>
-        <div className="max-w-2xl mx-auto px-4 py-8 text-center">
+      <div className="max-w-2xl mx-auto px-4 py-8 text-center">
           <p className="text-muted-foreground">Program not found.</p>
           <Button variant="ghost" onClick={() => navigate("/programs")} className="mt-4">
             Back to Programs
           </Button>
         </div>
-      </AppShell>
     );
   }
 
@@ -217,8 +212,7 @@ export default function ProgramDetail() {
     // ── LOCKED STATE — next day not yet open ────────────────────────────────
     if (isLocked && unlockAt) {
       return (
-        <AppShell>
-          <div className="max-w-2xl mx-auto px-4 py-8 pb-28">
+        <div className="max-w-2xl mx-auto px-4 py-8 pb-28">
             <button
               onClick={() => setShowLessonView(false)}
               className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-sm mb-6 transition-colors"
@@ -288,15 +282,13 @@ export default function ProgramDetail() {
               Back to Program Overview
             </Button>
           </div>
-        </AppShell>
       );
     }
 
     // ── SUBMITTED STATE — show reflection + AI insight ───────────────────────
     if (alreadySubmitted) {
       return (
-        <AppShell>
-          <div className="max-w-2xl mx-auto px-4 py-8 pb-28">
+        <div className="max-w-2xl mx-auto px-4 py-8 pb-28">
             <button
               onClick={() => setShowLessonView(false)}
               className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-sm mb-6 transition-colors"
@@ -359,14 +351,12 @@ export default function ProgramDetail() {
               Back to Program Overview
             </Button>
           </div>
-        </AppShell>
       );
     }
 
     // ── ACTIVE LESSON — reflection input ────────────────────────────────────
     return (
-      <AppShell>
-        <div className="max-w-2xl mx-auto px-4 py-8 pb-28">
+      <div className="max-w-2xl mx-auto px-4 py-8 pb-28">
           <button
             onClick={() => setShowLessonView(false)}
             className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-sm mb-6 transition-colors"
@@ -451,14 +441,12 @@ export default function ProgramDetail() {
             </div>
           </motion.div>
         </div>
-      </AppShell>
     );
   }
 
   // ── Program overview ────────────────────────────────────────────────────────
   return (
-    <AppShell>
-      <div className="max-w-2xl mx-auto px-4 py-8 pb-28">
+    <div className="max-w-2xl mx-auto px-4 py-8 pb-28">
         <button
           onClick={() => navigate("/programs")}
           className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-sm mb-6 transition-colors"
@@ -662,6 +650,5 @@ export default function ProgramDetail() {
           </Button>
         )}
       </div>
-    </AppShell>
   );
 }

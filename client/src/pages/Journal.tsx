@@ -3,7 +3,6 @@ import { trpc } from "@/lib/trpc";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useLocation, Link } from "wouter";
-import AppShell from "@/components/AppShell";
 import {
   Plus, X, ChevronRight, Sparkles, Wand2, Search, Filter,
   Tag, Trash2, FolderPlus, Calendar, ChevronDown, SlidersHorizontal,
@@ -213,7 +212,6 @@ export default function Journal() {
 
   return (
     <>
-      <AppShell>
       <div className="px-5 pt-8 pb-24 space-y-5">
 
         {/* ── Category + New Entry buttons ─────────────────────────────────── */}
@@ -478,7 +476,6 @@ export default function Journal() {
           </div>
         )}
       </div>
-      </AppShell>
 
       {/* ── New Entry Full-Screen Modal (outside AppShell so it covers the nav) ── */}
       <AnimatePresence>
