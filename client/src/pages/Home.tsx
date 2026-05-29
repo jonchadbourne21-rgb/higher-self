@@ -1,7 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { motion } from "framer-motion";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useLocation, Link } from "wouter";
 import { Sparkles, Sun, Moon, Bell, User, ChevronRight } from "lucide-react";
 import WelcomeSpinModal from "@/components/WelcomeSpinModal";
@@ -87,8 +87,19 @@ export default function Home() {
   const { data: proStatus } = trpc.rewards.proStatus.useQuery(undefined, { enabled: isAuthenticated });
   const { data: auraHistory } = trpc.checkIn.auraHistory.useQuery(undefined, { enabled: isAuthenticated });
   const { data: myEnrollments } = trpc.programs.myEnrollments.useQuery(undefined, { enabled: isAuthenticated });
-  const { data: tileEngagement } = trpc.home.tileEngagement.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: tileEngagement, isLoading: tileEngagementLoading } = trpc.home.tileEngagement.useQuery(undefined, { enabled: isAuthenticated });
   const isPro = proStatus?.isPro ?? false;
+
+  // Track whether tiles have rendered with real data at least once
+  // to suppress the layout animation on initial load (prevents jarring jump)
+  const tilesInitialized = useRef(false);
+  useEffect(() => {
+    if (tileEngagement && !tilesInitialized.current) {
+      // Small delay to let the first render with sorted data paint
+      const t = setTimeout(() => { tilesInitialized.current = true; }, 300);
+      return () => clearTimeout(t);
+    }
+  }, [tileEngagement]);
   const [showWelcomeSpin, setShowWelcomeSpin] = useState(false);
   const [showFaqPulse, setShowFaqPulse] = useState(false);
 
@@ -172,6 +183,9 @@ export default function Home() {
     () => [...TILE_DEFS].sort((a, b) => b.score - a.score),
     [TILE_DEFS]
   );
+
+  // Only enable layout animations after initial data has settled
+  const enableLayoutAnimation = tilesInitialized.current;
 
   // Aura score — weighted average of mood (40%), energy (30%), stress inverted (30%)
   const auraScore = todayCheckIn
@@ -503,12 +517,12 @@ export default function Home() {
                 return (
                   <Link key={tile.key} href={tile.href} className="block">
                     <motion.div
-                      layout
-                      layoutId={tile.key}
+                      layout={enableLayoutAnimation}
+                      layoutId={enableLayoutAnimation ? tile.key : undefined}
                       whileTap={{ scale: 0.96 }}
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.35, delay: idx * 0.04 }}
+                      transition={{ duration: 0.35, delay: idx * 0.04, layout: { duration: 0.3, ease: "easeInOut" } }}
                       className="rounded-xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:shadow-md h-20"
                       style={tileStyle}
                     >

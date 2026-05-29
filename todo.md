@@ -1228,3 +1228,6 @@
 - [ ] Remove old Pinecone dependency and `server/rag/embeddings.ts` (kept for backward compat)
 - [x] Write vitest tests for new RAG module (25 tests — embedding, storage, retrieval, personality)
 - [x] Verify all 574 existing tests still pass
+
+## Bug Fixes (May 29)
+- [x] Fix dashboard cards/rectangles jumping around on page load (layout shift issue)
