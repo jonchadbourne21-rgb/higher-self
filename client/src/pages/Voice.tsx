@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft, Mic, MicOff, PhoneOff, AlertTriangle, History, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -71,88 +71,69 @@ function GlowingOrb({
 }) {
   const isActive = status === "live";
   const isListening = isActive && !isMuted;
-  const hasAudio = audioLevel > 0.05; // Only consider it audio if above threshold
+  const hasAudio = audioLevel > 0.02;
   
-  // Scale rings based on audio level (0-1)
-  const audioScale = 1 + audioLevel * 0.3; // Max 1.3x scale
-  const audioOpacity = 0.3 + audioLevel * 0.5; // 0.3 to 0.8
+  // Memoize animation values to prevent framer-motion from restarting animations
+  // on every parent re-render (which caused the glitching after a few minutes)
+  const ringAnimation = useMemo(() => ({
+    scale: [1, 1.5],
+    opacity: [0.5, 0],
+  }), []);
   
+  const ringTransitions = useMemo(() => ([
+    { duration: 2.0, repeat: Infinity, ease: "easeOut" as const },
+    { duration: 2.5, repeat: Infinity, ease: "easeOut" as const, delay: 0.3 },
+    { duration: 3.0, repeat: Infinity, ease: "easeOut" as const, delay: 0.6 },
+  ]), []);
+
+  // Stable boxShadow values — memoized to avoid new object refs each render
+  const activeGlow = "0 0 30px rgba(34, 211, 238, 0.6), inset 0 0 20px rgba(34, 211, 238, 0.3)";
+  const idleGlow = "0 0 0px rgba(34, 211, 238, 0)";
+  const readyGlow = "0 0 20px rgba(34, 211, 238, 0.4), inset 0 0 15px rgba(34, 211, 238, 0.2)";
+
   return (
     <div className="flex justify-center mb-8">
       <div className="relative w-32 h-32">
-        {/* Outer expanding rings - only animate when there's audio */}
-        {isActive && isListening && hasAudio && (
+        {/* Pulsing rings — shown when connected and not muted.
+            Fixed animation values prevent framer-motion from restarting on re-render. */}
+        {isActive && isListening && (
           <>
-            {/* Ring 1 - Outermost - responds to audio */}
             <motion.div
               className="absolute inset-0 rounded-full border border-cyan-400/30"
-              animate={{
-                scale: [1, audioScale * 1.4],
-                opacity: [audioOpacity * 0.6, 0],
-              }}
-              transition={{
-                duration: 1.2,
-                repeat: Infinity,
-                ease: "easeOut",
-              }}
+              animate={ringAnimation}
+              transition={ringTransitions[0]}
             />
-            {/* Ring 2 - Mid - responds to audio */}
             <motion.div
               className="absolute inset-0 rounded-full border border-cyan-400/50"
-              animate={{
-                scale: [1, audioScale * 1.25],
-                opacity: [audioOpacity * 0.8, 0],
-              }}
-              transition={{
-                duration: 1.0,
-                repeat: Infinity,
-                ease: "easeOut",
-              }}
+              animate={ringAnimation}
+              transition={ringTransitions[1]}
             />
-            {/* Ring 3 - Inner - responds to audio */}
             <motion.div
               className="absolute inset-0 rounded-full border border-cyan-300/70"
-              animate={{
-                scale: [1, audioScale * 1.1],
-                opacity: [audioOpacity, 0.2],
-              }}
-              transition={{
-                duration: 0.8,
-                repeat: Infinity,
-                ease: "easeOut",
-              }}
+              animate={ringAnimation}
+              transition={ringTransitions[2]}
             />
           </>
         )}
         
-        {/* Main orb - Bright cyan center */}
+        {/* Main orb - scale reacts to audio via CSS transform (no re-render needed) */}
         <motion.div
           className={`absolute inset-0 rounded-full flex items-center justify-center ${
-            isListening && hasAudio
+            isListening
               ? "bg-gradient-to-br from-cyan-300 via-cyan-400 to-cyan-500"
               : isActive
               ? "bg-gradient-to-br from-cyan-400/90 via-cyan-500/80 to-cyan-600/70"
               : "bg-gradient-to-br from-slate-600 to-slate-700"
           }`}
+          style={{
+            transform: `scale(${hasAudio && isListening ? 1 + audioLevel * 0.08 : 1})`,
+            transition: "transform 0.15s ease-out",
+          }}
           animate={{
-            scale: isListening && hasAudio ? [1, 1.08 + audioLevel * 0.05] : 1,
-            boxShadow: isListening && hasAudio
-              ? [
-                  "0 0 30px rgba(34, 211, 238, 0.6), inset 0 0 20px rgba(34, 211, 238, 0.3)",
-                  "0 0 60px rgba(34, 211, 238, 1), inset 0 0 30px rgba(34, 211, 238, 0.5)",
-                  "0 0 30px rgba(34, 211, 238, 0.6), inset 0 0 20px rgba(34, 211, 238, 0.3)",
-                ]
-              : isActive
-              ? [
-                  "0 0 20px rgba(34, 211, 238, 0.4), inset 0 0 15px rgba(34, 211, 238, 0.2)",
-                  "0 0 40px rgba(34, 211, 238, 0.6), inset 0 0 25px rgba(34, 211, 238, 0.3)",
-                  "0 0 20px rgba(34, 211, 238, 0.4), inset 0 0 15px rgba(34, 211, 238, 0.2)",
-                ]
-              : "0 0 0px rgba(34, 211, 238, 0)",
+            boxShadow: isListening ? activeGlow : isActive ? readyGlow : idleGlow,
           }}
           transition={{
-            duration: isListening && hasAudio ? 0.3 : 2.5,
-            repeat: isListening && hasAudio ? Infinity : 0,
+            duration: 2.5,
             ease: "easeInOut",
           }}
         >
@@ -245,19 +226,25 @@ export default function Voice() {
   const [killSwitch, setKillSwitch] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState<"female" | "male">("female");
-  const [audioLevel, setAudioLevel] = useState(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const audioLevelRef = useRef(0);
-  const audioDecayIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Hume SDK hooks
+  // Hume SDK hooks — use micFft for real-time audio visualization
   const {
     connect,
     disconnect,
     messages: humeMessages,
     error: humeError,
+    micFft,
   } = useVoice();
+
+  // Derive audio level from SDK's micFft (array of frequency magnitudes 0-1)
+  const audioLevel = useMemo(() => {
+    if (!micFft || micFft.length === 0) return 0;
+    const bins = micFft.slice(0, Math.min(8, micFft.length));
+    const sum = bins.reduce((acc, v) => acc + v * v, 0);
+    return Math.min(1, Math.sqrt(sum / bins.length) * 2);
+  }, [micFft]);
 
   const mintTokenMut = trpc.voice.mintToken.useMutation();
   const createSessionMut = trpc.voice.createSession.useMutation();
@@ -268,25 +255,9 @@ export default function Voice() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Audio level decay effect - gradually reduce audio level when no new messages
-  useEffect(() => {
-    if (audioDecayIntervalRef.current) {
-      clearInterval(audioDecayIntervalRef.current);
-    }
+  // No manual setInterval decay needed — audioLevel is derived from SDK's micFft above.
 
-    audioDecayIntervalRef.current = setInterval(() => {
-      audioLevelRef.current = Math.max(0, audioLevelRef.current - 0.05);
-      setAudioLevel(audioLevelRef.current);
-    }, 50);
-
-    return () => {
-      if (audioDecayIntervalRef.current) {
-        clearInterval(audioDecayIntervalRef.current);
-      }
-    };
-  }, []);
-
-  // Monitor Hume SDK messages and sync to local state + update audio level
+  // Monitor Hume SDK messages and sync to local state
   useEffect(() => {
     if (!humeMessages || humeMessages.length === 0) return;
 
@@ -299,15 +270,6 @@ export default function Voice() {
 
     // Avoid duplicates
     if (lastLocalMsg?.id === `hume-${msg.id}`) return;
-
-    // Update audio level based on message role and content length
-    // User messages (speaking) get higher audio levels
-    if (msg.role === "user") {
-      const contentLength = msg.message?.content?.length || 0;
-      const level = Math.min(1, contentLength / 100); // Normalize to 0-1
-      audioLevelRef.current = level;
-      setAudioLevel(level);
-    }
 
     const newMsg: Message = {
       id: `hume-${msg.id}`,
@@ -369,8 +331,6 @@ export default function Voice() {
     setErrorMsg(null);
     setMessages([]);
     setKillSwitch(false);
-    setAudioLevel(0);
-    audioLevelRef.current = 0;
 
     try {
       // 1. Get API key and config from server
@@ -410,8 +370,6 @@ export default function Voice() {
   const handleDisconnect = useCallback(() => {
     disconnect();
     setStatus("ended");
-    setAudioLevel(0);
-    audioLevelRef.current = 0;
     toast.success("Session ended");
   }, [disconnect]);
 

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
 import { MessageCircle, Mic, MicOff, PhoneOff, Volume2 } from "lucide-react";
@@ -38,64 +38,56 @@ function GlowingOrb({
 }) {
   const isActive = status.value === "connected";
   const isListening = isActive && !isMuted;
-  const hasAudio = audioLevel > 0.05;
+  const hasAudio = audioLevel > 0.02;
   
-  const audioScale = 1 + audioLevel * 0.3;
-  const audioOpacity = 0.3 + audioLevel * 0.5;
+  // Memoize animation values to prevent framer-motion from restarting animations
+  // when parent re-renders with the same logical state
+  const ringAnimation = useMemo(() => ({
+    scale: [1, 1.4],
+    opacity: [0.5, 0],
+  }), []);
   
+  const ringTransitions = useMemo(() => ([
+    { duration: 2.0, repeat: Infinity, ease: "easeOut" as const },
+    { duration: 2.5, repeat: Infinity, ease: "easeOut" as const, delay: 0.3 },
+    { duration: 3.0, repeat: Infinity, ease: "easeOut" as const, delay: 0.6 },
+  ]), []);
+
   return (
     <div className="flex justify-center mb-8">
       <div className="relative w-32 h-32">
-        {isActive && isListening && hasAudio && (
+        {/* Pulsing rings — only shown when connected and not muted.
+            Use fixed animation values so framer-motion doesn't restart on every render. */}
+        {isActive && isListening && (
           <>
             <motion.div
               className="absolute inset-0 rounded-full border border-cyan-400/30"
-              animate={{
-                scale: [1, audioScale * 1.4],
-                opacity: [audioOpacity * 0.6, 0],
-              }}
-              transition={{
-                duration: 1.2,
-                repeat: Infinity,
-                ease: "easeOut",
-              }}
+              animate={ringAnimation}
+              transition={ringTransitions[0]}
             />
             <motion.div
               className="absolute inset-2 rounded-full border border-cyan-400/20"
-              animate={{
-                scale: [1, audioScale * 1.2],
-                opacity: [audioOpacity * 0.4, 0],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeOut",
-                delay: 0.2,
-              }}
+              animate={ringAnimation}
+              transition={ringTransitions[1]}
             />
             <motion.div
               className="absolute inset-4 rounded-full border border-cyan-400/10"
-              animate={{
-                scale: [1, audioScale],
-                opacity: [audioOpacity * 0.2, 0],
-              }}
-              transition={{
-                duration: 1.8,
-                repeat: Infinity,
-                ease: "easeOut",
-                delay: 0.4,
-              }}
+              animate={ringAnimation}
+              transition={ringTransitions[2]}
             />
           </>
         )}
 
+        {/* Main orb — scale reacts to audio level via CSS transform for zero-rerender updates */}
         <motion.div
           className="w-full h-full rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-2xl"
+          style={{
+            transform: `scale(${hasAudio && isListening ? 1 + audioLevel * 0.08 : 1})`,
+          }}
           animate={{
-            boxShadow: hasAudio && isListening 
+            boxShadow: isListening
               ? "0 0 40px rgba(34, 211, 238, 0.8), 0 0 80px rgba(34, 211, 238, 0.4)"
               : "0 0 20px rgba(34, 211, 238, 0.5), 0 0 40px rgba(34, 211, 238, 0.2)",
-            scale: hasAudio && isListening ? 1.05 : 1,
           }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
@@ -123,13 +115,20 @@ export default function Mirror() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Voice state
-  const { connect, disconnect, messages: voiceMessages, isMuted, status } = useVoice();
+  // Voice state — use SDK's built-in fft for real audio visualization
+  const { connect, disconnect, messages: voiceMessages, isMuted, status, micFft } = useVoice();
   const [voiceGender, setVoiceGender] = useState<"male" | "female">("female");
-  const [audioLevel, setAudioLevel] = useState(0);
   const voiceEndRef = useRef<HTMLDivElement>(null);
-  const audioLevelRef = useRef(0);
-  const audioDecayIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Derive audio level from SDK's micFft (array of frequency magnitudes 0-1)
+  // Using useMemo to avoid recalculating on unrelated renders
+  const audioLevel = useMemo(() => {
+    if (!micFft || micFft.length === 0) return 0;
+    // RMS of first 8 frequency bins gives a smooth energy reading
+    const bins = micFft.slice(0, Math.min(8, micFft.length));
+    const sum = bins.reduce((acc, v) => acc + v * v, 0);
+    return Math.min(1, Math.sqrt(sum / bins.length) * 2);
+  }, [micFft]);
 
   // Chat queries
   const sendChatMutation = trpc.chat.send.useMutation();
@@ -148,38 +147,8 @@ export default function Mirror() {
     voiceEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [voiceMessages]);
 
-  // Audio level decay effect
-  useEffect(() => {
-    if (audioDecayIntervalRef.current) {
-      clearInterval(audioDecayIntervalRef.current);
-    }
-
-    audioDecayIntervalRef.current = setInterval(() => {
-      audioLevelRef.current = Math.max(0, audioLevelRef.current - 0.05);
-      setAudioLevel(audioLevelRef.current);
-    }, 50);
-
-    return () => {
-      if (audioDecayIntervalRef.current) {
-        clearInterval(audioDecayIntervalRef.current);
-      }
-    };
-  }, []);
-
-  // Monitor Hume SDK messages and update audio level
-  useEffect(() => {
-    if (!voiceMessages || voiceMessages.length === 0) return;
-
-    const lastMsg = voiceMessages[voiceMessages.length - 1] as any;
-
-    // Update audio level based on message role and content length
-    if (lastMsg?.role === "user") {
-      const contentLength = lastMsg?.message?.content?.length || 0;
-      const level = Math.min(1, contentLength / 100);
-      audioLevelRef.current = level;
-      setAudioLevel(level);
-    }
-  }, [voiceMessages]);
+  // No manual setInterval decay or message-based audio level needed —
+  // audioLevel is now derived directly from the SDK's real-time micFft data above.
 
   // Send chat message
   const handleSendChat = useCallback(async () => {

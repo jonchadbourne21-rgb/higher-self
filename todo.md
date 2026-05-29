@@ -1167,3 +1167,8 @@
 - [x] Write vitest tests for voice.saveToJournal procedure
 - [x] Write vitest tests for crisis safety features (keyword detection, kill switch, logging)
 - [x] Full test suite passes cleanly — 549 tests, 32 test files, 0 failures
+
+## Voice Mirror Background Glitch Bug (May 29)
+- [x] Diagnose background glitching in voice/mirror feature after a few minutes of talking
+- [x] Fix the root cause — removed setInterval(50ms) audio decay loop that caused 20 FPS re-renders, replaced with SDK's built-in micFft data; memoized framer-motion animation values to prevent restart on re-render
+- [x] Verify fix doesn't break other voice/mirror functionality — 549 tests pass, 0 TypeScript errors
