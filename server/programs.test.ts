@@ -226,7 +226,7 @@ describe("programs.submitLessonResponse — Day 21 completion reward", () => {
     expect(vi.mocked(createRewardGrant)).toHaveBeenCalledWith(1, "month_pro", "spin");
   });
 
-  it("does NOT award completion reward for non-21-day programs", async () => {
+  it("awards scaled completion reward for short programs (<=21 days)", async () => {
     const ctx = createCtx();
     const caller = appRouter.createCaller(ctx);
 
@@ -246,7 +246,9 @@ describe("programs.submitLessonResponse — Day 21 completion reward", () => {
     });
 
     expect(result.isCompleted).toBe(true);
-    expect(result.completionReward).toBeNull();
-    expect(vi.mocked(addRewardPoints)).not.toHaveBeenCalled();
+    expect(result.completionReward).toEqual({ points: 25, grantActivated: true });
+    expect(vi.mocked(addRewardPoints)).toHaveBeenCalledWith(
+      1, 25, "checkin", expect.stringContaining("program_completion_1_")
+    );
   });
 });

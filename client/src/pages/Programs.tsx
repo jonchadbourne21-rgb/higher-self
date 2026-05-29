@@ -44,6 +44,7 @@ const PROGRAM_ICON_OVERRIDES: Record<string, string> = {
   "7-Day Emotional Mastery": "🌊",
   "The Present Moment Challenge": "🎭",
   "The Stoic Path": "🏛️",
+  "Self-Determination through Suffering": "🔥",
 };
 
 function getProgramIcon(program: { name: string; category: string }): string {

@@ -166,7 +166,7 @@ export const programsRouter = router({
       z.object({
         programId: z.number().int().positive(),
         lessonId: z.number().int().positive(),
-        day: z.number().int().min(1).max(30),
+        day: z.number().int().min(1).max(90),
         reflection: z.string().min(20, "Please write at least 20 characters"),
       })
     )
@@ -288,17 +288,19 @@ Your role: reflect back what the person shared, name what you notice with warmth
         streakMilestone = { days: 14, points: 25 };
       }
 
-      // ── 21-day completion reward ──────────────────────────────────────────
+      // ── Program completion reward ─────────────────────────────────────────
       let completionReward: { points: number; grantActivated: boolean } | null = null;
-      if (isLastDay && program?.durationDays === 21) {
+      if (isLastDay) {
+        // Scale reward by program length: 25 pts for short (<=21), 50 for medium (22-35), 75 for long (36+)
+        const rewardPoints = (program?.durationDays ?? 21) <= 21 ? 25 : (program?.durationDays ?? 21) <= 35 ? 50 : 75;
         await addRewardPoints(
           ctx.user.id,
-          25,
+          rewardPoints,
           "checkin",
           `program_completion_${input.programId}_${Date.now()}`
         );
         const grant = await createRewardGrant(ctx.user.id, "month_pro", "spin");
-        completionReward = { points: 25, grantActivated: grant.activated };
+        completionReward = { points: rewardPoints, grantActivated: grant.activated };
       }
 
       // Fetch next day's lesson preview for the insight page

@@ -405,6 +405,7 @@ export default function Home() {
                     "7-Day Emotional Mastery": "🌊",
                     "The Present Moment Challenge": "🎭",
                     "The Stoic Path": "🏛️",
+                    "Self-Determination through Suffering": "🔥",
                   };
                   const CAT_ICONS: Record<string, string> = {
                     "emotional-mastery": "🌊", "building-presence": "✨",

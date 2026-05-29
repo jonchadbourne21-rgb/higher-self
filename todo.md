@@ -1193,3 +1193,12 @@
 - [x] Integrated into Mirror page — History button in header, past session read-only view with "Back to live" banner
 - [x] Added "Start fresh" (+) button in header to begin new conversation
 - [x] Mobile-responsive slide-up panel (75dvh max height, spring animation)
+
+## Self-Determination through Suffering Program (May 29)
+- [x] Reviewed existing program schema and seed script pattern
+- [x] Designed 3-month curriculum: 4 lessons/week (48 total), rest days with real-world tasks
+- [x] Wrote seed script with all 48 lessons — logotherapy philosophy, Frankl as reflection guide, no name in titles
+- [x] Updated Programs page icon mapping (🔥) in both Programs.tsx and Home.tsx
+- [x] Ran seed script — program id=120002 with 48 lessons inserted
+- [x] Raised day validation max from 30→90, added scaled completion rewards for all programs
+- [x] All 549 tests pass (updated completion reward test for new behavior)
