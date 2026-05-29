@@ -10,6 +10,7 @@ import { useVoice } from "@humeai/voice-react";
 import { Streamdown } from "streamdown";
 import { Send } from "lucide-react";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { VoiceVisualization } from "@/components/VoiceVisualization";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -27,81 +28,7 @@ const STARTER_PROMPTS = [
   "Help me understand a difficult emotion I'm feeling",
 ];
 
-function GlowingOrb({ 
-  status, 
-  isMuted,
-  audioLevel = 0 
-}: { 
-  status: { value: 'connecting' | 'connected' | 'disconnected'; reason?: never } | { value: 'error'; reason: string }; 
-  isMuted: boolean;
-  audioLevel?: number;
-}) {
-  const isActive = status.value === "connected";
-  const isListening = isActive && !isMuted;
-  const hasAudio = audioLevel > 0.02;
-  
-  // Memoize animation values to prevent framer-motion from restarting animations
-  // when parent re-renders with the same logical state
-  const ringAnimation = useMemo(() => ({
-    scale: [1, 1.4],
-    opacity: [0.5, 0],
-  }), []);
-  
-  const ringTransitions = useMemo(() => ([
-    { duration: 2.0, repeat: Infinity, ease: "easeOut" as const },
-    { duration: 2.5, repeat: Infinity, ease: "easeOut" as const, delay: 0.3 },
-    { duration: 3.0, repeat: Infinity, ease: "easeOut" as const, delay: 0.6 },
-  ]), []);
-
-  return (
-    <div className="flex justify-center mb-8">
-      <div className="relative w-32 h-32">
-        {/* Pulsing rings — only shown when connected and not muted.
-            Use fixed animation values so framer-motion doesn't restart on every render. */}
-        {isActive && isListening && (
-          <>
-            <motion.div
-              className="absolute inset-0 rounded-full border border-cyan-400/30"
-              animate={ringAnimation}
-              transition={ringTransitions[0]}
-            />
-            <motion.div
-              className="absolute inset-2 rounded-full border border-cyan-400/20"
-              animate={ringAnimation}
-              transition={ringTransitions[1]}
-            />
-            <motion.div
-              className="absolute inset-4 rounded-full border border-cyan-400/10"
-              animate={ringAnimation}
-              transition={ringTransitions[2]}
-            />
-          </>
-        )}
-
-        {/* Main orb — scale reacts to audio level via CSS transform for zero-rerender updates */}
-        <motion.div
-          className="w-full h-full rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-2xl"
-          style={{
-            transform: `scale(${hasAudio && isListening ? 1 + audioLevel * 0.08 : 1})`,
-          }}
-          animate={{
-            boxShadow: isListening
-              ? "0 0 40px rgba(34, 211, 238, 0.8), 0 0 80px rgba(34, 211, 238, 0.4)"
-              : "0 0 20px rgba(34, 211, 238, 0.5), 0 0 40px rgba(34, 211, 238, 0.2)",
-          }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        >
-          <div className="w-full h-full rounded-full flex items-center justify-center">
-            {status.value === "connecting" && <div className="animate-spin text-white text-2xl">◐</div>}
-            {status.value === "connected" && isMuted && <MicOff className="text-white" size={32} />}
-            {status.value === "connected" && !isMuted && <Mic className="text-white" size={32} />}
-            {status.value === "disconnected" && <Mic className="text-white/50" size={32} />}
-          </div>
-        </motion.div>
-      </div>
-    </div>
-  );
-}
+// GlowingOrb replaced by VoiceVisualization component (imported above)
 
 export default function Mirror() {
   const { user } = useAuth();
@@ -355,7 +282,7 @@ export default function Mirror() {
           <div className="flex-1 flex flex-col items-center justify-center overflow-hidden px-4 pb-20">
             {status.value === "disconnected" ? (
               <>
-                <GlowingOrb status={status} isMuted={isMuted} audioLevel={audioLevel} />
+                <VoiceVisualization status={status} isMuted={isMuted} audioLevel={audioLevel} micFft={micFft} />
                 
                 <div className="flex gap-4 mb-8">
                   <button
@@ -389,7 +316,7 @@ export default function Mirror() {
               </>
             ) : (
               <>
-                <GlowingOrb status={status} isMuted={isMuted} audioLevel={audioLevel} />
+                <VoiceVisualization status={status} isMuted={isMuted} audioLevel={audioLevel} micFft={micFft} />
 
                 {/* Transcription display */}
                 {voiceMessages.length > 0 && (

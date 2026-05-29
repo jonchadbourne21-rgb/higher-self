@@ -1172,3 +1172,9 @@
 - [x] Diagnose background glitching in voice/mirror feature after a few minutes of talking
 - [x] Fix the root cause — removed setInterval(50ms) audio decay loop that caused 20 FPS re-renders, replaced with SDK's built-in micFft data; memoized framer-motion animation values to prevent restart on re-render
 - [x] Verify fix doesn't break other voice/mirror functionality — 549 tests pass, 0 TypeScript errors
+
+## Voice Visualization Redesign (May 29)
+- [x] Replace generic GlowingOrb with "The Inner Eye" — concentric organic rings that breathe when idle and pulse with real micFft frequency bands when listening
+- [x] Add frequency bar waveform below the main visualization — 32-bar canvas visualizer with teal-to-purple gradient, smooth exponential decay
+- [x] Apply consistent VoiceVisualization component to both Mirror.tsx and Voice.tsx
+- [x] Ensure smooth performance — uses requestAnimationFrame for canvas, CSS transitions for rings, no setInterval

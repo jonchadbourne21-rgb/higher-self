@@ -8,6 +8,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import AppShell from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { useVoice } from "@humeai/voice-react";
+import { VoiceVisualization } from "@/components/VoiceVisualization";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -58,104 +59,7 @@ function emotionColor(name: string): string {
   return "bg-primary/20 text-primary";
 }
 
-// ── Glowing Orb Component with Audio Visualization ────────────────────────────
-
-function GlowingOrb({ 
-  status, 
-  isMuted,
-  audioLevel = 0 
-}: { 
-  status: Status; 
-  isMuted: boolean;
-  audioLevel?: number;
-}) {
-  const isActive = status === "live";
-  const isListening = isActive && !isMuted;
-  const hasAudio = audioLevel > 0.02;
-  
-  // Memoize animation values to prevent framer-motion from restarting animations
-  // on every parent re-render (which caused the glitching after a few minutes)
-  const ringAnimation = useMemo(() => ({
-    scale: [1, 1.5],
-    opacity: [0.5, 0],
-  }), []);
-  
-  const ringTransitions = useMemo(() => ([
-    { duration: 2.0, repeat: Infinity, ease: "easeOut" as const },
-    { duration: 2.5, repeat: Infinity, ease: "easeOut" as const, delay: 0.3 },
-    { duration: 3.0, repeat: Infinity, ease: "easeOut" as const, delay: 0.6 },
-  ]), []);
-
-  // Stable boxShadow values — memoized to avoid new object refs each render
-  const activeGlow = "0 0 30px rgba(34, 211, 238, 0.6), inset 0 0 20px rgba(34, 211, 238, 0.3)";
-  const idleGlow = "0 0 0px rgba(34, 211, 238, 0)";
-  const readyGlow = "0 0 20px rgba(34, 211, 238, 0.4), inset 0 0 15px rgba(34, 211, 238, 0.2)";
-
-  return (
-    <div className="flex justify-center mb-8">
-      <div className="relative w-32 h-32">
-        {/* Pulsing rings — shown when connected and not muted.
-            Fixed animation values prevent framer-motion from restarting on re-render. */}
-        {isActive && isListening && (
-          <>
-            <motion.div
-              className="absolute inset-0 rounded-full border border-cyan-400/30"
-              animate={ringAnimation}
-              transition={ringTransitions[0]}
-            />
-            <motion.div
-              className="absolute inset-0 rounded-full border border-cyan-400/50"
-              animate={ringAnimation}
-              transition={ringTransitions[1]}
-            />
-            <motion.div
-              className="absolute inset-0 rounded-full border border-cyan-300/70"
-              animate={ringAnimation}
-              transition={ringTransitions[2]}
-            />
-          </>
-        )}
-        
-        {/* Main orb - scale reacts to audio via CSS transform (no re-render needed) */}
-        <motion.div
-          className={`absolute inset-0 rounded-full flex items-center justify-center ${
-            isListening
-              ? "bg-gradient-to-br from-cyan-300 via-cyan-400 to-cyan-500"
-              : isActive
-              ? "bg-gradient-to-br from-cyan-400/90 via-cyan-500/80 to-cyan-600/70"
-              : "bg-gradient-to-br from-slate-600 to-slate-700"
-          }`}
-          style={{
-            transform: `scale(${hasAudio && isListening ? 1 + audioLevel * 0.08 : 1})`,
-            transition: "transform 0.15s ease-out",
-          }}
-          animate={{
-            boxShadow: isListening ? activeGlow : isActive ? readyGlow : idleGlow,
-          }}
-          transition={{
-            duration: 2.5,
-            ease: "easeInOut",
-          }}
-        >
-          {/* Inner bright spot */}
-          <div className="absolute w-8 h-8 bg-white rounded-full blur-sm opacity-40" />
-          <div className="absolute w-4 h-4 bg-cyan-100 rounded-full blur-xs opacity-60" />
-        </motion.div>
-        
-        {/* Status text */}
-        <motion.div
-          className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-xs font-semibold whitespace-nowrap tracking-wider"
-          animate={{
-            opacity: isActive ? 1 : 0.4,
-            color: isListening ? "#22d3ee" : isActive ? "#06b6d4" : "#64748b",
-          }}
-        >
-          {isListening ? "LISTENING" : isActive ? "READY" : "IDLE"}
-        </motion.div>
-      </div>
-    </div>
-  );
-}
+// GlowingOrb replaced by VoiceVisualization component (imported above)
 
 // ── Save to Journal button ───────────────────────────────────────────────────
 
@@ -522,7 +426,7 @@ export default function Voice() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
             >
-              <GlowingOrb status={status} isMuted={isMuted} audioLevel={audioLevel} />
+              <VoiceVisualization status={status} isMuted={isMuted} audioLevel={audioLevel} micFft={micFft} />
             </motion.div>
           )}
 
