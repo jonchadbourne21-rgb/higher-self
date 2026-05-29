@@ -167,6 +167,32 @@ export const voiceRouter = router({
         .update(v2vSessions)
         .set({ endedAt: new Date() })
         .where(and(eq(v2vSessions.id, input.sessionId), eq(v2vSessions.userId, ctx.user.id)));
+
+      // TIME CAPSULE: Extract psychological fingerprint from the full voice session
+      (async () => {
+        try {
+          const { extractAndSaveFingerprint } = await import("../timeCapsule/fingerprint");
+          const messages = await db
+            .select()
+            .from(v2vMessages)
+            .where(eq(v2vMessages.sessionId, input.sessionId))
+            .orderBy(v2vMessages.createdAt);
+          const userMsgs = messages
+            .filter((m) => m.role === "user" && m.transcript)
+            .map((m) => m.transcript!);
+          if (userMsgs.length >= 2) {
+            await extractAndSaveFingerprint(
+              ctx.user.id,
+              "voice",
+              input.sessionId.toString(),
+              userMsgs
+            );
+          }
+        } catch (e) {
+          console.error("[TimeCapsule] Voice fingerprint extraction failed:", e);
+        }
+      })();
+
       return { ok: true };
     }),
 

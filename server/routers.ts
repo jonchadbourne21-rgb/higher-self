@@ -11,6 +11,7 @@ import { subscriptionRouter } from "./routers/subscription";
 import { rewardsRouter } from "./routers/rewards";
 import { programsRouter } from "./routers/programs";
 import { voiceRouter } from "./routers/voice";
+import { timeCapsuleRouter } from "./routers/timeCapsule";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { deleteUserAccount, getDb } from "./db";
 import {
@@ -80,6 +81,7 @@ import {
 import { sendPushNotification } from "./pushNotifications";
 import { storeMemory, retrieveMemories, formatMemoriesForPrompt, getPersonalityProfile, formatPersonalityForPrompt, updatePersonalityProfile } from "./rag/memory";
 import { buildIntentSpecificPrompt } from "./intentPrompts";
+import { extractAndSaveFingerprint } from "./timeCapsule/fingerprint";
 
 // ─── Helperss ──────────────────────────────────────────────────────────────────
 
@@ -464,6 +466,17 @@ export const appRouter = router({
               content: `Check-in (mood:${input.mood}/10, energy:${input.energy}/10, stress:${input.stress}/10)\n${embedParts.join("\n")}`,
               metadata: { mood: String(input.mood), energy: String(input.energy) },
             }).catch((e) => console.error("[RAG] Check-in embedding failed:", e));
+          }
+
+          // TIME CAPSULE: Extract fingerprint from check-in reflections
+          const checkinUserMessages = embedParts.filter((p) => p.length > 20);
+          if (checkinUserMessages.length >= 2) {
+            extractAndSaveFingerprint(
+              ctx.user.id,
+              "checkin",
+              today.id.toString(),
+              checkinUserMessages
+            ).catch((e) => console.error("[TimeCapsule] Check-in fingerprint failed:", e));
           }
 
           return { success: true, aiResponse, streakSpinEarned };
@@ -1020,6 +1033,29 @@ Rules:
           );
         }
 
+        // TIME CAPSULE: Extract psychological fingerprint every 5th message
+        // Collects recent user messages from this session and extracts emotional tone,
+        // core beliefs, and unresolved tensions — invisible to the user
+        if (savedMsgId && savedMsgId % 5 === 0) {
+          (async () => {
+            try {
+              const recentMsgs = await getChatHistory(ctx.user.id, sessionId);
+              const userMsgs = recentMsgs
+                .filter((m) => m.role === "user")
+                .slice(-10)
+                .map((m) => m.content);
+              await extractAndSaveFingerprint(
+                ctx.user.id,
+                "chat",
+                sessionId,
+                userMsgs
+              );
+            } catch (e) {
+              console.error("[TimeCapsule] Chat fingerprint extraction failed:", e);
+            }
+          })();
+        }
+
         return { response: aiContent, messageId: aiMsgId, audioDataUrl };
       }),
   }),
@@ -1461,5 +1497,6 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
   rewards: rewardsRouter,
   programs: programsRouter,
   voice: voiceRouter,
+  timeCapsule: timeCapsuleRouter,
 });
 export type AppRouter = typeof appRouter;

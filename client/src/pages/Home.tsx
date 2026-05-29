@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { motion } from "framer-motion";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useLocation, Link } from "wouter";
-import { Sparkles, Sun, Moon, Bell, User, ChevronRight } from "lucide-react";
+import { Sparkles, Sun, Moon, Bell, User, ChevronRight, Hourglass } from "lucide-react";
 import WelcomeSpinModal from "@/components/WelcomeSpinModal";
 import { format } from "date-fns";
 import { BookOpen } from "lucide-react";
@@ -286,6 +286,11 @@ export default function Home() {
                     </button>
                   </Link>
                 )}
+                <Link href="/time-capsule">
+                  <button className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground">
+                    <Hourglass className="w-4 h-4" />
+                  </button>
+                </Link>
                 <Link href="/notifications">
                   <button className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground">
                     <Bell className="w-4 h-4" />

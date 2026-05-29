@@ -1185,7 +1185,6 @@
 - [x] Redesign Mirror voice mode — focused immersive layout, better button placement
 - [x] Polish mode switcher, transitions, and overall page cohesion
 - [x] Ensure responsive and mobile-friendly layout
-<<<<<<< Updated upstream
 
 ## Session History Sidebar (May 29)
 - [x] Leveraged existing chat_sessions table with title field + existing tRPC procedures (sessions, getSessionTitles, updateSessionTitle, generateTitle, deleteSession)
@@ -1233,7 +1232,23 @@
 ## Bug Fixes (May 29)
 - [x] Fix dashboard cards/rectangles jumping around on page load (layout shift issue)
 - [x] Rename all "Mentrove" references to "Mirrored" across the entire codebase (including website title/link)
-=======
+
+## Self-Actualization Program (May 29)
 - [x] Add "Self-Actualization Guide to Full Potential" program (Carl Rogers philosophy) to programs section
->>>>>>> Stashed changes
 - [x] Add dedicated reflection journal section within Self-Actualization program (save/review daily insights per lesson)
+
+## Psychological Time Capsule — "A Letter From Your Past Self"
+- [x] Create `psychological_fingerprints` table (userId, sessionType, sessionId, emotionalTone, coreBelief, unresolvedTension, rawExcerpts JSON, extractedAt)
+- [x] Create `time_capsule_settings` table (userId, cadenceDays, isEnabled, nextDeliveryAt, scheduleCronTaskUid)
+- [x] Create `time_capsule_letters` table (userId, generatedAt, deliveredAt, letterContent, periodStart, periodEnd, readAt)
+- [x] Build silent fingerprint extraction module (LLM post-session analysis)
+- [x] Wire fingerprint extraction into chat.send (every 5th message)
+- [x] Wire fingerprint extraction into voice sessions (on session end)
+- [x] Wire fingerprint extraction into check-in submissions
+- [x] Build letter generation engine (first-person, user's linguistic style, ends with "Did you become them?")
+- [x] Create time capsule settings UI (cadence picker: 30/90/365 days, enable/disable)
+- [x] Create letter viewing page (sealed envelope metaphor, mark as read)
+- [x] Implement periodic delivery via heartbeat scheduling (daily 09:00 UTC check)
+- [x] Write vitest tests for fingerprint extraction and letter generation (16 tests passing)
+- [x] Push notification on letter delivery
+- [x] Time Capsule entry point on Home page (hourglass icon in header)

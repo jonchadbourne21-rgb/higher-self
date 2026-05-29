@@ -769,3 +769,66 @@ export const userPersonalityProfiles = mysqlTable("user_personality_profiles", {
 });
 export type UserPersonalityProfile = typeof userPersonalityProfiles.$inferSelect;
 export type InsertUserPersonalityProfile = typeof userPersonalityProfiles.$inferInsert;
+
+// ─── Psychological Time Capsule ────────────────────────────────────────────────
+
+export const psychologicalFingerprints = mysqlTable("psychological_fingerprints", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // Source of the session: chat, voice, checkin, program
+  sessionType: mysqlEnum("sessionType", ["chat", "voice", "checkin", "program"]).notNull(),
+  // Optional reference to the specific session/message
+  sessionId: varchar("sessionId", { length: 255 }),
+  // The dominant emotional tone detected (e.g., "anxious longing", "quiet grief", "defiant hope")
+  emotionalTone: varchar("emotionalTone", { length: 500 }).notNull(),
+  // The core belief the user expressed about themselves (e.g., "I'm not enough", "I don't deserve rest")
+  coreBelief: text("coreBelief").notNull(),
+  // One unresolved tension they named (e.g., "wanting connection but fearing vulnerability")
+  unresolvedTension: text("unresolvedTension").notNull(),
+  // Raw excerpts from the user's own words (exact quotes that reveal their voice)
+  rawExcerpts: json("rawExcerpts").$type<string[]>().notNull(),
+  // The person they said they wanted to become (aspirational self)
+  aspirationalSelf: text("aspirationalSelf"),
+  extractedAt: timestamp("extractedAt").defaultNow().notNull(),
+});
+export type PsychologicalFingerprint = typeof psychologicalFingerprints.$inferSelect;
+export type InsertPsychologicalFingerprint = typeof psychologicalFingerprints.$inferInsert;
+
+export const timeCapsuleSettings = mysqlTable("time_capsule_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // Delivery cadence in days (30, 90, 365)
+  cadenceDays: int("cadenceDays").notNull().default(30),
+  // Whether the feature is enabled
+  isEnabled: boolean("isEnabled").notNull().default(true),
+  // When the next letter should be delivered (UTC timestamp)
+  nextDeliveryAt: timestamp("nextDeliveryAt"),
+  // Heartbeat cron task UID for managing the scheduled job
+  scheduleCronTaskUid: varchar("scheduleCronTaskUid", { length: 65 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type TimeCapsuleSetting = typeof timeCapsuleSettings.$inferSelect;
+export type InsertTimeCapsuleSetting = typeof timeCapsuleSettings.$inferInsert;
+
+export const timeCapsuleLetters = mysqlTable("time_capsule_letters", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // The generated letter content (first-person, user's linguistic style)
+  letterContent: text("letterContent").notNull(),
+  // IDs of the fingerprints used to generate this letter
+  fingerprintIds: json("fingerprintIds").$type<number[]>().notNull(),
+  // Status: pending (generated but not yet delivered), delivered, read
+  status: mysqlEnum("status", ["pending", "delivered", "read"]).notNull().default("pending"),
+  // When the letter was generated
+  generatedAt: timestamp("generatedAt").defaultNow().notNull(),
+  // When the letter was delivered to the user
+  deliveredAt: timestamp("deliveredAt"),
+  // When the user first read the letter
+  readAt: timestamp("readAt"),
+  // The time period this letter covers (from-to dates)
+  periodStart: timestamp("periodStart").notNull(),
+  periodEnd: timestamp("periodEnd").notNull(),
+});
+export type TimeCapsuleLetter = typeof timeCapsuleLetters.$inferSelect;
+export type InsertTimeCapsuleLetter = typeof timeCapsuleLetters.$inferInsert;

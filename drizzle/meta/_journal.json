@@ -211,6 +211,13 @@
       "when": 1780080928804,
       "tag": "0029_lucky_sebastian_shaw",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "5",
+      "when": 1780090147684,
+      "tag": "0030_magical_havok",
+      "breakpoints": true
     }
   ]
 }
