@@ -361,6 +361,24 @@ Your role: reflect back what the person shared, name what you notice with warmth
       };
     }),
 
+  /** Get the reflection journal — all saved daily insights for a program */
+  getReflectionJournal: protectedProcedure
+    .input(z.object({ programId: z.number().int().positive() }))
+    .query(async ({ input, ctx }) => {
+      const enrollment = await getUserEnrollment(ctx.user.id, input.programId);
+      if (!enrollment) return [];
+      const responses = await getAllLessonResponses(ctx.user.id, input.programId);
+      const lessons = await getLessonsForProgram(input.programId);
+      const lessonMap = new Map(lessons.map((l) => [l.day, l]));
+      return responses.map((r) => ({
+        day: r.day,
+        lessonTitle: lessonMap.get(r.day)?.title ?? `Day ${r.day}`,
+        userReflection: r.userReflection,
+        aiFeedback: r.aiFeedback ?? null,
+        completedAt: r.completedAt,
+      }));
+    }),
+
   /** Get all enrollments for the current user */
   myEnrollments: protectedProcedure.query(async ({ ctx }) => {
     const enrollments = await getUserEnrollments(ctx.user.id);

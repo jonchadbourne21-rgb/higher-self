@@ -1236,3 +1236,4 @@
 =======
 - [x] Add "Self-Actualization Guide to Full Potential" program (Carl Rogers philosophy) to programs section
 >>>>>>> Stashed changes
+- [x] Add dedicated reflection journal section within Self-Actualization program (save/review daily insights per lesson)
