@@ -78,7 +78,7 @@ import {
   setLastStreakSpinDate,
 } from "./db";
 import { sendPushNotification } from "./pushNotifications";
-import { retrieveContextForChat, upsertJournalEmbedding } from "./rag/embeddings";
+import { storeMemory, retrieveMemories, formatMemoriesForPrompt, getPersonalityProfile, formatPersonalityForPrompt, updatePersonalityProfile } from "./rag/memory";
 import { buildIntentSpecificPrompt } from "./intentPrompts";
 
 // ─── Helperss ──────────────────────────────────────────────────────────────────
@@ -448,6 +448,24 @@ export const appRouter = router({
           const rawContent = aiRes.choices[0]?.message?.content;
           const aiResponse = typeof rawContent === 'string' ? rawContent : "";
           await updateCheckInAiResponse(today.id, aiResponse);
+
+          // RAG: Embed check-in data (reflections, gratitude, follow-ups) for personality learning
+          const embedParts = [
+            input.reflectionAnswer ? `Reflection: ${input.reflectionAnswer}` : "",
+            input.followUpAnswer ? `Follow-up: ${input.followUpAnswer}` : "",
+            input.gratitude ? `Gratitude: ${input.gratitude}` : "",
+            input.reflection ? `Thought: ${input.reflection}` : "",
+          ].filter(Boolean);
+          if (embedParts.join("").length > 30) {
+            storeMemory({
+              userId: ctx.user.id,
+              sourceType: "checkin",
+              sourceId: today.id,
+              content: `Check-in (mood:${input.mood}/10, energy:${input.energy}/10, stress:${input.stress}/10)\n${embedParts.join("\n")}`,
+              metadata: { mood: String(input.mood), energy: String(input.energy) },
+            }).catch((e) => console.error("[RAG] Check-in embedding failed:", e));
+          }
+
           return { success: true, aiResponse, streakSpinEarned };
         } catch (e) {
           console.error("AI check-in response failed:", e);
@@ -650,6 +668,16 @@ export const appRouter = router({
         const entries = await getJournalEntries(ctx.user.id, 1);
         const newEntry = entries[0];
         if (!newEntry) return { success: true, id: null };
+
+        // RAG: Embed journal entry for future retrieval (fire-and-forget)
+        const embedContent = `${input.title || "Untitled"}: ${input.content}`;
+        storeMemory({
+          userId: ctx.user.id,
+          sourceType: "journal",
+          sourceId: newEntry.id,
+          content: embedContent,
+          metadata: { moodTag: input.moodTag || "neutral" },
+        }).catch((e) => console.error("[RAG] Journal embedding failed:", e));
 
         // Generate AI perspective asynchronously
         try {
@@ -914,30 +942,22 @@ Rules:
           content: input.message,
           sessionId,
         });
-        // RAG: Retrieve similar journal entries
+        // RAG: Retrieve relevant memories + personality profile
         console.log(`[Chat] Retrieving RAG context for user ${ctx.user.id}`);
         let ragContextSection = "";
         let ragEntriesCount = 0;
         try {
-          const contextEntries = await retrieveContextForChat(
-            ctx.user.id,
-            input.message,
-            3
-          );
-          if (contextEntries.length > 0) {
-            ragEntriesCount = contextEntries.length;
-            ragContextSection = `\n\nRELEVANT PAST ENTRIES (from your journal):\n`;
-            ragContextSection += contextEntries
-              .map(
-                (entry) =>
-                  `[${entry.createdAt.toDateString()}] "${entry.title || "Untitled"}"\n${entry.content.substring(0, 300)}${entry.content.length > 300 ? "..." : ""}\n(similarity: ${(entry.score * 100).toFixed(0)}%)`
-              )
-              .join("\n\n---\n\n");
-            console.log(
-              `[Chat] Injecting ${contextEntries.length} context entries into system prompt`
-            );
+          const [memories, personalityProfile] = await Promise.all([
+            retrieveMemories({ userId: ctx.user.id, query: input.message, topK: 5 }),
+            getPersonalityProfile(ctx.user.id),
+          ]);
+          ragEntriesCount = memories.length;
+          ragContextSection = formatMemoriesForPrompt(memories);
+          ragContextSection += formatPersonalityForPrompt(personalityProfile);
+          if (memories.length > 0) {
+            console.log(`[Chat] Injecting ${memories.length} memories + personality into system prompt`);
           } else {
-            console.log(`[Chat] No relevant context found in RAG`);
+            console.log(`[Chat] No relevant memories found in RAG`);
           }
         } catch (error) {
           console.error("[Chat] RAG context retrieval failed, continuing without context:", error);
@@ -981,6 +1001,25 @@ Rules:
             console.error("[Voice] TTS generation failed:", err);
           }
         }
+        // RAG: Embed user message for future retrieval (fire-and-forget)
+        // Only embed messages longer than 50 chars (meaningful content)
+        if (input.message.length > 50) {
+          storeMemory({
+            userId: ctx.user.id,
+            sourceType: "chat",
+            sourceId: savedMsgId ?? undefined,
+            content: input.message,
+          }).catch((e) => console.error("[RAG] Chat embedding failed:", e));
+        }
+
+        // RAG: Trigger personality profile update every 5 chat messages
+        // (non-blocking, runs in background)
+        if (savedMsgId && savedMsgId % 5 === 0) {
+          updatePersonalityProfile(ctx.user.id).catch((e) =>
+            console.error("[RAG] Personality update failed:", e)
+          );
+        }
+
         return { response: aiContent, messageId: aiMsgId, audioDataUrl };
       }),
   }),

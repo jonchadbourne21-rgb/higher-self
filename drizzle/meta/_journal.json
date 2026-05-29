@@ -204,6 +204,13 @@
       "when": 1779668475865,
       "tag": "0028_huge_echo",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "5",
+      "when": 1780080928804,
+      "tag": "0029_lucky_sebastian_shaw",
+      "breakpoints": true
     }
   ]
 }

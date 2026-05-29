@@ -7,6 +7,7 @@ import { TRPCError } from "@trpc/server";
 import { randomUUID } from "crypto";
 import { isProVoiceUser } from "../db/subscriptions";
 import { FREE_LIMITS } from "../_core/stripe-products";
+import { storeMemory } from "../rag/memory";
 
 /** Get current month as YYYY-MM */
 function getCurrentMonth(): string {
@@ -139,6 +140,20 @@ export const voiceRouter = router({
         emotion3Name: e[2]?.name ?? null,
         emotion3Score: e[2]?.score ?? null,
       });
+
+      // RAG: Embed user voice messages for personality learning (fire-and-forget)
+      if (input.role === "user" && input.content.length > 30) {
+        const emotionContext = e.length > 0
+          ? ` [emotions: ${e.map(em => `${em.name}(${em.score.toFixed(2)})`).join(", ")}]`
+          : "";
+        storeMemory({
+          userId: ctx.user.id,
+          sourceType: "voice",
+          content: input.content + emotionContext,
+          metadata: e.length > 0 ? { topEmotion: e[0].name } : undefined,
+        }).catch((err) => console.error("[RAG] Voice embedding failed:", err));
+      }
+
       return { ok: true };
     }),
 
@@ -232,6 +247,15 @@ export const voiceRouter = router({
       // Import journal helpers
       const { createJournalEntry } = await import("../db");
       await createJournalEntry({ userId: ctx.user.id, title, content, moodTag: "reflective" });
+
+      // RAG: Embed the full voice transcript for future retrieval
+      storeMemory({
+        userId: ctx.user.id,
+        sourceType: "voice",
+        content: `${title}\n\n${transcript}`,
+        metadata: { sessionId: input.sessionId.toString() },
+      }).catch((err) => console.error("[RAG] Voice transcript embedding failed:", err));
+
       return { ok: true };
     }),
 });

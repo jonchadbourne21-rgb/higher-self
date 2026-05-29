@@ -23,6 +23,7 @@ import { getUserProfile, getRecentCheckIns, getLatestDomainScores } from "./db";
 import { buildIntentSpecificPrompt } from "./intentPrompts";
 import { users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { storeMemory, retrieveMemories, formatMemoriesForPrompt, getPersonalityProfile, formatPersonalityForPrompt } from "./rag/memory";
 
 // ─── Env ─────────────────────────────────────────────────────────────────────
 
@@ -95,7 +96,7 @@ async function buildVoiceSystemPrompt(userId: number): Promise<string> {
       .map((d) => `${d!.domain}: ${d!.score}/10`)
       .join(", ");
     
-    return buildIntentSpecificPrompt(seedIntent, {
+    let basePrompt = buildIntentSpecificPrompt(seedIntent, {
       name,
       valuesStr,
       goalsStr,
@@ -104,6 +105,24 @@ async function buildVoiceSystemPrompt(userId: number): Promise<string> {
       avgMood: avgMood.toString(),
       domainStr: domainStr || "not yet assessed",
     });
+
+    // RAG: Inject personality profile and recent relevant memories
+    try {
+      const [personalityProfile, recentMemories] = await Promise.all([
+        getPersonalityProfile(userId),
+        retrieveMemories({
+          userId,
+          query: "personal growth reflection emotional patterns",
+          topK: 3,
+        }),
+      ]);
+      basePrompt += formatPersonalityForPrompt(personalityProfile);
+      basePrompt += formatMemoriesForPrompt(recentMemories);
+    } catch (err) {
+      console.error("[v2v-relay] RAG context injection failed:", err);
+    }
+
+    return basePrompt;
   } catch (err) {
     console.error("[v2v-relay] Failed to build voice system prompt:", err);
     // Fallback to minimal prompt
@@ -223,6 +242,18 @@ export function attachV2VRelay(server: HttpServer): void {
         // Persist non-interim transcripts
         if (transcript && msg.interim === false) {
           await saveMessage(sessionId, "user", transcript, emotions);
+          // RAG: Embed user voice messages for personality learning (fire-and-forget)
+          if (userId && transcript.length > 30) {
+            const emotionCtx = emotions.length > 0
+              ? ` [emotions: ${emotions.map(e => `${e.name}(${e.score.toFixed(2)})`).join(", ")}]`
+              : "";
+            storeMemory({
+              userId,
+              sourceType: "voice",
+              content: transcript + emotionCtx,
+              metadata: emotions.length > 0 ? { topEmotion: emotions[0].name } : undefined,
+            }).catch((err) => console.error("[v2v-relay] RAG voice embedding failed:", err));
+          }
         }
         // Augment with top_emotions for convenience on the client
         msg.top_emotions = emotions;

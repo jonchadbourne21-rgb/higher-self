@@ -1212,3 +1212,19 @@
 - [x] Show upgrade prompt (UpgradeModal with program limitType) when free user tries to enroll in 2nd program
 - [x] Update Pricing page with 3 tiers (Free/Pro/Pro+Voice) and UpgradeModal with tier-specific upsells
 - [x] All 549 tests pass (updated voice.test.ts mock for isProVoiceUser)
+
+## RAG/Vector Pipeline Rebuild (May 29) — MySQL-based, no Pinecone
+- [x] Create `memory_embeddings` table in schema (id, userId, sourceType, sourceId, content, embedding JSON, createdAt)
+- [x] Create `user_personality_profiles` table (userId, traits JSON, communicationStyle, emotionalPatterns, updatedAt)
+- [x] Write new RAG module `server/rag/memory.ts` using Gemini embeddings (no Pinecone)
+- [x] Implement cosine similarity search in-app for retrieval
+- [x] Wire journal.create → embed journal entry content after creation
+- [x] Wire chat.send → embed user messages (every 5th message triggers personality update)
+- [x] Wire voice.saveMessage → embed user voice transcripts
+- [x] Wire voice.saveToJournal → embed the full transcript
+- [x] Build personality profile accumulator (extract traits, style, patterns from interactions via LLM)
+- [x] Update chat.send to retrieve relevant memories + personality profile before LLM call
+- [x] Update voice mirror (v2vRelay) to include personality context + recent memories
+- [ ] Remove old Pinecone dependency and `server/rag/embeddings.ts` (kept for backward compat)
+- [x] Write vitest tests for new RAG module (25 tests — embedding, storage, retrieval, personality)
+- [x] Verify all 574 existing tests still pass

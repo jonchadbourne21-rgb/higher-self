@@ -715,3 +715,57 @@ export const v2vMessages = mysqlTable("v2v_messages", {
 });
 export type V2vMessage = typeof v2vMessages.$inferSelect;
 export type InsertV2vMessage = typeof v2vMessages.$inferInsert;
+
+
+// ─── Memory Embeddings (RAG Vector Store) ────────────────────────────────────
+
+export const memoryEmbeddings = mysqlTable("memory_embeddings", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // Source type: journal, chat, voice, checkin, program_response
+  sourceType: mysqlEnum("sourceType", [
+    "journal",
+    "chat",
+    "voice",
+    "checkin",
+    "program_response",
+  ]).notNull(),
+  // ID of the source record (journalEntries.id, chatMessages.id, v2vMessages.id, etc.)
+  sourceId: int("sourceId"),
+  // The text content that was embedded
+  content: text("content").notNull(),
+  // 3072-dimensional embedding vector stored as JSON array of floats
+  embedding: json("embedding").$type<number[]>().notNull(),
+  // Optional metadata for filtering (domain, mood, theme, etc.)
+  metadata: json("metadata").$type<Record<string, string>>(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type MemoryEmbedding = typeof memoryEmbeddings.$inferSelect;
+export type InsertMemoryEmbedding = typeof memoryEmbeddings.$inferInsert;
+
+// ─── User Personality Profiles (AI Mirror Learning) ──────────────────────────
+
+export const userPersonalityProfiles = mysqlTable("user_personality_profiles", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // Personality traits extracted from interactions (e.g., ["introspective", "analytical", "empathetic"])
+  traits: json("traits").$type<string[]>().default([]),
+  // Communication style observations (e.g., "uses metaphors frequently, prefers direct feedback")
+  communicationStyle: text("communicationStyle"),
+  // Emotional patterns observed (e.g., "tends to intellectualize emotions, avoids vulnerability")
+  emotionalPatterns: text("emotionalPatterns"),
+  // Recurring themes in their reflections (e.g., ["perfectionism", "fear of failure", "need for control"])
+  recurringThemes: json("recurringThemes").$type<string[]>().default([]),
+  // Growth edges identified (areas where they're actively working on themselves)
+  growthEdges: json("growthEdges").$type<string[]>().default([]),
+  // How they prefer to be challenged (e.g., "responds well to direct questions, shuts down with criticism")
+  challengeStyle: text("challengeStyle"),
+  // Last time the profile was updated by the AI analysis
+  lastAnalyzedAt: timestamp("lastAnalyzedAt"),
+  // Number of interactions analyzed to build this profile
+  interactionCount: int("interactionCount").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type UserPersonalityProfile = typeof userPersonalityProfiles.$inferSelect;
+export type InsertUserPersonalityProfile = typeof userPersonalityProfiles.$inferInsert;
