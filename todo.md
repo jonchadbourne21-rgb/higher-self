@@ -1139,3 +1139,11 @@
 - [x] Add Mic icon to transcript indicators for visual clarity
 - [x] Write 11 vitest tests for transcription display logic (all passing)
 - [x] Test message filtering, styling, and indicator text determination
+
+## Codebase Audit & Tightening (May 28)
+- [x] Fix duplicate headers and nav bars — removed outer AppShell wrapper from App.tsx (pages already wrap themselves in AppShell)
+- [x] Fix TypeScript errors in Mirror.test.tsx — added proper type annotations for empty message objects
+- [x] Fix TypeScript errors in server/auth/validator.ts — added schema to drizzle initialization so db.query.sessions and db.query.users resolve correctly
+- [x] Fix drizzle initialization in db.ts — pass schema to drizzle() for relational query support
+- [x] Verify production build passes cleanly (0 errors)
+- [x] Verify 370+ tests passing

@@ -136,7 +136,7 @@ describe('Mirror Voice Transcription Display', () => {
     const emptyMessage = {
       type: 'user_transcript',
       id: 'msg-empty',
-      message: {},
+      message: {} as Record<string, any>,
     };
 
     let content = '';
