@@ -42,7 +42,7 @@ const PROGRAM_ICONS: Record<string, string> = {
 const PROGRAM_ICON_OVERRIDES: Record<string, string> = {
   "21-Day Inner Voice Reset": "🪞",
   "7-Day Emotional Mastery": "🌊",
-  "The Alan Watts Challenge": "🎭",
+  "The Present Moment Challenge": "🎭",
   "The Stoic Path": "🏛️",
 };
 

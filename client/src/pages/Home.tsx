@@ -403,7 +403,7 @@ export default function Home() {
                   const ICONS: Record<string, string> = {
                     "21-Day Inner Voice Reset": "🪞",
                     "7-Day Emotional Mastery": "🌊",
-                    "The Alan Watts Challenge": "🎭",
+                    "The Present Moment Challenge": "🎭",
                     "The Stoic Path": "🏛️",
                   };
                   const CAT_ICONS: Record<string, string> = {

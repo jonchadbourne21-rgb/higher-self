@@ -1,5 +1,5 @@
 /**
- * Seed script: 30-Day Alan Watts Challenge
+ * Seed script: 30-Day Present Moment Challenge
  *
  * Run with: node scripts/seed-alan-watts.mjs
  * Requires DATABASE_URL in environment.
@@ -17,10 +17,10 @@ const conn = await mysql.createConnection(DATABASE_URL);
 
 // ── 1. Insert the program ────────────────────────────────────────────────────
 
-const programName = "The Alan Watts Challenge";
+const programName = "The Present Moment Challenge";
 const programSlug = "alan-watts-challenge";
 const programDescription =
-  "A 30-day invitation to stop taking life so seriously and start playing it instead. Inspired by the philosophy of Alan Watts, each day offers a small game — not a task — designed to dissolve the illusion of the separate self and reveal the cosmic joke you've been part of all along. By the end, you won't be a 'better' person. You'll be a lighter one.";
+  "A 30-day invitation to stop taking life so seriously and start playing it instead. Each day offers a small game — not a task — designed to dissolve the illusion of the separate self and reveal the cosmic joke you've been part of all along. By the end, you won't be a 'better' person. You'll be a lighter one.";
 const durationDays = 30;
 const category = "zen-philosophy";
 
