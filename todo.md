@@ -1147,3 +1147,4 @@
 - [x] Fix drizzle initialization in db.ts — pass schema to drizzle() for relational query support
 - [x] Verify production build passes cleanly (0 errors)
 - [x] Verify 370+ tests passing
+- [x] Fix Home.tsx missing AppShell wrapper — nav bar was not showing on Dashboard/Home page because Home.tsx was the only authenticated page without an AppShell wrapper

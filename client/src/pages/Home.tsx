@@ -7,6 +7,7 @@ import { Sparkles, Sun, Moon, Bell, User, ChevronRight } from "lucide-react";
 import WelcomeSpinModal from "@/components/WelcomeSpinModal";
 import { format } from "date-fns";
 import { BookOpen } from "lucide-react";
+import AppShell from "@/components/AppShell";
 
 // Inline SVG sparkline for the last 7 Aura scores
 function AuraSparkline({ data }: { data: { date: Date; aura: number }[] }) {
@@ -233,7 +234,7 @@ export default function Home() {
   };
 
   return (
-    <>
+    <AppShell>
       <div className="px-4 pt-2 pb-2 space-y-2">
 
           {/* ── Greeting header ─────────────────────────────────────────── */}
@@ -595,6 +596,6 @@ export default function Home() {
       </div>
       {/* Welcome spin modal */}
       <WelcomeSpinModal open={showWelcomeSpin} onClose={() => setShowWelcomeSpin(false)} />
-    </>
+    </AppShell>
   );
 }
