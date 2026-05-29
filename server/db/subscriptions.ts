@@ -51,13 +51,14 @@ export async function getUserSubscription(userId: number) {
 
 /**
  * Check if user has active Pro subscription (Stripe or reward grants)
+ * Both "pro" and "pro_voice" tiers count as Pro.
  */
 export async function isProUser(userId: number): Promise<boolean> {
   const subscription = await getUserSubscription(userId);
   
-  // Check Stripe subscription first
+  // Check Stripe subscription first — both pro and pro_voice count
   if (subscription &&
-    subscription.tier === "pro" &&
+    (subscription.tier === "pro" || subscription.tier === "pro_voice") &&
     subscription.status === "active" &&
     (!subscription.endDate || new Date(subscription.endDate) > new Date())
   ) {
@@ -72,6 +73,21 @@ export async function isProUser(userId: number): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/**
+ * Check if user has active Pro + Voice Mirror subscription
+ */
+export async function isProVoiceUser(userId: number): Promise<boolean> {
+  const subscription = await getUserSubscription(userId);
+  if (subscription &&
+    subscription.tier === "pro_voice" &&
+    subscription.status === "active" &&
+    (!subscription.endDate || new Date(subscription.endDate) > new Date())
+  ) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -90,6 +106,32 @@ export async function upgradeToProTier(
     .update(subscriptions)
     .set({
       tier: "pro",
+      status: "active",
+      startDate: new Date(),
+      endDate: endDate,
+      stripeCustomerId: stripeCustomerId,
+      stripeSubscriptionId: stripeSubscriptionId,
+      updatedAt: new Date(),
+    })
+    .where(eq(subscriptions.userId, userId));
+}
+
+/**
+ * Upgrade user to Pro + Voice Mirror tier
+ */
+export async function upgradeToProVoiceTier(
+  userId: number,
+  stripeCustomerId?: string,
+  stripeSubscriptionId?: string,
+  endDate?: Date
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database connection failed");
+
+  await db
+    .update(subscriptions)
+    .set({
+      tier: "pro_voice",
       status: "active",
       startDate: new Date(),
       endDate: endDate,

@@ -564,7 +564,7 @@ export type InsertCrisisNotification = typeof crisisNotifications.$inferInsert;
 export const subscriptions = mysqlTable("subscriptions", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull().unique(),
-  tier: mysqlEnum("tier", ["free", "pro"]).default("free").notNull(),
+  tier: mysqlEnum("tier", ["free", "pro", "pro_voice"]).default("free").notNull(),
   status: mysqlEnum("status", ["active", "canceled", "expired"]).default("active").notNull(),
   startDate: timestamp("startDate").defaultNow().notNull(),
   endDate: timestamp("endDate"),
@@ -637,6 +637,18 @@ export const journalUsageWeekly = mysqlTable("journal_usage_weekly", {
 });
 export type JournalUsageWeekly = typeof journalUsageWeekly.$inferSelect;
 export type InsertJournalUsageWeekly = typeof journalUsageWeekly.$inferInsert;
+
+// ─── Pro Tier: Voice Usage Monthly ─────────────────────────────────────────────
+export const voiceUsageMonthly = mysqlTable("voice_usage_monthly", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  usageMonth: varchar("usageMonth", { length: 7 }).notNull(), // YYYY-MM format
+  responseCount: int("responseCount").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type VoiceUsageMonthly = typeof voiceUsageMonthly.$inferSelect;
+export type InsertVoiceUsageMonthly = typeof voiceUsageMonthly.$inferInsert;
 
 // ─── Pro Tier: Streak Rewards ─────────────────────────────────────────────────
 export const streakRewards = mysqlTable("streak_rewards", {

@@ -1,35 +1,46 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Check, X, Sparkles, Zap, Heart } from "lucide-react";
+import { Check, X, Sparkles, Zap, Heart, Mic } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
-
-const STRIPE_CHECKOUT_MONTHLY = "https://buy.stripe.com/test_14A5kC1EB85s5SQe9fco000";
-const STRIPE_CHECKOUT_YEARLY = "https://buy.stripe.com/test_7sYdR8dnj71o1CA5CJco001";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 const FREE_FEATURES = [
   { name: "5 AI chats per day", included: true },
   { name: "4 journal entries per week", included: true },
+  { name: "5 voice mirror responses/month", included: true },
+  { name: "1 active program", included: true },
   { name: "Life domains & habits", included: true },
   { name: "Daily check-ins", included: true },
-  { name: "Weekly insights only", included: true },
   { name: "Reward wheel", included: true },
+  { name: "Unlimited programs", included: false },
   { name: "Growth Dashboard", included: false },
-  { name: "Monthly & yearly analytics", included: false },
-  { name: "Priority support", included: false },
+  { name: "Unlimited voice mirror", included: false },
 ];
 
 const PRO_FEATURES = [
   { name: "Unlimited AI chats", included: true },
   { name: "Unlimited journals", included: true },
+  { name: "5 voice mirror responses/month", included: true },
+  { name: "Unlimited programs", included: true },
   { name: "Life domains & habits", included: true },
   { name: "Daily check-ins", included: true },
   { name: "Weekly + monthly + yearly insights", included: true },
-  { name: "Reward wheel", included: true },
-  { name: "Growth Dashboard & full analytics", included: true },
+  { name: "Growth Dashboard & analytics", included: true },
   { name: "Bonus spins on purchase", included: true },
   { name: "Priority support", included: true },
+  { name: "Unlimited voice mirror", included: false },
+];
+
+const PRO_VOICE_FEATURES = [
+  { name: "Everything in Pro", included: true },
+  { name: "Unlimited voice mirror sessions", included: true },
+  { name: "Real-time emotion tracking", included: true },
+  { name: "Voice session history", included: true },
+  { name: "Save voice insights to journal", included: true },
+  { name: "Priority voice processing", included: true },
 ];
 
 const MILESTONES = [
@@ -50,6 +61,12 @@ const MILESTONES = [
 export default function Pricing() {
   const { isAuthenticated, loading } = useAuth();
   const [, navigate] = useLocation();
+  const [isLoadingCheckout, setIsLoadingCheckout] = useState(false);
+
+  const createCheckoutMutation = trpc.subscription.createCheckoutSession.useMutation();
+  const subscriptionStatus = trpc.subscription.getStatus.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -67,14 +84,27 @@ export default function Pricing() {
     );
   }
 
-  const handleUpgrade = (billingPeriod: "monthly" | "yearly" = "monthly") => {
-    const url = billingPeriod === "yearly" ? STRIPE_CHECKOUT_YEARLY : STRIPE_CHECKOUT_MONTHLY;
-    window.open(url, "_blank");
+  const currentTier = subscriptionStatus.data?.tier || "free";
+
+  const handleUpgrade = async (tier: "pro" | "pro_voice", billingCycle: "monthly" | "annual" = "monthly") => {
+    setIsLoadingCheckout(true);
+    try {
+      const result = await createCheckoutMutation.mutateAsync({ billingCycle, tier });
+      if (result.checkoutUrl) {
+        toast.info("Redirecting to checkout...");
+        window.open(result.checkoutUrl, "_blank");
+      }
+    } catch (error) {
+      toast.error("Failed to create checkout session. Please try again.");
+      console.error("Checkout error:", error);
+    } finally {
+      setIsLoadingCheckout(false);
+    }
   };
 
   return (
     <AppShell>
-      <div className="px-4 pt-4 pb-4 space-y-8">
+      <div className="px-4 pt-4 pb-4 space-y-8 max-w-lg mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -88,46 +118,44 @@ export default function Pricing() {
             Choose Your Plan
           </h1>
           <p className="text-xs" style={{ color: "oklch(0.58 0.03 270)" }}>
-            Start free, upgrade when you're ready
+            Start free, upgrade when you're ready to go deeper
           </p>
         </motion.div>
 
-        {/* Side-by-side Pricing Cards */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* Three Tier Cards */}
+        <div className="space-y-4">
           {/* Free Tier */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className="rounded-2xl p-4 space-y-3"
+            className="rounded-2xl p-5 space-y-4"
             style={{
               background: "oklch(0.17 0.04 280)",
-              border: "1px solid oklch(0.28 0.05 280)",
+              border: currentTier === "free" ? "1.5px solid oklch(0.65 0.16 185 / 0.5)" : "1px solid oklch(0.28 0.05 280)",
             }}
           >
-            <div>
-              <h2 className="text-base font-semibold" style={{ color: "oklch(0.85 0.02 270)" }}>Free</h2>
-              <p className="text-[10px]" style={{ color: "oklch(0.55 0.03 270)" }}>Get started</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold" style={{ color: "oklch(0.85 0.02 270)" }}>Free</h2>
+                <p className="text-[11px]" style={{ color: "oklch(0.55 0.03 270)" }}>Get started on your journey</p>
+              </div>
+              <div className="text-right">
+                <span className="text-2xl font-bold" style={{ color: "oklch(0.90 0.01 270)" }}>$0</span>
+                <span className="text-[11px] ml-1" style={{ color: "oklch(0.55 0.03 270)" }}>/forever</span>
+              </div>
             </div>
 
-            <div>
-              <span className="text-2xl font-bold" style={{ color: "oklch(0.90 0.01 270)" }}>$0</span>
-              <span className="text-[10px] ml-1" style={{ color: "oklch(0.55 0.03 270)" }}>/forever</span>
-            </div>
+            {currentTier === "free" && (
+              <div
+                className="rounded-xl py-2 text-center text-xs font-medium"
+                style={{ background: "oklch(0.22 0.04 280)", border: "1px solid oklch(0.32 0.05 280)", color: "oklch(0.65 0.16 185)" }}
+              >
+                Current Plan
+              </div>
+            )}
 
-            <button
-              disabled
-              className="w-full rounded-xl py-2 text-xs font-medium opacity-50 cursor-not-allowed"
-              style={{
-                background: "oklch(0.22 0.04 280)",
-                border: "1px solid oklch(0.32 0.05 280)",
-                color: "oklch(0.60 0.03 270)",
-              }}
-            >
-              Current Plan
-            </button>
-
-            <div className="space-y-2 pt-2" style={{ borderTop: "1px solid oklch(0.25 0.04 280)" }}>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
               {FREE_FEATURES.map((f) => (
                 <div key={f.name} className="flex items-start gap-1.5">
                   {f.included ? (
@@ -136,7 +164,7 @@ export default function Pricing() {
                     <X size={12} className="flex-shrink-0 mt-0.5" style={{ color: "oklch(0.35 0.03 270)" }} />
                   )}
                   <span
-                    className="text-[10px] leading-tight"
+                    className="text-[11px] leading-tight"
                     style={{ color: f.included ? "oklch(0.78 0.02 270)" : "oklch(0.40 0.03 270)" }}
                   >
                     {f.name}
@@ -151,60 +179,150 @@ export default function Pricing() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="rounded-2xl p-4 space-y-3 relative"
+            className="rounded-2xl p-5 space-y-4 relative"
             style={{
               background: "linear-gradient(135deg, oklch(0.20 0.06 280), oklch(0.17 0.05 290))",
-              border: "1.5px solid oklch(0.65 0.16 185 / 0.4)",
+              border: currentTier === "pro" ? "1.5px solid oklch(0.65 0.16 185)" : "1.5px solid oklch(0.65 0.16 185 / 0.4)",
               boxShadow: "0 0 20px oklch(0.65 0.16 185 / 0.08)",
             }}
           >
             {/* Popular badge */}
             <div
-              className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[9px] font-semibold flex items-center gap-1"
+              className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-semibold flex items-center gap-1"
               style={{ background: "oklch(0.65 0.16 185)", color: "oklch(0.10 0.02 185)" }}
             >
-              <Sparkles size={9} /> PRO
+              <Sparkles size={10} /> POPULAR
             </div>
 
-            <div>
-              <h2 className="text-base font-semibold" style={{ color: "oklch(0.93 0.01 270)" }}>Pro</h2>
-              <p className="text-[10px]" style={{ color: "oklch(0.65 0.16 185)" }}>Unlimited access</p>
+            <div className="flex items-center justify-between pt-1">
+              <div>
+                <h2 className="text-lg font-semibold" style={{ color: "oklch(0.93 0.01 270)" }}>Pro</h2>
+                <p className="text-[11px]" style={{ color: "oklch(0.65 0.16 185)" }}>Unlimited growth</p>
+              </div>
+              <div className="text-right">
+                <span className="text-2xl font-bold" style={{ color: "oklch(0.93 0.01 270)" }}>$5.99</span>
+                <span className="text-[11px] ml-1" style={{ color: "oklch(0.55 0.03 270)" }}>/month</span>
+              </div>
             </div>
 
-            <div>
-              <span className="text-2xl font-bold" style={{ color: "oklch(0.93 0.01 270)" }}>$3.99</span>
-              <span className="text-[10px] ml-1" style={{ color: "oklch(0.55 0.03 270)" }}>/month</span>
-            </div>
+            {currentTier === "pro" ? (
+              <div
+                className="rounded-xl py-2.5 text-center text-xs font-medium"
+                style={{ background: "oklch(0.65 0.16 185 / 0.15)", border: "1px solid oklch(0.65 0.16 185 / 0.4)", color: "oklch(0.65 0.16 185)" }}
+              >
+                Current Plan
+              </div>
+            ) : currentTier === "pro_voice" ? (
+              <div
+                className="rounded-xl py-2.5 text-center text-xs font-medium"
+                style={{ background: "oklch(0.22 0.04 280)", color: "oklch(0.55 0.03 270)" }}
+              >
+                Included in your plan
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => handleUpgrade("pro", "monthly")}
+                  disabled={isLoadingCheckout}
+                  className="rounded-xl py-2.5 text-xs font-semibold transition-transform active:scale-95 disabled:opacity-50"
+                  style={{ background: "oklch(0.65 0.16 185)", color: "oklch(0.10 0.02 185)" }}
+                >
+                  Monthly — $5.99
+                </button>
+                <button
+                  onClick={() => handleUpgrade("pro", "annual")}
+                  disabled={isLoadingCheckout}
+                  className="rounded-xl py-2.5 text-xs font-semibold transition-transform active:scale-95 disabled:opacity-50"
+                  style={{ background: "oklch(0.65 0.16 185)", color: "oklch(0.10 0.02 185)" }}
+                >
+                  Annual — $59.99
+                </button>
+              </div>
+            )}
 
-            {/* Monthly button — teal */}
-            <button
-              onClick={() => handleUpgrade("monthly")}
-              className="w-full rounded-xl py-2 text-xs font-semibold transition-transform active:scale-95"
-              style={{
-                background: "oklch(0.65 0.16 185)",
-                color: "oklch(0.10 0.02 185)",
-              }}
-            >
-              Monthly + 1 Free Spin 🎡
-            </button>
-
-            {/* Yearly button — same teal */}
-            <button
-              onClick={() => handleUpgrade("yearly")}
-              className="w-full rounded-xl py-2 text-xs font-semibold transition-transform active:scale-95"
-              style={{
-                background: "oklch(0.65 0.16 185)",
-                color: "oklch(0.10 0.02 185)",
-              }}
-            >
-              Yearly — $49.99 + 3 Free Spins 🎡
-            </button>
-
-            <div className="space-y-2 pt-2" style={{ borderTop: "1px solid oklch(0.30 0.06 280)" }}>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 pt-2" style={{ borderTop: "1px solid oklch(0.30 0.06 280)" }}>
               {PRO_FEATURES.map((f) => (
                 <div key={f.name} className="flex items-start gap-1.5">
-                  <Check size={12} className="flex-shrink-0 mt-0.5" style={{ color: "oklch(0.65 0.16 185)" }} />
-                  <span className="text-[10px] leading-tight" style={{ color: "oklch(0.85 0.02 270)" }}>
+                  {f.included ? (
+                    <Check size={12} className="flex-shrink-0 mt-0.5" style={{ color: "oklch(0.65 0.16 185)" }} />
+                  ) : (
+                    <X size={12} className="flex-shrink-0 mt-0.5" style={{ color: "oklch(0.35 0.03 270)" }} />
+                  )}
+                  <span
+                    className="text-[11px] leading-tight"
+                    style={{ color: f.included ? "oklch(0.85 0.02 270)" : "oklch(0.40 0.03 270)" }}
+                  >
+                    {f.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Pro + Voice Mirror Tier */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="rounded-2xl p-5 space-y-4 relative"
+            style={{
+              background: "linear-gradient(135deg, oklch(0.19 0.07 290), oklch(0.16 0.06 300))",
+              border: currentTier === "pro_voice" ? "1.5px solid oklch(0.70 0.15 300)" : "1.5px solid oklch(0.70 0.15 300 / 0.4)",
+              boxShadow: "0 0 24px oklch(0.70 0.15 300 / 0.1)",
+            }}
+          >
+            {/* Voice badge */}
+            <div
+              className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-semibold flex items-center gap-1"
+              style={{ background: "oklch(0.70 0.15 300)", color: "oklch(0.10 0.02 300)" }}
+            >
+              <Mic size={10} /> VOICE
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <div>
+                <h2 className="text-lg font-semibold" style={{ color: "oklch(0.93 0.01 270)" }}>Pro + Voice Mirror</h2>
+                <p className="text-[11px]" style={{ color: "oklch(0.70 0.15 300)" }}>The complete experience</p>
+              </div>
+              <div className="text-right">
+                <span className="text-2xl font-bold" style={{ color: "oklch(0.93 0.01 270)" }}>$8.99</span>
+                <span className="text-[11px] ml-1" style={{ color: "oklch(0.55 0.03 270)" }}>/month</span>
+              </div>
+            </div>
+
+            {currentTier === "pro_voice" ? (
+              <div
+                className="rounded-xl py-2.5 text-center text-xs font-medium"
+                style={{ background: "oklch(0.70 0.15 300 / 0.15)", border: "1px solid oklch(0.70 0.15 300 / 0.4)", color: "oklch(0.70 0.15 300)" }}
+              >
+                Current Plan
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => handleUpgrade("pro_voice", "monthly")}
+                  disabled={isLoadingCheckout}
+                  className="rounded-xl py-2.5 text-xs font-semibold transition-transform active:scale-95 disabled:opacity-50"
+                  style={{ background: "oklch(0.70 0.15 300)", color: "oklch(0.10 0.02 300)" }}
+                >
+                  Monthly — $8.99
+                </button>
+                <button
+                  onClick={() => handleUpgrade("pro_voice", "annual")}
+                  disabled={isLoadingCheckout}
+                  className="rounded-xl py-2.5 text-xs font-semibold transition-transform active:scale-95 disabled:opacity-50"
+                  style={{ background: "oklch(0.70 0.15 300)", color: "oklch(0.10 0.02 300)" }}
+                >
+                  Annual — $89.99
+                </button>
+              </div>
+            )}
+
+            <div className="space-y-1.5 pt-2" style={{ borderTop: "1px solid oklch(0.30 0.07 290)" }}>
+              {PRO_VOICE_FEATURES.map((f) => (
+                <div key={f.name} className="flex items-start gap-1.5">
+                  <Check size={12} className="flex-shrink-0 mt-0.5" style={{ color: "oklch(0.70 0.15 300)" }} />
+                  <span className="text-[11px] leading-tight" style={{ color: "oklch(0.85 0.02 270)" }}>
                     {f.name}
                   </span>
                 </div>
@@ -291,20 +409,20 @@ export default function Pricing() {
                 a: "Yes! Cancel from account settings anytime. Access continues until end of billing period.",
               },
               {
-                q: "What payment methods?",
-                a: "All major credit and debit cards through Stripe. Secure and encrypted.",
+                q: "What's the difference between Pro and Pro + Voice?",
+                a: "Pro gives unlimited chats, journals, and programs. Pro + Voice adds unlimited voice mirror sessions — talk to your AI reflection with real-time emotion tracking.",
               },
               {
                 q: "Do I get a free trial?",
-                a: "The free tier gives you 5 chats/day and 4 journals/week. Upgrade to Pro anytime.",
+                a: "The free tier gives you 5 chats/day, 4 journals/week, 5 voice responses/month, and 1 active program. Upgrade to Pro anytime.",
               },
               {
                 q: "Can I earn free Pro?",
                 a: "Yes! 30-day streak = 2 months free. 100-day streak = 1 year free. Plus reward wheel spins every 3 days.",
               },
               {
-                q: "Need help?",
-                a: "Pro users get priority support. Use the help button in the app or contact us directly.",
+                q: "Can I upgrade from Pro to Pro + Voice later?",
+                a: "Absolutely. You can upgrade at any time and only pay the difference for the remainder of your billing cycle.",
               },
             ].map((faq, idx) => (
               <div
@@ -333,17 +451,18 @@ export default function Pricing() {
             Ready to unlock your potential?
           </p>
           <button
-            onClick={() => handleUpgrade("monthly")}
-            className="w-full rounded-xl py-3.5 text-sm font-semibold transition-transform active:scale-95"
+            onClick={() => handleUpgrade("pro", "monthly")}
+            disabled={isLoadingCheckout || currentTier !== "free"}
+            className="w-full rounded-xl py-3.5 text-sm font-semibold transition-transform active:scale-95 disabled:opacity-50"
             style={{
               background: "oklch(0.65 0.16 185)",
               color: "oklch(0.10 0.02 185)",
             }}
           >
-            Upgrade to Pro Now
+            {currentTier === "free" ? "Upgrade to Pro Now" : "You're already on a paid plan ✓"}
           </button>
           <p className="text-[10px]" style={{ color: "oklch(0.50 0.03 270)" }}>
-            No commitment · Cancel anytime
+            No commitment · Cancel anytime · Test card: 4242 4242 4242 4242
           </p>
         </motion.div>
       </div>

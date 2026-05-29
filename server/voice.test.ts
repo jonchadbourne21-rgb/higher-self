@@ -196,10 +196,11 @@ vi.mock("./db", async () => {
 
 vi.mock("./db/subscriptions", () => ({
   isProUser: vi.fn().mockResolvedValue(true),
+  isProVoiceUser: vi.fn().mockResolvedValue(true),
   getUserSubscription: vi.fn().mockResolvedValue(null),
   createSubscription: vi.fn().mockResolvedValue(undefined),
   updateSubscriptionStatus: vi.fn().mockResolvedValue(undefined),
-  getOrCreateSubscription: vi.fn().mockResolvedValue({ id: 1, tier: "free", stripeCustomerId: null, stripeSubscriptionId: null }),
+  getOrCreateSubscription: vi.fn().mockResolvedValue({ id: 1, tier: "pro_voice", stripeCustomerId: null, stripeSubscriptionId: null }),
   upgradeToProTier: vi.fn().mockResolvedValue(undefined),
   downgradeToFreeTier: vi.fn().mockResolvedValue(undefined),
   cancelSubscription: vi.fn().mockResolvedValue(undefined),
@@ -430,7 +431,13 @@ describe("voice.saveMessage", () => {
   });
 
   it("saves an assistant message without emotions", async () => {
+    // incrementVoiceUsage: select existing usage record (empty = insert new)
+    mockSelectLimit.mockResolvedValueOnce([]);
+    // incrementVoiceUsage: insert new usage record
+    mockInsertValues.mockReturnValueOnce({ $returningId: vi.fn() });
+    // session lookup
     mockSelectLimit.mockResolvedValueOnce([MOCK_SESSION]);
+    // actual message insert
     mockInsertValues.mockReturnValueOnce({ $returningId: vi.fn() });
 
     const caller = appRouter.createCaller(createCtx());

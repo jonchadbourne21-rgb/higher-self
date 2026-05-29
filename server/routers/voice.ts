@@ -2,9 +2,53 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { eq, and, desc } from "drizzle-orm";
 import { getDb } from "../db";
-import { v2vSessions, v2vMessages } from "../../drizzle/schema";
+import { v2vSessions, v2vMessages, voiceUsageMonthly } from "../../drizzle/schema";
 import { TRPCError } from "@trpc/server";
 import { randomUUID } from "crypto";
+import { isProVoiceUser } from "../db/subscriptions";
+import { FREE_LIMITS } from "../_core/stripe-products";
+
+/** Get current month as YYYY-MM */
+function getCurrentMonth(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/** Get or create voice usage record for current month */
+async function getVoiceUsage(userId: number) {
+  const db = await getDb();
+  if (!db) return { responseCount: 0 };
+  const month = getCurrentMonth();
+  const existing = await db
+    .select()
+    .from(voiceUsageMonthly)
+    .where(and(eq(voiceUsageMonthly.userId, userId), eq(voiceUsageMonthly.usageMonth, month)))
+    .limit(1);
+  if (existing.length) return existing[0];
+  // Create new record for this month
+  await db.insert(voiceUsageMonthly).values({ userId, usageMonth: month, responseCount: 0 });
+  return { responseCount: 0 };
+}
+
+/** Increment voice usage for current month */
+async function incrementVoiceUsage(userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  const month = getCurrentMonth();
+  const existing = await db
+    .select()
+    .from(voiceUsageMonthly)
+    .where(and(eq(voiceUsageMonthly.userId, userId), eq(voiceUsageMonthly.usageMonth, month)))
+    .limit(1);
+  if (existing.length) {
+    await db
+      .update(voiceUsageMonthly)
+      .set({ responseCount: existing[0].responseCount + 1 })
+      .where(eq(voiceUsageMonthly.id, existing[0].id));
+  } else {
+    await db.insert(voiceUsageMonthly).values({ userId, usageMonth: month, responseCount: 1 });
+  }
+}
 
 export const voiceRouter = router({
   /** Return Hume API key and config ID for direct WebSocket connection */
@@ -28,6 +72,22 @@ export const voiceRouter = router({
     return { sessionId: session.id };
   }),
 
+  /** Get voice usage status for the current user */
+  getUsage: protectedProcedure.query(async ({ ctx }) => {
+    const hasProVoice = await isProVoiceUser(ctx.user.id);
+    if (hasProVoice) {
+      return { used: 0, limit: Infinity, unlimited: true, remaining: Infinity };
+    }
+    const usage = await getVoiceUsage(ctx.user.id);
+    const limit = FREE_LIMITS.VOICE_RESPONSES_PER_MONTH;
+    return {
+      used: usage.responseCount,
+      limit,
+      unlimited: false,
+      remaining: Math.max(0, limit - usage.responseCount),
+    };
+  }),
+
   /** Save a message from a voice session */
   saveMessage: protectedProcedure
     .input(
@@ -41,6 +101,23 @@ export const voiceRouter = router({
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+
+      // If this is an assistant response, check voice usage limits
+      if (input.role === "assistant") {
+        const hasProVoice = await isProVoiceUser(ctx.user.id);
+        if (!hasProVoice) {
+          const usage = await getVoiceUsage(ctx.user.id);
+          if (usage.responseCount >= FREE_LIMITS.VOICE_RESPONSES_PER_MONTH) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "Monthly voice limit reached. Upgrade to Pro + Voice Mirror for unlimited voice sessions.",
+            });
+          }
+        }
+        // Increment usage counter for assistant responses
+        await incrementVoiceUsage(ctx.user.id);
+      }
+
       // Verify session belongs to user
       const sessions = await db
         .select()

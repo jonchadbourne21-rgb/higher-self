@@ -18,6 +18,8 @@ import {
 import { invokeLLM } from "../_core/llm";
 import { addRewardPoints } from "../db/rewards";
 import { createRewardGrant } from "../db/rewardGrants";
+import { isProUser } from "../db/subscriptions";
+import { FREE_LIMITS } from "../_core/stripe-products";
 
 // ── Time helpers ──────────────────────────────────────────────────────────────
 
@@ -105,6 +107,20 @@ export const programsRouter = router({
         }
         return { success: true, alreadyEnrolled: true };
       }
+
+      // Free users can only enroll in 1 program at a time
+      const isPro = await isProUser(ctx.user.id);
+      if (!isPro) {
+        const enrollments = await getUserEnrollments(ctx.user.id);
+        const activeEnrollments = enrollments.filter(e => e.status === "in_progress");
+        if (activeEnrollments.length >= FREE_LIMITS.MAX_PROGRAM_ENROLLMENTS) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Free users can only enroll in 1 program. Upgrade to Pro for unlimited programs.",
+          });
+        }
+      }
+
       await enrollUserInProgram(ctx.user.id, input.programId);
       return { success: true, alreadyEnrolled: false };
     }),

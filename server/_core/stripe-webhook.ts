@@ -139,12 +139,18 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     const priceId = subscription.items.data[0]?.price.id;
     const proMonthlyPriceId = process.env.STRIPE_PRO_MONTHLY_PRICE_ID;
     const proAnnualPriceId = process.env.STRIPE_PRO_ANNUAL_PRICE_ID;
+    const proVoiceMonthlyPriceId = process.env.STRIPE_PRO_VOICE_MONTHLY_PRICE_ID;
+    const proVoiceAnnualPriceId = process.env.STRIPE_PRO_VOICE_ANNUAL_PRICE_ID;
 
     let bonusSpins = 0;
     if (priceId === proAnnualPriceId) {
-      bonusSpins = 3; // Annual plan: 3 bonus spins
+      bonusSpins = 3; // Pro Annual: 3 bonus spins
     } else if (priceId === proMonthlyPriceId) {
-      bonusSpins = 1; // Monthly plan: 1 bonus spin
+      bonusSpins = 1; // Pro Monthly: 1 bonus spin
+    } else if (priceId === proVoiceAnnualPriceId) {
+      bonusSpins = 5; // Pro + Voice Annual: 5 bonus spins
+    } else if (priceId === proVoiceMonthlyPriceId) {
+      bonusSpins = 2; // Pro + Voice Monthly: 2 bonus spins
     }
 
     if (bonusSpins > 0) {
@@ -242,11 +248,17 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 /**
  * Map Stripe price ID to subscription tier
  */
-function getPriceIdTier(priceId?: string): "free" | "pro" {
+function getPriceIdTier(priceId?: string): "free" | "pro" | "pro_voice" {
   if (!priceId) return "free";
 
   const proMonthlyPriceId = process.env.STRIPE_PRO_MONTHLY_PRICE_ID;
   const proAnnualPriceId = process.env.STRIPE_PRO_ANNUAL_PRICE_ID;
+  const proVoiceMonthlyPriceId = process.env.STRIPE_PRO_VOICE_MONTHLY_PRICE_ID;
+  const proVoiceAnnualPriceId = process.env.STRIPE_PRO_VOICE_ANNUAL_PRICE_ID;
+
+  if (priceId === proVoiceMonthlyPriceId || priceId === proVoiceAnnualPriceId) {
+    return "pro_voice";
+  }
 
   if (priceId === proMonthlyPriceId || priceId === proAnnualPriceId) {
     return "pro";

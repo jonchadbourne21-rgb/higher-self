@@ -9,7 +9,14 @@ import {
   downgradeToFreeTier,
 } from "../db/subscriptions";
 import { checkAndProcessExpiredGrants } from "../db/rewardGrants";
-import { getProMonthlyPriceId, getProAnnualPriceId } from "../_core/stripe-products";
+import {
+  getProMonthlyPriceId,
+  getProAnnualPriceId,
+  getProVoiceMonthlyPriceId,
+  getProVoiceAnnualPriceId,
+  STRIPE_PRICES,
+  FREE_LIMITS,
+} from "../_core/stripe-products";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
 
@@ -25,6 +32,7 @@ export const subscriptionRouter = router({
       tier: subscription.tier,
       status: subscription.status,
       isProUser: isProStatus,
+      isProVoiceUser: subscription.tier === "pro_voice" && subscription.status === "active",
       startDate: subscription.startDate,
       endDate: subscription.endDate,
       stripeCustomerId: subscription.stripeCustomerId,
@@ -32,21 +40,31 @@ export const subscriptionRouter = router({
   }),
 
   /**
-   * Create a checkout session for Pro tier upgrade
+   * Create a checkout session for Pro or Pro + Voice Mirror upgrade
    * Returns the Stripe checkout URL
    */
   createCheckoutSession: protectedProcedure
     .input(
       z.object({
         billingCycle: z.enum(["monthly", "annual"]),
+        tier: z.enum(["pro", "pro_voice"]).default("pro"),
       })
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const priceId =
-          input.billingCycle === "monthly"
-            ? getProMonthlyPriceId()
-            : getProAnnualPriceId();
+        let priceId: string;
+
+        if (input.tier === "pro_voice") {
+          priceId =
+            input.billingCycle === "monthly"
+              ? getProVoiceMonthlyPriceId()
+              : getProVoiceAnnualPriceId();
+        } else {
+          priceId =
+            input.billingCycle === "monthly"
+              ? getProMonthlyPriceId()
+              : getProAnnualPriceId();
+        }
 
         const session = await stripe.checkout.sessions.create({
           customer_email: ctx.user.email || undefined,
@@ -65,6 +83,7 @@ export const subscriptionRouter = router({
             user_id: ctx.user.id.toString(),
             customer_email: ctx.user.email || "",
             customer_name: ctx.user.name || "",
+            tier: input.tier,
           },
           allow_promotion_codes: true,
         });
@@ -87,30 +106,50 @@ export const subscriptionRouter = router({
     }),
 
   /**
-   * Get Pro tier pricing information
+   * Get pricing information for all tiers
    */
   getPricing: protectedProcedure.query(async () => {
     return {
-      monthly: {
-        amount: 399,
-        currency: "usd",
-        displayAmount: "$3.99",
-        interval: "month",
-        bonusSpins: 1,
+      pro: {
+        monthly: {
+          amount: STRIPE_PRICES.PRO_MONTHLY.amount,
+          currency: "usd",
+          displayAmount: "$5.99",
+          interval: "month",
+          bonusSpins: STRIPE_PRICES.PRO_MONTHLY.bonusSpins,
+        },
+        annual: {
+          amount: STRIPE_PRICES.PRO_ANNUAL.amount,
+          currency: "usd",
+          displayAmount: "$59.99",
+          interval: "year",
+          savings: "Save 17%",
+          bonusSpins: STRIPE_PRICES.PRO_ANNUAL.bonusSpins,
+        },
       },
-      annual: {
-        amount: 4999,
-        currency: "usd",
-        displayAmount: "$49.99",
-        interval: "year",
-        savings: "Save 17%",
-        bonusSpins: 3,
+      proVoice: {
+        monthly: {
+          amount: STRIPE_PRICES.PRO_VOICE_MONTHLY.amount,
+          currency: "usd",
+          displayAmount: "$8.99",
+          interval: "month",
+          bonusSpins: STRIPE_PRICES.PRO_VOICE_MONTHLY.bonusSpins,
+        },
+        annual: {
+          amount: STRIPE_PRICES.PRO_VOICE_ANNUAL.amount,
+          currency: "usd",
+          displayAmount: "$89.99",
+          interval: "year",
+          savings: "Save 17%",
+          bonusSpins: STRIPE_PRICES.PRO_VOICE_ANNUAL.bonusSpins,
+        },
       },
+      freeLimits: FREE_LIMITS,
     };
   }),
 
   /**
-   * Cancel the user's Pro subscription
+   * Cancel the user's subscription
    */
   cancelSubscription: protectedProcedure.mutation(async ({ ctx }) => {
     try {
@@ -137,13 +176,20 @@ export const subscriptionRouter = router({
 
   /**
    * Check if user is a Pro subscriber (checks both Stripe and reward grants)
+   * Also returns whether they have pro_voice tier
    */
   isProUser: protectedProcedure.query(async ({ ctx }) => {
+    const subscription = await getOrCreateSubscription(ctx.user.id);
     // First check Stripe subscription
     const stripeProStatus = await isProUser(ctx.user.id);
-    if (stripeProStatus) return { isProUser: true };
+    if (stripeProStatus) {
+      return {
+        isProUser: true,
+        isProVoiceUser: subscription.tier === "pro_voice" && subscription.status === "active",
+      };
+    }
     // Then check reward grants (also processes expired ones)
     const grantStatus = await checkAndProcessExpiredGrants(ctx.user.id);
-    return { isProUser: grantStatus.isPro };
+    return { isProUser: grantStatus.isPro, isProVoiceUser: false };
   }),
 });

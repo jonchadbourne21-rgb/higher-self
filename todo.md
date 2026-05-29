@@ -1202,3 +1202,13 @@
 - [x] Ran seed script — program id=120002 with 48 lessons inserted
 - [x] Raised day validation max from 30→90, added scaled completion rewards for all programs
 - [x] All 549 tests pass (updated completion reward test for new behavior)
+
+## Subscription Tier Overhaul (May 29)
+- [x] Update Stripe products/prices: Pro $5.99/mo, Pro + Voice Mirror $8.99/mo
+- [x] Add voice_usage_monthly table (userId, usageMonth, responseCount)
+- [x] Enforce 5 free voice responses/month limit for non-Pro+Voice users
+- [x] Show upgrade prompt (UpgradeModal with voice limitType) when free voice limit reached
+- [x] Enforce 1 program enrollment limit for free users
+- [x] Show upgrade prompt (UpgradeModal with program limitType) when free user tries to enroll in 2nd program
+- [x] Update Pricing page with 3 tiers (Free/Pro/Pro+Voice) and UpgradeModal with tier-specific upsells
+- [x] All 549 tests pass (updated voice.test.ts mock for isProVoiceUser)
