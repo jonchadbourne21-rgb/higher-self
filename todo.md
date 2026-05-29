@@ -1103,7 +1103,7 @@
 - [ ] Morning push notification at 6AM EST when program lesson unlocks
 - [ ] Completion badges per program (Bulletproof badge for Stoic Path, Cosmic Player for Alan Watts)
 - [ ] Voice session naming (allow user to name past sessions)
-- [ ] Vitest tests for voice.getSessionMessages and voice.saveToJournal
+- [x] Vitest tests for voice.getSessionMessages and voice.saveToJournal
 
 ## Hume EVI Webhook Integration
 - [x] Create server/humeWebhook.ts — POST /api/hume/webhook handler
@@ -1159,3 +1159,11 @@
 - [x] Calendar.delete tests: basic deletion, user ownership enforcement, non-numeric id rejection, auth guard
 - [x] Calendar.upcoming tests: event retrieval, userId + limit=3 forwarding, empty results, field validation, auth guard
 - [x] All 432 tests passing (no regressions from 2 pre-existing DB-dependent test failures)
+
+## Test Suite Fixes & New Tests (May 28 — Part 2)
+- [x] Fix jwt.test.ts — convert from DB-dependent to mock-based test
+- [x] Fix upcomingEvents.test.ts — convert from DB-dependent to mock-based test
+- [x] Write vitest tests for voice.getSessionMessages procedure
+- [x] Write vitest tests for voice.saveToJournal procedure
+- [x] Write vitest tests for crisis safety features (keyword detection, kill switch, logging)
+- [x] Full test suite passes cleanly — 549 tests, 32 test files, 0 failures
