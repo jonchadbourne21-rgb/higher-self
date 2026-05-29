@@ -856,6 +856,14 @@ Rules:
       return { newSessionId };
     }),
 
+    deleteSession: protectedProcedure
+      .input(z.object({ sessionId: z.string().nullable() }))
+      .mutation(async ({ ctx, input }) => {
+        const { deleteChatSession } = await import("./db");
+        await deleteChatSession(ctx.user.id, input.sessionId);
+        return { success: true };
+      }),
+
     send: protectedProcedure
       .input(z.object({ message: z.string().min(1), sessionId: z.string().nullable().optional(), voiceMode: z.boolean().optional() }))
       .mutation(async ({ ctx, input }) => {

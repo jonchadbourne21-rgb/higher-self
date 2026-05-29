@@ -1185,3 +1185,11 @@
 - [x] Redesign Mirror voice mode — focused immersive layout, better button placement
 - [x] Polish mode switcher, transitions, and overall page cohesion
 - [x] Ensure responsive and mobile-friendly layout
+
+## Session History Sidebar (May 29)
+- [x] Leveraged existing chat_sessions table with title field + existing tRPC procedures (sessions, getSessionTitles, updateSessionTitle, generateTitle, deleteSession)
+- [x] Added deleteSession tRPC procedure + deleteChatSession db helper
+- [x] Built slide-up session history panel with inline rename, delete, and session switching
+- [x] Integrated into Mirror page — History button in header, past session read-only view with "Back to live" banner
+- [x] Added "Start fresh" (+) button in header to begin new conversation
+- [x] Mobile-responsive slide-up panel (75dvh max height, spring animation)

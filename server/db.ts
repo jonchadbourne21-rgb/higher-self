@@ -1250,6 +1250,27 @@ export async function updateLastSessionId(userId: number, sessionId: string | nu
   await db.update(users).set({ lastSessionId: sessionId }).where(eq(users.id, userId));
 }
 
+
+/** Delete a chat session and all its messages */
+export async function deleteChatSession(userId: number, sessionId: string | null): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  if (sessionId === null) {
+    await db.delete(chatMessages).where(
+      and(eq(chatMessages.userId, userId), sql`${chatMessages.sessionId} IS NULL`)
+    );
+    await db.delete(chatSessions).where(
+      and(eq(chatSessions.userId, userId), sql`${chatSessions.sessionId} IS NULL`)
+    );
+  } else {
+    await db.delete(chatMessages).where(
+      and(eq(chatMessages.userId, userId), eq(chatMessages.sessionId, sessionId))
+    );
+    await db.delete(chatSessions).where(
+      and(eq(chatSessions.userId, userId), eq(chatSessions.sessionId, sessionId))
+    );
+  }
+}
 // ─── Calendar Events ──────────────────────────────────────────────────────
 /** Get the next 3 upcoming events for a user (starting from now) */
 export async function getUpcomingEvents(
