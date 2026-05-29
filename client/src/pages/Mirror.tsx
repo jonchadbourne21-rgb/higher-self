@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
-import { MessageCircle, Mic, MicOff, PhoneOff, Volume2 } from "lucide-react";
+import { MessageCircle, Mic, MicOff, PhoneOff, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -28,8 +28,6 @@ const STARTER_PROMPTS = [
   "Help me understand a difficult emotion I'm feeling",
 ];
 
-// GlowingOrb replaced by VoiceVisualization component (imported above)
-
 export default function Mirror() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
@@ -42,16 +40,14 @@ export default function Mirror() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Voice state — use SDK's built-in fft for real audio visualization
+  // Voice state
   const { connect, disconnect, messages: voiceMessages, isMuted, status, micFft } = useVoice();
   const [voiceGender, setVoiceGender] = useState<"male" | "female">("female");
   const voiceEndRef = useRef<HTMLDivElement>(null);
 
-  // Derive audio level from SDK's micFft (array of frequency magnitudes 0-1)
-  // Using useMemo to avoid recalculating on unrelated renders
+  // Derive audio level from SDK's micFft
   const audioLevel = useMemo(() => {
     if (!micFft || micFft.length === 0) return 0;
-    // RMS of first 8 frequency bins gives a smooth energy reading
     const bins = micFft.slice(0, Math.min(8, micFft.length));
     const sum = bins.reduce((acc, v) => acc + v * v, 0);
     return Math.min(1, Math.sqrt(sum / bins.length) * 2);
@@ -73,9 +69,6 @@ export default function Mirror() {
   useEffect(() => {
     voiceEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [voiceMessages]);
-
-  // No manual setInterval decay or message-based audio level needed —
-  // audioLevel is now derived directly from the SDK's real-time micFft data above.
 
   // Send chat message
   const handleSendChat = useCallback(async () => {
@@ -121,13 +114,9 @@ export default function Mirror() {
   // Start voice session
   const handleStartVoice = useCallback(async () => {
     try {
-      // Get API key and config from server
       const { apiKey, configId } = await mintTokenMut.mutateAsync();
-
-      // Create a DB session
       await createSessionMut.mutateAsync();
 
-      // Connect using Hume SDK
       const connectOptions = {
         auth: { type: "apiKey" as const, value: apiKey },
         hostname: "api.hume.ai",
@@ -165,162 +154,220 @@ export default function Mirror() {
 
   return (
     <AppShell>
-      <div className="flex flex-col h-full bg-background">
-        {/* Mode tabs */}
-        <div className="flex gap-4 px-4 py-4 border-b border-border">
-          <button
-            onClick={() => setMode("chat")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-              mode === "chat"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <MessageCircle size={18} />
-            Chat
-          </button>
-          <button
-            onClick={() => setMode("voice")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-              mode === "voice"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Mic size={18} />
-            Voice
-          </button>
+      <div className="flex flex-col h-full">
+        {/* ─── Header: Mode Switcher ─────────────────────────────────── */}
+        <div className="flex items-center justify-center px-4 py-3 border-b border-border/50 bg-card/30 backdrop-blur-sm">
+          <div className="flex items-center gap-1 p-1 rounded-full bg-secondary/50 border border-border/30">
+            <button
+              onClick={() => setMode("chat")}
+              className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                mode === "chat"
+                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <MessageCircle size={15} />
+              Chat
+            </button>
+            <button
+              onClick={() => setMode("voice")}
+              className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                mode === "voice"
+                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Mic size={15} />
+              Voice
+            </button>
+          </div>
         </div>
 
-        {/* Chat mode */}
+        {/* ─── Chat Mode ─────────────────────────────────────────────── */}
         {mode === "chat" && (
           <div className="flex-1 flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-              {chatMessages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <MessageCircle className="text-primary" size={32} />
-                  </div>
-                  <p className="text-muted-foreground mb-6">Start a conversation with your Mirror</p>
-                  <div className="space-y-2 w-full max-w-xs">
-                    {STARTER_PROMPTS.map((prompt, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          setUserInput(prompt);
-                        }}
-                        className="w-full p-3 rounded-lg bg-secondary hover:bg-secondary/80 text-left text-sm transition-colors"
-                      >
-                        {prompt}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {chatMessages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                    >
-                      <div
-                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                          msg.role === "user"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-secondary text-secondary-foreground"
-                        }`}
-                      >
-                        {msg.role === "assistant" ? (
-                          <Streamdown>{msg.content}</Streamdown>
-                        ) : (
-                          <p>{msg.content}</p>
-                        )}
+            {/* Messages area */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="max-w-2xl mx-auto px-4 py-6">
+                {chatMessages.length === 0 ? (
+                  /* ─── Empty State ─── */
+                  <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+                    {/* Subtle mirror icon */}
+                    <div className="relative mb-6">
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/15 to-purple-500/10 flex items-center justify-center border border-primary/20">
+                        <Sparkles className="text-primary/70" size={28} />
                       </div>
+                      <div className="absolute inset-0 rounded-full bg-primary/5 blur-xl" />
                     </div>
-                  ))}
-                  {isLoadingChat && (
-                    <div className="flex justify-start">
-                      <div className="bg-secondary text-secondary-foreground px-4 py-2 rounded-lg">
-                        <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-current rounded-full animate-bounce" />
-                          <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
-                          <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "0.4s" }} />
+
+                    <h2 className="text-lg font-medium text-foreground/90 mb-2">
+                      What's on your mind?
+                    </h2>
+                    <p className="text-sm text-muted-foreground mb-8 max-w-xs">
+                      Your Mirror is here to reflect, challenge, and support you.
+                    </p>
+
+                    {/* Starter prompts */}
+                    <div className="w-full max-w-sm space-y-2">
+                      {STARTER_PROMPTS.map((prompt, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setUserInput(prompt)}
+                          className="w-full px-4 py-3 rounded-xl bg-card/80 border border-border/40 hover:border-primary/30 hover:bg-card text-left text-sm text-foreground/80 hover:text-foreground transition-all duration-200 group"
+                        >
+                          <span className="opacity-80 group-hover:opacity-100 transition-opacity">
+                            {prompt}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  /* ─── Message List ─── */
+                  <div className="space-y-4 pb-4">
+                    {chatMessages.map((msg) => (
+                      <motion.div
+                        key={msg.id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                      >
+                        <div
+                          className={`max-w-[80%] px-4 py-3 text-sm leading-relaxed ${
+                            msg.role === "user"
+                              ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md"
+                              : "bg-card border border-border/40 text-card-foreground rounded-2xl rounded-bl-md"
+                          }`}
+                        >
+                          {msg.role === "assistant" ? (
+                            <Streamdown>{msg.content}</Streamdown>
+                          ) : (
+                            <p>{msg.content}</p>
+                          )}
                         </div>
-                      </div>
-                    </div>
-                  )}
-                  <div ref={chatEndRef} />
-                </>
-              )}
+                      </motion.div>
+                    ))}
+
+                    {/* Typing indicator */}
+                    {isLoadingChat && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex justify-start"
+                      >
+                        <div className="bg-card border border-border/40 px-4 py-3 rounded-2xl rounded-bl-md">
+                          <div className="flex gap-1.5 items-center h-5">
+                            <motion.div
+                              className="w-2 h-2 bg-primary/60 rounded-full"
+                              animate={{ scale: [1, 1.3, 1] }}
+                              transition={{ duration: 0.8, repeat: Infinity, delay: 0 }}
+                            />
+                            <motion.div
+                              className="w-2 h-2 bg-primary/60 rounded-full"
+                              animate={{ scale: [1, 1.3, 1] }}
+                              transition={{ duration: 0.8, repeat: Infinity, delay: 0.2 }}
+                            />
+                            <motion.div
+                              className="w-2 h-2 bg-primary/60 rounded-full"
+                              animate={{ scale: [1, 1.3, 1] }}
+                              transition={{ duration: 0.8, repeat: Infinity, delay: 0.4 }}
+                            />
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                    <div ref={chatEndRef} />
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Chat input */}
-            <div className="border-t border-border p-4 space-y-3 pb-20">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleSendChat()}
-                  placeholder="Ask your Mirror..."
-                  className="flex-1 px-4 py-2 rounded-lg bg-secondary text-foreground placeholder:text-muted-foreground border border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <button
-                  onClick={handleSendChat}
-                  disabled={isLoadingChat}
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
-                >
-                  <Send size={18} />
-                </button>
+            {/* ─── Chat Input ─── */}
+            <div className="border-t border-border/30 bg-card/20 backdrop-blur-sm px-4 py-3 pb-20">
+              <div className="max-w-2xl mx-auto">
+                <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-card border border-border/40 focus-within:border-primary/40 focus-within:shadow-sm focus-within:shadow-primary/10 transition-all duration-200">
+                  <input
+                    type="text"
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendChat()}
+                    placeholder="Ask your Mirror..."
+                    className="flex-1 px-3 py-2 bg-transparent text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none"
+                  />
+                  <button
+                    onClick={handleSendChat}
+                    disabled={isLoadingChat || !userInput.trim()}
+                    className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 shrink-0"
+                  >
+                    <Send size={16} />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Voice mode */}
+        {/* ─── Voice Mode ────────────────────────────────────────────── */}
         {mode === "voice" && (
-          <div className="flex-1 flex flex-col items-center justify-center overflow-hidden px-4 pb-20">
+          <div className="flex-1 flex flex-col overflow-hidden">
             {status.value === "disconnected" ? (
-              <>
-                <VoiceVisualization status={status} isMuted={isMuted} audioLevel={audioLevel} micFft={micFft} />
-                
-                <div className="flex gap-4 mb-8">
+              /* ─── Voice: Pre-session (idle) ─── */
+              <div className="flex-1 flex flex-col items-center justify-center px-4 pb-20">
+                {/* Visualization */}
+                <div className="mb-8">
+                  <VoiceVisualization status={status} isMuted={isMuted} audioLevel={audioLevel} micFft={micFft} />
+                </div>
+
+                {/* Voice selection */}
+                <div className="flex items-center gap-2 mb-6">
                   <button
                     onClick={() => setVoiceGender("female")}
-                    className={`px-6 py-3 rounded-full font-medium transition-colors ${
+                    className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
                       voiceGender === "female"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                        ? "bg-primary/15 text-primary border border-primary/30"
+                        : "text-muted-foreground border border-border/30 hover:border-border/60 hover:text-foreground"
                     }`}
                   >
-                    ♀ Female
+                    Female voice
                   </button>
                   <button
                     onClick={() => setVoiceGender("male")}
-                    className={`px-6 py-3 rounded-full font-medium transition-colors ${
+                    className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
                       voiceGender === "male"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                        ? "bg-primary/15 text-primary border border-primary/30"
+                        : "text-muted-foreground border border-border/30 hover:border-border/60 hover:text-foreground"
                     }`}
                   >
-                    ♂ Male
+                    Male voice
                   </button>
                 </div>
 
-                <button
+                {/* Start button */}
+                <motion.button
                   onClick={handleStartVoice}
-                  className="px-8 py-4 bg-primary text-primary-foreground rounded-full font-semibold text-lg hover:bg-primary/90 transition-colors"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-8 py-3.5 bg-primary text-primary-foreground rounded-full font-medium text-sm shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow duration-200"
                 >
-                  Start Session
-                </button>
-              </>
-            ) : (
-              <>
-                <VoiceVisualization status={status} isMuted={isMuted} audioLevel={audioLevel} micFft={micFft} />
+                  Begin Session
+                </motion.button>
 
-                {/* Transcription display */}
+                <p className="mt-4 text-xs text-muted-foreground/60">
+                  Speak freely — your Mirror is listening
+                </p>
+              </div>
+            ) : (
+              /* ─── Voice: Active session ─── */
+              <div className="flex-1 flex flex-col items-center px-4 pt-6 pb-20 overflow-hidden">
+                {/* Visualization — stays compact at top */}
+                <div className="shrink-0 mb-4">
+                  <VoiceVisualization status={status} isMuted={isMuted} audioLevel={audioLevel} micFft={micFft} />
+                </div>
+
+                {/* Transcription area — scrollable */}
                 {voiceMessages.length > 0 && (
-                  <div className="mt-8 w-full max-w-2xl max-h-80 overflow-y-auto space-y-3 px-2 rounded-lg border border-border/50 bg-background/50 p-4">
+                  <div className="flex-1 w-full max-w-xl overflow-y-auto rounded-2xl border border-border/30 bg-card/30 backdrop-blur-sm p-4 space-y-3">
                     <AnimatePresence mode="popLayout">
                       {voiceMessages.map((msg: any, idx: number) => {
                         let content = '';
@@ -328,7 +375,6 @@ export default function Mirror() {
                         let messageType = '';
                         let isPartial = false;
                         
-                        // Handle different message types from Hume SDK
                         if (msg.type === 'user_transcript') {
                           content = msg.message?.content || '';
                           role = 'user';
@@ -353,47 +399,30 @@ export default function Mirror() {
                           <motion.div
                             key={msg.id || idx}
                             layout
-                            initial={{ opacity: 0, y: 10 }}
+                            initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
+                            exit={{ opacity: 0, y: -8 }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className={`flex ${
-                              role === "user" ? "justify-end" : "justify-start"
-                            }`}
+                            className={`flex ${role === "user" ? "justify-end" : "justify-start"}`}
                           >
                             <div
-                              className={`max-w-sm px-4 py-3 rounded-lg transition-all ${
+                              className={`max-w-[80%] px-4 py-2.5 text-sm leading-relaxed ${
                                 role === "user"
-                                  ? `bg-primary text-primary-foreground ${
-                                      isPartial ? "opacity-70" : ""
-                                    }`
-                                  : "bg-secondary text-secondary-foreground"
+                                  ? `bg-primary text-primary-foreground rounded-2xl rounded-br-md ${isPartial ? "opacity-60" : ""}`
+                                  : "bg-card border border-border/30 text-card-foreground rounded-2xl rounded-bl-md"
                               }`}
                             >
-                              {/* Message type indicator */}
-                              {messageType === 'transcript' && (
-                                <div className="flex items-center gap-1 mb-1 text-xs opacity-75">
-                                  <Mic size={12} />
-                                  <span>{isPartial ? "Listening..." : "Transcribed"}</span>
+                              {messageType === 'transcript' && isPartial && (
+                                <div className="flex items-center gap-1 mb-1 text-[10px] opacity-60 uppercase tracking-wider">
+                                  <Mic size={10} />
+                                  <span>listening...</span>
                                 </div>
                               )}
                               
-                              {/* Message content */}
                               {role === "assistant" ? (
                                 <Streamdown>{content}</Streamdown>
                               ) : (
-                                <p className="text-sm leading-relaxed">{content}</p>
-                              )}
-                              
-                              {/* Partial indicator */}
-                              {isPartial && (
-                                <motion.div
-                                  className="mt-1 text-xs opacity-60"
-                                  animate={{ opacity: [0.6, 1, 0.6] }}
-                                  transition={{ duration: 1.5, repeat: Infinity }}
-                                >
-                                  ●
-                                </motion.div>
+                                <p>{content}</p>
                               )}
                             </div>
                           </motion.div>
@@ -404,16 +433,19 @@ export default function Mirror() {
                   </div>
                 )}
 
-                <div className="mt-8 flex gap-3">
-                  <button
+                {/* End session button — fixed at bottom */}
+                <div className="shrink-0 mt-4 flex items-center gap-3">
+                  <motion.button
                     onClick={handleEndVoice}
-                    className="px-6 py-2 bg-red-500/20 text-red-300 rounded-lg hover:bg-red-500/30 transition-colors flex items-center gap-2"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="px-5 py-2.5 rounded-full text-sm font-medium bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/15 hover:border-red-500/30 transition-all duration-200 flex items-center gap-2"
                   >
-                    <PhoneOff size={18} />
+                    <PhoneOff size={14} />
                     End Session
-                  </button>
+                  </motion.button>
                 </div>
-              </>
+              </div>
             )}
           </div>
         )}

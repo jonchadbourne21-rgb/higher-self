@@ -1178,3 +1178,10 @@
 - [x] Add frequency bar waveform below the main visualization — 32-bar canvas visualizer with teal-to-purple gradient, smooth exponential decay
 - [x] Apply consistent VoiceVisualization component to both Mirror.tsx and Voice.tsx
 - [x] Ensure smooth performance — uses requestAnimationFrame for canvas, CSS transitions for rings, no setInterval
+
+## Mirror UI Overhaul & Particle Field (May 29)
+- [x] Add subtle particle field to VoiceVisualization — particles drift outward when speaking
+- [x] Redesign Mirror chat mode — cleaner message bubbles, better spacing, polished input area
+- [x] Redesign Mirror voice mode — focused immersive layout, better button placement
+- [x] Polish mode switcher, transitions, and overall page cohesion
+- [x] Ensure responsive and mobile-friendly layout
