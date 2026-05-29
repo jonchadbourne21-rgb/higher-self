@@ -51,7 +51,7 @@ async function main() {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      name: "Mentrove AI Mirror Voice",
+      name: "Mirrored AI Mirror Voice",
       text: MIRROR_VOICE_PROMPT,
       version_description: "Voice-optimized Mirror personality — conversational, emotionally intelligent, challenging",
     }),
@@ -78,7 +78,7 @@ async function main() {
         id: prompt.id,
         version: prompt.version,
       },
-      version_description: "Added Mentrove AI Mirror voice system prompt",
+      version_description: "Added Mirrored AI Mirror voice system prompt",
     }),
   });
 

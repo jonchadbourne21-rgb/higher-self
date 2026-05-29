@@ -39,7 +39,7 @@ export default function Landing() {
       >
         <motion.img
           src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
-          alt="Mentrove"
+          alt="Mirrored"
           className="w-20 h-20 rounded-full object-cover"
           animate={{ opacity: [0.4, 1, 0.4], scale: [0.92, 1.08, 0.92] }}
           transition={{ repeat: Infinity, duration: 2.4 }}
@@ -71,7 +71,7 @@ export default function Landing() {
         <div className="relative">
           <motion.img
             src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
-            alt="Mentrove"
+            alt="Mirrored"
             className="w-44 h-44 object-cover rounded-full"
             style={{ filter: "drop-shadow(0 0 40px oklch(0.55 0.18 295 / 0.7))" }}
           />

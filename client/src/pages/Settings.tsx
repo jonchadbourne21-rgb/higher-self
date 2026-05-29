@@ -145,7 +145,7 @@ export default function Settings() {
           </Link>
           <img
             src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
-            alt="Mentrove"
+            alt="Mirrored"
             className="w-8 h-8 rounded-full object-cover"
           />
           <h1 className="text-3xl font-bold">Settings</h1>
@@ -290,7 +290,7 @@ export default function Settings() {
                 Welcome to Pro!
               </DialogTitle>
               <DialogDescription className="text-base">
-                You’re now a Mentrove Pro member. Your journey just leveled up.
+                You’re now a Mirrored Pro member. Your journey just leveled up.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-2">

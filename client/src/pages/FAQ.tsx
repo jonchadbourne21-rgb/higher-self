@@ -15,19 +15,19 @@ const faqItems = [
       "Yes. Your data is encrypted end-to-end and stored securely. We never sell your data or share it with third parties. You have full control over your information and can request deletion at any time.",
   },
   {
-    question: "Is Mentrove a replacement for therapy?",
+    question: "Is Mirrored a replacement for therapy?",
     answer:
-      "No. Mentrove is an AI-powered self-reflection tool designed to support your personal growth journey. It is not a licensed therapist, medical doctor, or crisis counselor. If you need professional mental health support, please consult a licensed healthcare provider.",
+      "No. Mirrored is an AI-powered self-reflection tool designed to support your personal growth journey. It is not a licensed therapist, medical doctor, or crisis counselor. If you need professional mental health support, please consult a licensed healthcare provider.",
   },
   {
     question: "What if I'm in crisis?",
     answer:
-      "If you're experiencing a mental health crisis, please reach out to a professional immediately. Call 988 (Suicide & Crisis Lifeline), 1-800-273-8255, or 911. These services are free, confidential, and available 24/7. Mentrove is not equipped to handle crisis situations.",
+      "If you're experiencing a mental health crisis, please reach out to a professional immediately. Call 988 (Suicide & Crisis Lifeline), 1-800-273-8255, or 911. These services are free, confidential, and available 24/7. Mirrored is not equipped to handle crisis situations.",
   },
   {
-    question: "Can I use Mentrove on mobile?",
+    question: "Can I use Mirrored on mobile?",
     answer:
-      "Yes! Mentrove is fully responsive and works seamlessly on iOS, Android, and all modern browsers. Access it through your mobile browser for the same full experience.",
+      "Yes! Mirrored is fully responsive and works seamlessly on iOS, Android, and all modern browsers. Access it through your mobile browser for the same full experience.",
   },
   {
     question: "How does the streak reward system work?",
@@ -35,7 +35,7 @@ const faqItems = [
       "Consistency is rewarded. Maintain a 3-day streak across any activity (chat, journal, or habits) to earn a reward wheel spin. Reach a 30-day streak to unlock 2 months of free Pro, and a 100-day streak earns you 1 full year of Pro — free.",
   },
   {
-    question: "What's included in Mentrove Pro?",
+    question: "What's included in Mirrored Pro?",
     answer:
       "Pro unlocks unlimited AI chats, unlimited journal entries, advanced analytics and trends, priority support, and custom integrations. Free users get 5 AI chats per day and 4 journal entries per week.",
   },
@@ -78,14 +78,14 @@ export default function FAQ() {
           <div className="flex items-center gap-2">
             <img
               src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
-              alt="Mentrove"
+              alt="Mirrored"
               className="w-6 h-6 rounded-full object-cover"
             />
             <span
               className="text-sm font-light tracking-[0.2em] uppercase"
               style={{ color: "oklch(0.85 0.04 80)" }}
             >
-              Mentrove
+              Mirrored
             </span>
           </div>
           <div className="w-16" />
@@ -109,7 +109,7 @@ export default function FAQ() {
               textShadow: "0 0 20px oklch(0.55 0.18 295 / 0.3)",
             }}
           >
-            About Mentrove
+            About Mirrored
           </h2>
           <div
             className="h-px w-32 mx-auto mb-3"
@@ -119,7 +119,7 @@ export default function FAQ() {
             }}
           />
           <p className="text-sm" style={{ color: "oklch(0.65 0.08 295)" }}>
-            Everything you need to know about Mentrove
+            Everything you need to know about Mirrored
           </p>
         </motion.div>
 
@@ -148,10 +148,10 @@ export default function FAQ() {
           <div className="space-y-3 text-sm" style={{ color: "oklch(0.72 0.06 295)" }}>
             <div>
               <p className="font-semibold mb-1" style={{ color: "oklch(0.88 0.04 80)" }}>
-                What Mentrove Is
+                What Mirrored Is
               </p>
               <p className="leading-relaxed">
-                Mentrove is an AI-powered self-reflection tool designed to support personal growth,
+                Mirrored is an AI-powered self-reflection tool designed to support personal growth,
                 emotional awareness, and mindfulness. It offers guided journaling, mood tracking, and
                 AI-assisted insights to help you understand yourself better.
               </p>
@@ -159,10 +159,10 @@ export default function FAQ() {
 
             <div>
               <p className="font-semibold mb-1" style={{ color: "oklch(0.88 0.04 80)" }}>
-                What Mentrove Is NOT
+                What Mirrored Is NOT
               </p>
               <p className="leading-relaxed">
-                Mentrove is <strong style={{ color: "oklch(0.88 0.04 80)" }}>not</strong> a licensed
+                Mirrored is <strong style={{ color: "oklch(0.88 0.04 80)" }}>not</strong> a licensed
                 therapist, psychologist, medical doctor, or crisis counselor. It does not provide
                 medical advice, diagnosis, or treatment. It is not a substitute for professional
                 mental health care.
@@ -307,11 +307,11 @@ export default function FAQ() {
             Have a question or need help? We're here.
           </p>
           <a
-            href="mailto:support@mentrove.com"
+            href="mailto:support@mirrored.com"
             className="inline-block text-sm font-medium underline underline-offset-2 transition-opacity hover:opacity-70"
             style={{ color: "oklch(0.75 0.16 185)" }}
           >
-            support@mentrove.com
+            support@mirrored.com
           </a>
         </motion.div>
 

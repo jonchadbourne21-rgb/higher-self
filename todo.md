@@ -1231,3 +1231,4 @@
 
 ## Bug Fixes (May 29)
 - [x] Fix dashboard cards/rectangles jumping around on page load (layout shift issue)
+- [x] Rename all "Mentrove" references to "Mirrored" across the entire codebase (including website title/link)

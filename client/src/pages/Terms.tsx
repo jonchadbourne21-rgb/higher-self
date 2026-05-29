@@ -33,14 +33,14 @@ export default function Terms() {
           <div className="flex items-center gap-2">
             <img
               src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
-              alt="Mentrove"
+              alt="Mirrored"
               className="w-6 h-6 rounded-full object-cover"
             />
             <span
               className="text-sm font-light tracking-[0.2em] uppercase"
               style={{ color: "oklch(0.85 0.04 80)" }}
             >
-              Mentrove
+              Mirrored
             </span>
           </div>
           <div className="w-16" />
@@ -89,20 +89,20 @@ export default function Terms() {
         {/* Sections */}
         <div className="space-y-6">
           <Section title="Agreement to Terms">
-            By accessing or using Mentrove, you agree to be bound by these Terms of Service. If you do not
+            By accessing or using Mirrored, you agree to be bound by these Terms of Service. If you do not
             agree to these terms, please do not use the service. We reserve the right to update these terms
             at any time, and continued use constitutes acceptance of any changes.
           </Section>
 
           <Section title="Service Description">
-            Mentrove is an AI-powered self-reflection and personal growth platform. It provides guided
+            Mirrored is an AI-powered self-reflection and personal growth platform. It provides guided
             journaling, mood tracking, habit tracking, life domain scoring, and AI-assisted conversations.
             The service is designed for personal development and emotional awareness — it is not a medical
             or therapeutic service.
           </Section>
 
           <Section title="Not Medical Advice">
-            Mentrove is not a licensed therapist, psychologist, medical doctor, or crisis counselor. The AI
+            Mirrored is not a licensed therapist, psychologist, medical doctor, or crisis counselor. The AI
             Mirror does not provide medical advice, diagnosis, or treatment. It is not a substitute for
             professional mental health care. If you are experiencing a mental health crisis, contact
             emergency services (911) or the Suicide & Crisis Lifeline (988) immediately.
@@ -110,34 +110,34 @@ export default function Terms() {
 
           <Section title="Account Responsibilities">
             You are responsible for maintaining the security of your account credentials. You must be at
-            least 18 years old to use Mentrove. You agree to provide accurate information and to use the
+            least 18 years old to use Mirrored. You agree to provide accurate information and to use the
             service in accordance with applicable laws. One account per person — sharing accounts is not
             permitted.
           </Section>
 
           <Section title="Acceptable Use">
-            You agree not to use Mentrove to: generate harmful, illegal, or abusive content; attempt to
+            You agree not to use Mirrored to: generate harmful, illegal, or abusive content; attempt to
             extract or reverse-engineer the AI system; impersonate others; or use the service in any way
             that could damage, disable, or impair the platform. We reserve the right to suspend accounts
             that violate these guidelines.
           </Section>
 
           <Section title="Subscription & Billing">
-            Mentrove offers both free and paid (Pro) tiers. Pro subscriptions are billed monthly ($3.99) or
+            Mirrored offers both free and paid (Pro) tiers. Pro subscriptions are billed monthly ($3.99) or
             annually ($49.99) through Stripe. You may cancel at any time — access continues until the end
             of the current billing period. Refunds are handled on a case-by-case basis; contact
-            support@mentrove.com.
+            support@mirrored.com.
           </Section>
 
           <Section title="Intellectual Property">
-            The Mentrove platform, including its design, code, AI models, and branding, is owned by
-            Mentrove. Content you create (journal entries, check-ins, conversations) remains yours. By
+            The Mirrored platform, including its design, code, AI models, and branding, is owned by
+            Mirrored. Content you create (journal entries, check-ins, conversations) remains yours. By
             using the service, you grant us a limited license to process your content solely for the
             purpose of delivering the service to you.
           </Section>
 
           <Section title="Limitation of Liability">
-            Mentrove is provided "as is" without warranties of any kind. We are not liable for any
+            Mirrored is provided "as is" without warranties of any kind. We are not liable for any
             indirect, incidental, or consequential damages arising from your use of the service. Our total
             liability is limited to the amount you paid for the service in the 12 months preceding any
             claim.
@@ -145,18 +145,18 @@ export default function Terms() {
 
           <Section title="Termination">
             We may suspend or terminate your access if you violate these terms. You may delete your account
-            at any time by contacting support@mentrove.com. Upon termination, your data will be deleted in
+            at any time by contacting support@mirrored.com. Upon termination, your data will be deleted in
             accordance with our Privacy Policy.
           </Section>
 
           <Section title="Contact">
             Questions about these terms? Reach us at{" "}
             <a
-              href="mailto:support@mentrove.com"
+              href="mailto:support@mirrored.com"
               className="underline underline-offset-2"
               style={{ color: "oklch(0.75 0.16 185)" }}
             >
-              support@mentrove.com
+              support@mirrored.com
             </a>
             .
           </Section>
