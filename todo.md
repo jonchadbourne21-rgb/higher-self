@@ -1185,6 +1185,7 @@
 - [x] Redesign Mirror voice mode — focused immersive layout, better button placement
 - [x] Polish mode switcher, transitions, and overall page cohesion
 - [x] Ensure responsive and mobile-friendly layout
+<<<<<<< Updated upstream
 
 ## Session History Sidebar (May 29)
 - [x] Leveraged existing chat_sessions table with title field + existing tRPC procedures (sessions, getSessionTitles, updateSessionTitle, generateTitle, deleteSession)
@@ -1232,3 +1233,6 @@
 ## Bug Fixes (May 29)
 - [x] Fix dashboard cards/rectangles jumping around on page load (layout shift issue)
 - [x] Rename all "Mentrove" references to "Mirrored" across the entire codebase (including website title/link)
+=======
+- [x] Add "Self-Actualization Guide to Full Potential" program (Carl Rogers philosophy) to programs section
+>>>>>>> Stashed changes
