@@ -1148,3 +1148,14 @@
 - [x] Verify production build passes cleanly (0 errors)
 - [x] Verify 370+ tests passing
 - [x] Fix Home.tsx missing AppShell wrapper — nav bar was not showing on Dashboard/Home page because Home.tsx was the only authenticated page without an AppShell wrapper
+
+## Journal Filters & Calendar Vitest Tests (May 28)
+- [x] Write 18 vitest tests for journal.list filter parameters (search, categoryId, dateFrom, dateTo, moodTag, combined filters, default limit, auth guard)
+- [x] Write journal.get tests (entry retrieval, NOT_FOUND handling, user ownership, field validation, auth guard)
+- [x] Write 44 vitest tests for calendar procedures (list, create, update, delete, upcoming)
+- [x] Calendar.list tests: year/month params, boundary months (1 & 12), invalid months, empty results, auth guard
+- [x] Calendar.create tests: basic creation, all event types, all-day events, recurring events (weekly/monthly), end dates, default values, title validation (empty, max length), invalid type/recurrence, auth guard
+- [x] Calendar.update tests: title/type/date/notes/color/isAllDay/recurrence updates, multi-field updates, title validation, invalid type, auth guard
+- [x] Calendar.delete tests: basic deletion, user ownership enforcement, non-numeric id rejection, auth guard
+- [x] Calendar.upcoming tests: event retrieval, userId + limit=3 forwarding, empty results, field validation, auth guard
+- [x] All 432 tests passing (no regressions from 2 pre-existing DB-dependent test failures)
