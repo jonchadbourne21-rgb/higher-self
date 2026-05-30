@@ -1299,3 +1299,10 @@
 ## Bug Fix — Check-in Slider Navigation
 - [x] Fix: Changing Mood or Energy slider on check-in page navigates back to home without saving (Stress slider works fine)
 - [x] Remove swipe-between-tabs gesture entirely — it conflicts with sliders and horizontal interactions
+
+## Entropy Detection Engine (First-Strike PoC Step 1)
+- [x] Add entropy_scores table (user_id, score, days_since_checkin, journal_trend, habit_rate, prosody_energy, triggered, created_at)
+- [x] Build entropy calculation engine with weighted scoring (check-in 30%, journal 20%, habits 30%, prosody 20%)
+- [x] Create daily scheduled job handler at /api/scheduled/entropyDetection
+- [x] Implement 2-consecutive-day trigger logic (score > 65 for 2 days)
+- [x] Write vitest tests for entropy scoring logic

@@ -897,3 +897,30 @@ export const linguisticDrift = mysqlTable("linguistic_drift", {
 
 export type LinguisticDrift = typeof linguisticDrift.$inferSelect;
 export type InsertLinguisticDrift = typeof linguisticDrift.$inferInsert;
+
+// ─── Entropy Scores (First-Strike PoC — Entropy Detection Engine) ───────────
+// Daily behavioral entropy score per user. Triggers re-engagement when >65 for 2 consecutive days.
+
+export const entropyScores = mysqlTable("entropy_scores", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // Overall entropy score (0-100)
+  score: float("score").notNull(),
+  // Component scores (each 0-100 before weighting)
+  daysSinceCheckin: int("daysSinceCheckin").notNull(),
+  daysSinceCheckinScore: float("daysSinceCheckinScore").notNull(),
+  journalTrendScore: float("journalTrendScore").notNull(),
+  habitCompletionRate: float("habitCompletionRate").notNull(),
+  habitCompletionScore: float("habitCompletionScore").notNull(),
+  prosodyEnergyScore: float("prosodyEnergyScore").notNull(),
+  // Whether this score triggered the threshold (>65 for 2 consecutive days)
+  triggered: boolean("triggered").default(false).notNull(),
+  // Number of consecutive days above threshold (including this one)
+  consecutiveDaysAbove: int("consecutiveDaysAbove").default(0).notNull(),
+  // Date this score was calculated for (YYYY-MM-DD as varchar for easy querying)
+  scoreDate: varchar("scoreDate", { length: 10 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type EntropyScore = typeof entropyScores.$inferSelect;
+export type InsertEntropyScore = typeof entropyScores.$inferInsert;
