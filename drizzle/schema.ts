@@ -832,3 +832,28 @@ export const timeCapsuleLetters = mysqlTable("time_capsule_letters", {
 });
 export type TimeCapsuleLetter = typeof timeCapsuleLetters.$inferSelect;
 export type InsertTimeCapsuleLetter = typeof timeCapsuleLetters.$inferInsert;
+
+// ─── Session Fingerprints (First-Strike PoC) ─────────────────────────────────
+// Extracted after each Mirrored session via Gemini 2.5 Flash.
+// Invisible to the user in the UI — purely for pattern analysis.
+
+export const sessionFingerprints = mysqlTable("session_fingerprints", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // The session ID this fingerprint was extracted from (chat sessionId or check-in id)
+  sessionId: varchar("sessionId", { length: 36 }).notNull(),
+  // Source type: 'chat' or 'checkin'
+  sourceType: mysqlEnum("sourceType", ["chat", "checkin"]).notNull(),
+  // (a) Dominant emotional tone on a valence scale: -1.0 (very negative) to +1.0 (very positive)
+  emotionalValence: float("emotionalValence").notNull(),
+  // (b) The user's stated self-belief in one sentence
+  selfBelief: text("selfBelief").notNull(),
+  // (c) The primary unresolved tension named
+  unresolvedTension: text("unresolvedTension").notNull(),
+  // Raw extraction metadata (model, token count, etc.)
+  extractionMeta: json("extractionMeta").$type<Record<string, unknown>>(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SessionFingerprint = typeof sessionFingerprints.$inferSelect;
+export type InsertSessionFingerprint = typeof sessionFingerprints.$inferInsert;

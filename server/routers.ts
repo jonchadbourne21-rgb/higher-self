@@ -82,6 +82,7 @@ import { sendPushNotification } from "./pushNotifications";
 import { storeMemory, retrieveMemories, formatMemoriesForPrompt, getPersonalityProfile, formatPersonalityForPrompt, updatePersonalityProfile } from "./rag/memory";
 import { buildIntentSpecificPrompt } from "./intentPrompts";
 import { extractAndSaveFingerprint } from "./timeCapsule/fingerprint";
+import { extractAndStoreFingerprint } from "./db/sessionFingerprints";
 
 // ─── Helperss ──────────────────────────────────────────────────────────────────
 
@@ -477,6 +478,15 @@ export const appRouter = router({
               today.id.toString(),
               checkinUserMessages
             ).catch((e) => console.error("[TimeCapsule] Check-in fingerprint failed:", e));
+
+            // SESSION FINGERPRINT (Gemini 2.5 Flash — numeric valence PoC)
+            const checkinText = checkinUserMessages.map((m, i) => `[${i + 1}]: ${m}`).join("\n");
+            extractAndStoreFingerprint(
+              ctx.user.id,
+              today.id.toString(),
+              "checkin",
+              checkinText
+            ).catch((e) => console.error("[Fingerprint] Check-in extraction failed:", e));
           }
 
           return { success: true, aiResponse, streakSpinEarned };
@@ -1049,6 +1059,15 @@ Rules:
                 "chat",
                 sessionId,
                 userMsgs
+              );
+
+              // SESSION FINGERPRINT (Gemini 2.5 Flash — numeric valence PoC)
+              const chatText = userMsgs.map((m, i) => `[${i + 1}]: ${m}`).join("\n");
+              await extractAndStoreFingerprint(
+                ctx.user.id,
+                sessionId ?? "unknown",
+                "chat",
+                chatText
               );
             } catch (e) {
               console.error("[TimeCapsule] Chat fingerprint extraction failed:", e);

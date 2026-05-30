@@ -1261,3 +1261,10 @@
 - [x] Fix reward wheel not spinning — restore actual spin animation before revealing result
 - [x] Implement 7-day Pro trial grant when user wins "1 Week Free Pro" on the wheel (starts at top of hour, ends exactly 7 days later)
 - [x] Update OG/social share preview image from old Mentrove branding to new MIRRORED image
+
+## Session Fingerprint Extractor (First-Strike Roadmap — PoC)
+- [x] Add session_fingerprints table (emotional_valence, self_belief, unresolved_tension, timestamped)
+- [x] Build Gemini 2.5 Flash extraction function with structured prompt
+- [x] Create db helper for storing/retrieving fingerprints
+- [x] Wire background extraction trigger after chat/check-in sessions end
+- [x] Write vitest tests for fingerprint extraction logic
