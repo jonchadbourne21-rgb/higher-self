@@ -1289,3 +1289,9 @@
 - [x] Replace "Good morning" greeting with a profound/inspirational quote the user said 1-7 days ago
 - [x] Show the date/day the quote was said underneath it
 - [x] Create backend procedure to fetch recent user quotes from fingerprints/chat messages
+
+## Female Voice Mirror Option
+- [x] Add female voice Hume config (b5b9a42c-ef7e-42c6-bd7d-7495a10da489) as secondary voice option
+- [x] Update mintToken procedure to accept voice gender input and return correct config ID
+- [x] Wire Mirror.tsx voice gender toggle to pass selection to backend
+- [x] Same AI personality/prompt for both voices — only the voice itself differs

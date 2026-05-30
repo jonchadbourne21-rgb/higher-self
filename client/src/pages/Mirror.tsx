@@ -249,7 +249,7 @@ export default function Mirror() {
 
   const handleStartVoice = useCallback(async () => {
     try {
-      const { apiKey, configId } = await mintTokenMut.mutateAsync();
+      const { apiKey, configId } = await mintTokenMut.mutateAsync({ voice: voiceGender });
       await createSessionMut.mutateAsync();
       await connect({
         auth: { type: "apiKey" as const, value: apiKey },
@@ -260,7 +260,7 @@ export default function Mirror() {
     } catch (error) {
       toast.error("Failed to start voice session");
     }
-  }, [connect, mintTokenMut, createSessionMut]);
+  }, [connect, mintTokenMut, createSessionMut, voiceGender]);
 
   const handleEndVoice = useCallback(async () => {
     try {
