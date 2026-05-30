@@ -1284,3 +1284,8 @@
 - [x] Deliver via in-app notification and push notification
 - [x] Track engagement: open_rate, re-engagement within 48h, session-start rate
 - [x] Write vitest tests for letter generation and eligibility logic
+
+## Dashboard Quote Feature
+- [x] Replace "Good morning" greeting with a profound/inspirational quote the user said 1-7 days ago
+- [x] Show the date/day the quote was said underneath it
+- [x] Create backend procedure to fetch recent user quotes from fingerprints/chat messages

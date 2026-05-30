@@ -1,5 +1,5 @@
 import { COOKIE_NAME } from "@shared/const";
-import { sql, and, eq, gte } from "drizzle-orm";
+import { sql, and, eq, gte, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -19,6 +19,7 @@ import {
   chatMessages,
   habitCompletions,
   journalEntries,
+  psychologicalFingerprints,
   userLessonResponses,
   wheelSpins,
 } from "../drizzle/schema";
@@ -1496,6 +1497,68 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
         programs: programCount,
         rewards: rewardsCount,
         calendar: calendarCount,
+      };
+    }),
+
+    dailyQuote: protectedProcedure.query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return null;
+      const uid = ctx.user.id;
+
+      // Get quotes from the last 1-7 days (from psychological fingerprints rawExcerpts)
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const oneDayAgo = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000);
+
+      const fingerprints = await db
+        .select({
+          rawExcerpts: psychologicalFingerprints.rawExcerpts,
+          extractedAt: psychologicalFingerprints.extractedAt,
+          coreBelief: psychologicalFingerprints.coreBelief,
+          aspirationalSelf: psychologicalFingerprints.aspirationalSelf,
+        })
+        .from(psychologicalFingerprints)
+        .where(
+          and(
+            eq(psychologicalFingerprints.userId, uid),
+            gte(psychologicalFingerprints.extractedAt, sevenDaysAgo)
+          )
+        )
+        .orderBy(desc(psychologicalFingerprints.extractedAt));
+
+      if (fingerprints.length === 0) return null;
+
+      // Collect all candidate quotes: aspirational self, raw excerpts that are profound
+      const candidates: { text: string; date: Date }[] = [];
+
+      for (const fp of fingerprints) {
+        const date = fp.extractedAt;
+
+        // Aspirational self statements are often the most inspiring
+        if (fp.aspirationalSelf && fp.aspirationalSelf.length > 15 && fp.aspirationalSelf.length < 200) {
+          candidates.push({ text: fp.aspirationalSelf, date });
+        }
+
+        // Raw excerpts that are quote-worthy (not too short, not too long)
+        if (fp.rawExcerpts && Array.isArray(fp.rawExcerpts)) {
+          for (const excerpt of fp.rawExcerpts) {
+            if (excerpt.length >= 20 && excerpt.length <= 180) {
+              candidates.push({ text: excerpt, date });
+            }
+          }
+        }
+      }
+
+      if (candidates.length === 0) return null;
+
+      // Use a deterministic daily selection based on date seed
+      const today = new Date();
+      const daySeed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+      const index = daySeed % candidates.length;
+      const selected = candidates[index];
+
+      return {
+        quote: selected.text,
+        date: selected.date,
       };
     }),
 

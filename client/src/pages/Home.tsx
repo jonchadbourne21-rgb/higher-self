@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useLocation, Link } from "wouter";
 import { Sparkles, Sun, Moon, Bell, User, ChevronRight, Hourglass } from "lucide-react";
 import WelcomeSpinModal from "@/components/WelcomeSpinModal";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { BookOpen } from "lucide-react";
 import AppShell from "@/components/AppShell";
 
@@ -76,6 +76,7 @@ export default function Home() {
   const [, navigate] = useLocation();
 
   const { data: profile } = trpc.profile.get.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: dailyQuote } = trpc.home.dailyQuote.useQuery(undefined, { enabled: isAuthenticated });
   const { data: todayCheckIn } = trpc.checkIn.today.useQuery(undefined, { enabled: isAuthenticated });
   const { data: upcomingEvents } = trpc.calendar.upcoming.useQuery(undefined, { enabled: isAuthenticated });
   const { data: habitStreak } = trpc.habits.currentStreak.useQuery(undefined, { enabled: isAuthenticated });
@@ -131,11 +132,11 @@ export default function Home() {
   }, [isAuthenticated, loading, user, navigate]);
 
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const greetingIcon =
     hour < 17 ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} className="text-violet-400" />;
   const name = profile?.preferredName || user?.name?.split(" ")[0] || "friend";
   const today = format(new Date(), "EEEE, MMMM d");
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   // Rewards tile accent
   const hasWelcomeSpin = welcomeSpin?.available;
@@ -311,31 +312,52 @@ export default function Home() {
                 </Link>
               </div>
             </div>
-            <h1 className="text-xl font-serif font-light text-foreground leading-tight">
-              <motion.span
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, delay: 0.15 }}
-                style={{ display: "inline-block" }}
-              >
-                {greeting},
-              </motion.span>
-              <br />
-              <span className="inline-flex items-center gap-2 flex-wrap">
-                <AnimatedName name={name} />
-                {isPro && (
-                  <motion.span
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.6, duration: 0.3 }}
-                    className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full align-middle"
-                    style={{ background: "oklch(0.30 0.10 55)", color: "oklch(0.85 0.18 55)", verticalAlign: "middle" }}
-                  >
-                    👑 Pro
-                  </motion.span>
-                )}
-              </span>
-            </h1>
+            {dailyQuote ? (
+              <div className="space-y-1">
+                <motion.p
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.15 }}
+                  className="text-base font-serif italic text-foreground/90 leading-relaxed"
+                >
+                  "{dailyQuote.quote}"
+                </motion.p>
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 0.4 }}
+                  className="text-[11px] text-muted-foreground font-medium"
+                >
+                  — You, {format(new Date(dailyQuote.date), "EEEE, MMMM d")}
+                </motion.span>
+              </div>
+            ) : (
+              <h1 className="text-xl font-serif font-light text-foreground leading-tight">
+                <motion.span
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.15 }}
+                  style={{ display: "inline-block" }}
+                >
+                  {greeting},
+                </motion.span>
+                <br />
+                <span className="inline-flex items-center gap-2 flex-wrap">
+                  <AnimatedName name={name} />
+                  {isPro && (
+                    <motion.span
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.6, duration: 0.3 }}
+                      className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full align-middle"
+                      style={{ background: "oklch(0.30 0.10 55)", color: "oklch(0.85 0.18 55)", verticalAlign: "middle" }}
+                    >
+                      👑 Pro
+                    </motion.span>
+                  )}
+                </span>
+              </h1>
+            )}
           </motion.div>
 
           {/* ── Check-in card ───────────────────────────────────────────── */}
