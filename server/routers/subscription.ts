@@ -8,7 +8,7 @@ import {
   upgradeToProTier,
   downgradeToFreeTier,
 } from "../db/subscriptions";
-import { checkAndProcessExpiredGrants } from "../db/rewardGrants";
+import { checkAndProcessExpiredGrants, isPermanentProUser } from "../db/rewardGrants";
 import {
   getProMonthlyPriceId,
   getProAnnualPriceId,
@@ -25,6 +25,19 @@ export const subscriptionRouter = router({
    * Get current subscription status for the user
    */
   getStatus: protectedProcedure.query(async ({ ctx }) => {
+    // Permanent Pro override
+    if (isPermanentProUser(ctx.user.id)) {
+      const subscription = await getOrCreateSubscription(ctx.user.id);
+      return {
+        tier: "pro_voice" as const,
+        status: "active" as const,
+        isProUser: true,
+        isProVoiceUser: true,
+        startDate: subscription.startDate,
+        endDate: null,
+        stripeCustomerId: subscription.stripeCustomerId,
+      };
+    }
     const subscription = await getOrCreateSubscription(ctx.user.id);
     const isProStatus = await isProUser(ctx.user.id);
 
@@ -179,6 +192,10 @@ export const subscriptionRouter = router({
    * Also returns whether they have pro_voice tier
    */
   isProUser: protectedProcedure.query(async ({ ctx }) => {
+    // Permanent Pro override — always Pro with voice
+    if (isPermanentProUser(ctx.user.id)) {
+      return { isProUser: true, isProVoiceUser: true };
+    }
     const subscription = await getOrCreateSubscription(ctx.user.id);
     // First check Stripe subscription
     const stripeProStatus = await isProUser(ctx.user.id);

@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { subscriptions } from "../../drizzle/schema";
 import { getDb } from "../db";
+import { isPermanentProUser } from "./rewardGrants";
 
 /**
  * Get or create a subscription record for a user
@@ -54,6 +55,9 @@ export async function getUserSubscription(userId: number) {
  * Both "pro" and "pro_voice" tiers count as Pro.
  */
 export async function isProUser(userId: number): Promise<boolean> {
+  // Permanent Pro override
+  if (isPermanentProUser(userId)) return true;
+
   const subscription = await getUserSubscription(userId);
   
   // Check Stripe subscription first — both pro and pro_voice count
@@ -79,6 +83,9 @@ export async function isProUser(userId: number): Promise<boolean> {
  * Check if user has active Pro + Voice Mirror subscription
  */
 export async function isProVoiceUser(userId: number): Promise<boolean> {
+  // Permanent Pro override — always has voice access
+  if (isPermanentProUser(userId)) return true;
+
   const subscription = await getUserSubscription(userId);
   if (subscription &&
     subscription.tier === "pro_voice" &&

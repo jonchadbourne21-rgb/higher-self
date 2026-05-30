@@ -154,12 +154,29 @@ export async function tryActivateNextGrant(userId: number): Promise<boolean> {
  * If no more grants, downgrade to free.
  * Returns the current Pro status.
  */
+// Permanent Pro accounts — these users ALWAYS have Pro, never free
+const PERMANENT_PRO_USER_IDS = [1, 10590001];
+
+export function isPermanentProUser(userId: number): boolean {
+  return PERMANENT_PRO_USER_IDS.includes(userId);
+}
+
 export async function checkAndProcessExpiredGrants(userId: number): Promise<{
   isPro: boolean;
   activeGrant: typeof rewardGrants.$inferSelect | null;
   pendingGrants: (typeof rewardGrants.$inferSelect)[];
   expiresAt: Date | null;
 }> {
+  // Permanent Pro override — these accounts never lose Pro
+  if (isPermanentProUser(userId)) {
+    return {
+      isPro: true,
+      activeGrant: null,
+      pendingGrants: [],
+      expiresAt: null, // never expires
+    };
+  }
+
   const db = await getDb();
   if (!db) throw new Error("Database connection failed");
 
