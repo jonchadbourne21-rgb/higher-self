@@ -83,6 +83,13 @@ export default function AppShell({ children, noScroll }: AppShellProps) {
   const swipeLocked = useRef(false);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // Ignore swipe gestures that start on range inputs (sliders) to prevent
+    // accidental navigation when adjusting mood/energy/stress sliders
+    const target = e.target as HTMLElement;
+    if (target.tagName === "INPUT" && (target as HTMLInputElement).type === "range") {
+      swipeLocked.current = true;
+      return;
+    }
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
     swipeLocked.current = false;

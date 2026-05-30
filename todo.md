@@ -1295,3 +1295,6 @@
 - [x] Update mintToken procedure to accept voice gender input and return correct config ID
 - [x] Wire Mirror.tsx voice gender toggle to pass selection to backend
 - [x] Same AI personality/prompt for both voices — only the voice itself differs
+
+## Bug Fix — Check-in Slider Navigation
+- [x] Fix: Changing Mood or Energy slider on check-in page navigates back to home without saving (Stress slider works fine)
