@@ -313,20 +313,28 @@ export default function Home() {
               </div>
             </div>
             {dailyQuote ? (
-              <div className="space-y-1">
+              <div className="space-y-1.5">
+                <motion.h1
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                  className="text-xl font-serif font-light text-foreground leading-tight"
+                >
+                  {greeting}, <span className="text-violet-gradient">{name}</span>
+                </motion.h1>
                 <motion.p
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.15 }}
-                  className="text-base font-serif italic text-foreground/90 leading-relaxed"
+                  transition={{ duration: 0.5, delay: 0.25 }}
+                  className="text-sm font-serif italic text-foreground/80 leading-relaxed"
                 >
                   "{dailyQuote.quote}"
                 </motion.p>
                 <motion.span
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.4, delay: 0.4 }}
-                  className="text-[11px] text-muted-foreground font-medium"
+                  transition={{ duration: 0.4, delay: 0.45 }}
+                  className="text-[11px] text-muted-foreground font-medium block"
                 >
                   — You, {format(new Date(dailyQuote.date), "EEEE, MMMM d")}
                 </motion.span>
