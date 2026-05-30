@@ -1252,3 +1252,6 @@
 - [x] Write vitest tests for fingerprint extraction and letter generation (16 tests passing)
 - [x] Push notification on letter delivery
 - [x] Time Capsule entry point on Home page (hourglass icon in header)
+
+## Bug Fixes (May 30)
+- [x] Fix "Patterns Detected" and "Next Steps for Growth" showing empty in check-in results page

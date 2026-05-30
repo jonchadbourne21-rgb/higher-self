@@ -88,33 +88,67 @@ Avg stress: ${avgStress}/10`;
         const systemPrompt = buildHigherSelfSystemPromptForWeekly(ctx.user.seedIntent || undefined);
         const isFirstDayOfWeek = now.getDay() === 0;
 
-        const userPrompt = isFirstDayOfWeek
-          ? `Reflect on last week's data. Analyze patterns, celebrate wins, suggest next steps. Keep it warm and personal (under 300 words).${transcript}`
-          : `Analyze this week's data so far. Notice patterns, celebrate progress, suggest focus areas. Keep it warm and personal (under 300 words).${transcript}`;
+        // Use structured LLM output to generate insight, patterns, and actionable steps together
+        const structuredPrompt = isFirstDayOfWeek
+          ? `Reflect on last week's data. Return a JSON object with: "insightText" (warm personal reflection under 250 words), "patterns" (array of 2-4 behavioral patterns you notice — things like mood trends, consistency, areas of focus, emotional themes), and "actionableSteps" (array of 2-3 specific next steps for growth this week).${transcript}`
+          : `Analyze this week's data so far. Return a JSON object with: "insightText" (warm personal reflection under 250 words), "patterns" (array of 2-4 behavioral patterns you notice — things like mood trends, consistency, areas of focus, emotional themes), and "actionableSteps" (array of 2-3 specific next steps for growth).${transcript}`;
 
         const aiRes = await invokeLLM({
           messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
+            { role: "system", content: systemPrompt + " Always respond with valid JSON matching the requested schema." },
+            { role: "user", content: structuredPrompt },
           ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "weekly_insight",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  insightText: { type: "string", description: "Warm, personal weekly reflection" },
+                  patterns: { type: "array", items: { type: "string" }, description: "2-4 behavioral patterns detected" },
+                  actionableSteps: { type: "array", items: { type: "string" }, description: "2-3 specific growth steps" },
+                },
+                required: ["insightText", "patterns", "actionableSteps"],
+                additionalProperties: false,
+              },
+            },
+          },
         });
 
-        const insightText = typeof aiRes.choices[0]?.message?.content === "string"
-          ? aiRes.choices[0].message.content
-          : "";
+        let insightText = "";
+        let patterns: string[] = [];
+        let actionableSteps: string[] = [];
 
-        const patterns = [
-          sessions.length > 3 ? "Consistent Mirror practice" : undefined,
-          journals.length > 2 ? "Regular journaling" : undefined,
-          habits.length > 5 ? "Strong habit completion" : undefined,
-          checkIns.length === 7 ? "Perfect daily check-in streak" : undefined,
-        ].filter(Boolean) as string[];
-
-        const actionableSteps = [
-          sessions.length === 0 ? "Schedule a Mirror session this week" : undefined,
-          habits.length < 3 ? "Complete at least 3 habits this week" : undefined,
-          checkIns.length < 5 ? "Aim for daily check-ins" : undefined,
-        ].filter(Boolean) as string[];
+        try {
+          const rawContent = aiRes.choices[0]?.message?.content;
+          const contentStr = typeof rawContent === "string" ? rawContent : "{}";
+          const parsed = JSON.parse(contentStr);
+          insightText = parsed.insightText || "";
+          patterns = Array.isArray(parsed.patterns) ? parsed.patterns : [];
+          actionableSteps = Array.isArray(parsed.actionableSteps) ? parsed.actionableSteps : [];
+        } catch {
+          // Fallback: treat entire response as insightText
+          insightText = typeof aiRes.choices[0]?.message?.content === "string"
+            ? aiRes.choices[0].message.content
+            : "";
+          // Generate basic patterns from data
+          patterns = [
+            sessions.length > 0 ? `${sessions.length} Mirror session${sessions.length > 1 ? "s" : ""} this week` : undefined,
+            journals.length > 0 ? `${journals.length} journal entr${journals.length > 1 ? "ies" : "y"} written` : undefined,
+            checkIns.length > 0 ? `${checkIns.length}/7 daily check-ins completed` : undefined,
+            habits.length > 0 ? `${habits.length} habit${habits.length > 1 ? "s" : ""} completed` : undefined,
+          ].filter(Boolean) as string[];
+          actionableSteps = [
+            sessions.length === 0 ? "Try a Mirror session to explore your thoughts" : undefined,
+            habits.length < 3 ? "Focus on completing at least 3 habits this week" : undefined,
+            checkIns.length < 5 ? "Aim for daily check-ins to track your patterns" : undefined,
+            journals.length === 0 ? "Write a journal entry to capture your reflections" : undefined,
+          ].filter(Boolean) as string[];
+          // Ensure at least one step
+          if (actionableSteps.length === 0) actionableSteps = ["Keep up your current momentum!"];
+        }
 
         await saveWeeklyInsight({
           userId: ctx.user.id,

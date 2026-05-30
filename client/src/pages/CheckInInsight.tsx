@@ -152,7 +152,20 @@ export default function CheckInInsight() {
               )}
 
               {/* Patterns */}
-              {weeklyInsight.patterns && (
+              {weeklyInsight.patterns && Array.isArray(weeklyInsight.patterns) && weeklyInsight.patterns.length > 0 && (
+                <div className="bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30 rounded-2xl p-6 border border-rose-200 dark:border-rose-800">
+                  <h3 className="font-semibold text-foreground mb-3">Patterns Detected</h3>
+                  <ul className="space-y-2">
+                    {weeklyInsight.patterns.map((p: string, i: number) => (
+                      <li key={i} className="flex items-start gap-2 text-foreground text-sm">
+                        <span className="text-emerald-500 mt-0.5">✓</span>
+                        <span>{p}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {weeklyInsight.patterns && typeof weeklyInsight.patterns === 'string' && weeklyInsight.patterns.length > 0 && (
                 <div className="bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30 rounded-2xl p-6 border border-rose-200 dark:border-rose-800">
                   <h3 className="font-semibold text-foreground mb-3">Patterns Detected</h3>
                   <Streamdown className="text-foreground leading-relaxed text-sm">
@@ -172,7 +185,20 @@ export default function CheckInInsight() {
               )}
 
               {/* Actionable Steps */}
-              {weeklyInsight.actionableSteps && (
+              {weeklyInsight.actionableSteps && Array.isArray(weeklyInsight.actionableSteps) && weeklyInsight.actionableSteps.length > 0 && (
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-2xl p-6 border border-green-200 dark:border-green-800">
+                  <h3 className="font-semibold text-foreground mb-3">Next Steps for Growth</h3>
+                  <ul className="space-y-2">
+                    {weeklyInsight.actionableSteps.map((step: string, i: number) => (
+                      <li key={i} className="flex items-start gap-2 text-foreground text-sm">
+                        <span className="text-amber-500 mt-0.5">→</span>
+                        <span>{step}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {weeklyInsight.actionableSteps && typeof weeklyInsight.actionableSteps === 'string' && weeklyInsight.actionableSteps.length > 0 && (
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-2xl p-6 border border-green-200 dark:border-green-800">
                   <h3 className="font-semibold text-foreground mb-3">Next Steps for Growth</h3>
                   <Streamdown className="text-foreground leading-relaxed text-sm">
