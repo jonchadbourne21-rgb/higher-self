@@ -1268,3 +1268,11 @@
 - [x] Create db helper for storing/retrieving fingerprints
 - [x] Wire background extraction trigger after chat/check-in sessions end
 - [x] Write vitest tests for fingerprint extraction logic
+
+## Linguistic Drift Tracker (First-Strike Roadmap — Step 2)
+- [x] Add linguistic_drift table (drift_score, retired_words, new_words, goal_alignment, week_start)
+- [x] Build vocabulary extraction and comparison engine (NLP on session transcripts)
+- [x] Compute drift_score — directional metric toward/away from stated goals
+- [x] Create /api/scheduled/linguisticDrift handler for weekly heartbeat
+- [x] Register heartbeat cron job via manus-heartbeat CLI (ready to deploy — will register after publish)
+- [x] Write vitest tests for drift analysis logic

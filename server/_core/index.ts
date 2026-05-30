@@ -10,6 +10,7 @@ import { serveStatic, setupVite } from "./vite";
 import { startDailyReminderScheduler } from "../pushNotifications";
 import { weeklyInsightHandler } from "../jobs/weeklyInsightJob";
 import { timeCapsuleHandler } from "../jobs/timeCapsuleJob";
+import { linguisticDriftHandler } from "../jobs/linguisticDriftJob";
 import { attachV2VRelay } from "../v2vRelay";
 import { humeWebhookHandler } from "../humeWebhook";
 
@@ -105,6 +106,7 @@ Request-rate: 1/1s`;
   // Scheduled job endpoints (Heartbeat cron)
   app.post("/api/scheduled/weeklyInsight", weeklyInsightHandler);
   app.post("/api/scheduled/timeCapsule", timeCapsuleHandler);
+  app.post("/api/scheduled/linguisticDrift", linguisticDriftHandler);
 
   // Hume EVI webhook — receives real-time voice session events
   app.post("/api/hume/webhook", humeWebhookHandler);

@@ -857,3 +857,32 @@ export const sessionFingerprints = mysqlTable("session_fingerprints", {
 
 export type SessionFingerprint = typeof sessionFingerprints.$inferSelect;
 export type InsertSessionFingerprint = typeof sessionFingerprints.$inferInsert;
+
+// ─── Linguistic Drift Tracker (First-Strike PoC — Step 2) ────────────────────
+// Weekly analysis of self-descriptive vocabulary changes across sessions.
+// Invisible to the user — purely for pattern analysis and future interventions.
+
+export const linguisticDrift = mysqlTable("linguistic_drift", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // The week this analysis covers (start of week, UTC Monday 00:00)
+  weekStart: timestamp("weekStart").notNull(),
+  // Directional drift score: -1.0 (moving away from goals) to +1.0 (moving toward goals)
+  driftScore: float("driftScore").notNull(),
+  // Words/phrases that appeared in previous weeks but NOT this week
+  retiredWords: json("retiredWords").$type<string[]>().notNull(),
+  // Words/phrases that are NEW this week (not seen in previous analysis windows)
+  newWords: json("newWords").$type<string[]>().notNull(),
+  // Top self-descriptive vocabulary this week (frequency-ranked)
+  currentVocabulary: json("currentVocabulary").$type<string[]>().notNull(),
+  // The user's stated goals at time of analysis (snapshot for drift comparison)
+  goalSnapshot: text("goalSnapshot"),
+  // Number of sessions analyzed
+  sessionsAnalyzed: int("sessionsAnalyzed").notNull(),
+  // Analysis metadata
+  analysisMeta: json("analysisMeta").$type<Record<string, unknown>>(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LinguisticDrift = typeof linguisticDrift.$inferSelect;
+export type InsertLinguisticDrift = typeof linguisticDrift.$inferInsert;

@@ -225,6 +225,13 @@
       "when": 1780150072365,
       "tag": "0031_modern_loners",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "5",
+      "when": 1780150549038,
+      "tag": "0032_glorious_iceman",
+      "breakpoints": true
     }
   ]
 }
