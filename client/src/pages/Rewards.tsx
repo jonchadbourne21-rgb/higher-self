@@ -39,14 +39,42 @@ const SEGMENTS = [
   { id: "reward_points_2", label: "+5\nPoints", color: "oklch(0.50 0.12 160)", textColor: "#fff", icon: "✨" },
 ];
 
-// Map result IDs to segment indices for landing
-const RESULT_TO_SEGMENT: Record<string, number> = {
-  month_pro: 0,
-  five_percent_off: 1,
-  try_again: 2,
-  week_trial: 3,
-  reward_points: 4,
+// Map backend result IDs to segment indices (some results have multiple segments)
+const RESULT_TO_SEGMENT_INDEX: Record<string, number[]> = {
+  month_pro: [0],
+  five_percent_off: [1, 5],
+  try_again: [2, 6],
+  week_trial: [3],
+  reward_points: [4, 7],
 };
+
+function pickSegmentIndex(result: string): number {
+  const options = RESULT_TO_SEGMENT_INDEX[result];
+  if (!options) return 0;
+  return options[Math.floor(Math.random() * options.length)];
+}
+
+/**
+ * Calculate the final rotation so the pointer (at top, 0°) lands in the
+ * middle of the target segment.
+ *
+ * Segment 0 starts at -90° (12 o'clock) and goes clockwise.
+ * segmentCenter = segmentIndex * 45 + 22.5
+ * To land pointer on it: target = 360 - segCenter
+ * Plus multiple full rotations for dramatic effect.
+ */
+function calcLandingRotation(segmentIndex: number, currentRotation: number): number {
+  const segAngle = 360 / SEGMENTS.length; // 45°
+  const segCenter = segmentIndex * segAngle + segAngle / 2;
+  const targetOffset = 360 - segCenter;
+  // Add jitter within ±15° so it doesn't always hit dead center
+  const jitter = (Math.random() - 0.5) * (segAngle * 0.6);
+  // Add 5-8 full rotations for drama
+  const fullSpins = (5 + Math.floor(Math.random() * 3)) * 360;
+  // Normalize current rotation to avoid negative modulo issues
+  const base = Math.ceil(currentRotation / 360) * 360;
+  return base + fullSpins + targetOffset + jitter;
+}
 
 // ── Wheel tick sound via Web Audio API ─────────────────────────────────────
 function useWheelSound() {
@@ -102,23 +130,21 @@ function SpinWheel({
   onSpin,
   spinning,
   disabled,
-  onSpinComplete,
+  targetRotation,
 }: {
   onSpin: () => void;
   spinning: boolean;
   disabled: boolean;
-  onSpinComplete?: () => void;
+  targetRotation: number;
 }) {
-  const [rotation, setRotation] = useState(0);
   const { playTick, playWin } = useWheelSound();
   const tickIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Simulate tick-tick-tick that slows down as the wheel decelerates
   useEffect(() => {
     if (spinning) {
-      // Start fast, slow down over 4 seconds matching the ease curve
       let elapsed = 0;
-      const SPIN_DURATION = 4000;
+      const SPIN_DURATION = 4200;
       let lastTickTime = 0;
 
       const tick = () => {
@@ -127,15 +153,13 @@ function SpinWheel({
           if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
           tickIntervalRef.current = null;
           playWin();
-          onSpinComplete?.();
           return;
         }
-        // Ease-out: interval grows from 60ms to 600ms
         const progress = elapsed / SPIN_DURATION;
-        const easedProgress = 1 - Math.pow(1 - progress, 3); // cubic ease-out
+        const easedProgress = 1 - Math.pow(1 - progress, 3);
         const interval = 60 + easedProgress * 540;
         if (elapsed - lastTickTime >= interval) {
-          const pitch = 900 - easedProgress * 300; // pitch drops as it slows
+          const pitch = 900 - easedProgress * 300;
           const vol = 0.18 - easedProgress * 0.08;
           playTick(pitch, vol);
           lastTickTime = elapsed;
@@ -152,7 +176,7 @@ function SpinWheel({
     return () => {
       if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
     };
-  }, [spinning, playTick, playWin, onSpinComplete]);
+  }, [spinning, playTick, playWin]);
 
   return (
     <div className="relative flex flex-col items-center">
@@ -168,65 +192,80 @@ function SpinWheel({
             transition: "opacity 0.3s",
           }}
         />
-        {/* Wheel SVG */}
-        <motion.svg
-          viewBox="0 0 200 200"
-          className="w-full h-full relative z-10"
-          animate={{ rotate: rotation }}
-          transition={
-            spinning
-              ? { duration: 4, ease: [0.2, 0.8, 0.3, 1] }
-              : { duration: 0 }
-          }
+        {/* Wheel container — CSS transition drives the spin */}
+        <div
+          className="w-full h-full relative z-10 rounded-full overflow-hidden"
+          style={{
+            transform: `rotate(${targetRotation}deg)`,
+            transition: spinning
+              ? "transform 4.2s cubic-bezier(0.15, 0.85, 0.25, 1)"
+              : "none",
+          }}
         >
-          {SEGMENTS.map((seg, i) => {
-            const angle = 360 / SEGMENTS.length;
-            const startAngle = i * angle - 90;
-            const endAngle = startAngle + angle;
-            const startRad = (startAngle * Math.PI) / 180;
-            const endRad = (endAngle * Math.PI) / 180;
-            const x1 = 100 + 95 * Math.cos(startRad);
-            const y1 = 100 + 95 * Math.sin(startRad);
-            const x2 = 100 + 95 * Math.cos(endRad);
-            const y2 = 100 + 95 * Math.sin(endRad);
-            const midAngle = ((startAngle + endAngle) / 2) * (Math.PI / 180);
-            const textX = 100 + 60 * Math.cos(midAngle);
-            const textY = 100 + 60 * Math.sin(midAngle);
-            const textRotation = (startAngle + endAngle) / 2 + 90;
+          <svg viewBox="0 0 200 200" className="w-full h-full">
+            {SEGMENTS.map((seg, i) => {
+              const angle = 360 / SEGMENTS.length;
+              const startAngle = i * angle - 90;
+              const endAngle = startAngle + angle;
+              const startRad = (startAngle * Math.PI) / 180;
+              const endRad = (endAngle * Math.PI) / 180;
+              const x1 = 100 + 95 * Math.cos(startRad);
+              const y1 = 100 + 95 * Math.sin(startRad);
+              const x2 = 100 + 95 * Math.cos(endRad);
+              const y2 = 100 + 95 * Math.sin(endRad);
+              const midRad = ((startAngle + endAngle) / 2) * (Math.PI / 180);
+              const iconX = 100 + 50 * Math.cos(midRad);
+              const iconY = 100 + 50 * Math.sin(midRad);
+              const textX = 100 + 70 * Math.cos(midRad);
+              const textY = 100 + 70 * Math.sin(midRad);
+              const textRotation = (startAngle + endAngle) / 2 + 90;
 
-            return (
-              <g key={i}>
-                <path
-                  d={`M100,100 L${x1},${y1} A95,95 0 0,1 ${x2},${y2} Z`}
-                  fill={seg.color}
-                  stroke="oklch(0.13 0.04 280)"
-                  strokeWidth="1"
-                />
-                <text
-                  x={textX}
-                  y={textY}
-                  fill={seg.textColor}
-                  fontSize="7"
-                  fontWeight="600"
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  transform={`rotate(${textRotation}, ${textX}, ${textY})`}
-                >
-                  {seg.label.split("\n").map((line, li) => (
-                    <tspan key={li} x={textX} dy={li === 0 ? "-3" : "9"}>
-                      {line}
-                    </tspan>
-                  ))}
-                </text>
-              </g>
-            );
-          })}
-          {/* Center circle */}
-          <circle cx="100" cy="100" r="18" fill="oklch(0.17 0.04 280)" stroke="oklch(0.65 0.16 185)" strokeWidth="2" />
-          <text x="100" y="100" fill="oklch(0.65 0.16 185)" fontSize="10" fontWeight="700" textAnchor="middle" dominantBaseline="middle">
-            SPIN
-          </text>
-        </motion.svg>
+              return (
+                <g key={i}>
+                  <path
+                    d={`M100,100 L${x1},${y1} A95,95 0 0,1 ${x2},${y2} Z`}
+                    fill={seg.color}
+                    stroke="oklch(0.13 0.04 280)"
+                    strokeWidth="1"
+                  />
+                  {/* Icon */}
+                  <text
+                    x={iconX}
+                    y={iconY}
+                    fontSize="12"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    transform={`rotate(${textRotation}, ${iconX}, ${iconY})`}
+                  >
+                    {seg.icon}
+                  </text>
+                  {/* Label */}
+                  <text
+                    x={textX}
+                    y={textY}
+                    fill={seg.textColor}
+                    fontSize="7"
+                    fontWeight="600"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    transform={`rotate(${textRotation}, ${textX}, ${textY})`}
+                  >
+                    {seg.label.split("\n").map((line, li) => (
+                      <tspan key={li} x={textX} dy={li === 0 ? "-3" : "9"}>
+                        {line}
+                      </tspan>
+                    ))}
+                  </text>
+                </g>
+              );
+            })}
+            {/* Center circle */}
+            <circle cx="100" cy="100" r="18" fill="oklch(0.17 0.04 280)" stroke="oklch(0.65 0.16 185)" strokeWidth="2" />
+            <text x="100" y="100" fill="oklch(0.65 0.16 185)" fontSize="10" fontWeight="700" textAnchor="middle" dominantBaseline="middle">
+              SPIN
+            </text>
+          </svg>
+        </div>
         {/* Pointer triangle at top */}
         <div className="absolute top-[-8px] left-1/2 -translate-x-1/2 z-20">
           <div
@@ -424,6 +463,7 @@ export default function Rewards() {
   const { isAuthenticated, loading } = useAuth();
   const [, navigate] = useLocation();
   const [spinning, setSpinning] = useState(false);
+  const [wheelRotation, setWheelRotation] = useState(0);
   const [prizeModal, setPrizeModal] = useState<{ open: boolean; label: string | null; isWelcome: boolean; grantActivated: boolean }>({
     open: false,
     label: null,
@@ -435,6 +475,7 @@ export default function Rewards() {
   const { data: dashboard, refetch } = trpc.rewards.dashboard.useQuery(undefined, { enabled: isAuthenticated });
   const spinMutation = trpc.rewards.spin.useMutation();
   const redeemMutation = trpc.rewards.redeem.useMutation();
+  const utils = trpc.useUtils();
 
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate("/");
@@ -446,33 +487,46 @@ export default function Rewards() {
 
     const type = !dashboard?.welcomeSpinUsed ? "welcome" : "streak";
     try {
+      // 1. Call backend to get the result FIRST
       const result = await spinMutation.mutateAsync({ type });
-      if (!result.success) {
+      if (!result.success || !result.result) {
         toast.error(result.error || "Spin failed");
         setSpinning(false);
         return;
       }
 
-      // Wait for animation
+      // 2. Calculate landing rotation for the correct segment
+      const segIdx = pickSegmentIndex(result.result);
+      const landingRotation = calcLandingRotation(segIdx, wheelRotation);
+      setWheelRotation(landingRotation);
+
+      // 3. Wait for the CSS spin animation to complete (4.2s + small buffer)
       setTimeout(() => {
         setSpinning(false);
+
         // Show dare streak bonus toast if awarded
         if (result.dareStreakBonusAwarded) {
           toast.success("🎯 Dare Streak! +10 bonus points awarded!", { duration: 4000 });
         }
+
+        // 4. Show the prize modal AFTER the wheel has stopped
         setPrizeModal({
           open: true,
           label: result.prizeLabel,
           isWelcome: type === "welcome",
           grantActivated: result.grantActivated ?? false,
         });
+
+        // Invalidate queries so dashboard updates
         refetch();
-      }, 4200);
+        utils.subscription.isProUser.invalidate();
+        utils.subscription.getStatus.invalidate();
+      }, 4500);
     } catch (e) {
       toast.error("Something went wrong");
       setSpinning(false);
     }
-  }, [spinning, dashboard?.welcomeSpinUsed, spinMutation, refetch]);
+  }, [spinning, dashboard?.welcomeSpinUsed, spinMutation, refetch, wheelRotation, utils]);
 
   const handleRedeem = useCallback(
     async (tierId: string) => {
@@ -637,7 +691,12 @@ export default function Rewards() {
               </motion.div>
             )}
 
-            <SpinWheel onSpin={handleSpin} spinning={spinning} disabled={!canSpin} onSpinComplete={() => {}} />
+            <SpinWheel
+              onSpin={handleSpin}
+              spinning={spinning}
+              disabled={!canSpin}
+              targetRotation={wheelRotation}
+            />
 
             {dashboard?.welcomeSpinUsed && !canSpin && (
               <div

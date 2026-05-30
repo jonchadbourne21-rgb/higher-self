@@ -120,14 +120,24 @@ export async function tryActivateNextGrant(userId: number): Promise<boolean> {
 
   const grant = pendingGrants[0];
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + grant.durationDays * 24 * 60 * 60 * 1000);
+
+  // For week_trial grants, align start to the top of the current hour
+  // so the trial starts at e.g. 3:00 PM and ends exactly 7 days later at 3:00 PM
+  let activatedAt: Date;
+  if (grant.grantType === "week_trial") {
+    activatedAt = new Date(now);
+    activatedAt.setMinutes(0, 0, 0); // round down to top of the hour
+  } else {
+    activatedAt = now;
+  }
+  const expiresAt = new Date(activatedAt.getTime() + grant.durationDays * 24 * 60 * 60 * 1000);
 
   // Activate the grant
   await db
     .update(rewardGrants)
     .set({
       status: "active",
-      activatedAt: now,
+      activatedAt,
       expiresAt,
     })
     .where(eq(rewardGrants.id, grant.id));

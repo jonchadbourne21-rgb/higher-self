@@ -1256,3 +1256,7 @@
 ## Bug Fixes (May 30)
 - [x] Fix "Patterns Detected" and "Next Steps for Growth" showing empty in check-in results page
 - [x] Fix program enrollment showing generic error instead of Pro upgrade prompt for free users
+
+## Bug Fixes — Reward Wheel (May 30)
+- [x] Fix reward wheel not spinning — restore actual spin animation before revealing result
+- [x] Implement 7-day Pro trial grant when user wins "1 Week Free Pro" on the wheel (starts at top of hour, ends exactly 7 days later)
