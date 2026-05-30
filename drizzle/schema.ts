@@ -829,6 +829,17 @@ export const timeCapsuleLetters = mysqlTable("time_capsule_letters", {
   // The time period this letter covers (from-to dates)
   periodStart: timestamp("periodStart").notNull(),
   periodEnd: timestamp("periodEnd").notNull(),
+  // --- Engagement Tracking (First-Strike PoC Step 3) ---
+  // The drift score at time of generation (snapshot)
+  driftScoreSnapshot: float("driftScoreSnapshot"),
+  // The valence data from session fingerprints (Gemini)
+  valenceSnapshot: json("valenceSnapshot").$type<{ avg: number; trend: string } | null>(),
+  // Whether user started a new session within 48h of reading
+  sessionStartedWithin48h: boolean("sessionStartedWithin48h"),
+  // Timestamp of first session after letter delivery (for measuring re-engagement)
+  firstSessionAfterDelivery: timestamp("firstSessionAfterDelivery"),
+  // The accountability question appended to the letter
+  accountabilityQuestion: text("accountabilityQuestion"),
 });
 export type TimeCapsuleLetter = typeof timeCapsuleLetters.$inferSelect;
 export type InsertTimeCapsuleLetter = typeof timeCapsuleLetters.$inferInsert;

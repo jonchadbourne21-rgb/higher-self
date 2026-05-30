@@ -1276,3 +1276,11 @@
 - [x] Create /api/scheduled/linguisticDrift handler for weekly heartbeat
 - [x] Register heartbeat cron job via manus-heartbeat CLI (ready to deploy — will register after publish)
 - [x] Write vitest tests for drift analysis logic
+
+## 30-Day Letter (First-Strike Roadmap — Step 3)
+- [x] Add time_capsule_letters table (letter_text, delivery_status, engagement metrics, user voice data)
+- [x] Build letter generation engine (LLM prompt ingesting fingerprints + drift + intention)
+- [x] Create daily scheduled job to check for 30-day eligible users
+- [x] Deliver via in-app notification and push notification
+- [x] Track engagement: open_rate, re-engagement within 48h, session-start rate
+- [x] Write vitest tests for letter generation and eligibility logic

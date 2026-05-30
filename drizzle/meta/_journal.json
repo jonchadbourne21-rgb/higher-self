@@ -232,6 +232,13 @@
       "when": 1780150549038,
       "tag": "0032_glorious_iceman",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "5",
+      "when": 1780151331541,
+      "tag": "0033_gigantic_johnny_blaze",
+      "breakpoints": true
     }
   ]
 }
