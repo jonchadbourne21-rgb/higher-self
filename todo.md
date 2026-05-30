@@ -1298,3 +1298,4 @@
 
 ## Bug Fix — Check-in Slider Navigation
 - [x] Fix: Changing Mood or Energy slider on check-in page navigates back to home without saving (Stress slider works fine)
+- [x] Remove swipe-between-tabs gesture entirely — it conflicts with sliders and horizontal interactions

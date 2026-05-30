@@ -13,6 +13,7 @@ import {
 import { useLocation, Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { useRef, useCallback, useState } from "react";
+// Note: Swipe-between-tabs gesture removed — it conflicted with sliders and horizontal touch interactions
 import MirroredHeader from "./MirroredHeader";
 
 const navItems = [
@@ -73,62 +74,12 @@ export default function AppShell({ children, noScroll }: AppShellProps) {
     });
   }, []);
 
-  // ── Swipe between tabs ───────────────────────────────────────────────────
-  const currentIndex = navItems.findIndex(
-    (item) => location === item.path || location.startsWith(item.path + "/")
-  );
 
-  const touchStartX = useRef<number | null>(null);
-  const touchStartY = useRef<number | null>(null);
-  const swipeLocked = useRef(false);
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    // Ignore swipe gestures that start on range inputs (sliders) to prevent
-    // accidental navigation when adjusting mood/energy/stress sliders
-    const target = e.target as HTMLElement;
-    if (target.tagName === "INPUT" && (target as HTMLInputElement).type === "range") {
-      swipeLocked.current = true;
-      return;
-    }
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-    swipeLocked.current = false;
-  }, []);
-
-  const handleTouchEnd = useCallback(
-    (e: React.TouchEvent) => {
-      if (touchStartX.current === null || touchStartY.current === null) return;
-      if (swipeLocked.current) return;
-
-      const dx = e.changedTouches[0].clientX - touchStartX.current;
-      const dy = e.changedTouches[0].clientY - touchStartY.current;
-
-      if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-
-      swipeLocked.current = true;
-
-      if (dx < 0 && currentIndex < navItems.length - 1) {
-        haptic(6);
-        navigate(navItems[currentIndex + 1].path);
-        setNavVisible(true);
-      } else if (dx > 0 && currentIndex > 0) {
-        haptic(6);
-        navigate(navItems[currentIndex - 1].path);
-        setNavVisible(true);
-      }
-
-      touchStartX.current = null;
-      touchStartY.current = null;
-    },
-    [currentIndex, navigate]
-  );
 
 
   return (
     <div
       className="h-dvh bg-aurora flex flex-col max-w-[480px] mx-auto relative overflow-hidden"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
     >
       {/* Mirrored Wordmark Header */}
       <MirroredHeader subtitle={getSubtitle(location)} />
