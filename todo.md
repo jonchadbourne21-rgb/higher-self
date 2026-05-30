@@ -1260,3 +1260,4 @@
 ## Bug Fixes — Reward Wheel (May 30)
 - [x] Fix reward wheel not spinning — restore actual spin animation before revealing result
 - [x] Implement 7-day Pro trial grant when user wins "1 Week Free Pro" on the wheel (starts at top of hour, ends exactly 7 days later)
+- [x] Update OG/social share preview image from old Mentrove branding to new MIRRORED image
