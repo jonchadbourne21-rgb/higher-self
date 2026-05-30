@@ -1255,3 +1255,4 @@
 
 ## Bug Fixes (May 30)
 - [x] Fix "Patterns Detected" and "Next Steps for Growth" showing empty in check-in results page
+- [x] Fix program enrollment showing generic error instead of Pro upgrade prompt for free users

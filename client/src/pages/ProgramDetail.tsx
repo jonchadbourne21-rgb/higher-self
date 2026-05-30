@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
+import { UpgradeModal } from "@/components/UpgradeModal";
 import { trpc } from "@/lib/trpc";
 import AppShell from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -99,6 +100,7 @@ export default function ProgramDetail() {
   const [showLessonView, setShowLessonView] = useState(false);
   const [showJournal, setShowJournal] = useState(false);
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const utils = trpc.useUtils();
 
   const { data, isLoading } = trpc.programs.getById.useQuery(
@@ -133,7 +135,13 @@ export default function ProgramDetail() {
       utils.programs.myEnrollments.invalidate();
       setShowLessonView(true);
     },
-    onError: () => toast.error("Could not enroll. Please try again."),
+    onError: (err) => {
+      if (err?.data?.code === "FORBIDDEN") {
+        setShowUpgradeModal(true);
+      } else {
+        toast.error("Could not enroll. Please try again.");
+      }
+    },
   });
 
   const submitLesson = trpc.programs.submitLessonResponse.useMutation({
@@ -793,6 +801,12 @@ export default function ProgramDetail() {
           </Button>
         )}
       </div>
+
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        limitType="program"
+      />
     </AppShell>
   );
 }
