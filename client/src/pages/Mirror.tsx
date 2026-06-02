@@ -10,6 +10,7 @@ import { useVoice } from "@humeai/voice-react";
 import { Streamdown } from "streamdown";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { VoiceVisualization } from "@/components/VoiceVisualization";
+import { IncomingCall } from "@/components/IncomingCall";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -66,6 +67,12 @@ export default function Mirror() {
   const { connect, disconnect, messages: voiceMessages, isMuted, status, micFft } = useVoice();
   const [voiceGender, setVoiceGender] = useState<"male" | "female">("female");
   const voiceEndRef = useRef<HTMLDivElement>(null);
+
+  // Entropy outbound call state
+  const [showIncomingCall, setShowIncomingCall] = useState(false);
+  const [entropyVoicemailId, setEntropyVoicemailId] = useState<number | null>(null);
+  const answerCallMut = trpc.voice.answerCall.useMutation();
+  const declineCallMut = trpc.voice.declineCall.useMutation();
 
   // Derive audio level from SDK's micFft
   const audioLevel = useMemo(() => {
@@ -246,6 +253,52 @@ export default function Mirror() {
       voiceMode: false,
     });
   }, [userInput, sendChatMutation, sessionId, isViewingPast]);
+
+  // Check for entropy call on mount (from push notification deep link)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const isEntropyCall = params.get("entropyCall");
+    const vmId = params.get("voicemailId");
+    if (isEntropyCall === "true" && vmId) {
+      setEntropyVoicemailId(Number(vmId));
+      setShowIncomingCall(true);
+      // Clean URL without reload
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
+  const handleAnswerCall = useCallback(async () => {
+    if (!entropyVoicemailId) return;
+    setShowIncomingCall(false);
+    try {
+      const { systemPrompt } = await answerCallMut.mutateAsync({ voicemailId: entropyVoicemailId });
+      // Start voice session with entropy-aware prompt via configId
+      const { apiKey, configId } = await mintTokenMut.mutateAsync({ voice: voiceGender });
+      await createSessionMut.mutateAsync();
+      setMode("voice");
+      await connect({
+        auth: { type: "apiKey" as const, value: apiKey },
+        hostname: "api.hume.ai",
+        configId,
+        // Pass the entropy-aware system prompt as initial context
+        ...(systemPrompt ? { systemPrompt } : {}),
+      });
+      toast.success("Connected to your Higher Self");
+    } catch (error) {
+      toast.error("Failed to connect");
+    }
+  }, [entropyVoicemailId, answerCallMut, mintTokenMut, createSessionMut, connect, voiceGender]);
+
+  const handleDeclineCall = useCallback(async () => {
+    if (!entropyVoicemailId) return;
+    setShowIncomingCall(false);
+    try {
+      await declineCallMut.mutateAsync({ voicemailId: entropyVoicemailId });
+      toast("Your Higher Self will leave you a voicemail.", { icon: "\ud83d\udcec" });
+    } catch (error) {
+      // Silent fail
+    }
+  }, [entropyVoicemailId, declineCallMut]);
 
   const handleStartVoice = useCallback(async () => {
     try {
@@ -801,6 +854,15 @@ export default function Mirror() {
 
       {/* Modals */}
       <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} limitType="chat" />
+
+      {/* Incoming Call Overlay */}
+      <IncomingCall
+        visible={showIncomingCall}
+        voicemailId={entropyVoicemailId ?? 0}
+        onAnswer={handleAnswerCall}
+        onDecline={handleDeclineCall}
+        onDismiss={() => setShowIncomingCall(false)}
+      />
     </AppShell>
   );
 }

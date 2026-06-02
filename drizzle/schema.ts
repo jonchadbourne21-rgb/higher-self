@@ -924,3 +924,25 @@ export const entropyScores = mysqlTable("entropy_scores", {
 
 export type EntropyScore = typeof entropyScores.$inferSelect;
 export type InsertEntropyScore = typeof entropyScores.$inferInsert;
+
+// ─── Higher Self Voicemails (Entropy-triggered outbound calls) ───────────────
+
+export const higherSelfVoicemails = mysqlTable("higher_self_voicemails", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // The text content of the voicemail (what the Higher Self "said")
+  transcript: text("transcript").notNull(),
+  // URL to the generated audio file (TTS)
+  audioUrl: varchar("audioUrl", { length: 500 }),
+  // The entropy score that triggered this voicemail
+  entropyScore: float("entropyScore").notNull(),
+  // Whether the user answered the call (true) or it went to voicemail (false)
+  wasAnswered: boolean("wasAnswered").notNull().default(false),
+  // When the user listened to the voicemail (null if not yet listened)
+  listenedAt: timestamp("listenedAt"),
+  // Status: pending_generation, ready, failed
+  status: mysqlEnum("status", ["pending_generation", "ready", "failed"]).notNull().default("pending_generation"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type HigherSelfVoicemail = typeof higherSelfVoicemails.$inferSelect;
+export type InsertHigherSelfVoicemail = typeof higherSelfVoicemails.$inferInsert;

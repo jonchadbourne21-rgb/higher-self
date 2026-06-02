@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import AppShell from "@/components/AppShell";
@@ -11,6 +11,10 @@ import {
   Sparkles,
   ChevronLeft,
   Lock,
+  Phone,
+  Play,
+  Pause,
+  Volume2,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
@@ -20,11 +24,20 @@ export default function TimeCapsule() {
   const [, navigate] = useLocation();
   const [selectedLetterId, setSelectedLetterId] = useState<number | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [activeTab, setActiveTab] = useState<"letters" | "voicemails">("letters");
+  const [playingVoicemailId, setPlayingVoicemailId] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const settingsQuery = trpc.timeCapsule.getSettings.useQuery();
   const lettersQuery = trpc.timeCapsule.getLetters.useQuery();
   const fingerprintCount = trpc.timeCapsule.getFingerprintCount.useQuery();
   const unreadCount = trpc.timeCapsule.getUnreadCount.useQuery();
+  const voicemailsQuery = trpc.timeCapsule.getVoicemails.useQuery();
+  const markListened = trpc.timeCapsule.markVoicemailListened.useMutation({
+    onSuccess: () => voicemailsQuery.refetch(),
+  });
+
+  const voicemails = voicemailsQuery.data ?? [];
 
   const letterQuery = trpc.timeCapsule.getLetter.useQuery(
     { letterId: selectedLetterId! },
@@ -88,7 +101,7 @@ export default function TimeCapsule() {
                 Time Capsule
               </h1>
               <p className="text-muted-foreground text-sm mt-1">
-                Letters from your past self
+                Letters & voicemails from your Higher Self
               </p>
             </div>
             <button
@@ -168,8 +181,128 @@ export default function TimeCapsule() {
           )}
         </motion.div>
 
-        {/* Letters List */}
-        {letters.length > 0 ? (
+        {/* Tab Switcher */}
+        <div className="flex items-center gap-1 p-1 rounded-full bg-secondary/50 border border-border/30 mb-6">
+          <button
+            onClick={() => setActiveTab("letters")}
+            className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+              activeTab === "letters"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Mail className="w-4 h-4" />
+            Letters {letters.length > 0 && `(${letters.length})`}
+          </button>
+          <button
+            onClick={() => setActiveTab("voicemails")}
+            className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+              activeTab === "voicemails"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Phone className="w-4 h-4" />
+            Voicemails {voicemails.length > 0 && `(${voicemails.length})`}
+          </button>
+        </div>
+
+        {/* Voicemails Tab */}
+        {activeTab === "voicemails" && (
+          <div className="space-y-3">
+            {voicemails.length > 0 ? (
+              voicemails.map((vm: any, i: number) => (
+                <motion.div
+                  key={vm.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className={`bg-card border rounded-xl p-4 transition-all ${
+                    vm.status === "listened"
+                      ? "border-border"
+                      : "border-primary/30 shadow-sm shadow-primary/5"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => {
+                        if (playingVoicemailId === vm.id) {
+                          audioRef.current?.pause();
+                          setPlayingVoicemailId(null);
+                        } else if (vm.audioUrl) {
+                          if (audioRef.current) audioRef.current.pause();
+                          const audio = new Audio(vm.audioUrl);
+                          audio.onended = () => setPlayingVoicemailId(null);
+                          audio.play();
+                          audioRef.current = audio;
+                          setPlayingVoicemailId(vm.id);
+                          if (vm.status !== "listened") {
+                            markListened.mutate({ voicemailId: vm.id });
+                          }
+                        }
+                      }}
+                      disabled={!vm.audioUrl}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                        playingVoicemailId === vm.id
+                          ? "bg-primary text-primary-foreground"
+                          : vm.audioUrl
+                          ? "bg-primary/10 text-primary hover:bg-primary/20"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {playingVoicemailId === vm.id ? (
+                        <Pause className="w-4 h-4" />
+                      ) : vm.audioUrl ? (
+                        <Play className="w-4 h-4 ml-0.5" />
+                      ) : (
+                        <Volume2 className="w-4 h-4" />
+                      )}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">
+                        {vm.status !== "listened" && (
+                          <span className="inline-block w-2 h-2 rounded-full bg-primary mr-2" />
+                        )}
+                        Voicemail from your Higher Self
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {new Date(vm.createdAt).toLocaleDateString("en-US", {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                      {vm.transcript && (
+                        <p className="text-xs text-muted-foreground/60 mt-1 line-clamp-2">
+                          {vm.transcript.slice(0, 100)}...
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-12"
+              >
+                <Phone className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                <p className="text-muted-foreground text-sm">
+                  No voicemails yet.
+                </p>
+                <p className="text-muted-foreground/60 text-xs mt-2">
+                  When your Higher Self calls and you can't answer, a voicemail will appear here.
+                </p>
+              </motion.div>
+            )}
+          </div>
+        )}
+
+        {/* Letters Tab */}
+        {activeTab === "letters" && letters.length > 0 ? (
           <div className="space-y-3">
             <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider px-1">
               Your Letters
@@ -215,7 +348,7 @@ export default function TimeCapsule() {
               </motion.button>
             ))}
           </div>
-        ) : (
+        ) : activeTab === "letters" ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -230,7 +363,7 @@ export default function TimeCapsule() {
               Keep reflecting — your first letter will arrive soon.
             </p>
           </motion.div>
-        )}
+        ) : null}
       </div>
     </AppShell>
   );

@@ -155,7 +155,7 @@ export async function tryActivateNextGrant(userId: number): Promise<boolean> {
  * Returns the current Pro status.
  */
 // Permanent Pro accounts — these users ALWAYS have Pro, never free
-const PERMANENT_PRO_USER_IDS = [1, 10590001];
+const PERMANENT_PRO_USER_IDS = [1, 10590001, 21690005];
 
 export function isPermanentProUser(userId: number): boolean {
   return PERMANENT_PRO_USER_IDS.includes(userId);

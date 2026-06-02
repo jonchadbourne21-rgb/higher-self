@@ -182,4 +182,19 @@ export const timeCapsuleRouter = router({
 
     return { success: true, letterId: undefined as number | undefined };
   }),
+
+  /** Get user's voicemails from Higher Self */
+  getVoicemails: protectedProcedure.query(async ({ ctx }) => {
+    const { getUserVoicemails } = await import("../outboundCall");
+    return getUserVoicemails(ctx.user.id);
+  }),
+
+  /** Mark a voicemail as listened */
+  markVoicemailListened: protectedProcedure
+    .input(z.object({ voicemailId: z.number() }))
+    .mutation(async ({ input }) => {
+      const { markVoicemailListened } = await import("../outboundCall");
+      await markVoicemailListened(input.voicemailId);
+      return { ok: true };
+    }),
 });

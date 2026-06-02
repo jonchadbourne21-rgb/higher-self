@@ -235,6 +235,43 @@ export const voiceRouter = router({
       return messages;
     }),
 
+  /** Answer an entropy-triggered outbound call */
+  answerCall: protectedProcedure
+    .input(z.object({ voicemailId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const { markCallAnswered, buildEntropyAwarePrompt } = await import("../outboundCall");
+      await markCallAnswered(input.voicemailId);
+      const systemPrompt = await buildEntropyAwarePrompt(ctx.user.id);
+      return { systemPrompt };
+    }),
+
+  /** Decline an entropy-triggered outbound call — triggers voicemail generation */
+  declineCall: protectedProcedure
+    .input(z.object({ voicemailId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const { generateVoicemail } = await import("../outboundCall");
+      // Fire-and-forget voicemail generation
+      generateVoicemail(ctx.user.id, input.voicemailId).catch((err) =>
+        console.error("[OutboundCall] Voicemail generation failed:", err)
+      );
+      return { ok: true, message: "Your Higher Self will leave you a voicemail." };
+    }),
+
+  /** Get user's voicemails */
+  getVoicemails: protectedProcedure.query(async ({ ctx }) => {
+    const { getUserVoicemails } = await import("../outboundCall");
+    return getUserVoicemails(ctx.user.id);
+  }),
+
+  /** Mark a voicemail as listened */
+  markVoicemailListened: protectedProcedure
+    .input(z.object({ voicemailId: z.number() }))
+    .mutation(async ({ input }) => {
+      const { markVoicemailListened } = await import("../outboundCall");
+      await markVoicemailListened(input.voicemailId);
+      return { ok: true };
+    }),
+
   /** Save a voice session transcript as a journal entry */
   saveToJournal: protectedProcedure
     .input(z.object({ sessionId: z.number() }))
