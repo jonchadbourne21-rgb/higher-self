@@ -8,7 +8,10 @@ import {
   upgradeToProTier,
   downgradeToFreeTier,
 } from "../db/subscriptions";
-import { checkAndProcessExpiredGrants, isPermanentProUser } from "../db/rewardGrants";
+import {
+  checkAndProcessExpiredGrants,
+  isPermanentProUser,
+} from "../db/rewardGrants";
 import {
   getProMonthlyPriceId,
   getProAnnualPriceId,
@@ -18,7 +21,13 @@ import {
   FREE_LIMITS,
 } from "../_core/stripe-products";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
+function getStripe(): Stripe {
+  const apiKey = process.env.STRIPE_SECRET_KEY;
+  if (!apiKey) {
+    throw new Error("STRIPE_SECRET_KEY is required for subscription payments");
+  }
+  return new Stripe(apiKey);
+}
 
 export const subscriptionRouter = router({
   /**
@@ -45,7 +54,8 @@ export const subscriptionRouter = router({
       tier: subscription.tier,
       status: subscription.status,
       isProUser: isProStatus,
-      isProVoiceUser: subscription.tier === "pro_voice" && subscription.status === "active",
+      isProVoiceUser:
+        subscription.tier === "pro_voice" && subscription.status === "active",
       startDate: subscription.startDate,
       endDate: subscription.endDate,
       stripeCustomerId: subscription.stripeCustomerId,
@@ -79,7 +89,7 @@ export const subscriptionRouter = router({
               : getProAnnualPriceId();
         }
 
-        const session = await stripe.checkout.sessions.create({
+        const session = await getStripe().checkout.sessions.create({
           customer_email: ctx.user.email || undefined,
           payment_method_types: ["card"],
           line_items: [
@@ -169,7 +179,9 @@ export const subscriptionRouter = router({
       const subscription = await getOrCreateSubscription(ctx.user.id);
 
       if (subscription.stripeSubscriptionId) {
-        await stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
+        await getStripe().subscriptions.cancel(
+          subscription.stripeSubscriptionId
+        );
       }
 
       await downgradeToFreeTier(ctx.user.id);
@@ -202,7 +214,8 @@ export const subscriptionRouter = router({
     if (stripeProStatus) {
       return {
         isProUser: true,
-        isProVoiceUser: subscription.tier === "pro_voice" && subscription.status === "active",
+        isProVoiceUser:
+          subscription.tier === "pro_voice" && subscription.status === "active",
       };
     }
     // Then check reward grants (also processes expired ones)

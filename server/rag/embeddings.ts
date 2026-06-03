@@ -9,16 +9,29 @@ import { getDb } from "../db";
 import { journalEntries } from "../../drizzle/schema";
 import { inArray } from "drizzle-orm";
 
-// Initialize clients
-const pinecone = new Pinecone({
-  apiKey: process.env.PINECONE_API_KEY!,
-});
+const INDEX_NAME =
+  process.env.PINECONE_INDEX_NAME || "synapset-journal-embeddings";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
+let pinecone: Pinecone | null = null;
+let openai: OpenAI | null = null;
 
-const INDEX_NAME = process.env.PINECONE_INDEX_NAME || "synapset-journal-embeddings";
+function getPinecone(): Pinecone {
+  const apiKey = process.env.PINECONE_API_KEY;
+  if (!apiKey) {
+    throw new Error("PINECONE_API_KEY is required for RAG vector storage");
+  }
+  pinecone ??= new Pinecone({ apiKey });
+  return pinecone;
+}
+
+function getOpenAI(): OpenAI {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is required for RAG embeddings");
+  }
+  openai ??= new OpenAI({ apiKey });
+  return openai;
+}
 
 /**
  * Generate embedding vector for text using OpenAI text-embedding-3-small
@@ -27,7 +40,7 @@ const INDEX_NAME = process.env.PINECONE_INDEX_NAME || "synapset-journal-embeddin
  */
 export async function embedText(text: string): Promise<number[]> {
   try {
-    const response = await openai.embeddings.create({
+    const response = await getOpenAI().embeddings.create({
       model: "text-embedding-3-small",
       input: text,
       encoding_format: "float",
@@ -56,7 +69,7 @@ export async function upsertJournalEmbedding(
     const embedding = await embedText(text);
 
     // Get index
-    const index = pinecone.Index(INDEX_NAME);
+    const index = getPinecone().Index(INDEX_NAME);
 
     // Prepare vector record with metadata
     const vectorId = `journal-${journalId}`;
@@ -99,7 +112,7 @@ export async function searchSimilarEntries(
     const queryEmbedding = await embedText(queryText);
 
     // Get index
-    const index = pinecone.Index(INDEX_NAME);
+    const index = getPinecone().Index(INDEX_NAME);
 
     // Search with metadata filter
     const results = await index.query({
@@ -113,14 +126,21 @@ export async function searchSimilarEntries(
 
     // Extract journal IDs and scores
     const entries = results.matches
-      .map((match) => ({
+      .map(match => ({
         journalId: parseInt((match.metadata?.journalId as string) || "0"),
         score: match.score || 0,
-        createdAt: new Date((match.metadata?.createdAt as string) || new Date()),
+        createdAt: new Date(
+          (match.metadata?.createdAt as string) || new Date()
+        ),
       }))
-      .filter((e: { journalId: number; score: number; createdAt: Date }) => e.journalId > 0);
+      .filter(
+        (e: { journalId: number; score: number; createdAt: Date }) =>
+          e.journalId > 0
+      );
 
-    console.log(`[RAG] Found ${entries.length} similar entries for user ${userId}`);
+    console.log(
+      `[RAG] Found ${entries.length} similar entries for user ${userId}`
+    );
     return entries;
   } catch (error) {
     console.error("[RAG] Search failed:", error);
@@ -134,7 +154,9 @@ export async function searchSimilarEntries(
  */
 export async function fetchJournalEntriesFromIds(
   journalIds: number[]
-): Promise<Array<{ id: number; title: string | null; content: string; createdAt: Date }>> {
+): Promise<
+  Array<{ id: number; title: string | null; content: string; createdAt: Date }>
+> {
   try {
     if (journalIds.length === 0) return [];
 
@@ -149,7 +171,7 @@ export async function fetchJournalEntriesFromIds(
       .from(journalEntries)
       .where(inArray(journalEntries.id, journalIds));
 
-    return entries.map((e) => ({
+    return entries.map(e => ({
       id: e.id,
       title: e.title || "Untitled",
       content: e.content,
@@ -170,7 +192,13 @@ export async function retrieveContextForChat(
   queryText: string,
   topK: number = 3
 ): Promise<
-  Array<{ id: number; title: string | null; content: string; createdAt: Date; score: number }>
+  Array<{
+    id: number;
+    title: string | null;
+    content: string;
+    createdAt: Date;
+    score: number;
+  }>
 > {
   try {
     // Search Pinecone
@@ -182,18 +210,20 @@ export async function retrieveContextForChat(
     }
 
     // Extract IDs and fetch from MySQL
-    const journalIds = searchResults.map((r) => r.journalId);
+    const journalIds = searchResults.map(r => r.journalId);
     const entries = await fetchJournalEntriesFromIds(journalIds);
 
     // Merge with scores
-    const contextEntries = entries.map((entry) => {
-      const score = searchResults.find((r) => r.journalId === entry.id)?.score || 0;
+    const contextEntries = entries.map(entry => {
+      const score =
+        searchResults.find(r => r.journalId === entry.id)?.score || 0;
       return { ...entry, score };
     });
 
     const avgScore =
       contextEntries.length > 0
-        ? contextEntries.reduce((s, e) => s + e.score, 0) / contextEntries.length
+        ? contextEntries.reduce((s, e) => s + e.score, 0) /
+          contextEntries.length
         : 0;
 
     console.log(
@@ -212,7 +242,7 @@ export async function retrieveContextForChat(
  */
 export async function deleteEmbedding(journalId: number): Promise<void> {
   try {
-    const index = pinecone.Index(INDEX_NAME);
+    const index = getPinecone().Index(INDEX_NAME);
     await index.deleteMany([`journal-${journalId}`]);
     console.log(`[RAG] Deleted embedding for journal entry ${journalId}`);
   } catch (error) {
