@@ -570,6 +570,7 @@ export const subscriptions = mysqlTable("subscriptions", {
   endDate: timestamp("endDate"),
   stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
   stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
+  trialStartDate: timestamp("trialStartDate"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

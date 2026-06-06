@@ -2,13 +2,13 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
-import { AlertCircle, Zap, Mic } from "lucide-react";
+import { AlertCircle, Zap, Mic, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  limitType: "chat" | "journal" | "voice" | "program";
+  limitType: "chat" | "journal" | "voice" | "program" | "trial_expired";
 }
 
 export function UpgradeModal({ isOpen, onClose, limitType }: UpgradeModalProps) {
@@ -17,8 +17,8 @@ export function UpgradeModal({ isOpen, onClose, limitType }: UpgradeModalProps) 
 
   const createCheckoutMutation = trpc.subscription.createCheckoutSession.useMutation();
 
-  // Voice limit should upsell to pro_voice; others upsell to pro
-  const targetTier = limitType === "voice" ? "pro_voice" : "pro";
+  // Voice and trial_expired upsell to Premium Pro (pro_voice); others to Pro
+  const targetTier = (limitType === "voice" || limitType === "trial_expired") ? "pro_voice" : "pro";
 
   const handleUpgrade = async () => {
     setIsLoading(true);
@@ -43,56 +43,74 @@ export function UpgradeModal({ isOpen, onClose, limitType }: UpgradeModalProps) 
 
   const config = {
     chat: {
-      message: "You've reached your 5 daily chats limit",
+      message: "Your free trial has ended — upgrade to keep chatting with your Mirror",
       title: "Upgrade to Pro",
       icon: <Zap className="h-5 w-5" style={{ color: "oklch(0.65 0.16 185)" }} />,
       features: [
         "Unlimited daily chats with your AI Mirror",
         "Unlimited journal entries",
-        "Unlimited programs",
-        "Growth Dashboard & analytics",
+        "Unlimited growth programs",
+        "Full Dashboard & analytics",
       ],
-      price: { monthly: "$5.99", annual: "$59.99" },
+      price: { monthly: "$9.99", annual: "$104.99" },
+      savings: "Save 12%",
       accentColor: "oklch(0.65 0.16 185)",
     },
     journal: {
-      message: "You've reached your 4 weekly journals limit",
+      message: "Your free trial has ended — upgrade to keep journaling",
       title: "Upgrade to Pro",
       icon: <Zap className="h-5 w-5" style={{ color: "oklch(0.65 0.16 185)" }} />,
       features: [
-        "Unlimited weekly journal entries",
+        "Unlimited journal entries",
         "Unlimited daily chats",
-        "Unlimited programs",
-        "Growth Dashboard & analytics",
+        "Unlimited growth programs",
+        "Full Dashboard & analytics",
       ],
-      price: { monthly: "$5.99", annual: "$59.99" },
+      price: { monthly: "$9.99", annual: "$104.99" },
+      savings: "Save 12%",
       accentColor: "oklch(0.65 0.16 185)",
     },
     voice: {
-      message: "You've used your 5 free voice responses this month",
-      title: "Upgrade to Pro + Voice Mirror",
+      message: "Voice Mirror is a Premium Pro feature",
+      title: "Upgrade to Premium Pro",
       icon: <Mic className="h-5 w-5" style={{ color: "oklch(0.70 0.15 300)" }} />,
       features: [
-        "Unlimited voice mirror sessions",
-        "Everything in Pro included",
+        "Unlimited Voice Mirror sessions",
         "Real-time emotion tracking",
+        "Everything in Pro included",
         "Save voice insights to journal",
       ],
-      price: { monthly: "$8.99", annual: "$89.99" },
+      price: { monthly: "$13.99", annual: "$149.99" },
+      savings: "Save 11%",
       accentColor: "oklch(0.70 0.15 300)",
     },
     program: {
-      message: "Free users can enroll in 1 program at a time",
+      message: "Your free trial has ended — upgrade to access growth programs",
       title: "Upgrade to Pro",
       icon: <Zap className="h-5 w-5" style={{ color: "oklch(0.65 0.16 185)" }} />,
       features: [
         "Unlimited active programs",
         "Unlimited daily chats",
         "Unlimited journal entries",
-        "Growth Dashboard & analytics",
+        "Full Dashboard & analytics",
       ],
-      price: { monthly: "$5.99", annual: "$59.99" },
+      price: { monthly: "$9.99", annual: "$104.99" },
+      savings: "Save 12%",
       accentColor: "oklch(0.65 0.16 185)",
+    },
+    trial_expired: {
+      message: "Your 10-day free trial has ended. Keep your growth journey going.",
+      title: "Your Trial Has Ended",
+      icon: <Sparkles className="h-5 w-5" style={{ color: "oklch(0.70 0.15 300)" }} />,
+      features: [
+        "Unlimited Voice Mirror sessions",
+        "Unlimited chats, journals & programs",
+        "Real-time emotion tracking",
+        "Full growth analytics & insights",
+      ],
+      price: { monthly: "$13.99", annual: "$149.99" },
+      savings: "Save 11%",
+      accentColor: "oklch(0.70 0.15 300)",
     },
   };
 
@@ -116,7 +134,7 @@ export function UpgradeModal({ isOpen, onClose, limitType }: UpgradeModalProps) 
               {c.icon}
               <div>
                 <h3 className="font-semibold text-sm" style={{ color: c.accentColor }}>
-                  {targetTier === "pro_voice" ? "Pro + Voice Mirror" : "Pro"} Includes
+                  {targetTier === "pro_voice" ? "Premium Pro" : "Pro"} Includes
                 </h3>
                 <ul className="mt-2 space-y-1.5">
                   {c.features.map((f) => (
@@ -156,7 +174,7 @@ export function UpgradeModal({ isOpen, onClose, limitType }: UpgradeModalProps) 
                   className="absolute -top-2 right-2 text-[9px] px-2 py-0.5 rounded-full font-semibold"
                   style={{ background: c.accentColor, color: "oklch(0.10 0.02 280)" }}
                 >
-                  Save 17%
+                  {(c as { savings?: string }).savings ?? "Save 12%"}
                 </div>
                 <div className="font-bold text-sm" style={{ color: c.accentColor }}>{c.price.annual}</div>
                 <div className="text-[10px]" style={{ color: "oklch(0.55 0.03 270)" }}>/year</div>
@@ -186,7 +204,7 @@ export function UpgradeModal({ isOpen, onClose, limitType }: UpgradeModalProps) 
 
           {/* Trust message */}
           <p className="text-[10px] text-center" style={{ color: "oklch(0.45 0.03 270)" }}>
-            Secure payment powered by Stripe. Cancel anytime.
+            Secure payment via Stripe · Cancel anytime
           </p>
         </div>
       </DialogContent>

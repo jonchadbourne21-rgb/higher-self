@@ -8,30 +8,26 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
 const FREE_FEATURES = [
-  { name: "5 AI chats per day", included: true },
-  { name: "4 journal entries per week", included: true },
-  { name: "5 voice mirror responses/month", included: true },
-  { name: "1 active program", included: true },
+  { name: "3 AI chats per day", included: true },
+  { name: "2 journal entries per week", included: true },
   { name: "Life domains & habits", included: true },
   { name: "Daily check-ins", included: true },
   { name: "Reward wheel", included: true },
   { name: "Unlimited programs", included: false },
   { name: "Growth Dashboard", included: false },
-  { name: "Unlimited voice mirror", included: false },
+  { name: "Voice Mirror", included: false },
 ];
 
 const PRO_FEATURES = [
   { name: "Unlimited AI chats", included: true },
   { name: "Unlimited journals", included: true },
-  { name: "5 voice mirror responses/month", included: true },
   { name: "Unlimited programs", included: true },
   { name: "Life domains & habits", included: true },
-  { name: "Daily check-ins", included: true },
   { name: "Weekly + monthly + yearly insights", included: true },
   { name: "Growth Dashboard & analytics", included: true },
   { name: "Bonus spins on purchase", included: true },
   { name: "Priority support", included: true },
-  { name: "Unlimited voice mirror", included: false },
+  { name: "Voice Mirror sessions", included: false },
 ];
 
 const PRO_VOICE_FEATURES = [
@@ -117,8 +113,15 @@ export default function Pricing() {
           >
             Choose Your Plan
           </h1>
+          {/* Trial badge */}
+          <div
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold mx-auto"
+            style={{ background: "oklch(0.65 0.16 185 / 0.15)", border: "1px solid oklch(0.65 0.16 185 / 0.4)", color: "oklch(0.65 0.16 185)" }}
+          >
+            <Sparkles size={11} /> 10-Day Free Trial — Full Access Included
+          </div>
           <p className="text-xs" style={{ color: "oklch(0.58 0.03 270)" }}>
-            Start free, upgrade when you're ready to go deeper
+            Try everything free for 10 days, then choose the plan that fits
           </p>
         </motion.div>
 
@@ -200,7 +203,7 @@ export default function Pricing() {
                 <p className="text-[11px]" style={{ color: "oklch(0.65 0.16 185)" }}>Unlimited growth</p>
               </div>
               <div className="text-right">
-                <span className="text-2xl font-bold" style={{ color: "oklch(0.93 0.01 270)" }}>$5.99</span>
+                <span className="text-2xl font-bold" style={{ color: "oklch(0.93 0.01 270)" }}>$9.99</span>
                 <span className="text-[11px] ml-1" style={{ color: "oklch(0.55 0.03 270)" }}>/month</span>
               </div>
             </div>
@@ -227,15 +230,16 @@ export default function Pricing() {
                   className="rounded-xl py-2.5 text-xs font-semibold transition-transform active:scale-95 disabled:opacity-50"
                   style={{ background: "oklch(0.65 0.16 185)", color: "oklch(0.10 0.02 185)" }}
                 >
-                  Monthly — $5.99
+                  Monthly — $9.99
                 </button>
                 <button
                   onClick={() => handleUpgrade("pro", "annual")}
                   disabled={isLoadingCheckout}
-                  className="rounded-xl py-2.5 text-xs font-semibold transition-transform active:scale-95 disabled:opacity-50"
+                  className="relative rounded-xl py-2.5 text-xs font-semibold transition-transform active:scale-95 disabled:opacity-50"
                   style={{ background: "oklch(0.65 0.16 185)", color: "oklch(0.10 0.02 185)" }}
                 >
-                  Annual — $59.99
+                  <span className="absolute -top-2 -right-1 text-[8px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: "oklch(0.72 0.18 35)", color: "white" }}>Save 12%</span>
+                  Annual — $104.99
                 </button>
               </div>
             )}
@@ -281,11 +285,11 @@ export default function Pricing() {
 
             <div className="flex items-center justify-between pt-1">
               <div>
-                <h2 className="text-lg font-semibold" style={{ color: "oklch(0.93 0.01 270)" }}>Pro + Voice Mirror</h2>
-                <p className="text-[11px]" style={{ color: "oklch(0.70 0.15 300)" }}>The complete experience</p>
+                <h2 className="text-lg font-semibold" style={{ color: "oklch(0.93 0.01 270)" }}>Premium Pro</h2>
+                <p className="text-[11px]" style={{ color: "oklch(0.70 0.15 300)" }}>Voice Mirror included</p>
               </div>
               <div className="text-right">
-                <span className="text-2xl font-bold" style={{ color: "oklch(0.93 0.01 270)" }}>$8.99</span>
+                <span className="text-2xl font-bold" style={{ color: "oklch(0.93 0.01 270)" }}>$13.99</span>
                 <span className="text-[11px] ml-1" style={{ color: "oklch(0.55 0.03 270)" }}>/month</span>
               </div>
             </div>
@@ -305,15 +309,16 @@ export default function Pricing() {
                   className="rounded-xl py-2.5 text-xs font-semibold transition-transform active:scale-95 disabled:opacity-50"
                   style={{ background: "oklch(0.70 0.15 300)", color: "oklch(0.10 0.02 300)" }}
                 >
-                  Monthly — $8.99
+                  Monthly — $13.99
                 </button>
                 <button
                   onClick={() => handleUpgrade("pro_voice", "annual")}
                   disabled={isLoadingCheckout}
-                  className="rounded-xl py-2.5 text-xs font-semibold transition-transform active:scale-95 disabled:opacity-50"
+                  className="relative rounded-xl py-2.5 text-xs font-semibold transition-transform active:scale-95 disabled:opacity-50"
                   style={{ background: "oklch(0.70 0.15 300)", color: "oklch(0.10 0.02 300)" }}
                 >
-                  Annual — $89.99
+                  <span className="absolute -top-2 -right-1 text-[8px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: "oklch(0.72 0.18 35)", color: "white" }}>Save 11%</span>
+                  Annual — $149.99
                 </button>
               </div>
             )}
@@ -409,19 +414,19 @@ export default function Pricing() {
                 a: "Yes! Cancel from account settings anytime. Access continues until end of billing period.",
               },
               {
-                q: "What's the difference between Pro and Pro + Voice?",
-                a: "Pro gives unlimited chats, journals, and programs. Pro + Voice adds unlimited voice mirror sessions — talk to your AI reflection with real-time emotion tracking.",
+                q: "What's the difference between Pro and Premium Pro?",
+                a: "Pro ($9.99/mo) gives unlimited chats, journals, and programs. Premium Pro ($13.99/mo) adds unlimited Voice Mirror sessions — talk to your AI reflection with real-time emotion tracking.",
               },
               {
                 q: "Do I get a free trial?",
-                a: "The free tier gives you 5 chats/day, 4 journals/week, 5 voice responses/month, and 1 active program. Upgrade to Pro anytime.",
+                a: "Yes! Every new account starts with a 10-day free trial with full access to all features including Voice Mirror. After 10 days, choose a plan to continue.",
               },
               {
                 q: "Can I earn free Pro?",
                 a: "Yes! 30-day streak = 2 months free. 100-day streak = 1 year free. Plus reward wheel spins every 3 days.",
               },
               {
-                q: "Can I upgrade from Pro to Pro + Voice later?",
+                q: "Can I upgrade from Pro to Premium Pro later?",
                 a: "Absolutely. You can upgrade at any time and only pay the difference for the remainder of your billing cycle.",
               },
             ].map((faq, idx) => (
@@ -459,7 +464,7 @@ export default function Pricing() {
               color: "oklch(0.10 0.02 185)",
             }}
           >
-            {currentTier === "free" ? "Upgrade to Pro Now" : "You're already on a paid plan ✓"}
+            {currentTier === "free" ? "Start with Pro — $9.99/month" : "You're already on a paid plan ✓"}
           </button>
           <p className="text-[10px]" style={{ color: "oklch(0.50 0.03 270)" }}>
             No commitment · Cancel anytime · Test card: 4242 4242 4242 4242

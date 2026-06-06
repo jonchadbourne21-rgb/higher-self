@@ -1315,3 +1315,17 @@
 - [x] Build voicemail generation via TTS on decline (30-60 sec audio message)
 - [x] Integrate voicemails into Time Capsule archive (letters + voicemails in one place)
 - [x] Write vitest tests for outbound call trigger and voicemail generation
+
+## 10-Day Free Trial & New Pricing Tiers (Jun 2026)
+- [x] Add trialStartDate column to subscriptions table in drizzle/schema.ts
+- [x] Run DB migration: ALTER TABLE subscriptions ADD trialStartDate timestamp
+- [x] Update stripe-products.ts: new prices ($9.99/mo, $104.99/yr for Pro; $13.99/mo, $149.99/yr for Premium Pro)
+- [x] Update subscriptions DB helpers: isOnTrial(), isTrialExpired(), getTrialDaysRemaining()
+- [x] Update isProUser() and isProVoiceUser() to treat active trial as full Pro/Pro+Voice access
+- [x] Update getOrCreateSubscription() to set trialStartDate on first creation
+- [x] Update subscription router: getStatus to return trial info (isOnTrial, trialDaysRemaining)
+- [x] Update UpgradeModal: new prices, "10-day free trial" messaging, trial badge
+- [x] Update Pricing.tsx: new prices, trial hero section, updated FAQ
+- [x] Add TrialBanner component: shows days remaining during trial, upgrade CTA
+- [x] Wire TrialBanner into AppShell so it appears on all app pages
+- [x] Write vitest tests for trial logic (isOnTrial, isTrialExpired, getTrialDaysRemaining)

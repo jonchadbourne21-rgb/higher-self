@@ -7,6 +7,8 @@ import {
   isProUser,
   upgradeToProTier,
   downgradeToFreeTier,
+  isOnTrial,
+  getTrialDaysRemaining,
 } from "../db/subscriptions";
 import {
   checkAndProcessExpiredGrants,
@@ -19,6 +21,7 @@ import {
   getProVoiceAnnualPriceId,
   STRIPE_PRICES,
   FREE_LIMITS,
+  TRIAL_DURATION_DAYS,
 } from "../_core/stripe-products";
 
 function getStripe(): Stripe {
@@ -42,20 +45,34 @@ export const subscriptionRouter = router({
         status: "active" as const,
         isProUser: true,
         isProVoiceUser: true,
+        isOnTrial: false,
+        trialDaysRemaining: 0,
+        trialDurationDays: TRIAL_DURATION_DAYS,
         startDate: subscription.startDate,
         endDate: null,
         stripeCustomerId: subscription.stripeCustomerId,
       };
     }
+
     const subscription = await getOrCreateSubscription(ctx.user.id);
     const isProStatus = await isProUser(ctx.user.id);
+    const trialActive = isOnTrial(
+      subscription.tier,
+      subscription.status,
+      subscription.trialStartDate
+    );
+    const daysRemaining = getTrialDaysRemaining(subscription.trialStartDate);
 
     return {
       tier: subscription.tier,
       status: subscription.status,
       isProUser: isProStatus,
       isProVoiceUser:
-        subscription.tier === "pro_voice" && subscription.status === "active",
+        trialActive ||
+        (subscription.tier === "pro_voice" && subscription.status === "active"),
+      isOnTrial: trialActive,
+      trialDaysRemaining: daysRemaining,
+      trialDurationDays: TRIAL_DURATION_DAYS,
       startDate: subscription.startDate,
       endDate: subscription.endDate,
       stripeCustomerId: subscription.stripeCustomerId,
@@ -63,8 +80,8 @@ export const subscriptionRouter = router({
   }),
 
   /**
-   * Create a checkout session for Pro or Pro + Voice Mirror upgrade
-   * Returns the Stripe checkout URL
+   * Create a checkout session for Pro or Premium Pro upgrade.
+   * Returns the Stripe checkout URL.
    */
   createCheckoutSession: protectedProcedure
     .input(
@@ -133,20 +150,21 @@ export const subscriptionRouter = router({
    */
   getPricing: protectedProcedure.query(async () => {
     return {
+      trialDays: TRIAL_DURATION_DAYS,
       pro: {
         monthly: {
           amount: STRIPE_PRICES.PRO_MONTHLY.amount,
           currency: "usd",
-          displayAmount: "$5.99",
+          displayAmount: "$9.99",
           interval: "month",
           bonusSpins: STRIPE_PRICES.PRO_MONTHLY.bonusSpins,
         },
         annual: {
           amount: STRIPE_PRICES.PRO_ANNUAL.amount,
           currency: "usd",
-          displayAmount: "$59.99",
+          displayAmount: "$104.99",
           interval: "year",
-          savings: "Save 17%",
+          savings: "Save 12%",
           bonusSpins: STRIPE_PRICES.PRO_ANNUAL.bonusSpins,
         },
       },
@@ -154,16 +172,16 @@ export const subscriptionRouter = router({
         monthly: {
           amount: STRIPE_PRICES.PRO_VOICE_MONTHLY.amount,
           currency: "usd",
-          displayAmount: "$8.99",
+          displayAmount: "$13.99",
           interval: "month",
           bonusSpins: STRIPE_PRICES.PRO_VOICE_MONTHLY.bonusSpins,
         },
         annual: {
           amount: STRIPE_PRICES.PRO_VOICE_ANNUAL.amount,
           currency: "usd",
-          displayAmount: "$89.99",
+          displayAmount: "$149.99",
           interval: "year",
-          savings: "Save 17%",
+          savings: "Save 11%",
           bonusSpins: STRIPE_PRICES.PRO_VOICE_ANNUAL.bonusSpins,
         },
       },
@@ -200,26 +218,51 @@ export const subscriptionRouter = router({
   }),
 
   /**
-   * Check if user is a Pro subscriber (checks both Stripe and reward grants)
-   * Also returns whether they have pro_voice tier
+   * Check if user is a Pro subscriber (checks Stripe, reward grants, and active trial)
    */
   isProUser: protectedProcedure.query(async ({ ctx }) => {
     // Permanent Pro override — always Pro with voice
     if (isPermanentProUser(ctx.user.id)) {
-      return { isProUser: true, isProVoiceUser: true };
+      return { isProUser: true, isProVoiceUser: true, isOnTrial: false, trialDaysRemaining: 0 };
     }
+
     const subscription = await getOrCreateSubscription(ctx.user.id);
-    // First check Stripe subscription
+    const trialActive = isOnTrial(
+      subscription.tier,
+      subscription.status,
+      subscription.trialStartDate
+    );
+    const daysRemaining = getTrialDaysRemaining(subscription.trialStartDate);
+
+    // Trial counts as full Pro + Voice access
+    if (trialActive) {
+      return {
+        isProUser: true,
+        isProVoiceUser: true,
+        isOnTrial: true,
+        trialDaysRemaining: daysRemaining,
+      };
+    }
+
+    // Check Stripe subscription
     const stripeProStatus = await isProUser(ctx.user.id);
     if (stripeProStatus) {
       return {
         isProUser: true,
         isProVoiceUser:
           subscription.tier === "pro_voice" && subscription.status === "active",
+        isOnTrial: false,
+        trialDaysRemaining: 0,
       };
     }
-    // Then check reward grants (also processes expired ones)
+
+    // Check reward grants
     const grantStatus = await checkAndProcessExpiredGrants(ctx.user.id);
-    return { isProUser: grantStatus.isPro, isProVoiceUser: false };
+    return {
+      isProUser: grantStatus.isPro,
+      isProVoiceUser: false,
+      isOnTrial: false,
+      trialDaysRemaining: 0,
+    };
   }),
 });

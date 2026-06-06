@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { useRef, useCallback, useState } from "react";
 // Note: Swipe-between-tabs gesture removed — it conflicted with sliders and horizontal touch interactions
 import MirroredHeader from "./MirroredHeader";
+import TrialBanner from "./TrialBanner";
 
 const navItems = [
   { path: "/home", icon: Home, label: "Dashboard" },
@@ -83,6 +84,9 @@ export default function AppShell({ children, noScroll }: AppShellProps) {
     >
       {/* Mirrored Wordmark Header */}
       <MirroredHeader subtitle={getSubtitle(location)} />
+
+      {/* Trial banner — visible during 10-day trial */}
+      <TrialBanner />
 
       {/* Main content — inner scroll only, with bottom padding for fixed nav */}
       <main
