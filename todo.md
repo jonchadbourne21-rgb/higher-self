@@ -1308,10 +1308,10 @@
 - [x] Write vitest tests for entropy scoring logic
 
 ## Outbound Call V2V Trigger (First-Strike PoC Step 2)
-- [ ] Add higher_self_voicemails table (userId, transcript, audioUrl, entropyScore, listenedAt, createdAt)
-- [ ] Update entropy trigger to send push notification styled as incoming call
-- [ ] Build full-screen "Your Higher Self is calling..." incoming call UI component
-- [ ] Build entropy-aware V2V session with specialized system prompt (accept path)
-- [ ] Build voicemail generation via TTS on decline (30-60 sec audio message)
-- [ ] Integrate voicemails into Time Capsule archive (letters + voicemails in one place)
-- [ ] Write vitest tests for outbound call trigger and voicemail generation
+- [x] Add higher_self_voicemails table (userId, transcript, audioUrl, entropyScore, listenedAt, createdAt)
+- [x] Update entropy trigger to send push notification styled as incoming call
+- [x] Build full-screen "Your Higher Self is calling..." incoming call UI component
+- [x] Build entropy-aware V2V session with specialized system prompt (accept path)
+- [x] Build voicemail generation via TTS on decline (30-60 sec audio message)
+- [x] Integrate voicemails into Time Capsule archive (letters + voicemails in one place)
+- [x] Write vitest tests for outbound call trigger and voicemail generation
