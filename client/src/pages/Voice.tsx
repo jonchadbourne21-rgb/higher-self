@@ -8,7 +8,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import AppShell from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { useVoice } from "@humeai/voice-react";
-import { VoiceVisualization } from "@/components/VoiceVisualization";
+import { VoiceWave } from "@/components/VoiceWave";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -344,171 +344,172 @@ export default function Voice() {
 
         {/* Voice Tab Content */}
         {mirrorTab === "voice" && (
-        <>
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          <AnimatePresence>
-            {messages.map((msg) => (
+        <div className="flex flex-col flex-1 overflow-hidden">
+          {/* ── Waveform header ── */}
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="flex-shrink-0 px-4 pt-4 pb-3"
+            style={{
+              background: "linear-gradient(to bottom, oklch(0.14 0.04 280), oklch(0.13 0.03 280 / 0))",
+              borderBottom: status === "live" ? "1px solid oklch(0.65 0.16 185 / 0.15)" : "1px solid oklch(0.22 0.04 280)",
+            }}
+          >
+            <VoiceWave
+              status={status}
+              isMuted={isMuted}
+              micFft={micFft}
+              audioLevel={audioLevel}
+            />
+          </motion.div>
+
+          {/* ── Transcript ── */}
+          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+            {messages.length === 0 && status !== "live" && status !== "connecting" && (
               <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-col items-center justify-center h-full text-center gap-3 py-12"
               >
-                <div
-                  className={`max-w-xs px-4 py-3 rounded-lg ${
-                    msg.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-foreground"
-                  }`}
-                >
-                  <p className="text-sm">{msg.content}</p>
-                  {msg.emotions && msg.emotions.length > 0 && (
-                    <div className="flex gap-2 mt-2 flex-wrap">
-                      {msg.emotions.map((e) => (
-                        <span key={e.name} className={`text-xs px-2 py-1 rounded ${emotionColor(e.name)}`}>
-                          {e.name} {(e.score * 100).toFixed(0)}%
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                <div className="flex items-center gap-2 bg-background/50 rounded-full p-1 border border-border/50 mb-2">
+                  {Object.entries(VOICE_OPTIONS).map(([key, value]) => (
+                    <button
+                      key={key}
+                      onClick={() => handleVoiceChange(key as "female" | "male")}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                        selectedVoice === key
+                          ? "bg-primary text-primary-foreground shadow-lg"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      }`}
+                      title={value.label}
+                    >
+                      {key === "female" ? "♀ Female" : "♂ Male"}
+                    </button>
+                  ))}
                 </div>
+                <p className="text-xs" style={{ color: "oklch(0.45 0.04 270)" }}>
+                  {status === "ended" ? "Session ended. Transcript above." : "Your conversation will appear here"}
+                </p>
               </motion.div>
-            ))}
-          </AnimatePresence>
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Error Display */}
-        {errorMsg && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mx-4 mb-4 p-4 rounded-lg bg-destructive/10 border border-destructive/30 flex gap-3"
-          >
-            <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-destructive">Connection Error</p>
-              <p className="text-xs text-destructive/80 mt-1">{errorMsg}</p>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Kill Switch Alert */}
-        {killSwitch && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mx-4 mb-4 p-4 rounded-lg bg-red-500/10 border border-red-500/30"
-          >
-            <p className="text-sm font-medium text-red-500">
-              Crisis detected. Please reach out to a mental health professional.
-            </p>
-            <p className="text-xs text-red-500/80 mt-2">
-              National Suicide Prevention Lifeline: 1-800-273-8255
-            </p>
-          </motion.div>
-        )}
-
-        {/* Session End Options */}
-        {status === "ended" && sessionId && (
-          <div className="mx-4 mb-4">
-            <SaveToJournalButton sessionId={sessionId} />
-          </div>
-        )}
-
-        {/* Center Section: Orb, Voice Selection, and Start Button */}
-        <div className="flex-1 flex flex-col items-center justify-center px-4 pb-40">
-          {/* Glowing Orb - only show when live */}
-          {status === "live" && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <VoiceVisualization status={status} isMuted={isMuted} audioLevel={audioLevel} micFft={micFft} />
-            </motion.div>
-          )}
-
-          {/* Voice Selection - only show when idle */}
-          {(status === "idle" || status === "error" || status === "ended") && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="mb-8 flex items-center gap-2 bg-background/50 rounded-full p-1 border border-border/50"
-            >
-              {Object.entries(VOICE_OPTIONS).map(([key, value]) => (
-                <button
-                  key={key}
-                  onClick={() => handleVoiceChange(key as "female" | "male")}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                    selectedVoice === key
-                      ? "bg-primary text-primary-foreground shadow-lg"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  }`}
-                  title={value.label}
+            )}
+            {messages.length === 0 && status === "connecting" && (
+              <div className="flex items-center justify-center h-full py-12">
+                <p className="text-xs" style={{ color: "oklch(0.50 0.06 270)" }}>Connecting to your Mirror…</p>
+              </div>
+            )}
+            <AnimatePresence>
+              {messages.map((msg) => (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
-                  {key === "female" ? "♀ Female" : "♂ Male"}
-                </button>
+                  <div
+                    className="max-w-[82%] px-4 py-3 rounded-2xl space-y-2"
+                    style={{
+                      background: msg.role === "user"
+                        ? "oklch(0.65 0.16 185 / 0.18)"
+                        : "oklch(0.20 0.05 280)",
+                      border: msg.role === "user"
+                        ? "1px solid oklch(0.65 0.16 185 / 0.35)"
+                        : "1px solid oklch(0.28 0.05 280)",
+                    }}
+                  >
+                    <p
+                      className="text-sm leading-relaxed"
+                      style={{ color: msg.role === "user" ? "oklch(0.90 0.02 270)" : "oklch(0.85 0.02 270)" }}
+                    >
+                      {msg.content}
+                    </p>
+                    {msg.emotions && msg.emotions.length > 0 && (
+                      <div className="flex gap-1.5 flex-wrap">
+                        {msg.emotions.map((e) => (
+                          <span
+                            key={e.name}
+                            className={`text-[10px] px-2 py-0.5 rounded-full ${emotionColor(e.name)}`}
+                          >
+                            {e.name} {(e.score * 100).toFixed(0)}%
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
               ))}
+            </AnimatePresence>
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* ── Alerts ── */}
+          {errorMsg && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mx-4 mb-2 p-3 rounded-xl bg-destructive/10 border border-destructive/30 flex gap-2.5"
+            >
+              <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-semibold text-destructive">Connection Error</p>
+                <p className="text-[11px] text-destructive/80 mt-0.5">{errorMsg}</p>
+              </div>
+            </motion.div>
+          )}
+          {killSwitch && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mx-4 mb-2 p-3 rounded-xl bg-red-500/10 border border-red-500/30"
+            >
+              <p className="text-xs font-semibold text-red-400">Crisis detected. Please reach out to a mental health professional.</p>
+              <p className="text-[11px] text-red-400/80 mt-1">National Suicide Prevention Lifeline: 1-800-273-8255</p>
             </motion.div>
           )}
 
-          {/* Start/Control Button */}
-          {status === "idle" || status === "error" || status === "ended" || status === "connecting" ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-              className="w-full max-w-xs"
-            >
+          {/* ── Bottom controls ── */}
+          <div
+            className="flex-shrink-0 px-4 pb-6 pt-3 space-y-3"
+            style={{ borderTop: "1px solid oklch(0.20 0.04 280)" }}
+          >
+            {status === "ended" && sessionId && (
+              <SaveToJournalButton sessionId={sessionId} />
+            )}
+            {(status === "idle" || status === "error" || status === "ended" || status === "connecting") && (
               <Button
                 onClick={handleConnect}
                 disabled={status === "connecting"}
-                className="w-full h-14 text-lg font-semibold rounded-full"
+                className="w-full h-12 text-base font-semibold rounded-full"
               >
-                {status === "connecting" ? "Connecting..." : "Start Session"}
+                {status === "connecting" ? (
+                  <><span className="w-4 h-4 border-2 border-primary-foreground/40 border-t-primary-foreground rounded-full animate-spin mr-2" />Connecting…</>
+                ) : status === "ended" ? "Start New Session" : "Start Session"}
               </Button>
-            </motion.div>
-          ) : status === "live" ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-              className="flex gap-3 w-full max-w-xs"
-            >
-              <Button
-                onClick={handleToggleMic}
-                variant={isMuted ? "destructive" : "default"}
-                className="flex-1 h-12 rounded-full"
-              >
-                {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-              </Button>
-              <Button
-                onClick={handleDisconnect}
-                variant="destructive"
-                className="flex-1 h-12 rounded-full"
-              >
-                <PhoneOff className="w-5 h-5" />
-              </Button>
-            </motion.div>
-          ) : null}
-
-          {/* Live Status Indicator */}
-          {status === "live" && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="mt-8 flex items-center justify-center gap-2 text-sm text-emerald-400"
-            >
-              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-              Live
-            </motion.div>
-          )}
+            )}
+            {status === "live" && (
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleToggleMic}
+                  variant={isMuted ? "destructive" : "outline"}
+                  className="flex-1 h-12 rounded-full"
+                >
+                  {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                  <span className="ml-2 text-sm">{isMuted ? "Unmute" : "Mute"}</span>
+                </Button>
+                <Button
+                  onClick={handleDisconnect}
+                  variant="destructive"
+                  className="flex-1 h-12 rounded-full"
+                >
+                  <PhoneOff className="w-5 h-5" />
+                  <span className="ml-2 text-sm">End</span>
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
-        </>
         )}
       </div>
     </AppShell>
