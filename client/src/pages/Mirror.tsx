@@ -9,7 +9,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { useVoice } from "@humeai/voice-react";
 import { Streamdown } from "streamdown";
 import { UpgradeModal } from "@/components/UpgradeModal";
-import { VoiceVisualization } from "@/components/VoiceVisualization";
+import { VoiceWave } from "@/components/VoiceWave";
 import { IncomingCall } from "@/components/IncomingCall";
 
 type ChatMessage = {
@@ -587,7 +587,7 @@ export default function Mirror() {
             {status.value === "disconnected" ? (
               <div className="flex-1 flex flex-col items-center justify-center px-4 pb-20">
                 <div className="mb-8">
-                  <VoiceVisualization status={status} isMuted={isMuted} audioLevel={audioLevel} micFft={micFft} />
+                  <VoiceWave status="idle" isMuted={isMuted} audioLevel={audioLevel} micFft={micFft} />
                 </div>
 
                 <div className="flex items-center gap-2 mb-6">
@@ -627,13 +627,15 @@ export default function Mirror() {
                 </p>
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center px-4 pt-6 pb-20 overflow-hidden">
-                <div className="shrink-0 mb-4">
-                  <VoiceVisualization status={status} isMuted={isMuted} audioLevel={audioLevel} micFft={micFft} />
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* ─── Waveform Header (pinned top) ─── */}
+                <div className="flex-shrink-0 px-4 pt-4 pb-3 border-b border-border/20">
+                  <VoiceWave status="live" isMuted={isMuted} audioLevel={audioLevel} micFft={micFft} />
                 </div>
 
+                {/* ─── Scrollable Transcript (middle) ─── */}
                 {voiceMessages.length > 0 && (
-                  <div className="flex-1 w-full max-w-xl overflow-y-auto rounded-2xl border border-border/30 bg-card/30 backdrop-blur-sm p-4 space-y-3">
+                  <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
                     <AnimatePresence mode="popLayout">
                       {voiceMessages.map((msg: any, idx: number) => {
                         let content = '';
@@ -668,7 +670,7 @@ export default function Mirror() {
                             className={`flex ${role === "user" ? "justify-end" : "justify-start"}`}
                           >
                             <div
-                              className={`max-w-[80%] px-4 py-2.5 text-sm leading-relaxed ${
+                              className={`max-w-[85%] px-4 py-2.5 text-sm leading-relaxed ${
                                 role === "user"
                                   ? `bg-primary text-primary-foreground rounded-2xl rounded-br-md ${isPartial ? "opacity-60" : ""}`
                                   : "bg-card border border-border/30 text-card-foreground rounded-2xl rounded-bl-md"
@@ -694,12 +696,23 @@ export default function Mirror() {
                   </div>
                 )}
 
-                <div className="shrink-0 mt-4 flex items-center gap-3">
+                {/* ─── Empty State (when no messages) ─── */}
+                {voiceMessages.length === 0 && (
+                  <div className="flex-1 flex items-center justify-center text-center px-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Listening...</p>
+                      <p className="text-xs text-muted-foreground/60 mt-1">Speak and your words will appear here</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* ─── Bottom Controls (pinned) ─── */}
+                <div className="flex-shrink-0 px-4 py-4 border-t border-border/20">
                   <motion.button
                     onClick={handleEndVoice}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.97 }}
-                    className="px-5 py-2.5 rounded-full text-sm font-medium bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/15 hover:border-red-500/30 transition-all duration-200 flex items-center gap-2"
+                    className="w-full px-5 py-2.5 rounded-full text-sm font-medium bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/15 hover:border-red-500/30 transition-all duration-200 flex items-center justify-center gap-2"
                   >
                     <PhoneOff size={14} />
                     End Session
