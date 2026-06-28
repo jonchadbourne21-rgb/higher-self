@@ -57,12 +57,13 @@
     <link rel="canonical" href="https://higherself.cloud" />
   </head>
 
-  <body>
-    <div id="root">
-      <!-- SEO fallback content for crawlers before React hydration -->
-      <h1>Mirrored — Your AI Mirror for Personal Growth</h1>
-      <h2>Daily check-ins, guided journaling, and AI-powered insights to help you become your highest self.</h2>
-    </div>
+  <body style="background:#0f0a2e;margin:0;">
+    <!-- SEO fallback for crawlers only (hidden from display) -->
+    <noscript>
+      <h1 style="color:#eee;">Mirrored — Your AI Mirror for Personal Growth</h1>
+      <h2 style="color:#ccc;">Daily check-ins, guided journaling, and AI-powered insights to help you become your highest self.</h2>
+    </noscript>
+    <div id="root" style="background:#0f0a2e;min-height:100dvh;"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script
       defer

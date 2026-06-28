@@ -141,6 +141,7 @@
     height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
+    background: #0f0a2e; /* prevent white flash before CSS vars resolve */
   }
   body, #root {
     min-height: 100vh;

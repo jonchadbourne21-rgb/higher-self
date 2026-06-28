@@ -179,6 +179,10 @@ export default defineConfig({
       "localhost",
       "127.0.0.1",
     ],
+    hmr: {
+      timeout: 60000,
+      overlay: false,
+    },
     fs: {
       strict: true,
       deny: ["**/.*"],
