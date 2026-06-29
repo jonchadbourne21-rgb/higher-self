@@ -170,6 +170,7 @@ export default defineConfig({
   },
   server: {
     host: true,
+    hmr: false, // Disable HMR WebSocket to prevent reconnection loop in proxy environments
     allowedHosts: [
       ".manuspre.computer",
       ".manus.computer",
@@ -179,10 +180,6 @@ export default defineConfig({
       "localhost",
       "127.0.0.1",
     ],
-    hmr: {
-      timeout: 60000,
-      overlay: false,
-    },
     fs: {
       strict: true,
       deny: ["**/.*"],

@@ -1,6 +1,7 @@
 import express, { type Express } from "express";
 import fs from "fs";
 import { type Server } from "http";
+// Removed nanoid import - no cache-busting needed
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
@@ -31,8 +32,9 @@ export async function setupVite(app: Express, server: Server) {
         "index.html"
       );
 
-      // Reload index.html from disk so changes are picked up by HMR
-      const template = await fs.promises.readFile(clientTemplate, "utf-8");
+      // always reload the index.html file from disk incase it changes
+      let template = await fs.promises.readFile(clientTemplate, "utf-8");
+      // No cache-busting - Vite handles module invalidation correctly
       const page = await vite.transformIndexHtml(url, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {
