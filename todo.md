@@ -1329,3 +1329,17 @@
 - [x] Add TrialBanner component: shows days remaining during trial, upgrade CTA
 - [x] Wire TrialBanner into AppShell so it appears on all app pages
 - [x] Write vitest tests for trial logic (isOnTrial, isTrialExpired, getTrialDaysRemaining)
+
+
+## VOW Language Integration (Learning Reflection Loop)
+- [ ] Add user_scars table to drizzle schema (userId, scarText, category, vectorEmbedding, confidence, createdAt)
+- [ ] Run DB migration for user_scars table
+- [ ] Create scar recording helpers in server/db/scars.ts (recordScar, getScarsByUser, searchScarsByEmbedding)
+- [ ] Build scar extraction logic: analyze journal entries, voice transcripts, check-ins for patterns
+- [ ] Create weekly digest quest in VOW with tournament strategies (empathetic, analytical, action-focused)
+- [ ] Implement scar recall: query vector memory before digest generation
+- [ ] Build LLM context injection: pass relevant scars to digest generation prompt
+- [ ] Add proof gates: digest must address top issues and avoid repeating past patterns
+- [ ] Wire VOW quest into weekly scheduler (runs Sundays 6am)
+- [ ] Write vitest tests for scar recording and digest generation
+- [ ] Test end-to-end: journal entry → scar recorded → digest uses scar in context

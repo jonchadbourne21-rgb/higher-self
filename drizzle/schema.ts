@@ -947,3 +947,52 @@ export const higherSelfVoicemails = mysqlTable("higher_self_voicemails", {
 });
 export type HigherSelfVoicemail = typeof higherSelfVoicemails.$inferSelect;
 export type InsertHigherSelfVoicemail = typeof higherSelfVoicemails.$inferInsert;
+
+// ─── User Scars (VOW Learning Reflection Loop) ─────────────────────────────────
+// Records lessons learned from past interactions (journal entries, voice sessions, check-ins).
+// Used for scar-aware weekly digest generation with VOW tournaments.
+
+export const userScars = mysqlTable("user_scars", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // The lesson learned (e.g., "anxiety_trigger: public_speaking", "productivity_blocker: perfectionism")
+  scarText: text("scarText").notNull(),
+  // Category for semantic grouping: anxiety_trigger, productivity_blocker, relationship_pattern, health_issue, etc.
+  category: varchar("category", { length: 100 }).notNull(),
+  // Pinecone vector embedding for semantic search (stored as JSON array of floats)
+  vectorEmbedding: json("vectorEmbedding").$type<number[]>(),
+  // Confidence score (0-1) indicating how strongly this scar applies
+  confidence: float("confidence").notNull().default(0.5),
+  // Source type: journal, voice, checkin, manual
+  sourceType: varchar("sourceType", { length: 50 }).notNull(),
+  // Reference to the source (journal entry ID, voicemail ID, etc.)
+  sourceId: int("sourceId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserScar = typeof userScars.$inferSelect;
+export type InsertUserScar = typeof userScars.$inferInsert;
+
+// ─── Weekly Digests with Scar Recall ──────────────────────────────────────────
+// Stores generated weekly digests with metadata about which scars were recalled.
+
+export const weeklyDigests = mysqlTable("weekly_digests", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  weekStartDate: timestamp("weekStartDate").notNull(),
+  // The generated digest content
+  digestContent: text("digestContent").notNull(),
+  // Array of scar IDs that were recalled and used in generation
+  scarsRecalled: json("scarsRecalled").$type<number[]>().default([]),
+  // Strategy used: empathetic, analytical, action_focused
+  strategy: varchar("strategy", { length: 50 }).notNull(),
+  // Personalization score (0-100) indicating how well the digest addressed user's patterns
+  personalizationScore: float("personalizationScore").default(0),
+  // Whether the digest met proof gates (addressed top issues, avoided repeating patterns)
+  passedProofGates: boolean("passedProofGates").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type WeeklyDigest = typeof weeklyDigests.$inferSelect;
+export type InsertWeeklyDigest = typeof weeklyDigests.$inferInsert;

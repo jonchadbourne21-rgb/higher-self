@@ -253,6 +253,13 @@
       "when": 1780164229427,
       "tag": "0035_flashy_mojo",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "5",
+      "when": 1783060495908,
+      "tag": "0036_freezing_nightmare",
+      "breakpoints": true
     }
   ]
 }
