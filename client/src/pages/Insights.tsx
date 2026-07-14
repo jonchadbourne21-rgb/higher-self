@@ -5,10 +5,43 @@ import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
-import { Sparkles, RefreshCw } from "lucide-react";
+import { Sparkles, RefreshCw, Layers } from "lucide-react";
 import { format } from "date-fns";
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
+
+function PatternsSection() {
+  const { data: patterns, isLoading } = trpc.insights.patterns.useQuery();
+
+  if (isLoading) return null;
+  if (!patterns || patterns.length === 0) return null;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <Layers size={14} className="text-primary" />
+        <p className="text-xs text-muted-foreground uppercase tracking-widest">Recurring Themes</p>
+      </div>
+      <div className="grid gap-3">
+        {patterns.map((p, i) => (
+          <div key={i} className="glass rounded-2xl p-4 space-y-2 border border-primary/10">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-foreground">{p.theme}</span>
+              <span className="text-xs text-muted-foreground">{p.entryCount} entries</span>
+            </div>
+            <div className="space-y-1">
+              {p.recentEntries.map((e, j) => (
+                <p key={j} className="text-xs text-muted-foreground line-clamp-1">
+                  <span className="text-primary/60">[{e.sourceType}]</span> {e.content}
+                </p>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Insights() {
   const { isAuthenticated, loading } = useAuth();
@@ -162,6 +195,9 @@ export default function Insights() {
             </Button>
           </motion.div>
         )}
+
+        {/* Recurring Patterns (RAG Clustering) */}
+        <PatternsSection />
 
         {/* History */}
         {allInsights && allInsights.length > 1 && (

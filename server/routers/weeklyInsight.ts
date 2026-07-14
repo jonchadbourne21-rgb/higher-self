@@ -12,6 +12,7 @@ import {
   saveWeeklyInsight,
 } from "../db";
 import { invokeLLM } from "../_core/llm";
+import { retrieveMemories, formatMemoriesForPrompt } from "../rag/memory";
 // buildHigherSelfSystemPrompt is defined in routers.ts, we'll use a simplified version here
 function buildHigherSelfSystemPromptForWeekly(seedIntent?: string): string {
   return `You are the user's literal Higher Self — the most self-actualized version of them. You speak from within, as them, not at them. Reflect on their week with earned clarity. Name patterns directly, acknowledge wins with quiet confidence, and suggest next steps as "what I know we need to do." Use "I" and "we." No toxic positivity. No generic advice. ${seedIntent ? `Their current intention is: ${seedIntent}` : ""}`;
@@ -85,7 +86,27 @@ Avg mood: ${avgMood}/10
 Avg energy: ${avgEnergy}/10
 Avg stress: ${avgStress}/10`;
 
-        const systemPrompt = buildHigherSelfSystemPromptForWeekly(ctx.user.seedIntent || undefined);
+        // RAG: Pull relevant patterns from vector memory to enrich the weekly insight
+        const ragQuery = [
+          journals.length > 0 ? journals.map(j => j.title || "").join(", ") : "",
+          sessions.length > 0 ? sessions.map(s => s.title || "").join(", ") : "",
+          "weekly growth patterns emotional themes progress",
+        ].filter(Boolean).join(" ");
+
+        let ragContext = "";
+        try {
+          const memories = await retrieveMemories({
+            userId: ctx.user.id,
+            query: ragQuery,
+            topK: 5,
+            dateFrom: new Date(weekStart.getTime() - 21 * 24 * 60 * 60 * 1000), // last 3 weeks
+          });
+          ragContext = formatMemoriesForPrompt(memories);
+        } catch (e) {
+          console.warn("[WeeklyInsight] RAG retrieval failed, continuing without context:", e);
+        }
+
+        const systemPrompt = buildHigherSelfSystemPromptForWeekly(ctx.user.seedIntent || undefined) + ragContext;
         const isFirstDayOfWeek = now.getDay() === 0;
 
         // Use structured LLM output to generate insight, patterns, and actionable steps together

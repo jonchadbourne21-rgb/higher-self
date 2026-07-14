@@ -1202,6 +1202,29 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
 
       return insightData;
     }),
+    /** Semantic clustering: detect recurring themes across user's memories */
+    patterns: protectedProcedure.query(async ({ ctx }) => {
+      const { clusterMemories } = await import("./rag/memory");
+      const fourWeeksAgo = new Date();
+      fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+      const clusters = await clusterMemories({
+        userId: ctx.user.id,
+        maxClusters: 6,
+        similarityThreshold: 0.55,
+        minClusterSize: 2,
+        dateFrom: fourWeeksAgo,
+      });
+      return clusters.map(c => ({
+        theme: c.theme,
+        entryCount: c.entries.length,
+        avgSimilarity: Math.round(c.avgSimilarity * 100) / 100,
+        recentEntries: c.entries.slice(0, 3).map(e => ({
+          content: e.content.slice(0, 200),
+          sourceType: e.sourceType,
+          createdAt: e.createdAt,
+        })),
+      }));
+    }),
   }),
 
   // ─── Dashboard ────────────────────────────────────────────────────────────

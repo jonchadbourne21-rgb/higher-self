@@ -477,3 +477,160 @@ export async function deleteAllUserMemories(userId: number): Promise<void> {
     console.error("[RAG] Failed to delete user memories:", error);
   }
 }
+
+// ─── Semantic Similarity Clustering ─────────────────────────────────────────
+
+export interface MemoryCluster {
+  theme: string;
+  entries: { id: number; content: string; sourceType: SourceType; createdAt: Date }[];
+  avgSimilarity: number;
+}
+
+/**
+ * Cluster user memories by semantic similarity to detect recurring patterns.
+ * Uses a simple greedy centroid-based approach:
+ * 1. Pick the first unassigned memory as a centroid
+ * 2. Assign all memories with similarity > threshold to that cluster
+ * 3. Repeat until all memories are assigned or max clusters reached
+ * 4. Use LLM to label each cluster with a human-readable theme
+ */
+export async function clusterMemories(params: {
+  userId: number;
+  maxClusters?: number;
+  similarityThreshold?: number;
+  minClusterSize?: number;
+  dateFrom?: Date;
+}): Promise<MemoryCluster[]> {
+  const {
+    userId,
+    maxClusters = 6,
+    similarityThreshold = 0.55,
+    minClusterSize = 2,
+    dateFrom,
+  } = params;
+
+  try {
+    const db = await getDb();
+    if (!db) return [];
+
+    // Fetch recent memories with embeddings
+    let conditions = [eq(memoryEmbeddings.userId, userId)];
+    if (dateFrom) {
+      conditions.push(sql`${memoryEmbeddings.createdAt} >= ${dateFrom}`);
+    }
+
+    const allMemories = await db
+      .select()
+      .from(memoryEmbeddings)
+      .where(and(...conditions))
+      .orderBy(desc(memoryEmbeddings.createdAt))
+      .limit(100);
+
+    if (allMemories.length < minClusterSize) {
+      return [];
+    }
+
+    // Greedy centroid clustering
+    const assigned = new Set<number>();
+    const clusters: {
+      centroidIdx: number;
+      memberIndices: number[];
+    }[] = [];
+
+    for (let i = 0; i < allMemories.length && clusters.length < maxClusters; i++) {
+      if (assigned.has(i)) continue;
+
+      const centroidEmbedding = allMemories[i].embedding as number[];
+      const members = [i];
+      assigned.add(i);
+
+      for (let j = i + 1; j < allMemories.length; j++) {
+        if (assigned.has(j)) continue;
+        const sim = cosineSimilarity(centroidEmbedding, allMemories[j].embedding as number[]);
+        if (sim >= similarityThreshold) {
+          members.push(j);
+          assigned.add(j);
+        }
+      }
+
+      if (members.length >= minClusterSize) {
+        clusters.push({ centroidIdx: i, memberIndices: members });
+      }
+    }
+
+    if (clusters.length === 0) return [];
+
+    // Label clusters with LLM
+    const clusterSummaries = clusters.map((c) => {
+      const snippets = c.memberIndices
+        .slice(0, 4)
+        .map((idx) => allMemories[idx].content.slice(0, 200))
+        .join("\n---\n");
+      return snippets;
+    });
+
+    const labelPrompt = `Label each of the following clusters of personal journal/chat entries with a short theme (2-5 words). Return a JSON array of strings, one label per cluster.
+
+${clusterSummaries.map((s, i) => `Cluster ${i + 1}:\n${s}`).join("\n\n")}`;
+
+    let labels: string[] = [];
+    try {
+      const labelRes = await invokeLLM({
+        messages: [
+          { role: "system", content: "You are a pattern analyst. Return only valid JSON." },
+          { role: "user", content: labelPrompt },
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "cluster_labels",
+            strict: true,
+            schema: {
+              type: "object",
+              properties: {
+                labels: { type: "array", items: { type: "string" } },
+              },
+              required: ["labels"],
+              additionalProperties: false,
+            },
+          },
+        },
+      });
+      const parsed = JSON.parse(labelRes.choices[0]?.message?.content as string || "{}");
+      labels = Array.isArray(parsed.labels) ? parsed.labels : [];
+    } catch {
+      // Fallback: use generic labels
+      labels = clusters.map((_, i) => `Pattern ${i + 1}`);
+    }
+
+    // Build result
+    const result: MemoryCluster[] = clusters.map((c, i) => {
+      // Compute average pairwise similarity within cluster
+      let totalSim = 0;
+      let pairCount = 0;
+      const centroidEmb = allMemories[c.centroidIdx].embedding as number[];
+      for (const idx of c.memberIndices) {
+        if (idx === c.centroidIdx) continue;
+        totalSim += cosineSimilarity(centroidEmb, allMemories[idx].embedding as number[]);
+        pairCount++;
+      }
+
+      return {
+        theme: labels[i] || `Pattern ${i + 1}`,
+        entries: c.memberIndices.map((idx) => ({
+          id: allMemories[idx].id,
+          content: allMemories[idx].content,
+          sourceType: allMemories[idx].sourceType as SourceType,
+          createdAt: allMemories[idx].createdAt,
+        })),
+        avgSimilarity: pairCount > 0 ? totalSim / pairCount : 1,
+      };
+    });
+
+    console.log(`[RAG] Clustered ${allMemories.length} memories into ${result.length} themes for user ${userId}`);
+    return result;
+  } catch (error) {
+    console.error("[RAG] Clustering failed:", error);
+    return [];
+  }
+}

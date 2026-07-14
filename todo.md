@@ -263,9 +263,11 @@
 ## Future RAG Enhancements
 - [x] Add hard filters to RAG search (by life domain, date range) — retrieveMemories now accepts dateFrom, dateTo, domain params
 - [x] Implement RAG for journal entry suggestions (suggest related past entries) — journal.suggestRelated procedure + inline UI in compose modal
-- [ ] Add RAG to weekly insights (pull relevant patterns from vector search)
-- [ ] Implement semantic similarity clustering for pattern detection
-- [ ] Add RAG analytics dashboard (most-retrieved entries, context usage patterns)
+- [x] Add RAG to weekly insights (pull relevant patterns from vector search) — retrieveMemories called with 3-week lookback, context injected into system prompt
+- [x] Implement semantic similarity clustering for pattern detection — clusterMemories() in rag/memory.ts + insights.patterns tRPC query
+- [x] Add RAG analytics dashboard (recurring themes view) — PatternsSection on Insights page shows clustered themes with entry counts and snippets
+- [ ] Track RAG retrieval analytics (log retrieved memory IDs, query source, timestamps) — FUTURE enhancement
+- [ ] Add most-retrieved entries leaderboard and context-usage metrics — FUTURE enhancement
 
 
 ## QuickOnboarding Integration (Apr 10)
