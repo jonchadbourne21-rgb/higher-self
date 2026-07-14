@@ -35,14 +35,47 @@ export default function Onboarding() {
   const [oneGoal, setOneGoal] = useState("");
 
   const utils = trpc.useUtils();
+  const [showMilestonePrompt, setShowMilestonePrompt] = useState(false);
+  const createCalendarEvent = trpc.calendar.create.useMutation({
+    onSuccess: () => {
+      toast.success("Milestone scheduled! \ud83c\udf1f");
+      navigate("/home");
+    },
+    onError: () => {
+      toast.error("Couldn't schedule milestone, but you're all set!");
+      navigate("/home");
+    },
+  });
   const completeMutation = trpc.profile.completeOnboarding.useMutation({
     onSuccess: async () => {
-      toast.success("Your journey begins now ✦");
       await utils.auth.me.invalidate();
-      navigate("/home");
+      // If user set a goal, offer to schedule a milestone
+      if (oneGoal.trim()) {
+        setShowMilestonePrompt(true);
+      } else {
+        toast.success("Your journey begins now \u2726");
+        navigate("/home");
+      }
     },
     onError: () => toast.error("Something went wrong. Please try again."),
   });
+
+  const handleScheduleMilestone = () => {
+    const thirtyDaysFromNow = Date.now() + 30 * 24 * 60 * 60 * 1000;
+    createCalendarEvent.mutate({
+      title: `Milestone: ${oneGoal.trim().slice(0, 80)}`,
+      type: "goal",
+      eventDate: thirtyDaysFromNow,
+      isAllDay: true,
+      notes: "Auto-created during onboarding. Check in on your progress!",
+      color: "#8b5cf6",
+    });
+  };
+
+  const handleSkipMilestone = () => {
+    toast.success("Your journey begins now \u2726");
+    navigate("/home");
+  };
 
   const saveSeedIntentMutation = trpc.onboarding.saveSeedIntent.useMutation();
 
@@ -112,8 +145,75 @@ export default function Onboarding() {
 
   return (
     <>
-      {/* ── Step 0: Name + Intent (splash style) ─────────────────────────── */}
-      {step === 0 && (
+      {/* ── Milestone Scheduling Prompt ────────────────────────────────── */}
+      {showMilestonePrompt && (
+        <div
+          className="h-dvh flex flex-col items-center justify-center max-w-[480px] mx-auto px-6"
+          style={{
+            background:
+              "radial-gradient(ellipse at 50% 30%, oklch(0.22 0.12 295 / 0.9) 0%, oklch(0.08 0.04 270) 60%, oklch(0.05 0.02 260) 100%)",
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center space-y-6 w-full"
+          >
+            <div className="text-4xl mb-2">🎯</div>
+            <h2
+              className="text-xl font-bold"
+              style={{ color: "oklch(0.95 0.02 80)" }}
+            >
+              Schedule this milestone?
+            </h2>
+            <p
+              className="text-sm leading-relaxed"
+              style={{ color: "oklch(0.65 0.04 270)" }}
+            >
+              We'll add a 30-day check-in to your calendar so you can track progress on:
+            </p>
+            <div
+              className="rounded-xl p-4 text-left"
+              style={{
+                background: "oklch(0.14 0.05 295 / 0.6)",
+                border: "1px solid oklch(0.45 0.12 295 / 0.4)",
+              }}
+            >
+              <p className="text-sm font-medium" style={{ color: "oklch(0.85 0.06 185)" }}>
+                "{oneGoal.trim().slice(0, 100)}"
+              </p>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={handleSkipMilestone}
+                className="flex-1 py-3 rounded-xl text-sm font-medium transition-all"
+                style={{
+                  background: "oklch(0.2 0.03 270 / 0.6)",
+                  border: "1px solid oklch(0.35 0.05 270)",
+                  color: "oklch(0.7 0.03 270)",
+                }}
+              >
+                Skip
+              </button>
+              <button
+                onClick={handleScheduleMilestone}
+                disabled={createCalendarEvent.isPending}
+                className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
+                style={{
+                  background: "linear-gradient(135deg, oklch(0.55 0.18 185), oklch(0.62 0.16 170))",
+                  color: "oklch(0.98 0.01 185)",
+                  boxShadow: "0 0 24px oklch(0.55 0.18 185 / 0.3)",
+                }}
+              >
+                {createCalendarEvent.isPending ? "Scheduling..." : "Schedule It \u2728"}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ── Step 0: Name + Intent (splash style) ───────────────────────────── */}
+      {!showMilestonePrompt && step === 0 && (
         <div
           className="h-dvh flex flex-col max-w-[480px] mx-auto px-6 py-8 overflow-y-auto"
           style={{
@@ -248,7 +348,7 @@ export default function Onboarding() {
       )}
 
       {/* ── Steps 1–2: Values & Goal ────────────────────────────────────── */}
-      {step > 0 && (
+      {!showMilestonePrompt && step > 0 && (
         <div
           className="h-dvh flex flex-col max-w-[480px] mx-auto overflow-hidden"
           style={{ background: "oklch(0.08 0.04 270)" }}
