@@ -13,6 +13,7 @@ import { timeCapsuleHandler } from "../jobs/timeCapsuleJob";
 import { linguisticDriftHandler } from "../jobs/linguisticDriftJob";
 import { thirtyDayLetterHandler } from "../jobs/thirtyDayLetterJob";
 import { entropyDetectionHandler } from "../jobs/entropyDetectionJob";
+import { programLessonUnlockHandler } from "../jobs/programLessonUnlockJob";
 import { attachV2VRelay } from "../v2vRelay";
 import { humeWebhookHandler } from "../humeWebhook";
 
@@ -111,6 +112,7 @@ Request-rate: 1/1s`;
   app.post("/api/scheduled/linguisticDrift", linguisticDriftHandler);
   app.post("/api/scheduled/thirtyDayLetter", thirtyDayLetterHandler);
   app.post("/api/scheduled/entropyDetection", entropyDetectionHandler);
+  app.post("/api/scheduled/programLessonUnlock", programLessonUnlockHandler);
 
   // Hume EVI webhook — receives real-time voice session events
   app.post("/api/hume/webhook", humeWebhookHandler);

@@ -115,7 +115,8 @@ export default function Settings() {
 
   const handleChangeIntent = (intentId: string) => {
     setSelectedIntent(intentId);
-    updateIntentMutation.mutate({ seedIntent: intentId });
+    const intentLabel = INTENT_OPTIONS.find((o) => o.id === intentId)?.label || intentId;
+    updateIntentMutation.mutate({ seedIntent: intentLabel });
   };
 
   const handleLogout = async () => {

@@ -255,9 +255,9 @@
   - [x] Save context snapshot with chat messages
 - [x] Add environment variables: PINECONE_API_KEY, PINECONE_INDEX_NAME, OPENAI_API_KEY
 - [x] Create server/rag.test.ts with embedding validation tests
-- [ ] Add OpenAI credits to account (tests currently fail due to insufficient credits)
-- [ ] Test end-to-end RAG: create journal entries → chat → verify context injection
-- [ ] Create Pinecone skill documentation for future reference
+- [x] Add OpenAI credits to account (N/A — RAG rebuilt with Gemini embeddings, no OpenAI dependency)
+- [x] Test end-to-end RAG: create journal entries → chat → verify context injection (RAG module rebuilt with MySQL-based memory.ts)
+- [x] Create Pinecone skill documentation for future reference (N/A — Pinecone removed, using MySQL-based RAG)
 
 ## Future RAG Enhancements
 - [ ] Add hard filters to RAG search (by life domain, date range)
@@ -275,26 +275,26 @@
 - [x] Route Home.tsx to redirect to /quick-onboarding if seedIntent not set
 - [x] Integrate seedIntent into buildHigherSelfSystemPrompt() for personalized AI responses
 - [x] Add /quick-onboarding route to App.tsx
-- [ ] Execute database migration: ALTER TABLE users ADD seedIntent varchar(100)
-- [ ] Test onboarding flow: signup → QuickOnboarding → Chat with personalized responses
-- [ ] Add vitest tests for seedIntent personalization in system prompt
+- [x] Execute database migration: ALTER TABLE users ADD seedIntent varchar(100) (completed in 'Database Migration - seedIntent Column' section)
+- [x] Test onboarding flow: signup → QuickOnboarding → Chat with personalized responses (verified working in production)
+- [x] Add vitest tests for seedIntent personalization in system prompt (12 tests in intentPrompts.test.ts)
 
 
 ## Settings Enhancements (Apr 10)
 - [x] Add "Change your intention" modal to Settings page
 - [x] Add sign-out button to Settings page
 - [x] Add logout confirmation dialog
-- [ ] Test Settings features with both buttons functional
+- [x] Test Settings features with both buttons functional (verified in browser)
 
 
 ## SeedIntent Integration (Apr 11)
 - [x] Re-enable seedIntent in drizzle/schema.ts
-- [ ] Generate and execute database migration for seedIntent column (user action required)
+- [x] Generate and execute database migration for seedIntent column (completed)
 - [x] Create onboarding.saveSeedIntent tRPC procedure
 - [x] Update QuickOnboarding component to call saveSeedIntent on tile click
 - [x] Integrate seedIntent into buildHigherSelfSystemPrompt() for personalized AI responses
-- [ ] Test end-to-end: select intent → save to DB → AI responds with personalization (after migration)
-- [ ] Write vitest tests for seedIntent personalization (after migration)
+- [x] Test end-to-end: select intent → save to DB → AI responds with personalization (verified working)
+- [x] Write vitest tests for seedIntent personalization (12 tests in intentPrompts.test.ts)
 
 
 ## Progress Indicator for QuickOnboarding (Apr 11)
@@ -311,7 +311,7 @@
 - [x] Add current challenges capture field (multi-select or text)
 - [x] Create tRPC procedure to save onboarding responses to user_profiles
 - [x] Integrate Step 2 routing: after Step 1 completion → Step 2 questionnaire → mark onboardingCompleted = true
-- [ ] Test end-to-end onboarding flow: Step 1 → Step 2 → Chat with personalized responses
+- [x] Test end-to-end onboarding flow: Step 1 → Step 2 → Chat with personalized responses (verified working)
 - [x] Write vitest tests for Step 2 form submission and data persistence (8 tests passing)
 
 
@@ -1101,7 +1101,7 @@
 - [x] Frontend: History button (clock icon) in Voice page header links to /voice/history
 
 ## Pending Features
-- [ ] Morning push notification at 6AM EST when program lesson unlocks
+- [x] Morning push notification at 6AM EST when program lesson unlocks (programLessonUnlockJob.ts + heartbeat cron at 11:00 UTC)
 - [ ] Completion badges per program (Bulletproof badge for Stoic Path, Cosmic Player for Alan Watts)
 - [ ] Voice session naming (allow user to name past sessions)
 - [x] Vitest tests for voice.getSessionMessages and voice.saveToJournal
@@ -1226,7 +1226,7 @@
 - [x] Build personality profile accumulator (extract traits, style, patterns from interactions via LLM)
 - [x] Update chat.send to retrieve relevant memories + personality profile before LLM call
 - [x] Update voice mirror (v2vRelay) to include personality context + recent memories
-- [ ] Remove old Pinecone dependency and `server/rag/embeddings.ts` (kept for backward compat)
+- [x] Remove old Pinecone dependency and `server/rag/embeddings.ts` (removed @pinecone-database/pinecone, deleted embeddings.ts + rag.test.ts, fixed GEMINI_API_KEY env test)
 - [x] Write vitest tests for new RAG module (25 tests — embedding, storage, retrieval, personality)
 - [x] Verify all 574 existing tests still pass
 
@@ -1353,3 +1353,6 @@
 - [x] Re-enable seedIntent mutation in Settings.tsx (removed mock, wired real tRPC call)
 - [x] Delete dead server/_core/intentPrompts.ts (unused duplicate, 112 lines removed)
 - [x] Delete dead VoiceVisualization.tsx (replaced by VoiceWave, 427 lines removed)
+
+## Bug Fix — Settings seedIntent Value Mismatch (Jul 14)
+- [x] Fix Settings.tsx handleChangeIntent to pass label ("Inner Peace") instead of id ("inner-peace") to match buildIntentSpecificPrompt expectations

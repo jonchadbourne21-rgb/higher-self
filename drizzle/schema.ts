@@ -959,7 +959,7 @@ export const userScars = mysqlTable("user_scars", {
   scarText: text("scarText").notNull(),
   // Category for semantic grouping: anxiety_trigger, productivity_blocker, relationship_pattern, health_issue, etc.
   category: varchar("category", { length: 100 }).notNull(),
-  // Pinecone vector embedding for semantic search (stored as JSON array of floats)
+  // Vector embedding for semantic search (stored as JSON array of floats)
   vectorEmbedding: json("vectorEmbedding").$type<number[]>(),
   // Confidence score (0-1) indicating how strongly this scar applies
   confidence: float("confidence").notNull().default(0.5),

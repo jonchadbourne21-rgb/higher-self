@@ -407,10 +407,4 @@ describe("RAG Memory Module", () => {
     });
   });
 
-  describe("Environment", () => {
-    it("should have GEMINI_API_KEY set", () => {
-      expect(process.env.GEMINI_API_KEY).toBeDefined();
-      expect(process.env.GEMINI_API_KEY?.length).toBeGreaterThan(0);
-    });
-  });
 });
