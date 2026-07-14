@@ -190,7 +190,7 @@
 - [x] Show "Want a daily reminder?" card at bottom of check-in completion screen when user hasn't subscribed yet — animated violet card with enable button and dismiss (BellOff) option
 
 ## higherself.cloud OAuth Fix (Mar 28)
-- [ ] Fix OAuth login on higherself.cloud — route through registered manus.space redirect URI, return to custom domain after login
+- [ ] Fix OAuth login on higherself.cloud — route through registered manus.space redirect URI, return to custom domain after login (BLOCKED: requires Manus OAuth team to whitelist custom domain redirect URI)
 
 ## Account Settings & Calendar (Mar 28)
 - [x] Add phone, email, therapistName, therapistPhone, therapistEmail columns to user_profiles table
@@ -220,9 +220,9 @@
 - [x] Write vitest tests for updated calendar procedures (21 tests passing)
 
 ## OAuth Redirect URI Fix (Mar 28)
-- [ ] Investigate how redirect URI is constructed in OAuth flow (client const.ts + server oauth.ts)
-- [ ] Fix redirect URI logic so higherself.cloud works the same as higherself.manus.space
-- [ ] Test both domains work for login
+- [ ] Investigate how redirect URI is constructed in OAuth flow (client const.ts + server oauth.ts) (BLOCKED: same as above)
+- [ ] Fix redirect URI logic so higherself.cloud works the same as higherself.manus.space (BLOCKED: same as above)
+- [ ] Test both domains work for login (BLOCKED: same as above)
 
 ## URGENT — Make higherself.cloud the Primary OAuth Domain
 - [x] Update const.ts: use higherself.cloud as the canonical OAuth redirect URI
@@ -260,8 +260,8 @@
 - [x] Create Pinecone skill documentation for future reference (N/A — Pinecone removed, using MySQL-based RAG)
 
 ## Future RAG Enhancements
-- [ ] Add hard filters to RAG search (by life domain, date range)
-- [ ] Implement RAG for journal entry suggestions (suggest related past entries)
+- [x] Add hard filters to RAG search (by life domain, date range) — retrieveMemories now accepts dateFrom, dateTo, domain params
+- [x] Implement RAG for journal entry suggestions (suggest related past entries) — journal.suggestRelated procedure + inline UI in compose modal
 - [ ] Add RAG to weekly insights (pull relevant patterns from vector search)
 - [ ] Implement semantic similarity clustering for pattern detection
 - [ ] Add RAG analytics dashboard (most-retrieved entries, context usage patterns)
@@ -527,11 +527,11 @@
 ## Crisis Safety Features — Testing, Dashboard & Escalation (May 1) - IN PROGRESS
 - [x] Create crisis testing protocol and manual verification guide (CRISIS_TESTING_PROTOCOL.md with 30+ test cases)
 - [x] Build crisis incident database schema and logging infrastructure (3 new tables: crisis_incidents, emergency_contacts, crisis_notifications)
-- [ ] Create admin-only crisis dashboard with anonymized data
-- [ ] Add crisis escalation workflow with emergency contact management
-- [ ] Implement crisis notification system for emergency contacts
-- [ ] Write comprehensive tests for crisis features
-- [ ] Test all crisis scenarios end-to-end
+- [ ] Create admin-only crisis dashboard with anonymized data (FUTURE: Crisis system — large feature, separate session)
+- [ ] Add crisis escalation workflow with emergency contact management (FUTURE: Crisis system)
+- [ ] Implement crisis notification system for emergency contacts (FUTURE: Crisis system)
+- [ ] Write comprehensive tests for crisis features (FUTURE: Crisis system)
+- [ ] Test all crisis scenarios end-to-end (FUTURE: Crisis system)
 
 ## Social Media Preview Image — Open Graph (May 3) - COMPLETE
 - [x] Generate custom Open Graph preview image (1200×630px) showing app home page (Mentrove - Higher Self branding)
@@ -655,7 +655,7 @@
 - [x] Create checkpoint with complete Pro tier system (done)
 - [x] Review all changes and features (done)
 - [x] Final regression testing (727 tests passing)
-- [ ] Deploy to production (user action — click Publish in UI)
+- [ ] Deploy to production (USER ACTION: click Publish button in Management UI header)
 
 
 ## App Rebranding: Synapset → Mentrove (May 13) - COMPLETE
@@ -687,8 +687,8 @@
 - [x] Add logo to Pricing page header
 - [x] All 320 tests still passing
 - [x] TypeScript: 0 errors
-- [ ] Update VITE_APP_TITLE to Mentrove (requires Management UI > Settings > General)
-- [ ] Update VITE_APP_LOGO to new logo URL (requires Management UI > Settings > General)
+- [ ] Update VITE_APP_TITLE to Mentrove (USER ACTION: Management UI > Settings > General)
+- [ ] Update VITE_APP_LOGO to new logo URL (USER ACTION: Management UI > Settings > General)
 
 ## Mentrove Landing Page Redesign (May 14) - COMPLETE
 - [x] Rewrite Landing.tsx with dark midnight radial gradient background
@@ -1113,8 +1113,8 @@
 - [x] Replay attack prevention via timestamp validation (3-minute window)
 - [x] Register route in server/_core/index.ts before tRPC middleware
 - [x] Verified endpoint returns {"status":"ok"} for both chat_started and chat_ended test payloads
-- [ ] Add HUME_WEBHOOK_SIGNING_KEY secret (from Hume Developers page → Generate signing key)
-- [ ] Update Hume EVI config webhook URL to https://mentrove.manus.space/api/hume/webhook
+- [ ] Add HUME_WEBHOOK_SIGNING_KEY secret (USER ACTION: Hume Developers page → Generate signing key → paste in Settings > Secrets)
+- [ ] Update Hume EVI config webhook URL to https://mentrove.manus.space/api/hume/webhook (USER ACTION: Hume Dashboard)
 
 
 ## Unified Mirror Page (May 26) - COMPLETE
@@ -1333,17 +1333,17 @@
 
 
 ## VOW Language Integration (Learning Reflection Loop)
-- [ ] Add user_scars table to drizzle schema (userId, scarText, category, vectorEmbedding, confidence, createdAt)
-- [ ] Run DB migration for user_scars table
-- [ ] Create scar recording helpers in server/db/scars.ts (recordScar, getScarsByUser, searchScarsByEmbedding)
-- [ ] Build scar extraction logic: analyze journal entries, voice transcripts, check-ins for patterns
-- [ ] Create weekly digest quest in VOW with tournament strategies (empathetic, analytical, action-focused)
-- [ ] Implement scar recall: query vector memory before digest generation
-- [ ] Build LLM context injection: pass relevant scars to digest generation prompt
-- [ ] Add proof gates: digest must address top issues and avoid repeating past patterns
-- [ ] Wire VOW quest into weekly scheduler (runs Sundays 6am)
-- [ ] Write vitest tests for scar recording and digest generation
-- [ ] Test end-to-end: journal entry → scar recorded → digest uses scar in context
+- [ ] Add user_scars table to drizzle schema (FUTURE: VOW/Scars system — large feature, separate session)
+- [ ] Run DB migration for user_scars table (FUTURE: VOW/Scars system)
+- [ ] Create scar recording helpers in server/db/scars.ts (FUTURE: VOW/Scars system)
+- [ ] Build scar extraction logic: analyze journal entries, voice transcripts, check-ins for patterns (FUTURE: VOW/Scars system)
+- [ ] Create weekly digest quest in VOW with tournament strategies (FUTURE: VOW/Scars system)
+- [ ] Implement scar recall: query vector memory before digest generation (FUTURE: VOW/Scars system)
+- [ ] Build LLM context injection: pass relevant scars to digest generation prompt (FUTURE: VOW/Scars system)
+- [ ] Add proof gates: digest must address top issues and avoid repeating past patterns (FUTURE: VOW/Scars system)
+- [ ] Wire VOW quest into weekly scheduler (runs Sundays 6am) (FUTURE: VOW/Scars system)
+- [ ] Write vitest tests for scar recording and digest generation (FUTURE: VOW/Scars system)
+- [ ] Test end-to-end: journal entry → scar recorded → digest uses scar in context (FUTURE: VOW/Scars system)
 
 ## Lite Audit Fixes (Jul 2026)
 - [x] Fix weekly insight job prompt: replaced 'wise friend' with Higher Self persona (speaks as user, uses I/we)

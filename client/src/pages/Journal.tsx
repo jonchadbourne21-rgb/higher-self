@@ -79,6 +79,11 @@ export default function Journal() {
   const [showRewardWheel, setShowRewardWheel] = useState(false);
   const [wheelPrize, setWheelPrize] = useState<string | null>(null);
 
+  // ── Related entries suggestion state ─────────────────────────────────────
+  const [relatedEntries, setRelatedEntries] = useState<{id: number | null; content: string; score: number; date: string}[]>([]);
+  const [isLoadingRelated, setIsLoadingRelated] = useState(false);
+  const relatedDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // ── Queries ──────────────────────────────────────────────────────────────
   const [debouncedSearch, setDebouncedSearch] = useState("");
   useEffect(() => {
@@ -150,6 +155,14 @@ export default function Journal() {
     onError: () => setIsSuggesting(false),
   });
 
+  const suggestRelatedMutation = trpc.journal.suggestRelated.useMutation({
+    onSuccess: (data) => {
+      setRelatedEntries(data);
+      setIsLoadingRelated(false);
+    },
+    onError: () => setIsLoadingRelated(false),
+  });
+
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate("/");
   }, [isAuthenticated, loading]);
@@ -163,7 +176,10 @@ export default function Journal() {
     setSuggestedTitles([]);
     setLastSuggestedContent("");
     setIsSuggesting(false);
+    setRelatedEntries([]);
+    setIsLoadingRelated(false);
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    if (relatedDebounceRef.current) clearTimeout(relatedDebounceRef.current);
   }, []);
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -174,6 +190,7 @@ export default function Journal() {
       setSuggestedTitles([]);
     }
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    if (relatedDebounceRef.current) clearTimeout(relatedDebounceRef.current);
     if (newContent.trim().length >= MIN_CONTENT_FOR_SUGGESTION) {
       debounceTimerRef.current = setTimeout(() => {
         if (!title && newContent.trim() !== lastSuggestedContent.trim()) {
@@ -182,6 +199,11 @@ export default function Journal() {
           suggestTitleMutation.mutate({ content: newContent });
         }
       }, SUGGESTION_DEBOUNCE_MS);
+      // Also trigger related entries search (longer debounce)
+      relatedDebounceRef.current = setTimeout(() => {
+        setIsLoadingRelated(true);
+        suggestRelatedMutation.mutate({ content: newContent });
+      }, 3000);
     }
   };
 
@@ -578,6 +600,35 @@ export default function Journal() {
                 className="w-full bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none text-sm leading-relaxed resize-none min-h-[220px]"
                 autoFocus
               />
+
+              {/* Related past entries */}
+              <AnimatePresence>
+                {(isLoadingRelated || relatedEntries.length > 0) && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-2 overflow-hidden"
+                  >
+                    <p className="text-xs text-muted-foreground font-medium flex items-center gap-1">
+                      <Sparkles size={11} className="text-primary" />
+                      {isLoadingRelated ? "Finding related entries..." : "You've written about this before:"}
+                    </p>
+                    {!isLoadingRelated && relatedEntries.map((entry, i) => (
+                      <button
+                        key={i}
+                        onClick={() => entry.id && navigate(`/journal/${entry.id}`)}
+                        className="w-full text-left px-3 py-2 rounded-lg border border-border/50 bg-muted/30 hover:bg-muted/60 transition-all"
+                      >
+                        <p className="text-xs text-foreground/80 line-clamp-2">{entry.content}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          {new Date(entry.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })} · {entry.score}% match
+                        </p>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Mood tags */}
               <div className="space-y-2">

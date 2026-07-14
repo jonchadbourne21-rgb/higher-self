@@ -160,9 +160,12 @@ export async function retrieveMemories(params: {
   query: string;
   topK?: number;
   sourceTypes?: SourceType[];
+  dateFrom?: Date;
+  dateTo?: Date;
+  domain?: string;
 }): Promise<RetrievedMemory[]> {
   try {
-    const { userId, query, topK = 5, sourceTypes } = params;
+    const { userId, query, topK = 5, sourceTypes, dateFrom, dateTo, domain } = params;
 
     // Generate query embedding
     const queryEmbedding = await generateEmbedding(query);
@@ -172,6 +175,14 @@ export async function retrieveMemories(params: {
 
     // Fetch all embeddings for this user (with optional source type filter)
     let conditions = [eq(memoryEmbeddings.userId, userId)];
+
+    // Hard filter: date range at SQL level
+    if (dateFrom) {
+      conditions.push(sql`${memoryEmbeddings.createdAt} >= ${dateFrom}`);
+    }
+    if (dateTo) {
+      conditions.push(sql`${memoryEmbeddings.createdAt} <= ${dateTo}`);
+    }
 
     const allMemories = await db
       .select()
@@ -189,6 +200,14 @@ export async function retrieveMemories(params: {
     let filtered = allMemories;
     if (sourceTypes && sourceTypes.length > 0) {
       filtered = allMemories.filter((m) => sourceTypes.includes(m.sourceType as SourceType));
+    }
+
+    // Hard filter: life domain (stored in metadata.domain)
+    if (domain) {
+      filtered = filtered.filter((m) => {
+        const meta = m.metadata as Record<string, string> | null;
+        return meta?.domain === domain;
+      });
     }
 
     // Compute cosine similarity for each memory

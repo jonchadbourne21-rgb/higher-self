@@ -695,12 +695,20 @@ export const appRouter = router({
 
         // RAG: Embed journal entry for future retrieval (fire-and-forget)
         const embedContent = `${input.title || "Untitled"}: ${input.content}`;
+        // Resolve category name for domain metadata (if category is set)
+        let domainMeta: string | undefined;
+        if (input.categoryId) {
+          const { getJournalCategories } = await import("./db");
+          const cats = await getJournalCategories(ctx.user.id);
+          const cat = cats.find((c: any) => c.id === input.categoryId);
+          if (cat) domainMeta = cat.name.toLowerCase();
+        }
         storeMemory({
           userId: ctx.user.id,
           sourceType: "journal",
           sourceId: newEntry.id,
           content: embedContent,
-          metadata: { moodTag: input.moodTag || "neutral" },
+          metadata: { moodTag: input.moodTag || "neutral", ...(domainMeta ? { domain: domainMeta } : {}) },
         }).catch((e) => console.error("[RAG] Journal embedding failed:", e));
 
         // Generate AI perspective asynchronously
@@ -759,6 +767,35 @@ export const appRouter = router({
         }
 
         return { success: true, id: newEntry.id };
+      }),
+
+    suggestRelated: protectedProcedure
+      .input(z.object({
+        content: z.string().min(30),
+        limit: z.number().default(3),
+        domain: z.string().optional(),
+        dateFrom: z.date().optional(),
+        dateTo: z.date().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Use RAG to find semantically related past journal entries (with optional hard filters)
+        const related = await retrieveMemories({
+          userId: ctx.user.id,
+          query: input.content.slice(0, 2000),
+          topK: input.limit,
+          sourceTypes: ["journal"],
+          domain: input.domain,
+          dateFrom: input.dateFrom,
+          dateTo: input.dateTo,
+        });
+
+        // Map to a frontend-friendly shape
+        return related.map((m) => ({
+          id: m.sourceId,
+          content: m.content.slice(0, 200),
+          score: Math.round(m.score * 100),
+          date: m.createdAt.toISOString(),
+        }));
       }),
 
     suggestTitle: protectedProcedure
