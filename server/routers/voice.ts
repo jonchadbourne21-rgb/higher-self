@@ -272,6 +272,26 @@ export const voiceRouter = router({
       return { ok: true };
     }),
 
+  /** Rename a voice session */
+  renameSession: protectedProcedure
+    .input(z.object({ sessionId: z.number(), title: z.string().min(1).max(200) }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      // Verify session belongs to user
+      const sessions = await db
+        .select()
+        .from(v2vSessions)
+        .where(and(eq(v2vSessions.id, input.sessionId), eq(v2vSessions.userId, ctx.user.id)))
+        .limit(1);
+      if (!sessions.length) throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
+      await db
+        .update(v2vSessions)
+        .set({ title: input.title })
+        .where(eq(v2vSessions.id, input.sessionId));
+      return { ok: true };
+    }),
+
   /** Save a voice session transcript as a journal entry */
   saveToJournal: protectedProcedure
     .input(z.object({ sessionId: z.number() }))

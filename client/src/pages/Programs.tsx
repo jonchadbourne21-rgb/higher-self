@@ -56,6 +56,19 @@ function getProgramIcon(program: { name: string; category: string }): string {
   );
 }
 
+/** Completion title per program */
+function getCompletionTitle(programName: string): string {
+  const titles: Record<string, string> = {
+    "The Stoic Path": "Bulletproof",
+    "The Present Moment Challenge": "Cosmic Player",
+    "Self-Determination through Suffering": "Unbreakable",
+    "21-Day Inner Voice Reset": "Mirror Master",
+    "7-Day Emotional Mastery": "Wave Rider",
+    "Self-Actualization Guide to Full Potential": "Self-Actualized",
+  };
+  return titles[programName] ?? "Completed";
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Programs() {
@@ -172,7 +185,7 @@ export default function Programs() {
                         {isCompleted ? (
                           <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs border shrink-0 gap-1">
                             <CheckCircle2 className="w-3 h-3" />
-                            Completed
+                            {getCompletionTitle(program.name)}
                           </Badge>
                         ) : isEnrolled ? (
                           <Badge className="bg-primary/20 text-primary border-primary/30 text-xs border shrink-0">

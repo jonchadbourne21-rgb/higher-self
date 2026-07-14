@@ -44,6 +44,32 @@ const PROGRAM_ICONS: Record<string, string> = {
   stoicism: "🏛️",
 };
 
+/** Completion badge emoji per program */
+function getCompletionBadge(programName: string): string {
+  const badges: Record<string, string> = {
+    "The Stoic Path": "🛡️",
+    "The Present Moment Challenge": "🌀",
+    "Self-Determination through Suffering": "🔥",
+    "21-Day Inner Voice Reset": "🪞",
+    "7-Day Emotional Mastery": "🌊",
+    "Self-Actualization Guide to Full Potential": "🌱",
+  };
+  return badges[programName] ?? "🏆";
+}
+
+/** Completion title per program */
+function getCompletionTitle(programName: string): string {
+  const titles: Record<string, string> = {
+    "The Stoic Path": "Bulletproof",
+    "The Present Moment Challenge": "Cosmic Player",
+    "Self-Determination through Suffering": "Unbreakable",
+    "21-Day Inner Voice Reset": "Mirror Master",
+    "7-Day Emotional Mastery": "Wave Rider",
+    "Self-Actualization Guide to Full Potential": "Self-Actualized",
+  };
+  return titles[programName] ?? "Program Graduate";
+}
+
 /** Format an ISO timestamp as a human-readable EST time string */
 function formatUnlockTime(isoString: string): string {
   try {
@@ -748,9 +774,10 @@ export default function ProgramDetail() {
         {/* CTA */}
         {isCompleted ? (
           <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5 text-center">
-            <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
+            <div className="text-4xl mb-2">{getCompletionBadge(program.name)}</div>
             <p className="font-semibold text-emerald-400">Journey Complete!</p>
-            <p className="text-sm text-muted-foreground mt-1">You've completed this program. Incredible work.</p>
+            <p className="text-xs font-medium text-emerald-300/80 mt-0.5">{getCompletionTitle(program.name)}</p>
+            <p className="text-sm text-muted-foreground mt-2">You've completed this program. Incredible work.</p>
           </div>
         ) : isEnrolled ? (
           currentLessonData?.isLocked ? (

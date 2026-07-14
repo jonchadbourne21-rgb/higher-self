@@ -1,0 +1,1 @@
+ALTER TABLE `v2v_sessions` ADD `title` varchar(200);

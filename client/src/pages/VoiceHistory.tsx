@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Mic, ChevronDown, ChevronUp, BookOpen, Clock, MessageSquare } from "lucide-react";
+import { Mic, ChevronDown, ChevronUp, BookOpen, Clock, MessageSquare, Pencil, Check, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -158,7 +158,10 @@ function SessionDetail({ sessionId, onSaveToJournal, savingId }: SessionDetailPr
 export default function VoiceHistory() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [savingId, setSavingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editTitle, setEditTitle] = useState("");
 
+  const utils = trpc.useUtils();
   const { data: sessions, isLoading } = trpc.voice.getSessions.useQuery();
   const saveToJournalMut = trpc.voice.saveToJournal.useMutation({
     onSuccess: () => {
@@ -168,6 +171,16 @@ export default function VoiceHistory() {
     onError: (err) => {
       toast.error(err.message || "Failed to save to journal.");
       setSavingId(null);
+    },
+  });
+  const renameMut = trpc.voice.renameSession.useMutation({
+    onSuccess: () => {
+      toast.success("Session renamed!");
+      setEditingId(null);
+      utils.voice.getSessions.invalidate();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to rename session.");
     },
   });
 
@@ -223,45 +236,98 @@ export default function VoiceHistory() {
                     className="rounded-2xl border border-border/40 bg-card/60 overflow-hidden"
                   >
                     {/* Session header row */}
-                    <button
-                      className="w-full px-4 py-4 flex items-center gap-3 text-left hover:bg-secondary/20 transition-colors"
-                      onClick={() => setExpandedId(isExpanded ? null : session.id)}
-                    >
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <Mic className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">
-                          {startDate.toLocaleDateString("en-US", {
-                            weekday: "short",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </p>
-                        <div className="flex items-center gap-3 mt-0.5">
-                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Clock className="w-3 h-3" />
-                            {startDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
-                          </span>
-                          {endDate && (
-                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <MessageSquare className="w-3 h-3" />
-                              {formatDuration(startDate, endDate)}
-                            </span>
-                          )}
-                          {!endDate && (
-                            <span className="text-xs text-amber-400">In progress</span>
-                          )}
+                    <div className="w-full px-4 py-4 flex items-center gap-3">
+                      <button
+                        className="flex items-center gap-3 flex-1 min-w-0 text-left hover:bg-secondary/20 transition-colors rounded-lg -m-1 p-1"
+                        onClick={() => setExpandedId(isExpanded ? null : session.id)}
+                      >
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <Mic className="w-5 h-5 text-primary" />
                         </div>
-                      </div>
+                        <div className="flex-1 min-w-0">
+                          {editingId === session.id ? (
+                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="text"
+                                value={editTitle}
+                                onChange={(e) => setEditTitle(e.target.value)}
+                                className="text-sm font-medium bg-secondary/40 border border-border/60 rounded px-2 py-0.5 w-full text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                autoFocus
+                                maxLength={200}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" && editTitle.trim()) {
+                                    renameMut.mutate({ sessionId: session.id, title: editTitle.trim() });
+                                  } else if (e.key === "Escape") {
+                                    setEditingId(null);
+                                  }
+                                }}
+                              />
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (editTitle.trim()) renameMut.mutate({ sessionId: session.id, title: editTitle.trim() });
+                                }}
+                                className="p-1 text-green-400 hover:text-green-300"
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setEditingId(null); }}
+                                className="p-1 text-muted-foreground hover:text-foreground"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {session.title || startDate.toLocaleDateString("en-US", {
+                                weekday: "short",
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-3 mt-0.5">
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Clock className="w-3 h-3" />
+                              {startDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+                            </span>
+                            {endDate && (
+                              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <MessageSquare className="w-3 h-3" />
+                                {formatDuration(startDate, endDate)}
+                              </span>
+                            )}
+                            {!endDate && (
+                              <span className="text-xs text-amber-400">In progress</span>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                      {/* Rename button */}
+                      {editingId !== session.id && (
+                        <button
+                          className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/30"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingId(session.id);
+                            setEditTitle(session.title || "");
+                          }}
+                          title="Rename session"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                      )}
                       <div className="text-muted-foreground">
-                        {isExpanded ? (
-                          <ChevronUp className="w-4 h-4" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4" />
-                        )}
+                        <button onClick={() => setExpandedId(isExpanded ? null : session.id)}>
+                          {isExpanded ? (
+                            <ChevronUp className="w-4 h-4" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4" />
+                          )}
+                        </button>
                       </div>
-                    </button>
+                    </div>
 
                     {/* Expanded detail */}
                     <AnimatePresence>

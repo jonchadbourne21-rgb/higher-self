@@ -693,6 +693,7 @@ export const v2vSessions = mysqlTable("v2v_sessions", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
   sessionUuid: varchar("sessionUuid", { length: 36 }).notNull(),
+  title: varchar("title", { length: 200 }),
   startedAt: timestamp("startedAt").defaultNow().notNull(),
   endedAt: timestamp("endedAt"),
 });

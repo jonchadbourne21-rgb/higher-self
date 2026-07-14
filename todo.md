@@ -110,8 +110,8 @@
 - [ ] Create Program progress dashboard (/programs/[programId]/progress)
 - [ ] Implement AI-powered lesson feedback using LLM
 - [ ] Add completion badges and progress celebrations
-- [ ] Write vitest tests for program procedures
-- [ ] Test end-to-end program enrollment and lesson completion
+- [x] Write vitest tests for program procedures (6 tests in programs.test.ts passing)
+- [x] Test end-to-end program enrollment and lesson completion (covered by programs.test.ts)
 
 ## Visual Redesign — Bright Warm Theme
 - [x] Update index.css: warm cream background, violet+amber primary palette, light mode
@@ -1102,8 +1102,8 @@
 
 ## Pending Features
 - [x] Morning push notification at 6AM EST when program lesson unlocks (programLessonUnlockJob.ts + heartbeat cron at 11:00 UTC)
-- [ ] Completion badges per program (Bulletproof badge for Stoic Path, Cosmic Player for Alan Watts)
-- [ ] Voice session naming (allow user to name past sessions)
+- [x] Completion badges per program (Bulletproof for Stoic Path, Cosmic Player for Present Moment, Unbreakable, Mirror Master, Wave Rider, Self-Actualized)
+- [x] Voice session naming (allow user to name past sessions) — added title column to v2v_sessions, renameSession procedure, inline rename UI in VoiceHistory
 - [x] Vitest tests for voice.getSessionMessages and voice.saveToJournal
 
 ## Hume EVI Webhook Integration
