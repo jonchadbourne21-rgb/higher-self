@@ -1,7 +1,7 @@
 import express, { type Express } from "express";
 import fs from "fs";
 import { type Server } from "http";
-// Removed nanoid import - no cache-busting needed
+// HMR disabled to prevent WebSocket reconnection loop in proxy environments
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
@@ -9,7 +9,7 @@ import viteConfig from "../../vite.config";
 export async function setupVite(app: Express, server: Server) {
   const serverOptions = {
     middlewareMode: true,
-    hmr: { server },
+    hmr: false as const,
     allowedHosts: true as const,
   };
 

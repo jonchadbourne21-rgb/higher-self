@@ -156,7 +156,7 @@
 - [x] Add search/filter support to journal.list (by keyword, date range, category, mood)
 - [x] Rebuild Journal page: working Save button, date-organized entry list, search bar, category/mood filter panel
 - [x] Add category management UI (create/delete custom categories with 10-color picker)
-- [ ] Write vitest tests for new journal category procedures
+- [x] Write vitest tests for new journal category procedures
 
 ## Journal Save Button Fix (Mar 28)
 - [x] Fix Save Entry button hidden behind bottom nav bar — moved modal outside AppShell so it renders as true full-screen overlay above the nav
@@ -202,7 +202,8 @@
 - [x] Add tRPC procedures: calendar.list, calendar.create, calendar.update, calendar.delete
 - [x] Build /calendar Calendar page with monthly view, event creation modal, event list
 - [x] Add Settings and Calendar to nav (profile icon → settings, calendar icon in nav or home)
-- [ ] Write vitest tests for new procedures
+- [x] Write vitest tests for calendar procedures (44 tests passing)
+- [x] Write vitest tests for settings procedures (settings.get, settings.update) — 20 tests passing
 
 ## Feature Sprint — Recurring Events, Quick-Dial, Goals Integration (Mar 28)
 - [x] Add recurrence columns to calendar_events table (recurrence: none/weekly/monthly, recurrenceEnd: date)
@@ -235,8 +236,8 @@
 - [x] Add tRPC procedure: onboarding.saveSeedIntent
 - [x] Route /quick-onboarding wired into App.tsx
 - [x] Write vitest tests for onboarding router
-- [ ] Integrate QuickOnboarding into post-signup flow (route new users here before full questionnaire)
-- [ ] Use seedIntent in AI Mirror system prompt for personalization
+- [x] Integrate QuickOnboarding into post-signup flow — Onboarding.tsx step 0 combines name + intent selection; seedIntent is saved during onboarding before completion
+- [x] Use seedIntent in AI Mirror system prompt for personalization — buildHigherSelfSystemPrompt passes seedIntent to buildIntentSpecificPrompt in chat, check-in, and insights
 
 ## RAG with Pinecone Integration (Apr 9)
 - [x] Install @pinecone-database/pinecone and openai packages
