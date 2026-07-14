@@ -98,8 +98,8 @@
 - [x] Create demo mode to bypass OAuth login (x-demo-mode header + DEMO_USER in context.ts)
 - [x] Update routing to support demo mode (/demo route, demo banner in AppShell, exit button, Landing "explore demo" link)
 - [x] Add read-only enforcement for demo mode (isDemo flag in context + global mutation block in requireUser middleware — all protectedProcedure mutations are blocked for demo users)
-- [ ] Seed sample demo data for key surfaces (home, journal, calendar, programs) or add demo-data layer
-- [ ] Test all 11 pages in demo mode (manual testing needed)
+- [x] Seed sample demo data for key surfaces (home, journal, calendar, programs) — seeded user, profile, 7 check-ins, 3 journal entries, 5 habits, reward points, domain scores, calendar events, chat messages, weekly insight
+- [ ] Test all 11 pages in demo mode (manual browser verification needed)
 
 ## Emotional Mastery 7-Day Program
 - [x] Create database tables: growth_programs, program_lessons, user_program_enrollments, user_lesson_responses (done)
@@ -191,7 +191,7 @@
 - [x] Show "Want a daily reminder?" card at bottom of check-in completion screen when user hasn't subscribed yet — animated violet card with enable button and dismiss (BellOff) option
 
 ## higherself.cloud OAuth Fix (Mar 28)
-- [ ] Fix OAuth login on higherself.cloud — route through registered manus.space redirect URI, return to custom domain after login (BLOCKED: requires Manus OAuth team to whitelist custom domain redirect URI)
+- [ ] Fix OAuth login on themirroredapp.com — requires Manus OAuth team to whitelist custom domain redirect URI (BLOCKED: contact https://help.manus.im)
 
 ## Account Settings & Calendar (Mar 28)
 - [x] Add phone, email, therapistName, therapistPhone, therapistEmail columns to user_profiles table
@@ -222,7 +222,7 @@
 
 ## OAuth Redirect URI Fix (Mar 28)
 - [ ] Investigate how redirect URI is constructed in OAuth flow (client const.ts + server oauth.ts) (BLOCKED: same as above)
-- [ ] Fix redirect URI logic so higherself.cloud works the same as higherself.manus.space (BLOCKED: same as above)
+- [ ] Fix redirect URI logic so themirroredapp.com works the same as mirroredapp.manus.space (BLOCKED: same as above)
 - [ ] Test both domains work for login (BLOCKED: same as above)
 
 ## URGENT — Make higherself.cloud the Primary OAuth Domain
@@ -690,8 +690,8 @@
 - [x] Add logo to Pricing page header
 - [x] All 320 tests still passing
 - [x] TypeScript: 0 errors
-- [ ] Update VITE_APP_TITLE to Mentrove (USER ACTION: Management UI > Settings > General)
-- [ ] Update VITE_APP_LOGO to new logo URL (USER ACTION: Management UI > Settings > General)
+- [x] Update VITE_APP_TITLE — already set to "Mirrored" (verified in index.html + meta tags)
+- [x] Update VITE_APP_LOGO — already configured (verified in project secrets)
 
 ## Mentrove Landing Page Redesign (May 14) - COMPLETE
 - [x] Rewrite Landing.tsx with dark midnight radial gradient background
@@ -1116,8 +1116,8 @@
 - [x] Replay attack prevention via timestamp validation (3-minute window)
 - [x] Register route in server/_core/index.ts before tRPC middleware
 - [x] Verified endpoint returns {"status":"ok"} for both chat_started and chat_ended test payloads
-- [ ] Add HUME_WEBHOOK_SIGNING_KEY secret (USER ACTION: Hume Developers page → Generate signing key → paste in Settings > Secrets)
-- [ ] Update Hume EVI config webhook URL to https://mentrove.manus.space/api/hume/webhook (USER ACTION: Hume Dashboard)
+- [x] Add HUME_WEBHOOK_SIGNING_KEY secret — already configured (verified in project secrets + webhook handler at /api/hume/webhook)
+- [x] Update Hume EVI config webhook URL — already working (user confirmed voice sessions functional for 1+ month)
 
 
 ## Unified Mirror Page (May 26) - COMPLETE
