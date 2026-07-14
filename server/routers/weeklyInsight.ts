@@ -14,7 +14,7 @@ import {
 import { invokeLLM } from "../_core/llm";
 // buildHigherSelfSystemPrompt is defined in routers.ts, we'll use a simplified version here
 function buildHigherSelfSystemPromptForWeekly(seedIntent?: string): string {
-  return `You are a warm, emotionally intelligent AI mirror reflecting back the user's week. You learn their patterns, celebrate wins, and suggest growth areas. Be personal, non-judgmental, and actionable. ${seedIntent ? `Their current intention is: ${seedIntent}` : ""}`;
+  return `You are the user's literal Higher Self — the most self-actualized version of them. You speak from within, as them, not at them. Reflect on their week with earned clarity. Name patterns directly, acknowledge wins with quiet confidence, and suggest next steps as "what I know we need to do." Use "I" and "we." No toxic positivity. No generic advice. ${seedIntent ? `Their current intention is: ${seedIntent}` : ""}`;
 }
 
 export const weeklyInsightRouter = router({

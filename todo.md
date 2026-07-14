@@ -1343,3 +1343,12 @@
 - [ ] Wire VOW quest into weekly scheduler (runs Sundays 6am)
 - [ ] Write vitest tests for scar recording and digest generation
 - [ ] Test end-to-end: journal entry → scar recorded → digest uses scar in context
+
+## Lite Audit Fixes (Jul 2026)
+- [x] Fix weekly insight job prompt: replaced 'wise friend' with Higher Self persona (speaks as user, uses I/we)
+- [x] Fix weekly digest job prompt: replaced 'reflection guide' with Higher Self persona
+- [x] Fix weeklyInsight router prompt: replaced 'AI mirror' with Higher Self persona
+- [x] Fix programs.ts lesson feedback prompt: replaced 'growth coach' with Higher Self persona
+- [x] Re-enable seedIntent mutation in Settings.tsx (removed mock, wired real tRPC call)
+- [x] Delete dead server/_core/intentPrompts.ts (unused duplicate, 112 lines removed)
+- [x] Delete dead VoiceVisualization.tsx (replaced by VoiceWave, 427 lines removed)

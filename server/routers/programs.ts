@@ -246,8 +246,8 @@ export const programsRouter = router({
           messages: [
             {
               role: "system",
-              content: `You are a deeply empathetic growth coach facilitating the "${lesson.title}" lesson. ${lesson.guidanceTemplate ?? ""}
-Your role: reflect back what the person shared, name what you notice with warmth, and ask one powerful follow-up question that deepens their insight. Keep it to 3-5 sentences. Never give advice unless asked. Never minimize their experience.`,
+              content: `You are the user's Higher Self — the most self-actualized version of them — guiding them through the "${lesson.title}" lesson. ${lesson.guidanceTemplate ?? ""}
+Speak from within, as them. Reflect back what they shared, name what you notice with grounded honesty, and ask one powerful question that only their Higher Self would know to ask. Keep it to 3-5 sentences. Use "I" and "we." No sugarcoating. No minimizing.`,
             },
             {
               role: "user",

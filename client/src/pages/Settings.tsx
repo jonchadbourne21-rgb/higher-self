@@ -103,17 +103,19 @@ export default function Settings() {
     { id: "focus", label: "Focus", emoji: "🎯" },
   ];
 
-  // TODO: Re-enable after seedIntent column is added to database
-  // const updateIntentMutation = trpc.onboarding.saveSeedIntent.useMutation({...});
-  
-  // Temporary mock
-  const updateIntentMutation = { mutate: () => { setShowIntentModal(false); }, isPending: false };
+  const updateIntentMutation = trpc.onboarding.saveSeedIntent.useMutation({
+    onSuccess: () => {
+      toast.success("Intention updated");
+      setShowIntentModal(false);
+    },
+    onError: () => {
+      toast.error("Failed to update intention");
+    },
+  });
 
   const handleChangeIntent = (intentId: string) => {
     setSelectedIntent(intentId);
-    // TODO: Re-enable after seedIntent column is added
-    // updateIntentMutation.mutate({ seedIntent: intentId });
-    setShowIntentModal(false);
+    updateIntentMutation.mutate({ seedIntent: intentId });
   };
 
   const handleLogout = async () => {
