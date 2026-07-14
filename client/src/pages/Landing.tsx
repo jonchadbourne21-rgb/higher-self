@@ -157,6 +157,17 @@ export default function Landing() {
           </a>
         </div>
 
+        {/* Demo mode link */}
+        <div className="text-center">
+          <a
+            href="/demo"
+            className="text-xs font-medium transition-opacity hover:opacity-80"
+            style={{ color: "oklch(0.55 0.08 280)" }}
+          >
+            or <span className="underline underline-offset-2">explore demo</span> without signing up
+          </a>
+        </div>
+
         {/* FAQ link */}
         <div className="text-center pt-1">
           <a

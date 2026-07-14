@@ -16,6 +16,7 @@ import { useRef, useCallback, useState } from "react";
 // Note: Swipe-between-tabs gesture removed — it conflicted with sliders and horizontal touch interactions
 import MirroredHeader from "./MirroredHeader";
 import TrialBanner from "./TrialBanner";
+import { isDemoMode, disableDemoMode } from "@/lib/demo";
 
 const navItems = [
   { path: "/home", icon: Home, label: "Dashboard" },
@@ -84,6 +85,20 @@ export default function AppShell({ children, noScroll }: AppShellProps) {
     >
       {/* Mirrored Wordmark Header */}
       <MirroredHeader subtitle={getSubtitle(location)} />
+
+      {/* Demo mode banner */}
+      {isDemoMode() && (
+        <div className="flex items-center justify-between px-4 py-1.5 text-xs font-medium" style={{ background: "oklch(0.25 0.12 55 / 0.9)", color: "oklch(0.90 0.10 55)" }}>
+          <span>Demo Mode — exploring as a sample user</span>
+          <button
+            onClick={() => { disableDemoMode(); window.location.href = "/"; }}
+            className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide"
+            style={{ background: "oklch(0.90 0.10 55)", color: "oklch(0.15 0.05 55)" }}
+          >
+            Exit
+          </button>
+        </div>
+      )}
 
       {/* Trial banner — visible during 10-day trial */}
       <TrialBanner />

@@ -11,10 +11,18 @@ export const router = t.router;
 export const publicProcedure = t.procedure;
 
 const requireUser = t.middleware(async opts => {
-  const { ctx, next } = opts;
+  const { ctx, next, type } = opts;
 
   if (!ctx.user) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
+  }
+
+  // Block all mutations for demo users globally
+  if (ctx.isDemo && type === "mutation") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "This action is not available in demo mode. Sign up to use all features!",
+    });
   }
 
   return next({

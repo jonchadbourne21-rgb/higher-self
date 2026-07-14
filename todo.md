@@ -95,10 +95,11 @@
 - [x] Fixed all other table schemas to match Drizzle definitions
 
 ## Demo Mode (Temporary)
-- [ ] Create demo mode to bypass OAuth login
-- [ ] Add demo user with sample data
-- [ ] Update routing to support demo mode
-- [ ] Test all 11 pages in demo mode
+- [x] Create demo mode to bypass OAuth login (x-demo-mode header + DEMO_USER in context.ts)
+- [x] Update routing to support demo mode (/demo route, demo banner in AppShell, exit button, Landing "explore demo" link)
+- [x] Add read-only enforcement for demo mode (isDemo flag in context + global mutation block in requireUser middleware — all protectedProcedure mutations are blocked for demo users)
+- [ ] Seed sample demo data for key surfaces (home, journal, calendar, programs) or add demo-data layer
+- [ ] Test all 11 pages in demo mode (manual testing needed)
 
 ## Emotional Mastery 7-Day Program
 - [x] Create database tables: growth_programs, program_lessons, user_program_enrollments, user_lesson_responses (done)

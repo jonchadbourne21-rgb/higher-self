@@ -8,6 +8,7 @@ export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
   res: CreateExpressContextOptions["res"];
   user: User | null;
+  isDemo?: boolean;
 };
 
 /**
@@ -20,10 +21,33 @@ export type TrpcContext = {
  * 3. Check session in database (catches revocations)
  * 4. Return user data or null
  */
+// Demo user for bypassing OAuth in demo mode
+const DEMO_USER: User = {
+  id: 999999,
+  openId: "demo-user-readonly",
+  name: "Demo User",
+  email: "demo@mirrored.app",
+  loginMethod: "demo",
+  role: "user",
+  onboardingCompleted: true,
+  seedIntent: "Inner Peace",
+  lastSessionId: null,
+  createdAt: new Date("2025-01-01"),
+  updatedAt: new Date(),
+  lastSignedIn: new Date(),
+  welcomeSpinUsed: true,
+  lastStreakSpinDate: null,
+};
+
 export async function createContext(
   opts: CreateExpressContextOptions
 ): Promise<TrpcContext> {
   let user: User | null = null;
+
+  // Demo mode — return a read-only demo user without hitting the database
+  if (opts.req.headers["x-demo-mode"] === "true") {
+    return { req: opts.req, res: opts.res, user: DEMO_USER, isDemo: true };
+  }
 
   try {
     // First try new JWT-based authentication

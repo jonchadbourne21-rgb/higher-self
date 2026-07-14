@@ -1,5 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { isDemoMode } from "@/lib/demo";
 import { motion } from "framer-motion";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useLocation, Link } from "wouter";
@@ -127,6 +128,7 @@ export default function Home() {
   }, [welcomeSpin?.available, isAuthenticated, loading]);
 
   useEffect(() => {
+    if (isDemoMode()) return; // Skip redirects in demo mode
     if (!loading && !isAuthenticated) navigate("/");
     if (!loading && isAuthenticated && !(user as any)?.onboardingCompleted) navigate("/onboarding");
   }, [isAuthenticated, loading, user, navigate]);

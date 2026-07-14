@@ -34,6 +34,7 @@ import ProgramDetail from "./pages/ProgramDetail";
 import ProgramInsight from "./pages/ProgramInsight";
 import VoiceHistory from "./pages/VoiceHistory";
 import TimeCapsule from "./pages/TimeCapsule";
+import Demo from "./pages/Demo";
 import { useRef, useEffect } from "react";
 import { usePageMetadata } from "@/lib/metadata";
 import { injectStructuredData } from "@/lib/structuredData";
@@ -83,7 +84,7 @@ function AuthenticatedRouter() {
   const variants = makeVariants(directionRef.current);
 
   // Check if we're on an authenticated route that needs AppShell
-  const isAuthenticatedRoute = !["/", "/onboarding", "/quick-onboarding", "/full-onboarding", "/faq", "/privacy", "/terms", "/pricing"].includes(location);
+  const isAuthenticatedRoute = !["/", "/onboarding", "/quick-onboarding", "/full-onboarding", "/faq", "/privacy", "/terms", "/pricing", "/demo"].includes(location);
 
   return (
     <>
@@ -147,6 +148,7 @@ function AuthenticatedRouter() {
                 <Route path="/privacy" component={Privacy} />
                 <Route path="/terms" component={Terms} />
                 <Route path="/pricing" component={Pricing} />
+                <Route path="/demo" component={Demo} />
                 <Route path="/404" component={NotFound} />
                 <Route component={NotFound} />
               </Switch>

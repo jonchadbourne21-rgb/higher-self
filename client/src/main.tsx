@@ -1,4 +1,5 @@
 import { trpc } from "@/lib/trpc";
+import { isDemoMode } from "@/lib/demo";
 import { UNAUTHED_ERR_MSG } from '@shared/const';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, TRPCClientError } from "@trpc/client";
@@ -11,6 +12,7 @@ import "./index.css";
 const queryClient = new QueryClient();
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {
+  if (isDemoMode()) return; // Don't redirect in demo mode
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
 
@@ -64,8 +66,11 @@ const trpcClient = trpc.createClient({
       url: "/api/trpc",
       transformer: superjson,
       headers() {
+        const headers: Record<string, string> = {};
         const token = getStoredToken();
-        return token ? { Authorization: `Bearer ${token}` } : {};
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+        if (isDemoMode()) headers["x-demo-mode"] = "true";
+        return headers;
       },
       fetch(input, init) {
         return globalThis.fetch(input, {
