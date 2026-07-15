@@ -155,6 +155,8 @@ export const dailyCheckIns = mysqlTable("daily_check_ins", {
   stress: int("stress").notNull(),
   // Gratitude note
   gratitude: text("gratitude"),
+  // Theme key used for today's prompt (for exclusion logic)
+  reflectionTheme: varchar("reflectionTheme", { length: 50 }),
   // Dynamic AI-generated reflection prompt (rotates daily, e.g. gratitude/surprise/joy)
   reflectionPrompt: text("reflectionPrompt"),
   // User's answer to the AI-generated reflection prompt

@@ -122,6 +122,7 @@ export default function CheckIn() {
       mood,
       energy,
       stress,
+      reflectionTheme: dailyPromptData?.theme || undefined,
       reflectionPrompt,
       reflectionAnswer,
       followUpQuestion,

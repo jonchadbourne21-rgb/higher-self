@@ -276,19 +276,13 @@ export const appRouter = router({
     }),
 
     // Returns a fresh AI-generated reflection prompt for today
-    // Rotates through themes: gratitude, surprise, joy, unexpected, small wins, etc.
+    // Uses RAG memories + personality profile + theme exclusion for deep personalization
     getDailyPrompt: protectedProcedure.query(async ({ ctx }) => {
       const profile = await getUserProfile(ctx.user.id);
       const name = profile?.preferredName || "friend";
       const recentCheckIns = await getRecentCheckIns(ctx.user.id, 7);
-      const recentAnswers = recentCheckIns
-        .slice(0, 3)
-        .map((c) => c.reflectionAnswer || c.gratitude)
-        .filter(Boolean)
-        .join(" | ");
 
-      // Use day-of-year to deterministically rotate theme, but let AI craft the exact question
-      const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+      // ─── Theme exclusion: skip themes used in last 3 check-ins ───
       const themes = [
         "gratitude — something you're genuinely thankful for today",
         "surprise — something unexpected that happened or that you noticed",
@@ -301,28 +295,56 @@ export const appRouter = router({
         "energy — what's been draining you vs. what's been filling you up",
         "intention — what you want to bring more of into your life right now",
       ];
-      const theme = themes[dayOfYear % themes.length];
+      const recentThemes = recentCheckIns
+        .slice(0, 3)
+        .map((c) => (c as any).reflectionTheme)
+        .filter(Boolean) as string[];
+      const available = themes.filter((t) => !recentThemes.some((rt) => t.startsWith(rt)));
+      const pool = available.length > 0 ? available : themes;
+      const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+      const theme = pool[dayOfYear % pool.length];
+      const themeKey = theme.split(" — ")[0]; // e.g. "gratitude"
+
+      // ─── RAG: pull relevant memories for personalization ───
+      const [memories, personality] = await Promise.all([
+        retrieveMemories({
+          userId: ctx.user.id,
+          query: `${themeKey} reflection personal growth`,
+          topK: 3,
+          sourceTypes: ["journal", "checkin", "voice"],
+        }),
+        getPersonalityProfile(ctx.user.id),
+      ]);
+      const memoryContext = formatMemoriesForPrompt(memories);
+      const personalityContext = formatPersonalityForPrompt(personality);
+
+      // ─── Recent answers for continuity ───
+      const recentAnswers = recentCheckIns
+        .slice(0, 3)
+        .map((c) => c.reflectionAnswer || c.gratitude)
+        .filter(Boolean)
+        .join(" | ");
 
       try {
-        // Route to Claude Sonnet for user-facing features
         const res = await invokeLLM({
           messages: [
             {
               role: "system",
-              content: `You write short, personal, emotionally intelligent reflection prompts for a growth app. The user's name is ${name}. Today's theme is: ${theme}. ${recentAnswers ? `Recent reflections for context: "${recentAnswers}"` : ""} Write a single question — conversational, specific, never generic. Under 20 words. No emojis. No quotation marks. Just the question.`,
+              content: `You write short, personal, emotionally intelligent reflection prompts for a growth app. The user's name is ${name}. Today's theme is: ${theme}.${recentAnswers ? `\n\nRecent reflections (avoid repeating these angles): "${recentAnswers}"` : ""}${memoryContext}${personalityContext}\n\nWrite a single question — conversational, specific to THEIR life, never generic. Reference something concrete from their history if available. Under 20 words. No emojis. No quotation marks. Just the question.`,
             },
             { role: "user", content: "Write today's reflection prompt." },
           ],
         });
         const rawContent = res.choices[0]?.message?.content;
         const prompt = typeof rawContent === "string" ? rawContent.trim().replace(/^"|"$/g, "") : `What's one thing you're grateful for today?`;
-        return { prompt, theme };
+        return { prompt, theme: themeKey };
       } catch {
-        return { prompt: `What's one thing you're grateful for today?`, theme };
+        return { prompt: `What's one thing you're grateful for today?`, theme: themeKey };
       }
     }),
 
     // Generates a personalized follow-up question based on mood, stress, energy + reflection answer
+    // Enhanced with RAG memories + personality profile for deep personalization
     generateFollowUp: protectedProcedure
       .input(z.object({
         mood: z.number().min(1).max(10),
@@ -334,13 +356,26 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         const profile = await getUserProfile(ctx.user.id);
         const name = profile?.preferredName || "friend";
+
+        // ─── RAG: semantic search using their reflection answer as query ───
+        const [memories, personality] = await Promise.all([
+          retrieveMemories({
+            userId: ctx.user.id,
+            query: input.reflectionAnswer,
+            topK: 3,
+            sourceTypes: ["journal", "checkin", "voice", "program_response"],
+          }),
+          getPersonalityProfile(ctx.user.id),
+        ]);
+        const memoryContext = formatMemoriesForPrompt(memories);
+        const personalityContext = formatPersonalityForPrompt(personality);
+
         try {
-          // Route to Claude Sonnet for user-facing features
-        const res = await invokeLLM({
+          const res = await invokeLLM({
             messages: [
               {
                 role: "system",
-                content: `You are a deeply perceptive growth coach. The user's name is ${name}. Based on their check-in data, craft ONE powerful follow-up question that goes deeper into what's really going on for them. The question should feel like it comes from someone who truly sees them — not a therapist, not a life coach script. A real human who notices things. Under 25 words. No emojis. Just the question.`,
+                content: `You are a deeply perceptive growth coach. The user's name is ${name}. Based on their check-in data AND their history, craft ONE powerful follow-up question that goes deeper into what's really going on for them. The question should feel like it comes from someone who truly sees them — not a therapist, not a life coach script. A real human who notices things and remembers.${memoryContext}${personalityContext}\n\nUnder 25 words. No emojis. Just the question. If their memories reveal a pattern or contradiction with today's answer, ask about THAT.`,
               },
               {
                 role: "user",
@@ -370,6 +405,7 @@ export const appRouter = router({
           stress: z.number().min(1).max(10),
           gratitude: z.string().optional(),
           reflection: z.string().optional(),
+          reflectionTheme: z.string().optional(),
           reflectionPrompt: z.string().optional(),
           reflectionAnswer: z.string().optional(),
           followUpQuestion: z.string().optional(),
