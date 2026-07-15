@@ -21,6 +21,7 @@ import {
   Lock,
   CalendarClock,
   Moon,
+  Mic,
   NotebookPen,
 } from "lucide-react";
 
@@ -239,6 +240,31 @@ export default function ProgramDetail() {
 
   const handleEnroll = () => enroll.mutate({ programId });
 
+  const completeVoiceDay = trpc.programs.completeVoiceDay.useMutation({
+    onSuccess: (res) => {
+      utils.programs.getCurrentLesson.invalidate({ programId });
+      utils.programs.getProgress.invalidate({ programId });
+      utils.programs.myEnrollments.invalidate();
+      const day = currentLessonData?.lesson.day ?? 1;
+      if (res.streakMilestone) {
+        toast.success(`\uD83D\uDD25 ${res.streakMilestone.days}-Day Streak! +${res.streakMilestone.points} bonus points!`, { duration: 5000 });
+      }
+      try {
+        sessionStorage.setItem(
+          `program_insight_${programId}_${day}`,
+          JSON.stringify({
+            aiFeedback: res.aiFeedback,
+            userReflection: "[Voice session completed]",
+            nextLesson: res.nextLesson,
+            unlockAt: res.unlockAt,
+          })
+        );
+      } catch {}
+      navigate(`/programs/${programId}/insight/${day}`);
+    },
+    onError: (err) => toast.error(err.message ?? "Could not complete voice day."),
+  });
+
   const handleSubmit = () => {
     if (!currentLessonData?.lesson) return;
     submitLesson.mutate({
@@ -246,6 +272,18 @@ export default function ProgramDetail() {
       lessonId: currentLessonData.lesson.id,
       day: currentLessonData.lesson.day,
       reflection,
+    });
+  };
+
+  const handleStartVoiceSession = () => {
+    navigate("/mirror?tab=voice");
+  };
+
+  const handleCompleteVoiceDay = () => {
+    if (!currentLessonData?.lesson) return;
+    completeVoiceDay.mutate({
+      programId,
+      day: currentLessonData.lesson.day,
     });
   };
 
@@ -405,7 +443,113 @@ export default function ProgramDetail() {
       );
     }
 
-    // ── ACTIVE LESSON — reflection input ────────────────────────────────────
+    // ── VOICE DAY — prompt user to do a voice session ─────────────────────────
+    if (currentLessonData.isVoiceDay) {
+      return (
+        <AppShell>
+          <div className="max-w-2xl mx-auto px-4 py-8 pb-28">
+            <button
+              onClick={() => setShowLessonView(false)}
+              className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-sm mb-6 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              {program.name}
+            </button>
+
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-semibold text-primary uppercase tracking-widest">
+                Day {lesson.day} of {program.durationDays}
+              </span>
+              <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full transition-all"
+                  style={{ width: `${Math.round(((currentDay - 1) / program.durationDays) * 100)}%` }}
+                />
+              </div>
+              <span className="text-xs text-muted-foreground">{progress?.percentComplete ?? 0}%</span>
+            </div>
+
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+              <h1 className="text-2xl font-bold text-foreground leading-snug">{lesson.title}</h1>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="rounded-xl border border-border/40 bg-card/60 p-5 mb-5"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <BookOpen className="w-4 h-4 text-primary" />
+                <span className="text-xs font-semibold text-primary uppercase tracking-wider">Today's Concept</span>
+              </div>
+              <p className="text-sm text-foreground/90 leading-relaxed">{lesson.concept}</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="rounded-xl border border-primary/20 bg-primary/5 p-5 mb-5"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span className="text-xs font-semibold text-primary uppercase tracking-wider">Your Exercise</span>
+              </div>
+              <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line">{lesson.exercisePrompt}</p>
+            </motion.div>
+
+            {/* Voice Session CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-6 mb-5 text-center"
+            >
+              <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center bg-primary/10 border border-primary/30">
+                <Mic className="w-7 h-7 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Today is a Voice Day</h3>
+              <p className="text-sm text-muted-foreground mb-5 max-w-sm mx-auto">
+                This lesson is best experienced through a live conversation with your Mirror.
+                Speak your truth aloud — the Mirror will guide you.
+              </p>
+              <Button
+                onClick={handleStartVoiceSession}
+                className="gap-2 mb-3 w-full max-w-xs mx-auto"
+                size="lg"
+              >
+                <Mic className="w-4 h-4" />
+                Start Voice Session
+              </Button>
+              <p className="text-xs text-muted-foreground mt-3">After your session, come back here to mark this day complete.</p>
+            </motion.div>
+
+            {/* Mark complete after voice session */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Button
+                variant="outline"
+                onClick={handleCompleteVoiceDay}
+                disabled={completeVoiceDay.isPending}
+                className="w-full gap-2"
+              >
+                {completeVoiceDay.isPending ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Completing...</>
+                ) : (
+                  <><CheckCircle2 className="w-4 h-4" /> I've Completed My Voice Session</>
+                )}
+              </Button>
+            </motion.div>
+          </div>
+        </AppShell>
+      );
+    }
+
+    // ── ACTIVE LESSON — reflection input (text days) ────────────────────────────
     return (
       <AppShell>
         <div className="max-w-2xl mx-auto px-4 py-8 pb-28">

@@ -170,9 +170,96 @@ export const programsRouter = router({
         enrollment,
         response: response ?? null,
         isCompleted: !!response,
+        isVoiceDay: !!lesson.isVoiceDay,
         isLocked,
         unlockAt: unlockAt ? unlockAt.toISOString() : null,
         nextLesson: nextLessonRaw ? { day: nextLessonRaw.day, title: nextLessonRaw.title } : null,
+      };
+    }),
+
+  /** Complete a voice day — voice session counts as the lesson reflection */
+  completeVoiceDay: protectedProcedure
+    .input(
+      z.object({
+        programId: z.number().int().positive(),
+        day: z.number().int().min(1).max(90),
+        voiceSessionId: z.number().int().positive().optional(),
+        summary: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const enrollment = await getUserEnrollment(ctx.user.id, input.programId);
+      if (!enrollment) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You are not enrolled in this program" });
+      }
+      const currentDay = enrollment.currentDay ?? 1;
+      if (input.day !== currentDay) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "This day is not available." });
+      }
+      const existing = await getLessonResponse(ctx.user.id, input.programId, input.day);
+      if (existing) {
+        throw new TRPCError({ code: "CONFLICT", message: "You have already completed this day." });
+      }
+      const lesson = await getLessonByDay(input.programId, input.day);
+      if (!lesson) throw new TRPCError({ code: "NOT_FOUND", message: "Lesson not found" });
+      if (!lesson.isVoiceDay) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "This is not a voice day." });
+      }
+      // Save a response marking the voice session as the reflection
+      const voiceReflection = input.summary || "[Completed via voice session with the Mirror]";
+      const aiFeedback = "You showed up and spoke your truth aloud today. That takes courage. The Mirror heard you.";
+      await saveLessonResponse({
+        userId: ctx.user.id,
+        programId: input.programId,
+        lessonId: lesson.id,
+        day: input.day,
+        userReflection: voiceReflection,
+        aiFeedback,
+      });
+      // Advance enrollment
+      const program = await getProgramById(input.programId);
+      const nextDay = input.day + 1;
+      const isLastDay = program ? nextDay > program.durationDays : false;
+      await updateEnrollmentProgress(ctx.user.id, input.programId, {
+        status: isLastDay ? "completed" : "in_progress",
+        currentDay: isLastDay ? input.day : nextDay,
+        startedAt: enrollment.startedAt ?? new Date(),
+        ...(isLastDay ? { completedAt: new Date() } : {}),
+      });
+      // Streak + rewards (same logic as submitLessonResponse)
+      const streak = await computeProgramStreak(ctx.user.id, input.programId);
+      let streakMilestone: { days: number; points: number } | null = null;
+      if (streak === 7) {
+        await addRewardPoints(ctx.user.id, 15, "checkin", `program_streak_7_${input.programId}_${Date.now()}`);
+        streakMilestone = { days: 7, points: 15 };
+      } else if (streak === 14) {
+        await addRewardPoints(ctx.user.id, 25, "checkin", `program_streak_14_${input.programId}_${Date.now()}`);
+        streakMilestone = { days: 14, points: 25 };
+      }
+      let completionReward: { points: number; grantActivated: boolean } | null = null;
+      if (isLastDay) {
+        const rewardPoints = (program?.durationDays ?? 21) <= 21 ? 25 : (program?.durationDays ?? 21) <= 35 ? 50 : 75;
+        await addRewardPoints(ctx.user.id, rewardPoints, "checkin", `program_completion_${input.programId}_${Date.now()}`);
+        const grant = await createRewardGrant(ctx.user.id, "month_pro", "spin");
+        completionReward = { points: rewardPoints, grantActivated: grant.activated };
+      }
+      let nextLesson: { day: number; title: string } | null = null;
+      if (!isLastDay) {
+        const nl = await getLessonByDay(input.programId, nextDay);
+        if (nl) nextLesson = { day: nl.day, title: nl.title };
+      }
+      const submittedAt = new Date();
+      const unlockAt = isLastDay ? null : getUnlockAt(submittedAt);
+      return {
+        success: true,
+        aiFeedback,
+        isCompleted: isLastDay,
+        nextDay: isLastDay ? null : nextDay,
+        nextLesson,
+        completionReward,
+        streakMilestone,
+        streak,
+        unlockAt: unlockAt ? unlockAt.toISOString() : null,
       };
     }),
 

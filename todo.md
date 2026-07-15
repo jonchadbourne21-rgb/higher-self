@@ -1431,3 +1431,10 @@
 - [x] Write Hume voice scripts for Days 3, 12, 21 (guided visualization / check-in / closing ceremony)
 - [x] Seed program into database (id=180002, category=self-awareness)
 - [x] Verify 21 lessons inserted correctly
+
+## Program Voice Days (Restructure)
+- [ ] Add isVoiceDay boolean column to program_lessons table
+- [ ] Update IFS seed days 3, 12, 21 to mark isVoiceDay = true
+- [ ] Update getCurrentLesson to return isVoiceDay flag to frontend
+- [ ] Update ProgramDetail.tsx to show voice session CTA on voice days (instead of text reflection)
+- [ ] Allow voice session completion to count as lesson completion for voice days

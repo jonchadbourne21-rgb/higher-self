@@ -306,6 +306,8 @@ export const programLessons = mysqlTable("program_lessons", {
   concept: text("concept").notNull(),
   exercisePrompt: text("exercisePrompt").notNull(),
   guidanceTemplate: text("guidanceTemplate"),
+  // If true, this day prompts a voice session with the Mirror instead of text reflection
+  isVoiceDay: boolean("isVoiceDay").default(false),
   order: int("order").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
