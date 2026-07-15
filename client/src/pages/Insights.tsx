@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
 import { Sparkles, RefreshCw, Layers } from "lucide-react";
+import { AIThinking, AIThinkingInline } from "@/components/AIThinking";
 import { format } from "date-fns";
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
@@ -103,7 +104,7 @@ export default function Insights() {
               className="w-full rounded-2xl py-5 glow-gold"
             >
               {generateMutation.isPending ? (
-                <span className="animate-pulse">Analyzing your patterns...</span>
+                <AIThinkingInline messages={["Analyzing your patterns…", "Reading your story…", "Connecting the dots…"]} />
               ) : (
                 <><Sparkles size={16} className="mr-2" /> Generate Insight</>
               )}
@@ -188,7 +189,7 @@ export default function Insights() {
               className="w-full rounded-2xl py-5"
             >
               {generateMutation.isPending ? (
-                <span className="animate-pulse">Generating...</span>
+                <AIThinkingInline messages={["Generating new insight…", "Reviewing your growth…", "Finding fresh patterns…"]} />
               ) : (
                 <><RefreshCw size={16} className="mr-2" /> Generate New Insight</>
               )}

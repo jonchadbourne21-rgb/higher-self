@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { format, isToday, isYesterday, isThisWeek, isThisMonth } from "date-fns";
 import { toast } from "sonner";
+import { AIThinkingInline } from "@/components/AIThinking";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { RewardWheel } from "@/components/RewardWheel";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -697,7 +698,7 @@ export default function Journal() {
                 size="lg"
               >
                 {createMutation.isPending ? (
-                  <span className="animate-pulse">Saving & reflecting...</span>
+                  <AIThinkingInline messages={["Saving & reflecting…", "Your Higher Self is reading…", "Finding connections…"]} />
                 ) : (
                   <><Sparkles size={17} className="mr-2" /> Save Entry</>
                 )}

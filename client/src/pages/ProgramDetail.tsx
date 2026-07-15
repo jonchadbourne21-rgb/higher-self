@@ -24,7 +24,7 @@ import {
   Mic,
   NotebookPen,
 } from "lucide-react";
-
+import { AIThinkingInline } from "@/components/AIThinking";
 const CATEGORY_LABELS: Record<string, string> = {
   "emotional-mastery": "Emotional Mastery",
   "building-presence": "Building Presence",
@@ -629,7 +629,7 @@ export default function ProgramDetail() {
                 className="gap-2"
               >
                 {submitLesson.isPending ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Getting insight…</>
+                  <AIThinkingInline messages={["Getting your insight…", "Reflecting on your response…", "Connecting to your journey…"]} />
                 ) : (
                   <><Sparkles className="w-4 h-4" /> Submit & Reflect</>
                 )}

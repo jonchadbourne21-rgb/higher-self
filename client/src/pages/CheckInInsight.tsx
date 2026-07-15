@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
 import { ArrowLeft, Loader2, TrendingUp } from "lucide-react";
+import { AIThinking } from "@/components/AIThinking";
 import { Streamdown } from "streamdown";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -133,10 +134,13 @@ export default function CheckInInsight() {
 
           {isLoadingWeekly ? (
             <div className="bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30 rounded-2xl p-6 border border-rose-200 dark:border-rose-800 min-h-[250px] flex items-center justify-center">
-              <div className="flex flex-col items-center gap-2">
-                <Loader2 size={32} className="animate-spin text-rose-600" />
-                <p className="text-sm text-muted-foreground">Analyzing your week...</p>
-              </div>
+              <AIThinking messages={[
+                "Analyzing your week…",
+                "Spotting patterns in your journey…",
+                "Connecting this week to your story…",
+                "Finding what matters most…",
+                "Your Higher Self is reflecting…",
+              ]} />
             </div>
           ) : weeklyInsight ? (
             <div className="space-y-4">

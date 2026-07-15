@@ -1438,3 +1438,10 @@
 - [ ] Update getCurrentLesson to return isVoiceDay flag to frontend
 - [ ] Update ProgramDetail.tsx to show voice session CTA on voice days (instead of text reflection)
 - [ ] Allow voice session completion to count as lesson completion for voice days
+
+## AI Loading States & User Feedback
+- [x] Create reusable AIThinking component with rotating status messages and animation
+- [x] Add loading state to check-in AI reflection generation
+- [x] Add loading state to journal AI perspective generation
+- [x] Add loading state to weekly insights generation
+- [x] Add loading state to program lesson AI feedback

@@ -7,6 +7,7 @@ import { useLocation } from "wouter";
 import { toast } from "sonner";
 import AppShell from "@/components/AppShell";
 import { ChevronLeft, ChevronRight, Sparkles, BellRing, BellOff, Loader2 } from "lucide-react";
+import { AIThinking } from "@/components/AIThinking";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Streamdown } from "streamdown";
 
@@ -354,9 +355,12 @@ export default function CheckIn() {
               {step === 1 && (
                 <div className="space-y-5">
                   {promptLoading || !reflectionPrompt ? (
-                    <div className="glass rounded-2xl p-6 flex items-center gap-3">
-                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                      <p className="text-sm text-muted-foreground">Crafting today's question…</p>
+                    <div className="glass rounded-2xl p-6">
+                      <AIThinking messages={[
+                        "Crafting today's question…",
+                        "Reviewing your recent journey…",
+                        "Finding the right thread to pull…",
+                      ]} interval={2500} />
                     </div>
                   ) : (
                     <motion.div
@@ -393,9 +397,12 @@ export default function CheckIn() {
               {step === 2 && (
                 <div className="space-y-5">
                   {generateFollowUpMutation.isPending || !followUpQuestion ? (
-                    <div className="glass rounded-2xl p-6 flex items-center gap-3">
-                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                      <p className="text-sm text-muted-foreground">Reading between the lines…</p>
+                    <div className="glass rounded-2xl p-6">
+                      <AIThinking messages={[
+                        "Reading between the lines…",
+                        "Noticing what you didn't say…",
+                        "Going deeper…",
+                      ]} interval={2500} />
                     </div>
                   ) : (
                     <motion.div
@@ -453,7 +460,7 @@ export default function CheckIn() {
               className="flex-1 rounded-2xl py-5 glow-gold"
             >
               {submitMutation.isPending ? (
-                <span className="animate-pulse">Reflecting…</span>
+                <span className="inline-flex items-center gap-2"><Loader2 size={16} className="animate-spin" /> Reflecting…</span>
               ) : (
                 <><Sparkles size={16} className="mr-2" /> Complete Check-in</>
               )}
