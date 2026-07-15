@@ -1359,3 +1359,75 @@
 
 ## Bug Fix — Settings seedIntent Value Mismatch (Jul 14)
 - [x] Fix Settings.tsx handleChangeIntent to pass label ("Inner Peace") instead of id ("inner-peace") to match buildIntentSpecificPrompt expectations
+
+
+## iOS Mobile App (Expo/React Native) — App Store Release
+
+### Phase 1: Project Setup & Configuration
+- [ ] Initialize Expo project with Manus mobile template
+- [ ] Configure app.config.ts (name: "Mirrored", bundle ID, scheme)
+- [ ] Set up dark theme matching web app (deep navy/midnight purple OKLCH palette)
+- [ ] Configure custom fonts (Cormorant Garamond + Inter)
+- [ ] Generate app icon (1024x1024) and splash screen from existing branding
+- [ ] Set up tRPC client pointing to mirroredapp.manus.space backend
+
+### Phase 2: Navigation & Layout
+- [ ] Configure 5-tab navigation (Home, Habits, Mirror, Journal, Programs)
+- [ ] Add icon mappings for all tabs (SF Symbols → Material Icons)
+- [ ] Build header component with MIRRORED wordmark + mandala O
+- [ ] Add settings gear icon in header → Settings screen
+- [ ] Add rewards/time capsule icons in header
+
+### Phase 3: Core Screens
+- [ ] Home screen (greeting, aura sparkline, check-in card, quick access tiles, active program card)
+- [ ] Check-in flow (3-step: mood/energy/stress → AI prompt → follow-up)
+- [ ] Mirror chat mode (message bubbles, starter prompts, streaming responses, session history)
+- [ ] Mirror voice mode (Hume EVI integration, waveform visualization, transcript display)
+- [ ] Journal screen (entry list, compose modal, categories, search/filter)
+- [ ] Habits/Domains screen (6 domain cards, habit tracking, streak badges)
+- [ ] Programs screen (discovery list, program detail, daily lesson, AI feedback)
+
+### Phase 4: Secondary Screens
+- [ ] Rewards screen (points, spin wheel, streak status, spin history, redemption)
+- [ ] Calendar screen (monthly view, event creation, recurring events)
+- [ ] Settings screen (account info, therapist contacts, notification prefs, milestones, delete account)
+- [ ] Insights/Dashboard screen (weekly insight, growth score, patterns, actions)
+- [ ] Pricing screen (Free/Pro/Premium Pro tiers, Stripe checkout)
+- [ ] Time Capsule screen (letters, voicemails, settings)
+- [ ] Voice History screen (past sessions, transcripts, rename, save to journal)
+- [ ] Notifications settings screen
+- [ ] FAQ, Privacy Policy, Terms of Service screens
+- [ ] Onboarding flow (preferred name → seed intent selection)
+
+### Phase 5: Native Features
+- [ ] Apple Push Notification Service (APNs) integration
+- [ ] Haptic feedback on key interactions (button taps, completions, errors)
+- [ ] Native audio for voice sessions (expo-audio)
+- [ ] Keep screen awake during voice sessions
+- [ ] Biometric auth option (Face ID / Touch ID) for app lock
+- [ ] Native share sheet for journal entries / insights
+
+### Phase 6: Payments
+- [ ] Stripe in-app purchase integration (required by Apple for subscriptions)
+- [ ] Monthly Pro subscription ($9.99/mo)
+- [ ] Annual Pro subscription ($104.99/yr)
+- [ ] Premium Pro + Voice subscription ($13.99/mo, $149.99/yr)
+- [ ] Restore purchases flow
+- [ ] Receipt validation on backend
+
+### Phase 7: Testing & App Store Prep
+- [ ] Test all screens on iOS simulator
+- [ ] Test auth flow (OAuth login via in-app browser)
+- [ ] Test push notifications
+- [ ] Test voice sessions
+- [ ] Test Stripe subscription flow
+- [ ] Create App Store screenshots (6.7" and 6.1" iPhone)
+- [ ] Write App Store description and keywords
+- [ ] Create app preview video (optional)
+- [ ] Submit to App Store Connect for review
+
+## IFS 21-Day Parts Work Program (Jul 14)
+- [x] Build seed script (seed-ifs-parts-work.mjs) with 21 lessons following existing data model
+- [x] Write Hume voice scripts for Days 3, 12, 21 (guided visualization / check-in / closing ceremony)
+- [x] Seed program into database (id=180002, category=self-awareness)
+- [x] Verify 21 lessons inserted correctly

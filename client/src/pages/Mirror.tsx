@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { isDemoMode } from "@/lib/demo";
 import { useVoice } from "@humeai/voice-react";
 import { Streamdown } from "streamdown";
 import { UpgradeModal } from "@/components/UpgradeModal";
@@ -185,7 +186,12 @@ export default function Mirror() {
         const timeSinceLastMsg = Date.now() - lastMsgTime;
 
         if (lastSession.messageCount > 0 && timeSinceLastMsg >= EIGHT_HOURS_MS) {
-          clearMutation.mutate();
+          // In demo mode, don't fire the mutation (it's blocked); just use the existing session
+          if (isDemoMode()) {
+            setSessionId(lastSession.sessionId);
+          } else {
+            clearMutation.mutate();
+          }
         } else {
           setSessionId(lastSession.sessionId);
         }
@@ -339,6 +345,10 @@ export default function Mirror() {
   };
 
   const handleStartFresh = () => {
+    if (isDemoMode()) {
+      toast.info("Demo mode is read-only");
+      return;
+    }
     clearMutation.mutate();
   };
 

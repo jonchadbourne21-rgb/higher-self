@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { RewardWheel } from "@/components/RewardWheel";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { isDemoMode } from "@/lib/demo";
 
 // ─── Intent display config ────────────────────────────────────────────────────
 
@@ -259,7 +260,12 @@ export default function Chat() {
       
       if (lastSession.messageCount > 0 && timeSinceLastMsg >= EIGHT_HOURS_MS) {
         // 8+ hours since last message — save old session to history, start fresh
-        clearMutation.mutate();
+        if (isDemoMode()) {
+          // In demo mode, don't fire mutation; just use the existing session
+          setSessionId(lastSession.sessionId);
+        } else {
+          clearMutation.mutate();
+        }
       } else if (lastSession.messageCount > 0) {
         // Active session within 8 hours — resume where they left off
         setSessionId(lastSession.sessionId);
@@ -621,7 +627,10 @@ export default function Chat() {
                     Keep going
                   </button>
                   <button
-                    onClick={() => clearMutation.mutate()}
+                    onClick={() => {
+                      if (isDemoMode()) { toast.info("Demo mode is read-only"); return; }
+                      clearMutation.mutate();
+                    }}
                     disabled={clearMutation.isPending}
                     className="flex-1 py-2.5 rounded-2xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all disabled:opacity-60 glow-gold"
                   >
