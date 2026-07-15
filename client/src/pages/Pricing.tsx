@@ -12,7 +12,7 @@ const FREE_FEATURES = [
   { name: "2 journal entries per week", included: true },
   { name: "Life domains & habits", included: true },
   { name: "Daily check-ins", included: true },
-  { name: "Reward wheel", included: true },
+  { name: "Streak rewards", included: true },
   { name: "Unlimited programs", included: false },
   { name: "Growth Dashboard", included: false },
   { name: "Voice Mirror", included: false },
@@ -25,7 +25,7 @@ const PRO_FEATURES = [
   { name: "Life domains & habits", included: true },
   { name: "Weekly + monthly + yearly insights", included: true },
   { name: "Growth Dashboard & analytics", included: true },
-  { name: "Bonus spins on purchase", included: true },
+  { name: "Bonus reward points on purchase", included: true },
   { name: "Priority support", included: true },
   { name: "Voice Mirror sessions", included: false },
 ];
@@ -388,7 +388,7 @@ export default function Pricing() {
               <p className="text-xs font-semibold" style={{ color: "oklch(0.88 0.02 270)" }}>Consistency is Rewarded</p>
             </div>
             <p className="text-[11px] leading-relaxed" style={{ color: "oklch(0.60 0.03 270)" }}>
-              Every 3-day streak unlocks a spin on the reward wheel with chances to win free Pro access, discount codes, and reward points.
+              Build streaks across chat, journal, and habits to earn reward points toward free Pro access. Hit 30 days for 2 months free, or 100 days for a full year.
             </p>
           </div>
         </motion.div>
@@ -423,7 +423,7 @@ export default function Pricing() {
               },
               {
                 q: "Can I earn free Pro?",
-                a: "Yes! 30-day streak = 2 months free. 100-day streak = 1 year free. Plus reward wheel spins every 3 days.",
+                a: "Yes! 30-day streak = 2 months free. 100-day streak = 1 year free. Plus reward points earned daily through consistent engagement.",
               },
               {
                 q: "Can I upgrade from Pro to Premium Pro later?",

@@ -3,7 +3,6 @@ import Stripe from "stripe";
 import { getDb } from "../db";
 import { subscriptions, users } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
-import { addRewardPoints } from "../db/rewards";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2026-04-22.dahlia",
@@ -134,39 +133,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
   console.log(`[Webhook] User ${userId} upgraded to ${tier} tier`);
 
-  // Award bonus free spins based on billing cycle
-  try {
-    const priceId = subscription.items.data[0]?.price.id;
-    const proMonthlyPriceId = process.env.STRIPE_PRO_MONTHLY_PRICE_ID;
-    const proAnnualPriceId = process.env.STRIPE_PRO_ANNUAL_PRICE_ID;
-    const proVoiceMonthlyPriceId = process.env.STRIPE_PRO_VOICE_MONTHLY_PRICE_ID;
-    const proVoiceAnnualPriceId = process.env.STRIPE_PRO_VOICE_ANNUAL_PRICE_ID;
-
-    let bonusSpins = 0;
-    if (priceId === proAnnualPriceId) {
-      bonusSpins = 3; // Pro Annual: 3 bonus spins
-    } else if (priceId === proMonthlyPriceId) {
-      bonusSpins = 1; // Pro Monthly: 1 bonus spin
-    } else if (priceId === proVoiceAnnualPriceId) {
-      bonusSpins = 5; // Pro + Voice Annual: 5 bonus spins
-    } else if (priceId === proVoiceMonthlyPriceId) {
-      bonusSpins = 2; // Pro + Voice Monthly: 2 bonus spins
-    }
-
-    if (bonusSpins > 0) {
-      for (let i = 0; i < bonusSpins; i++) {
-        await addRewardPoints(
-          parseInt(userId),
-          1,
-          "checkin",
-          `purchase_spin_${Date.now()}_${i}`
-        );
-      }
-      console.log(`[Webhook] Awarded ${bonusSpins} bonus spin(s) to user ${userId} for subscription purchase`);
-    }
-  } catch (err) {
-    console.error("[Webhook] Failed to award bonus spins:", err);
-  }
 }
 
 /**

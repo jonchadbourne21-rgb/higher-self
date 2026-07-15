@@ -32,7 +32,7 @@ const faqItems = [
   {
     question: "How does the streak reward system work?",
     answer:
-      "Consistency is rewarded. Maintain a 3-day streak across any activity (chat, journal, or habits) to earn a reward wheel spin. Reach a 30-day streak to unlock 2 months of free Pro, and a 100-day streak earns you 1 full year of Pro — free.",
+      "Consistency is rewarded. Maintain streaks across any activity (chat, journal, or habits) to earn reward points toward Pro access. Reach a 30-day streak to unlock 2 months of free Pro, and a 100-day streak earns you 1 full year of Pro — free.",
   },
   {
     question: "What's included in Mirrored Pro?",

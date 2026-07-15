@@ -80,8 +80,8 @@ export default function CheckIn() {
       setAiResponse(data.aiResponse);
       if (data.streakSpinEarned) {
         setTimeout(() => {
-          toast.success("🎡 3-day streak! You earned a free spin — check Rewards!", {
-            duration: 5000,
+          toast.success("🔥 3-day streak! Keep the momentum going.", {
+            duration: 4000,
           });
         }, 1500);
       }

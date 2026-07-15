@@ -1464,4 +1464,7 @@
 - [x] Trim rewards router to only keep proStatus procedure
 - [x] Remove RewardWheel from Journal.tsx
 - [x] Fix ProgramInsight.tsx /rewards navigation → /home
-- [ ] Remove bonusSpins logic from Stripe webhook (deferred)
+- [x] Remove bonusSpins logic from Stripe webhook
+- [x] Update stale "reward wheel spin" copy in Pricing.tsx (feature lists + consistency card + FAQ)
+- [x] Update stale "reward wheel spin" copy in FAQ.tsx
+- [x] Update stale "free spin" toast in CheckIn.tsx
