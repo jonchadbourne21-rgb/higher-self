@@ -254,11 +254,11 @@ export default function ProgramInsight() {
           </Button>
           {isLastDay ? (
             <Button
-              onClick={() => navigate("/rewards")}
+              onClick={() => navigate("/home")}
               className="flex-1 gap-2"
             >
               <Crown className="w-4 h-4" />
-              View Rewards
+              Back to Home
             </Button>
           ) : (
             <Button

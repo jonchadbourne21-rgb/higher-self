@@ -12,7 +12,7 @@ import { format, isToday, isYesterday, isThisWeek, isThisMonth } from "date-fns"
 import { toast } from "sonner";
 import { AIThinkingInline } from "@/components/AIThinking";
 import { UpgradeModal } from "@/components/UpgradeModal";
-import { RewardWheel } from "@/components/RewardWheel";
+
 import { useAuth } from "@/_core/hooks/useAuth";
 
 const MOOD_TAGS = ["Reflective", "Grateful", "Anxious", "Hopeful", "Sad", "Peaceful", "Confused", "Inspired", "Tired", "Joyful"];
@@ -77,8 +77,7 @@ export default function Journal() {
   
   // ── Upgrade modal state ──────────────────────────────────────────────────
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [showRewardWheel, setShowRewardWheel] = useState(false);
-  const [wheelPrize, setWheelPrize] = useState<string | null>(null);
+
 
   // ── Related entries suggestion state ─────────────────────────────────────
   const [relatedEntries, setRelatedEntries] = useState<{id: number | null; content: string; score: number; date: string}[]>([]);
@@ -814,14 +813,7 @@ export default function Journal() {
         onClose={() => setShowUpgradeModal(false)}
         limitType="journal"
       />
-      <RewardWheel
-        isOpen={showRewardWheel}
-        onClose={() => setShowRewardWheel(false)}
-        onSpinComplete={(prize) => {
-          setWheelPrize(prize);
-          toast.success(`You won: ${prize}!`);
-        }}
-      />
+
     </>
   );
 }

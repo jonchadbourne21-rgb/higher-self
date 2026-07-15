@@ -1460,5 +1460,8 @@
 - [x] Remove wheel/spin references from Home page tile
 - [x] Replace rewards tile with Echo tile on Home
 - [x] Remove /rewards route from App.tsx
-- [ ] Delete Rewards.tsx page file (kept for now — rewards router still has proStatus/points procedures)
+- [x] Delete Rewards.tsx, WelcomeSpinModal.tsx, RewardWheel.tsx files
+- [x] Trim rewards router to only keep proStatus procedure
+- [x] Remove RewardWheel from Journal.tsx
+- [x] Fix ProgramInsight.tsx /rewards navigation → /home
 - [ ] Remove bonusSpins logic from Stripe webhook (deferred)
