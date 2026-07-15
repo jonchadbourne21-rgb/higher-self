@@ -1477,3 +1477,13 @@
 - [x] Add echo.history and echo.stats tRPC procedures for past echoes
 - [x] Verify EchoReveal overlay triggers correctly from pending echo
 - [x] Verify full pipeline: journal write → tagging → echo queue → reveal (confirmed wired in routers.ts line 827)
+
+## Echo Challenge Feature (Pattern-Breaking Micro-Challenges)
+- [x] Add challengeText, challengeCategory, challengeAcceptedAt, challengeCompletedAt, challengeReflection, challengeSkippedAt columns to echo_queue table
+- [x] Build LLM prompt for challenge generation (context-aware, opposite-action based, uses personality profile)
+- [x] Integrate challenge generation into Echo pipeline (triggers when resolutionStatus=open AND intensity>=4)
+- [x] Add echo.acceptChallenge / completeChallenge / skipChallenge mutations to echo router
+- [x] Build Challenge card UI in Echo page (category-styled, accept/skip buttons)
+- [x] Add challenge step to EchoReveal cinematic sequence (after reframing line, before controls)
+- [x] Build challenge completion flow (reflection textarea + done button)
+- [x] Add challenge data to echo history cards (shows category badge + completion status)

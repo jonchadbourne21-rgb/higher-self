@@ -3,7 +3,7 @@
  */
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
-import { getPendingEcho, dismissEcho, reflectOnEcho } from "../echo";
+import { getPendingEcho, dismissEcho, reflectOnEcho, acceptChallenge, completeChallenge, skipChallenge } from "../echo";
 import { getDb } from "../db";
 import { echoQueue, journalEntries } from "../../drizzle/schema";
 import { eq, and, isNotNull, desc, sql } from "drizzle-orm";
@@ -40,6 +40,11 @@ export const echoRouter = router({
           dismissedAt: echoQueue.dismissedAt,
           reflectedAt: echoQueue.reflectedAt,
           createdAt: echoQueue.createdAt,
+          // Challenge fields
+          challengeText: echoQueue.challengeText,
+          challengeCategory: echoQueue.challengeCategory,
+          challengeCompletedAt: echoQueue.challengeCompletedAt,
+          challengeSkippedAt: echoQueue.challengeSkippedAt,
           // Join source entry for snippet
           sourceTitle: journalEntries.title,
           sourceContent: journalEntries.content,
@@ -67,6 +72,10 @@ export const echoRouter = router({
         surfacedAt: e.surfacedAt,
         wasReflected: !!e.reflectedAt,
         wasDismissed: !!e.dismissedAt,
+        challengeText: e.challengeText,
+        challengeCategory: e.challengeCategory,
+        challengeCompleted: !!e.challengeCompletedAt,
+        challengeSkipped: !!e.challengeSkippedAt,
       }));
     }),
 
@@ -110,6 +119,36 @@ export const echoRouter = router({
     .input(z.object({ echoId: z.number() }))
     .mutation(async ({ ctx, input }) => {
       await reflectOnEcho(input.echoId, ctx.user.id);
+      return { success: true };
+    }),
+
+  /**
+   * Accept a challenge (user tapped "I'll do it").
+   */
+  acceptChallenge: protectedProcedure
+    .input(z.object({ echoId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await acceptChallenge(input.echoId, ctx.user.id);
+      return { success: true };
+    }),
+
+  /**
+   * Complete a challenge with optional reflection.
+   */
+  completeChallenge: protectedProcedure
+    .input(z.object({ echoId: z.number(), reflection: z.string().optional() }))
+    .mutation(async ({ ctx, input }) => {
+      await completeChallenge(input.echoId, ctx.user.id, input.reflection);
+      return { success: true };
+    }),
+
+  /**
+   * Skip a challenge (user tapped "Not today").
+   */
+  skipChallenge: protectedProcedure
+    .input(z.object({ echoId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await skipChallenge(input.echoId, ctx.user.id);
       return { success: true };
     }),
 });

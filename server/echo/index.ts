@@ -222,6 +222,18 @@ export async function findAndQueueEcho(
   const reframingLine = await generateReframingLine(best.content, best.title, best.createdAt);
   if (!reframingLine) return;
 
+  // Generate challenge if the pattern suggests a negative/unresolved state
+  let challengeText: string | null = null;
+  let challengeCategory: string | null = null;
+  const shouldChallenge = newResolutionStatus === "open" && newIntensity >= 4;
+  if (shouldChallenge) {
+    const challenge = await generateEchoChallenge(userId, best.content, newTensionSummary, newIntensity);
+    if (challenge) {
+      challengeText = challenge.text;
+      challengeCategory = challenge.category;
+    }
+  }
+
   // Queue the Echo
   await db.insert(echoQueue).values({
     userId,
@@ -231,9 +243,11 @@ export async function findAndQueueEcho(
     reframingLine,
     isCompound: false,
     compoundEntryIds: [],
+    challengeText,
+    challengeCategory,
   });
 
-  console.log(`[Echo] Queued echo for user ${userId}: entry #${best.id} (score: ${best.score.toFixed(3)})`);
+  console.log(`[Echo] Queued echo for user ${userId}: entry #${best.id} (score: ${best.score.toFixed(3)})${challengeText ? " [with challenge]" : ""}`);
 }
 
 // ─── Reframing Line Generation ───────────────────────────────────────────────
@@ -394,6 +408,105 @@ function formatTimeAgo(date: Date): string {
   return `${months} months ago`;
 }
 
+// ─── Echo Challenge Generation ──────────────────────────────────────────────
+
+interface EchoChallenge {
+  text: string;
+  category: string;
+}
+
+/**
+ * Generate a micro-challenge when Echo detects a negative/unresolved pattern.
+ * Uses the user's personality profile (if available) to personalize tone.
+ * Grounded in: Opposite Action (DBT), Behavioral Activation, Post-Traumatic Growth.
+ */
+async function generateEchoChallenge(
+  userId: number,
+  pastEntryContent: string,
+  currentTensionSummary: string,
+  intensity: number
+): Promise<EchoChallenge | null> {
+  try {
+    // Get personality profile for personalization
+    let personalityContext = "";
+    try {
+      const { getPersonalityProfile, formatPersonalityForPrompt } = await import("../rag/memory");
+      const profile = await getPersonalityProfile(userId);
+      personalityContext = formatPersonalityForPrompt(profile);
+    } catch {
+      // Personality profile not available — proceed without it
+    }
+
+    const intensityGuide = intensity >= 8
+      ? "This person is in high distress. The challenge should be extremely gentle, grounding, and body-based (breathing, cold water, stepping outside). Under 1 minute."
+      : intensity >= 6
+      ? "This person is struggling. The challenge should be brief and actionable — something that shifts their state through movement, connection, or perspective. 1-3 minutes."
+      : "This person is caught in a pattern. The challenge can be slightly more ambitious — something that builds evidence against their negative belief. 2-5 minutes.";
+
+    const res = await invokeLLM({
+      messages: [
+        {
+          role: "system",
+          content: `You are the higher self of a journaling app user. You've noticed they are stuck in a recurring negative pattern. Your job is to offer ONE specific, quick micro-challenge that uses the principle of Opposite Action — moving AGAINST the emotional urge to break the cycle.
+
+Psychological foundations you draw from:
+- Opposite Action (DBT, Linehan): When emotion doesn't fit the facts, do the opposite. Fear → approach. Sadness → activate. Shame → share.
+- Behavioral Activation: Action comes BEFORE motivation. The smallest step breaks inertia.
+- Post-Traumatic Growth (Tedeschi & Calhoun): People who face discomfort rather than avoid it almost universally look back on hard moments as catalysts for their greatest growth.
+- The challenge is NOT advice. It's a dare from their highest self. Brief. Specific. Doable in the moment.
+
+${intensityGuide}
+
+Rules:
+- ONE challenge, 1-2 sentences max
+- Must be completable RIGHT NOW (not "tomorrow" or "this week")
+- Be specific: not "be grateful" but "text one person why you appreciate them"
+- Never condescending. Frame as strength, not weakness.
+- No therapy-speak. No "try to" or "consider." Direct.
+- Category must be one of: grounding, connection, movement, perspective, expression, courage
+- Return JSON only: { "text": "...", "category": "..." }${personalityContext}`,
+        },
+        {
+          role: "user",
+          content: `Current pattern detected: ${currentTensionSummary}\n\nPast entry showing same pattern:\n"${pastEntryContent.slice(0, 300)}"`,
+        },
+      ],
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "echo_challenge",
+          strict: true,
+          schema: {
+            type: "object",
+            properties: {
+              text: { type: "string", description: "The micro-challenge text" },
+              category: {
+                type: "string",
+                enum: ["grounding", "connection", "movement", "perspective", "expression", "courage"],
+                description: "Challenge category",
+              },
+            },
+            required: ["text", "category"],
+            additionalProperties: false,
+          },
+        },
+      },
+    });
+
+    const content = res.choices[0]?.message?.content;
+    if (typeof content !== "string") return null;
+
+    const parsed = JSON.parse(content) as EchoChallenge;
+    if (!parsed.text || !parsed.category) return null;
+
+    console.log(`[Echo] Generated challenge (${parsed.category}): ${parsed.text.slice(0, 60)}...`);
+    return parsed;
+  } catch (e) {
+    console.error("[Echo] Challenge generation failed:", e);
+    return null;
+  }
+}
+
 // ─── Public API for Router ───────────────────────────────────────────────────
 
 /**
@@ -409,6 +522,8 @@ export async function getPendingEcho(userId: number): Promise<{
   reframingLine: string;
   isCompound: boolean;
   compoundEntries?: Array<{ id: number; content: string; createdAt: Date }>;
+  challengeText: string | null;
+  challengeCategory: string | null;
 } | null> {
   const db = await getDb();
   if (!db) return null;
@@ -472,6 +587,8 @@ export async function getPendingEcho(userId: number): Promise<{
     reframingLine: echo.reframingLine,
     isCompound: echo.isCompound,
     compoundEntries,
+    challengeText: echo.challengeText,
+    challengeCategory: echo.challengeCategory,
   };
 }
 
@@ -496,6 +613,45 @@ export async function reflectOnEcho(echoId: number, userId: number): Promise<voi
   await db
     .update(echoQueue)
     .set({ reflectedAt: new Date() })
+    .where(and(eq(echoQueue.id, echoId), eq(echoQueue.userId, userId)));
+}
+
+/**
+ * Accept a challenge (user tapped "I'll do it").
+ */
+export async function acceptChallenge(echoId: number, userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(echoQueue)
+    .set({ challengeAcceptedAt: new Date() })
+    .where(and(eq(echoQueue.id, echoId), eq(echoQueue.userId, userId)));
+}
+
+/**
+ * Complete a challenge with optional reflection note.
+ */
+export async function completeChallenge(echoId: number, userId: number, reflection?: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(echoQueue)
+    .set({
+      challengeCompletedAt: new Date(),
+      challengeReflection: reflection || null,
+    })
+    .where(and(eq(echoQueue.id, echoId), eq(echoQueue.userId, userId)));
+}
+
+/**
+ * Skip a challenge (user tapped "Not today").
+ */
+export async function skipChallenge(echoId: number, userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(echoQueue)
+    .set({ challengeSkippedAt: new Date() })
     .where(and(eq(echoQueue.id, echoId), eq(echoQueue.userId, userId)));
 }
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, BookOpen, Clock } from "lucide-react";
+import { X, BookOpen, Clock, Zap } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 
@@ -13,6 +13,8 @@ interface EchoData {
   reframingLine: string;
   isCompound: boolean;
   compoundEntries?: Array<{ id: number; content: string; createdAt: string | Date }>;
+  challengeText: string | null;
+  challengeCategory: string | null;
 }
 
 /**
@@ -27,7 +29,7 @@ interface EchoData {
  */
 export function EchoReveal() {
   const [, navigate] = useLocation();
-  const [phase, setPhase] = useState<"silence" | "timestamp" | "entry" | "reframing" | "controls" | "done">("silence");
+  const [phase, setPhase] = useState<"silence" | "timestamp" | "entry" | "reframing" | "challenge" | "controls" | "done">("silence");
   const [echo, setEcho] = useState<EchoData | null>(null);
   const [dismissed, setDismissed] = useState(false);
 
@@ -48,11 +50,17 @@ export function EchoReveal() {
   // Cinematic sequence timing
   useEffect(() => {
     if (!echo) return;
+    const hasChallenge = !!echo.challengeText;
     const timers: NodeJS.Timeout[] = [];
     timers.push(setTimeout(() => setPhase("timestamp"), 2000));
     timers.push(setTimeout(() => setPhase("entry"), 3500));
     timers.push(setTimeout(() => setPhase("reframing"), 6000));
-    timers.push(setTimeout(() => setPhase("controls"), 8000));
+    if (hasChallenge) {
+      timers.push(setTimeout(() => setPhase("challenge"), 8500));
+      timers.push(setTimeout(() => setPhase("controls"), 11000));
+    } else {
+      timers.push(setTimeout(() => setPhase("controls"), 8000));
+    }
     return () => timers.forEach(clearTimeout);
   }, [echo]);
 
@@ -173,7 +181,7 @@ export function EchoReveal() {
 
           {/* Phase 4: Mirror reframing line */}
           <AnimatePresence>
-            {(phase === "reframing" || phase === "controls") && (
+            {(phase === "reframing" || phase === "challenge" || phase === "controls") && (
               <motion.div
                 key="reframing"
                 initial={{ opacity: 0, y: 10 }}
@@ -185,6 +193,31 @@ export function EchoReveal() {
                   <div className="absolute -left-3 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-amber-400/40 to-transparent" />
                   <p className="text-amber-200/90 text-base leading-relaxed font-light pl-3">
                     {echo.reframingLine}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Phase 4.5: Challenge (if present) */}
+          <AnimatePresence>
+            {echo.challengeText && (phase === "challenge" || phase === "controls") && (
+              <motion.div
+                key="challenge"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className="mb-8"
+              >
+                <div className="relative bg-white/[0.03] border border-amber-500/20 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-400/80">
+                      {echo.challengeCategory || "challenge"}
+                    </span>
+                  </div>
+                  <p className="text-white/85 text-sm leading-relaxed font-medium">
+                    {echo.challengeText}
                   </p>
                 </div>
               </motion.div>

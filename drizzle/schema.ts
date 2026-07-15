@@ -231,6 +231,19 @@ export const echoQueue = mysqlTable("echo_queue", {
   isCompound: boolean("isCompound").default(false).notNull(),
   // IDs of entries in the compound pattern
   compoundEntryIds: json("compoundEntryIds").$type<number[]>().default([]),
+  // ─── Echo Challenge Fields ─────────────────────────────────────────────────
+  // AI-generated micro-challenge (null = no challenge offered for this echo)
+  challengeText: text("challengeText"),
+  // Challenge category for UI styling
+  challengeCategory: varchar("challengeCategory", { length: 50 }),
+  // When user accepted the challenge
+  challengeAcceptedAt: timestamp("challengeAcceptedAt"),
+  // When user completed the challenge
+  challengeCompletedAt: timestamp("challengeCompletedAt"),
+  // User's reflection after completing the challenge
+  challengeReflection: text("challengeReflection"),
+  // User skipped the challenge
+  challengeSkippedAt: timestamp("challengeSkippedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type EchoQueue = typeof echoQueue.$inferSelect;
