@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useLocation, Link } from "wouter";
 import { Sparkles, Sun, Moon, Bell, User, ChevronRight, Hourglass } from "lucide-react";
-import WelcomeSpinModal from "@/components/WelcomeSpinModal";
+
 import { format, formatDistanceToNow } from "date-fns";
 import { BookOpen } from "lucide-react";
 import AppShell from "@/components/AppShell";
@@ -81,11 +81,6 @@ export default function Home() {
   const { data: todayCheckIn } = trpc.checkIn.today.useQuery(undefined, { enabled: isAuthenticated });
   const { data: upcomingEvents } = trpc.calendar.upcoming.useQuery(undefined, { enabled: isAuthenticated });
   const { data: habitStreak } = trpc.habits.currentStreak.useQuery(undefined, { enabled: isAuthenticated });
-  const { data: rewardPoints } = trpc.rewards.points.useQuery(undefined, { enabled: isAuthenticated });
-  const { data: welcomeSpin } = trpc.rewards.welcomeSpinAvailable.useQuery(undefined, { enabled: isAuthenticated });
-  const { data: rewardsDashboard } = trpc.rewards.dashboard.useQuery(undefined, {
-    enabled: isAuthenticated && !welcomeSpin?.available,
-  });
   const { data: proStatus } = trpc.rewards.proStatus.useQuery(undefined, { enabled: isAuthenticated });
   const { data: auraHistory } = trpc.checkIn.auraHistory.useQuery(undefined, { enabled: isAuthenticated });
   const { data: myEnrollments } = trpc.programs.myEnrollments.useQuery(undefined, { enabled: isAuthenticated });
@@ -102,7 +97,7 @@ export default function Home() {
       return () => clearTimeout(t);
     }
   }, [tileEngagement]);
-  const [showWelcomeSpin, setShowWelcomeSpin] = useState(false);
+
   const [showFaqPulse, setShowFaqPulse] = useState(false);
 
   // Show FAQ pulse for new users (first 3 visits only)
@@ -120,12 +115,7 @@ export default function Home() {
     }
   }, []);
 
-  useEffect(() => {
-    if (welcomeSpin?.available && isAuthenticated && !loading) {
-      const timer = setTimeout(() => setShowWelcomeSpin(true), 600);
-      return () => clearTimeout(timer);
-    }
-  }, [welcomeSpin?.available, isAuthenticated, loading]);
+
 
   useEffect(() => {
     if (isDemoMode()) return; // Skip redirects in demo mode
@@ -140,30 +130,11 @@ export default function Home() {
   const today = format(new Date(), "EEEE, MMMM d");
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
-  // Rewards tile accent
-  const hasWelcomeSpin = welcomeSpin?.available;
-  const pendingSpins = rewardsDashboard?.pendingStreakSpins ?? 0;
-  const rewardsBg = hasWelcomeSpin
-    ? "linear-gradient(135deg, oklch(0.55 0.18 290 / 0.22), oklch(0.65 0.16 185 / 0.22))"
-    : pendingSpins > 0
-    ? "linear-gradient(135deg, oklch(0.60 0.18 50 / 0.18), oklch(0.55 0.18 290 / 0.14))"
-    // Dark Blue — calm, trustworthy, reward depth (default state)
-    : "oklch(0.14 0.06 255)";
-  const rewardsBorder = hasWelcomeSpin
-    ? "1px solid oklch(0.65 0.16 185 / 0.35)"
-    : pendingSpins > 0
-    ? "1px solid oklch(0.60 0.18 50 / 0.4)"
-    : "1px solid oklch(0.36 0.11 255 / 0.55)";
-
-  // Rewards label
-  const rewardsLabel = hasWelcomeSpin
-    ? "🎁 Welcome Spin!"
-    : pendingSpins > 0
-    ? `🎡 ${pendingSpins} Free Spin${pendingSpins > 1 ? "s" : ""}!`
-    : (rewardPoints?.total ?? 0) === 0
-    ? "Earn your first spin →"
-    : `${rewardPoints?.total ?? 0} pts`;
-  const rewardsLabelColor = hasWelcomeSpin || pendingSpins > 0 ? "oklch(0.75 0.16 55)" : undefined;
+  // Echo tile style — Deep Teal / Memory
+  const TILE_ECHO = {
+    background: "oklch(0.13 0.06 195)",
+    border: "1px solid oklch(0.35 0.12 195 / 0.55)",
+  };
 
   // Calendar subtitle
   const calendarSub =
@@ -177,10 +148,10 @@ export default function Home() {
     { key: "programs", href: "/programs", emoji: "🎓", label: "Programs",        sub: "Guided growth",   score: tileEngagement?.programs ?? 0 },
     { key: "habits",   href: "/domains",  emoji: "🧭", label: "Positive Habits", sub: "Build your habits", score: tileEngagement?.habits ?? 0 },
     { key: "journal",  href: "/journal",  emoji: "📝", label: "Journal",          sub: "Write your thoughts", score: tileEngagement?.journal ?? 0 },
-    { key: "rewards",  href: "/rewards",  emoji: "🎁", label: rewardsLabel,      sub: "Spin & earn",     score: tileEngagement?.rewards ?? 0 },
+    { key: "echo",     href: "/journal",  emoji: "🔮", label: "Echo",            sub: "Memory reflections", score: tileEngagement?.rewards ?? 0 },
     { key: "calendar", href: "/calendar", emoji: "📅", label: "Calendar",         sub: calendarSub || "Plan your week", score: tileEngagement?.calendar ?? 0 },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [tileEngagement, rewardsLabel, calendarSub]);
+  ], [tileEngagement, calendarSub]);
 
   const sortedTiles = useMemo(
     () => [...TILE_DEFS].sort((a, b) => b.score - a.score),
@@ -268,7 +239,7 @@ export default function Home() {
               </div>
               <div className="flex items-center gap-1">
                 {isPro ? (
-                  <Link href="/rewards">
+                  <Link href="/settings">
                     <motion.button
                       initial={{ scale: 0.85, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
@@ -548,7 +519,7 @@ export default function Home() {
                   tile.key === "programs" ? TILE_PROGRAMS :
                   tile.key === "habits"   ? TILE_DOMAINS :
                   tile.key === "journal"  ? TILE_JOURNAL :
-                  tile.key === "rewards"  ? { background: rewardsBg, border: rewardsBorder } :
+                  tile.key === "echo"     ? TILE_ECHO :
                   TILE_CALENDAR;
 
                 return (
@@ -587,7 +558,7 @@ export default function Home() {
                       <div>
                         <p
                           className="text-xs font-semibold"
-                          style={{ color: tile.key === "rewards" ? (rewardsLabelColor ?? "oklch(0.92 0.02 280)") : undefined }}
+                          style={undefined}
                         >
                           {tile.label}
                         </p>
@@ -646,8 +617,7 @@ export default function Home() {
           </motion.div>
 
       </div>
-      {/* Welcome spin modal */}
-      <WelcomeSpinModal open={showWelcomeSpin} onClose={() => setShowWelcomeSpin(false)} />
+
     </AppShell>
   );
 }

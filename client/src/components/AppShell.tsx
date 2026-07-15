@@ -43,7 +43,7 @@ function getSubtitle(path: string): string {
   if (path.startsWith("/dashboard")) return "DASHBOARD";
   if (path.startsWith("/calendar")) return "CALENDAR";
   if (path.startsWith("/settings")) return "PROFILE";
-  if (path.startsWith("/rewards")) return "REWARDS";
+
   if (path.startsWith("/programs")) return "GROWTH PROGRAMS";
   return "AI SELF-REFLECTION";
 }

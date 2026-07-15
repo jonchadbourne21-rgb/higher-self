@@ -12,6 +12,7 @@ import { rewardsRouter } from "./routers/rewards";
 import { programsRouter } from "./routers/programs";
 import { voiceRouter } from "./routers/voice";
 import { timeCapsuleRouter } from "./routers/timeCapsule";
+import { echoRouter } from "./routers/echo";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { deleteUserAccount, getDb } from "./db";
 import {
@@ -822,6 +823,19 @@ export const appRouter = router({
         } catch (e) {
           console.error("AI journal perspective failed:", e);
         }
+
+        // Echo pipeline: tag entry and check for pattern matches (fire-and-forget)
+        (async () => {
+          try {
+            const { generateEchoTags, saveEchoTags, findAndQueueEcho, findCompoundEcho } = await import("./echo");
+            const tags = await generateEchoTags(input.content, input.title || undefined);
+            await saveEchoTags(newEntry.id, ctx.user.id, tags);
+            await findAndQueueEcho(ctx.user.id, newEntry.id, tags.tensionSummary, tags.intensityScore, tags.resolutionStatus);
+            await findCompoundEcho(ctx.user.id, newEntry.id);
+          } catch (e) {
+            console.error("[Echo] Pipeline failed:", e);
+          }
+        })();
 
         return { success: true, id: newEntry.id };
       }),
@@ -1707,5 +1721,6 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
   programs: programsRouter,
   voice: voiceRouter,
   timeCapsule: timeCapsuleRouter,
+  echo: echoRouter,
 });
 export type AppRouter = typeof appRouter;

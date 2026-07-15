@@ -28,7 +28,7 @@ import FAQ from "./pages/FAQ";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Pricing from "./pages/Pricing";
-import Rewards from "./pages/Rewards";
+import { EchoReveal } from "@/components/EchoReveal";
 import Programs from "./pages/Programs";
 import ProgramDetail from "./pages/ProgramDetail";
 import ProgramInsight from "./pages/ProgramInsight";
@@ -89,6 +89,8 @@ function AuthenticatedRouter() {
   return (
     <>
       {isAuthenticatedRoute ? (
+        <>
+        <EchoReveal />
         <div className="overflow-hidden w-full">
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
@@ -114,7 +116,7 @@ function AuthenticatedRouter() {
                 <Route path="/notifications" component={Notifications} />
                 <Route path="/settings" component={Settings} />
                 <Route path="/calendar" component={Calendar} />
-                <Route path="/rewards" component={Rewards} />
+
                 <Route path="/programs" component={Programs} />
                 <Route path="/programs/:id" component={ProgramDetail} />
                 <Route path="/programs/:id/insight/:day" component={ProgramInsight} />
@@ -126,6 +128,7 @@ function AuthenticatedRouter() {
             </motion.div>
           </AnimatePresence>
         </div>
+        </>
       ) : (
         /* Non-authenticated routes without AppShell */
         <div className="overflow-hidden w-full">

@@ -192,12 +192,49 @@ export const journalEntries = mysqlTable("journal_entries", {
   themes: json("themes").$type<string[]>().default([]),
   // Optional user-defined category
   categoryId: int("categoryId"),
+  // ─── Echo Tagging Fields ───────────────────────────────────────────────────
+  // Primary emotion detected (e.g. "fear", "shame", "relief")
+  primaryEmotion: varchar("primaryEmotion", { length: 50 }),
+  // Theme tags for pattern matching (2-4 lowercase tags)
+  themeTags: json("themeTags").$type<string[]>().default([]),
+  // One-sentence third-person tension summary for embedding
+  tensionSummary: text("tensionSummary"),
+  // Resolution status of the internal conflict
+  resolutionStatus: mysqlEnum("resolutionStatus", ["open", "resolved", "unclear"]).default("unclear"),
+  // Emotional intensity 1-10
+  intensityScore: int("intensityScore"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
-
 export type JournalEntry = typeof journalEntries.$inferSelect;
 export type InsertJournalEntry = typeof journalEntries.$inferInsert;
+
+// ─── Echo Queue ─────────────────────────────────────────────────────────────────
+export const echoQueue = mysqlTable("echo_queue", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // The old entry being surfaced
+  sourceEntryId: int("sourceEntryId").notNull(),
+  // The new entry that triggered the echo
+  triggerEntryId: int("triggerEntryId").notNull(),
+  // Similarity/relevance score
+  score: float("score").notNull(),
+  // AI-generated reframing line (Mirror voice)
+  reframingLine: text("reframingLine").notNull(),
+  // When the echo was shown to the user (null = pending)
+  surfacedAt: timestamp("surfacedAt"),
+  // User dismissed without reflecting
+  dismissedAt: timestamp("dismissedAt"),
+  // User chose to reflect
+  reflectedAt: timestamp("reflectedAt"),
+  // Compound echo (pattern across 3+ entries)
+  isCompound: boolean("isCompound").default(false).notNull(),
+  // IDs of entries in the compound pattern
+  compoundEntryIds: json("compoundEntryIds").$type<number[]>().default([]),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type EchoQueue = typeof echoQueue.$inferSelect;
+export type InsertEchoQueue = typeof echoQueue.$inferInsert;
 
 // ─── Journal Categories ─────────────────────────────────────────────────────────
 

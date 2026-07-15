@@ -8,7 +8,7 @@ import AppShell from "@/components/AppShell";
 import { Plus, X, Check, Trash2, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 import { HabitCompletionAnimation } from "@/components/HabitCompletionAnimation";
-import { RewardWheel, WheelPrize } from "@/components/RewardWheel";
+
 
 // Each domain has its own identity: color class, accent hex for the progress bar,
 // and a subtle tinted background for the card.
@@ -90,8 +90,6 @@ export default function Domains() {
   const [completingHabitId, setCompletingHabitId] = useState<number | null>(null);
   const [milestoneStreak, setMilestoneStreak] = useState<number | null>(null);
   
-  // Reward wheel state
-  const [showRewardWheel, setShowRewardWheel] = useState(false);
   const [milestoneReward, setMilestoneReward] = useState<{ type: "30day" | "100day"; streak: number } | null>(null);
 
   const { data: domainScores, refetch: refetchScores } = trpc.domains.scores.useQuery(undefined, { enabled: isAuthenticated });
@@ -117,10 +115,7 @@ export default function Domains() {
           }
         }
         
-        // Show reward wheel on 3-day streak
-        if (newStreak === 3) {
-          setShowRewardWheel(true);
-        }
+
       }
       
       refetchHabits();
@@ -186,15 +181,7 @@ export default function Domains() {
         }}
       />
       
-      {/* Reward Wheel Modal */}
-      <RewardWheel
-        isOpen={showRewardWheel}
-        onClose={() => setShowRewardWheel(false)}
-        onSpinComplete={(prize: WheelPrize) => {
-          toast.success(`You won: ${prize === "month_free" ? "1 Month Free" : prize === "dare" ? "Take a Dare! 🎯" : prize === "week_free" ? "1 Week Free" : prize === "reward_points" ? "5 Reward Points" : "Try Again!"}`);
-          setShowRewardWheel(false);
-        }}
-      />
+
       
       {/* Milestone Reward Modals */}
       {milestoneReward && (

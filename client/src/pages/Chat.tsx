@@ -9,7 +9,7 @@ import { Send, RefreshCw, X, History, ChevronRight, Pencil, Check, MessageCircle
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
-import { RewardWheel } from "@/components/RewardWheel";
+
 import { useAuth } from "@/_core/hooks/useAuth";
 import { isDemoMode } from "@/lib/demo";
 
@@ -109,8 +109,7 @@ export default function Chat() {
   const [historySearchQuery, setHistorySearchQuery] = useState("");
   // Auto-resume handled via useEffect (no modal)
   const [hasShownResumeModal, setHasShownResumeModal] = useState(false);
-  const [showRewardWheel, setShowRewardWheel] = useState(false);
-  const [wheelPrize, setWheelPrize] = useState<string | null>(null);
+
   // Voice mode state
   const [voiceMode, setVoiceMode] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -1144,15 +1143,7 @@ export default function Chat() {
         onClose={() => setShowUpgradeModal(false)}
         limitType="chat"
       />
-      <RewardWheel
-        isOpen={showRewardWheel}
-        onClose={() => setShowRewardWheel(false)}
-        onSpinComplete={(prize) => {
-          setWheelPrize(prize);
-          // Handle prize reward here
-          toast.success(`You won: ${prize}!`);
-        }}
-      />
+
     </AppShell>
   );
 }

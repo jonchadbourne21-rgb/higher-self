@@ -1433,11 +1433,11 @@
 - [x] Verify 21 lessons inserted correctly
 
 ## Program Voice Days (Restructure)
-- [ ] Add isVoiceDay boolean column to program_lessons table
-- [ ] Update IFS seed days 3, 12, 21 to mark isVoiceDay = true
-- [ ] Update getCurrentLesson to return isVoiceDay flag to frontend
-- [ ] Update ProgramDetail.tsx to show voice session CTA on voice days (instead of text reflection)
-- [ ] Allow voice session completion to count as lesson completion for voice days
+- [x] Add isVoiceDay boolean column to program_lessons table
+- [x] Update IFS seed days 3, 12, 21 to mark isVoiceDay = true
+- [x] Update getCurrentLesson to return isVoiceDay flag to frontend
+- [x] Update ProgramDetail.tsx to show voice session CTA on voice days (instead of text reflection)
+- [x] Allow voice session completion to count as lesson completion for voice days
 
 ## AI Loading States & User Feedback
 - [x] Create reusable AIThinking component with rotating status messages and animation
@@ -1445,3 +1445,20 @@
 - [x] Add loading state to journal AI perspective generation
 - [x] Add loading state to weekly insights generation
 - [x] Add loading state to program lesson AI feedback
+
+## Echo Feature (Replaces Wheel Spin)
+- [x] Add journal entry tagging fields to schema (primary_emotion, theme_tags, tension_summary, resolution_status, intensity_score)
+- [x] Create echo_queue table (userId, sourceEntryId, triggerEntryId, score, reframingLine, surfacedAt, dismissedAt, reflectedAt, isCompound, compoundEntryIds)
+- [x] Build tagging pipeline in journal.create (LLM call for metadata extraction)
+- [x] Store tension_embedding in memory_embeddings (sourceType: "tension")
+- [x] Build async Echo retrieval logic (findEchoCandidate after journal write)
+- [x] Generate reframing line (Mirror voice, second person, question-ending)
+- [x] Build Echo reveal UI (cinematic: silence beat → timestamp → entry fade → reframing → controls)
+- [x] Build compound Echo logic (30+ entries, pattern clustering)
+- [x] Remove RewardWheel component references from Domains.tsx and Chat.tsx
+- [x] Remove WelcomeSpinModal from Home page
+- [x] Remove wheel/spin references from Home page tile
+- [x] Replace rewards tile with Echo tile on Home
+- [x] Remove /rewards route from App.tsx
+- [ ] Delete Rewards.tsx page file (kept for now — rewards router still has proStatus/points procedures)
+- [ ] Remove bonusSpins logic from Stripe webhook (deferred)
