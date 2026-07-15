@@ -458,9 +458,20 @@ export const appRouter = router({
           console.error("Failed to check streak spin:", e);
         }
 
-        // Generate AI response
+        // Generate AI response with RAG context
         try {
-          const systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id, ctx.user.seedIntent || undefined);
+          let systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id, ctx.user.seedIntent || undefined);
+          // Inject RAG memories + personality for deeper personalization
+          try {
+            const ragQuery = [input.reflectionAnswer, input.followUpAnswer, input.gratitude, input.reflection].filter(Boolean).join(" ");
+            const [memories, personality] = await Promise.all([
+              retrieveMemories({ userId: ctx.user.id, query: ragQuery || "daily check-in reflection", topK: 3, sourceTypes: ["journal", "checkin", "voice"] }),
+              getPersonalityProfile(ctx.user.id),
+            ]);
+            systemPrompt += formatMemoriesForPrompt(memories) + formatPersonalityForPrompt(personality);
+          } catch (e) {
+            console.error("[CheckIn] RAG context retrieval failed, continuing without:", e);
+          }
           const userMessage = [
             `Today's check-in:`,
             `Mood: ${input.mood}/10`,
@@ -747,9 +758,19 @@ export const appRouter = router({
           metadata: { moodTag: input.moodTag || "neutral", ...(domainMeta ? { domain: domainMeta } : {}) },
         }).catch((e) => console.error("[RAG] Journal embedding failed:", e));
 
-        // Generate AI perspective asynchronously
+        // Generate AI perspective with RAG context
         try {
-          const systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id, ctx.user.seedIntent || undefined);
+          let systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id, ctx.user.seedIntent || undefined);
+          // Inject RAG memories + personality so the AI references past entries
+          try {
+            const [memories, personality] = await Promise.all([
+              retrieveMemories({ userId: ctx.user.id, query: `${input.title || ""} ${input.content.slice(0, 200)}`, topK: 3, sourceTypes: ["journal", "checkin", "voice"] }),
+              getPersonalityProfile(ctx.user.id),
+            ]);
+            systemPrompt += formatMemoriesForPrompt(memories) + formatPersonalityForPrompt(personality);
+          } catch (e) {
+            console.error("[Journal] RAG context retrieval failed, continuing without:", e);
+          }
           // Route to Claude Sonnet for user-facing reflection
           const aiRes = await invokeLLM({
             messages: [
@@ -1172,7 +1193,17 @@ Rules:
         getUserProfile(ctx.user.id),
       ]);
 
-      const systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id, ctx.user.seedIntent || undefined);
+      let systemPrompt = await buildHigherSelfSystemPrompt(ctx.user.id, ctx.user.seedIntent || undefined);
+      // Inject RAG memories for cross-week pattern recognition
+      try {
+        const [memories, personality] = await Promise.all([
+          retrieveMemories({ userId: ctx.user.id, query: "weekly patterns growth themes emotional trends", topK: 5, sourceTypes: ["journal", "checkin", "voice"] }),
+          getPersonalityProfile(ctx.user.id),
+        ]);
+        systemPrompt += formatMemoriesForPrompt(memories) + formatPersonalityForPrompt(personality);
+      } catch (e) {
+        console.error("[Insights] RAG context retrieval failed, continuing without:", e);
+      }
 
       const contextStr = `
 Recent check-ins (${recentCheckIns.length} this week):

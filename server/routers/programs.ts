@@ -16,6 +16,7 @@ import {
   computeProgramStreak,
 } from "../db/programs";
 import { invokeLLM } from "../_core/llm";
+import { retrieveMemories, formatMemoriesForPrompt, getPersonalityProfile, formatPersonalityForPrompt } from "../rag/memory";
 import { addRewardPoints } from "../db/rewards";
 import { createRewardGrant } from "../db/rewardGrants";
 import { isProUser } from "../db/subscriptions";
@@ -326,15 +327,26 @@ export const programsRouter = router({
       const lesson = await getLessonByDay(input.programId, input.day);
       if (!lesson) throw new TRPCError({ code: "NOT_FOUND", message: "Lesson not found" });
 
-      // Generate AI feedback
+      // Generate AI feedback with RAG context
       let aiFeedback = "";
       try {
+        // Retrieve relevant memories to personalize feedback
+        let ragContext = "";
+        try {
+          const [memories, personality] = await Promise.all([
+            retrieveMemories({ userId: ctx.user.id, query: `${lesson.title} ${input.reflection}`, topK: 3, sourceTypes: ["journal", "checkin", "voice", "program_response"] }),
+            getPersonalityProfile(ctx.user.id),
+          ]);
+          ragContext = formatMemoriesForPrompt(memories) + formatPersonalityForPrompt(personality);
+        } catch (e) {
+          console.error("[Programs] RAG context retrieval failed, continuing without:", e);
+        }
         const res = await invokeLLM({
           messages: [
             {
               role: "system",
               content: `You are the user's Higher Self — the most self-actualized version of them — guiding them through the "${lesson.title}" lesson. ${lesson.guidanceTemplate ?? ""}
-Speak from within, as them. Reflect back what they shared, name what you notice with grounded honesty, and ask one powerful question that only their Higher Self would know to ask. Keep it to 3-5 sentences. Use "I" and "we." No sugarcoating. No minimizing.`,
+Speak from within, as them. Reflect back what they shared, name what you notice with grounded honesty, and ask one powerful question that only their Higher Self would know to ask. Keep it to 3-5 sentences. Use "I" and "we." No sugarcoating. No minimizing.${ragContext ? `\n\nContext from their journey so far:\n${ragContext}` : ""}`,
             },
             {
               role: "user",
