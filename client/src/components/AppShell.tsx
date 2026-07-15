@@ -45,6 +45,7 @@ function getSubtitle(path: string): string {
   if (path.startsWith("/settings")) return "PROFILE";
 
   if (path.startsWith("/programs")) return "GROWTH PROGRAMS";
+  if (path.startsWith("/echo")) return "ECHO";
   return "AI SELF-REFLECTION";
 }
 

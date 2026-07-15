@@ -34,6 +34,7 @@ import ProgramDetail from "./pages/ProgramDetail";
 import ProgramInsight from "./pages/ProgramInsight";
 import VoiceHistory from "./pages/VoiceHistory";
 import TimeCapsule from "./pages/TimeCapsule";
+import Echo from "./pages/Echo";
 import Demo from "./pages/Demo";
 import { useRef, useEffect } from "react";
 import { usePageMetadata } from "@/lib/metadata";
@@ -121,6 +122,7 @@ function AuthenticatedRouter() {
                 <Route path="/programs/:id" component={ProgramDetail} />
                 <Route path="/programs/:id/insight/:day" component={ProgramInsight} />
                 <Route path="/voice/history" component={VoiceHistory} />
+                <Route path="/echo" component={Echo} />
                 <Route path="/time-capsule" component={TimeCapsule} />
                 <Route path="/404" component={NotFound} />
                 <Route component={NotFound} />

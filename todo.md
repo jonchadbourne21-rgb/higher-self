@@ -1468,3 +1468,12 @@
 - [x] Update stale "reward wheel spin" copy in Pricing.tsx (feature lists + consistency card + FAQ)
 - [x] Update stale "reward wheel spin" copy in FAQ.tsx
 - [x] Update stale "free spin" toast in CheckIn.tsx
+
+## Echo Feature — Full Integration (Jul 15)
+- [x] Create dedicated /echo page with pending echo card + echo history list
+- [x] Add /echo route to App.tsx
+- [x] Update Home tile to link to /echo instead of /journal
+- [x] Add ECHO subtitle to AppShell
+- [x] Add echo.history and echo.stats tRPC procedures for past echoes
+- [x] Verify EchoReveal overlay triggers correctly from pending echo
+- [x] Verify full pipeline: journal write → tagging → echo queue → reveal (confirmed wired in routers.ts line 827)

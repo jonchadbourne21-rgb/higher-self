@@ -148,7 +148,7 @@ export default function Home() {
     { key: "programs", href: "/programs", emoji: "🎓", label: "Programs",        sub: "Guided growth",   score: tileEngagement?.programs ?? 0 },
     { key: "habits",   href: "/domains",  emoji: "🧭", label: "Positive Habits", sub: "Build your habits", score: tileEngagement?.habits ?? 0 },
     { key: "journal",  href: "/journal",  emoji: "📝", label: "Journal",          sub: "Write your thoughts", score: tileEngagement?.journal ?? 0 },
-    { key: "echo",     href: "/journal",  emoji: "🔮", label: "Echo",            sub: "Memory reflections", score: tileEngagement?.rewards ?? 0 },
+    { key: "echo",     href: "/echo",     emoji: "🔮", label: "Echo",            sub: "Memory reflections", score: tileEngagement?.rewards ?? 0 },
     { key: "calendar", href: "/calendar", emoji: "📅", label: "Calendar",         sub: calendarSub || "Plan your week", score: tileEngagement?.calendar ?? 0 },
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [tileEngagement, calendarSub]);
