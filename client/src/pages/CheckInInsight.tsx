@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
 import { ArrowLeft, Loader2, TrendingUp } from "lucide-react";
-import { AIThinking } from "@/components/AIThinking";
+import { AIThinking, AIReveal } from "@/components/AIThinking";
 import { Streamdown } from "streamdown";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -105,15 +105,17 @@ export default function CheckInInsight() {
           <h2 className="text-lg font-semibold text-foreground mb-3">Today's Check-In</h2>
           <div className="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-950/30 dark:to-cyan-950/30 rounded-2xl p-6 border border-teal-200 dark:border-teal-800 min-h-[200px] flex flex-col justify-center">
             {dailyInsight ? (
-              <div className="space-y-4">
+              <AIReveal className="space-y-4">
                 <Streamdown className="text-foreground leading-relaxed text-sm">
                   {dailyInsight}
                 </Streamdown>
-              </div>
+              </AIReveal>
             ) : (
-              <div className="flex items-center justify-center h-32">
-                <Loader2 size={32} className="animate-spin text-teal-600" />
-              </div>
+              <AIThinking messages={[
+                "Your Higher Self is reflecting…",
+                "Weaving today's insights…",
+                "Almost ready…",
+              ]} interval={2500} />
             )}
           </div>
         </motion.div>
@@ -143,7 +145,7 @@ export default function CheckInInsight() {
               ]} />
             </div>
           ) : weeklyInsight ? (
-            <div className="space-y-4">
+            <AIReveal className="space-y-4">
               {/* Growth Score */}
               {weeklyInsight.growthScore !== undefined && (
                 <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
@@ -210,7 +212,7 @@ export default function CheckInInsight() {
                   </Streamdown>
                 </div>
               )}
-            </div>
+            </AIReveal>
           ) : (
             <div className="bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30 rounded-2xl p-6 border border-rose-200 dark:border-rose-800 text-center">
               <p className="text-sm text-muted-foreground">Weekly insights will appear here as you complete check-ins</p>

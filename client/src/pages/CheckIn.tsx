@@ -7,7 +7,7 @@ import { useLocation } from "wouter";
 import { toast } from "sonner";
 import AppShell from "@/components/AppShell";
 import { ChevronLeft, ChevronRight, Sparkles, BellRing, BellOff, Loader2 } from "lucide-react";
-import { AIThinking } from "@/components/AIThinking";
+import { AIThinking, AIReveal } from "@/components/AIThinking";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Streamdown } from "streamdown";
 
@@ -363,11 +363,7 @@ export default function CheckIn() {
                       ]} interval={2500} />
                     </div>
                   ) : (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="glass rounded-2xl p-5 border border-primary/20"
-                    >
+                    <AIReveal className="glass rounded-2xl p-5 border border-primary/20">
                       <div className="flex items-start gap-3">
                         <span className="text-xl mt-0.5">✦</span>
                         <p className="text-base font-medium leading-relaxed text-foreground">
@@ -379,7 +375,7 @@ export default function CheckIn() {
                           Today's theme: {dailyPromptData.theme.split(" —")[0]}
                         </p>
                       )}
-                    </motion.div>
+                    </AIReveal>
                   )}
 
                   <textarea
@@ -405,18 +401,14 @@ export default function CheckIn() {
                       ]} interval={2500} />
                     </div>
                   ) : (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="glass rounded-2xl p-5 border border-amber-500/20"
-                    >
+                    <AIReveal className="glass rounded-2xl p-5 border border-amber-500/20">
                       <div className="flex items-start gap-3">
                         <span className="text-xl mt-0.5">🔍</span>
                         <p className="text-base font-medium leading-relaxed text-foreground">
                           {followUpQuestion}
                         </p>
                       </div>
-                    </motion.div>
+                    </AIReveal>
                   )}
 
                   <textarea

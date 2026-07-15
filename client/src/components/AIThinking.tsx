@@ -83,6 +83,29 @@ export function AIThinking({
   );
 }
 
+/**
+ * Wrapper that crossfades from AIThinking → revealed content.
+ * Use this around any content that appears after an AI generation completes.
+ */
+export function AIReveal({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 /** Compact inline version for buttons/small spaces */
 export function AIThinkingInline({
   messages = ["Thinking…", "Reflecting…", "Connecting…"],

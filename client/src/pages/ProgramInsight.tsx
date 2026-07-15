@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useLocation, useParams } from "wouter";
 import { motion } from "framer-motion";
+import { AIReveal } from "@/components/AIThinking";
 import { trpc } from "@/lib/trpc";
 import AppShell from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -189,18 +190,13 @@ export default function ProgramInsight() {
 
         {/* AI insight */}
         {aiFeedback && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="rounded-xl border border-primary/20 bg-primary/5 p-5 mb-5"
-          >
+          <AIReveal className="rounded-xl border border-primary/20 bg-primary/5 p-5 mb-5">
             <div className="flex items-center gap-2 mb-3">
               <Sparkles className="w-4 h-4 text-primary" />
               <span className="text-xs font-semibold text-primary uppercase tracking-wider">Your Mirror Reflects</span>
             </div>
             <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{aiFeedback}</p>
-          </motion.div>
+          </AIReveal>
         )}
 
         {/* Next day preview */}

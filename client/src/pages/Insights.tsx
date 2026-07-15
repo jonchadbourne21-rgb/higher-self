@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { useLocation } from "wouter";
 import AppShell from "@/components/AppShell";
 import { Sparkles, RefreshCw, Layers } from "lucide-react";
-import { AIThinking, AIThinkingInline } from "@/components/AIThinking";
+import { AIThinking, AIThinkingInline, AIReveal } from "@/components/AIThinking";
 import { format } from "date-fns";
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
@@ -114,11 +114,7 @@ export default function Insights() {
 
         {/* Latest insight */}
         {latest && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
+          <AIReveal className="space-y-4">
             <div className="glass rounded-3xl p-5 space-y-4 border border-primary/10">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -194,9 +190,8 @@ export default function Insights() {
                 <><RefreshCw size={16} className="mr-2" /> Generate New Insight</>
               )}
             </Button>
-          </motion.div>
+          </AIReveal>
         )}
-
         {/* Recurring Patterns (RAG Clustering) */}
         <PatternsSection />
 

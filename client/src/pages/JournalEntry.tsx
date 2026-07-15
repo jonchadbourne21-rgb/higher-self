@@ -6,6 +6,7 @@ import AppShell from "@/components/AppShell";
 import { ChevronLeft } from "lucide-react";
 import { format } from "date-fns";
 import { Streamdown } from "streamdown";
+import { AIReveal, AIThinking } from "@/components/AIThinking";
 
 export default function JournalEntry() {
   const { isAuthenticated, loading } = useAuth();
@@ -72,7 +73,7 @@ export default function JournalEntry() {
 
             {/* AI Perspective */}
             {entry.aiPerspective ? (
-              <div className="space-y-3">
+              <AIReveal className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center">
                     <span className="text-xs">✦</span>
@@ -84,15 +85,14 @@ export default function JournalEntry() {
                     <Streamdown>{entry.aiPerspective}</Streamdown>
                   </div>
                 </div>
-              </div>
+              </AIReveal>
             ) : (
               <div className="glass rounded-3xl p-5 border border-dashed border-border/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center">
-                    <span className="text-xs animate-pulse">✦</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Your Higher Self is reflecting on this entry...</p>
-                </div>
+                <AIThinking messages={[
+                  "Your Higher Self is reflecting…",
+                  "Reading between the lines…",
+                  "Finding the deeper meaning…",
+                ]} interval={2500} />
               </div>
             )}
           </div>
