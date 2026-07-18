@@ -16,15 +16,17 @@ import { memoryEmbeddings, userPersonalityProfiles } from "../../drizzle/schema"
 import { eq, and, desc, sql } from "drizzle-orm";
 import { invokeLLM } from "../_core/llm";
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY!;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const EMBEDDING_MODEL = "gemini-embedding-001";
 const EMBEDDING_DIMENSION = 3072;
+const RAG_ENABLED = !!GEMINI_API_KEY;
 
 // ─── Embedding Generation ────────────────────────────────────────────────────
 
 /**
  * Generate embedding vector using Gemini embedding-001
  * Returns a 3072-dimensional float array
+ * If GEMINI_API_KEY is not configured, returns zero vector (RAG disabled gracefully)
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
   if (!text || text.trim().length === 0) {
@@ -32,35 +34,49 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     return new Array(EMBEDDING_DIMENSION).fill(0);
   }
 
+  // If RAG is not enabled, return zero vector (graceful degradation)
+  if (!RAG_ENABLED) {
+    console.warn("[RAG] GEMINI_API_KEY not configured, returning zero vector");
+    return new Array(EMBEDDING_DIMENSION).fill(0);
+  }
+
   // Truncate to ~8000 chars to stay within token limits
   const truncated = text.slice(0, 8000);
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${EMBEDDING_MODEL}:embedContent?key=${GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: `models/${EMBEDDING_MODEL}`,
-        content: { parts: [{ text: truncated }] },
-      }),
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${EMBEDDING_MODEL}:embedContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: `models/${EMBEDDING_MODEL}`,
+          content: { parts: [{ text: truncated }] },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`[RAG] Gemini embedding failed (${response.status}):`, errText);
+      // Return zero vector instead of throwing (graceful degradation)
+      return new Array(EMBEDDING_DIMENSION).fill(0);
     }
-  );
 
-  if (!response.ok) {
-    const errText = await response.text();
-    console.error(`[RAG] Gemini embedding failed (${response.status}):`, errText);
-    throw new Error(`Embedding generation failed: ${response.status}`);
+    const data = await response.json();
+    const values: number[] = data.embedding?.values;
+
+    if (!values || values.length !== EMBEDDING_DIMENSION) {
+      console.warn(`[RAG] Unexpected embedding dimension: ${values?.length}, returning zero vector`);
+      return new Array(EMBEDDING_DIMENSION).fill(0);
+    }
+
+    return values;
+  } catch (err) {
+    console.error("[RAG] Embedding generation error:", err);
+    // Return zero vector on any error (graceful degradation)
+    return new Array(EMBEDDING_DIMENSION).fill(0);
   }
-
-  const data = await response.json();
-  const values: number[] = data.embedding?.values;
-
-  if (!values || values.length !== EMBEDDING_DIMENSION) {
-    throw new Error(`Unexpected embedding dimension: ${values?.length}`);
-  }
-
-  return values;
 }
 
 // ─── Cosine Similarity ───────────────────────────────────────────────────────
