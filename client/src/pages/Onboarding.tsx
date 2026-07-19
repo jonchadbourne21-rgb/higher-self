@@ -244,9 +244,9 @@ export default function Onboarding() {
             className="flex justify-center mb-4"
           >
             <img
-              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
+              src="/mirrored-emblem-logo.png"
               alt="Mirrored"
-              className="w-24 h-24 object-cover rounded-full"
+              className="w-20 h-28 object-contain"
               style={{ filter: "drop-shadow(0 0 24px oklch(0.55 0.18 295 / 0.5))" }}
             />
           </motion.div>

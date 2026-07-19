@@ -77,9 +77,9 @@ export default function FAQ() {
           </button>
           <div className="flex items-center gap-2">
             <img
-              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663398434536/LQwmD5t86EFFZjkEDkXbgz/mentrove-icon-transparent-XGQUfu4fN7im4fQNKmSvzr.webp"
+              src="/mirrored-emblem-logo.png"
               alt="Mirrored"
-              className="w-6 h-6 rounded-full object-cover"
+              className="w-5 h-7 object-contain"
             />
             <span
               className="text-sm font-light tracking-[0.2em] uppercase"

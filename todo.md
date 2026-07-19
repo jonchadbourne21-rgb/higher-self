@@ -1533,3 +1533,11 @@
 - [x] Delete client/src/components/ManusDialog.tsx (template component, never used)
 - [x] Delete client/src/components/Map.tsx (template component, never used)
 - [x] Keep client/src/components/MilestoneCard.tsx (still imported by Settings.tsx MilestonesSection)
+
+## Logo Replacement — Emblem Logo (Jul 19)
+- [x] Replace CloudFront mandala URL with /mirrored-emblem-logo.png in Landing.tsx
+- [x] Replace CloudFront mandala URL with /mirrored-emblem-logo.png in Onboarding.tsx
+- [x] Replace CloudFront mandala URL with /mirrored-emblem-logo.png in Settings.tsx
+- [x] Replace CloudFront mandala URL with /mirrored-emblem-logo.png in FAQ.tsx
+- [x] Replace CloudFront mandala URL with /mirrored-emblem-logo.png in Privacy.tsx
+- [x] Replace CloudFront mandala URL with /mirrored-emblem-logo.png in Terms.tsx
