@@ -49,7 +49,7 @@ describe("JWT Authentication Flow", () => {
       expect(typeof token).toBe("string");
       expect(token.split(".").length).toBe(3); // JWT has 3 parts
       expect(sessionId).toMatch(/^sess_/);
-      expect(maxAge).toBe(600); // 10 minutes
+      expect(maxAge).toBe(30 * 24 * 60 * 60); // 30 days
     });
 
     it("should insert a session row in the database", async () => {
@@ -108,14 +108,14 @@ describe("JWT Authentication Flow", () => {
       expect(payload.sid).toMatch(/^sess_/);
     });
 
-    it("JWT should expire in 10 minutes", async () => {
+    it("JWT should expire in 30 days", async () => {
       const { token } = await createSessionAndToken(42);
 
       const parts = token.split(".");
       const payload = JSON.parse(Buffer.from(parts[1], "base64").toString("utf-8"));
 
       const ttlSeconds = payload.exp - payload.iat;
-      expect(ttlSeconds).toBe(600); // 10 minutes
+      expect(ttlSeconds).toBe(30 * 24 * 60 * 60); // 30 days
     });
 
     it("JWT should NOT contain user data (name, email, role)", async () => {

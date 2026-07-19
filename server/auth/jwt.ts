@@ -16,17 +16,21 @@ function getJwtSecret(): Uint8Array {
   }
   return new TextEncoder().encode(secret);
 }
-const ACCESS_TOKEN_TTL_SECONDS = 600; // 10 minutes
+// JWT TTL matches the session row duration (30 days).
+// A short 10-minute TTL with no refresh endpoint caused all users to be logged out
+// after 10 minutes, breaking every authenticated API call.
+const ACCESS_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
 
 /**
- * Creates a long-lived session row and issues a short-lived JWT token.
+ * Creates a long-lived session row and issues a JWT token.
  *
- * The JWT is the "hall pass" — it's short-lived and stateless.
- * The session row is the source of truth — it's long-lived and can be revoked.
+ * Both the session row and the JWT are valid for 30 days.
+ * The session row is the source of truth — it can be revoked server-side.
+ * The JWT is the stateless hall pass verified on every request.
  *
  * Flow:
  * 1. Create session row in database (30 days)
- * 2. Issue JWT token with session ID + user ID (10 minutes)
+ * 2. Issue JWT token with session ID + user ID (30 days)
  * 3. Return both to OAuth callback
  * 4. OAuth callback sets JWT as HTTP-only cookie
  */
