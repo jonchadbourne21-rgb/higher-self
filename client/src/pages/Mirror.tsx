@@ -225,12 +225,10 @@ export default function Mirror() {
     });
   }, [chatMessages]);
 
-  // Auto-scroll voice — defer to next frame to avoid layout shift during render
+  // Auto-scroll voice
   useEffect(() => {
-    requestAnimationFrame(() => {
-      voiceEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    });
-  }, [voiceMessages.length]);
+    voiceEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [voiceMessages]);
 
   // Focus title input when editing
   useEffect(() => {
@@ -412,6 +410,11 @@ export default function Mirror() {
             title="Session history"
           >
             <History size={18} />
+            {sessions && sessions.length > 1 && (
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary/80 text-[9px] font-bold text-primary-foreground flex items-center justify-center">
+                {sessions.length}
+              </span>
+            )}
           </button>
 
           {/* Mode switcher */}
@@ -643,60 +646,62 @@ export default function Mirror() {
                 {/* ─── Scrollable Transcript (middle) ─── */}
                 {voiceMessages.length > 0 && (
                   <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-                    {voiceMessages.map((msg: any, idx: number) => {
-                      let content = '';
-                      let role = 'assistant';
-                      let isPartial = false;
+                    <AnimatePresence mode="popLayout">
+                      {voiceMessages.map((msg: any, idx: number) => {
+                        let content = '';
+                        let role = 'assistant';
+                        let isPartial = false;
 
-                      if (msg.type === 'user_transcript') {
-                        content = msg.message?.content || '';
-                        role = 'user';
-                        isPartial = msg.message?.isFinal === false;
-                      } else if (msg.type === 'assistant_message') {
-                        content = msg.message?.content || '';
-                        role = 'assistant';
-                      } else if (msg.type === 'user_message') {
-                        content = msg.message?.content || '';
-                        role = 'user';
-                      } else if (msg.message?.content) {
-                        content = msg.message.content;
-                        role = msg.role || 'assistant';
-                      }
+                        if (msg.type === 'user_transcript') {
+                          content = msg.message?.content || '';
+                          role = 'user';
+                          isPartial = msg.message?.isFinal === false;
+                        } else if (msg.type === 'assistant_message') {
+                          content = msg.message?.content || '';
+                          role = 'assistant';
+                        } else if (msg.type === 'user_message') {
+                          content = msg.message?.content || '';
+                          role = 'user';
+                        } else if (msg.message?.content) {
+                          content = msg.message.content;
+                          role = msg.role || 'assistant';
+                        }
 
-                      if (!content) return null;
+                        if (!content) return null;
 
-                      const stableKey = msg.id ? `voice-${msg.id}` : `voice-${msg.type}-${idx}`;
-
-                      return (
-                        <motion.div
-                          key={stableKey}
-                          initial={{ opacity: 0, y: 6 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.2, ease: "easeOut" }}
-                          className={`flex ${role === "user" ? "justify-end" : "justify-start"}`}
-                        >
-                          <div
-                            className={`max-w-[85%] px-4 py-2.5 text-sm leading-relaxed ${
-                              role === "user"
-                                ? `bg-primary text-primary-foreground rounded-2xl rounded-br-md ${isPartial ? "opacity-60" : ""}`
-                                : "bg-card border border-border/30 text-card-foreground rounded-2xl rounded-bl-md"
-                            }`}
+                        return (
+                          <motion.div
+                            key={msg.id || idx}
+                            layout
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            className={`flex ${role === "user" ? "justify-end" : "justify-start"}`}
                           >
-                            {isPartial && (
-                              <div className="flex items-center gap-1 mb-1 text-[10px] opacity-60 uppercase tracking-wider">
-                                <Mic size={10} />
-                                <span>listening...</span>
-                              </div>
-                            )}
-                            {role === "assistant" ? (
-                              <Streamdown>{content}</Streamdown>
-                            ) : (
-                              <p>{content}</p>
-                            )}
-                          </div>
-                        </motion.div>
-                      );
-                    })}
+                            <div
+                              className={`max-w-[85%] px-4 py-2.5 text-sm leading-relaxed ${
+                                role === "user"
+                                  ? `bg-primary text-primary-foreground rounded-2xl rounded-br-md ${isPartial ? "opacity-60" : ""}`
+                                  : "bg-card border border-border/30 text-card-foreground rounded-2xl rounded-bl-md"
+                              }`}
+                            >
+                              {isPartial && (
+                                <div className="flex items-center gap-1 mb-1 text-[10px] opacity-60 uppercase tracking-wider">
+                                  <Mic size={10} />
+                                  <span>listening...</span>
+                                </div>
+                              )}
+                              {role === "assistant" ? (
+                                <Streamdown>{content}</Streamdown>
+                              ) : (
+                                <p>{content}</p>
+                              )}
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
                     <div ref={voiceEndRef} />
                   </div>
                 )}
