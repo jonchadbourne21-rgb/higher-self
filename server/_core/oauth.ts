@@ -3,7 +3,7 @@ import type { Express, Request, Response } from "express";
 import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
-import { setAuthCookie } from "../auth/jwt";
+import { setAuthCookie, createSessionAndToken } from "../auth/jwt";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -16,6 +16,8 @@ export function registerOAuthRoutes(app: Express) {
     const state = getQueryParam(req, "state");
     // The redirectUri in the query param is the exact URI registered with Manus OAuth
     const redirectUri = getQueryParam(req, "redirectUri");
+    // Native client flag — when present, redirect to deep link instead of web
+    const clientType = getQueryParam(req, "client");
 
     if (!code || !state) {
       res.status(400).json({ error: "code and state are required" });
@@ -25,6 +27,7 @@ export function registerOAuthRoutes(app: Express) {
     try {
       console.log("[OAuth] Callback received, code length:", code?.length);
       console.log("[OAuth] redirectUri from query:", redirectUri);
+      console.log("[OAuth] client type:", clientType || "web");
 
       // Pass the redirectUri from query params if available (most reliable)
       // Fall back to decoding from state for backwards compatibility
@@ -56,8 +59,7 @@ export function registerOAuthRoutes(app: Express) {
         return;
       }
 
-      // NEW: Use JWT issuer to create session + issue short-lived JWT
-      // This creates a 30-day session row and a 10-minute JWT token
+      // Create session + JWT token
       await setAuthCookie(res, user.id);
 
       // Also set legacy session cookie for backwards compatibility
@@ -70,7 +72,16 @@ export function registerOAuthRoutes(app: Express) {
       console.log("[OAuth] Setting legacy cookie with options:", JSON.stringify(cookieOptions));
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      // Always redirect to relative root — the SPA router handles the rest
+      // NATIVE PATH: redirect to deep link with JWT token so the native app can store it
+      if (clientType === "native") {
+        const { token } = await createSessionAndToken(user.id);
+        const nativeRedirect = `higherself://oauth/callback?_t=${encodeURIComponent(token)}`;
+        console.log("[OAuth] Native login successful, redirecting to deep link");
+        res.redirect(302, nativeRedirect);
+        return;
+      }
+
+      // WEB PATH: redirect to relative root — the SPA router handles the rest
       console.log("[OAuth] Login successful, redirecting to /");
       res.redirect(302, "/");
     } catch (error: any) {
@@ -80,6 +91,12 @@ export function registerOAuthRoutes(app: Express) {
       const sqlError = error?.sqlMessage || error?.code || "";
       console.error("[OAuth] Callback failed:", errMsg, sqlError ? `| SQL: ${sqlError}` : "");
       if (error?.sql) console.error("[OAuth] Failed SQL:", error.sql);
+
+      // Native error path
+      if (clientType === "native") {
+        res.redirect(302, "higherself://oauth/callback?error=auth_failed");
+        return;
+      }
       // Redirect to landing page with error instead of showing raw JSON
       res.redirect(302, "/?auth_error=1");
     }

@@ -15,7 +15,13 @@ const config: CapacitorConfig = {
   webDir: "dist/public",
   server: {
     // Allow navigation to the production API + OAuth portal from the WebView.
-    allowNavigation: ["higherself.cloud", "*.higherself.cloud"],
+    allowNavigation: [
+      "mirroredapp.manus.space",
+      "themirroredapp.com",
+      "*.themirroredapp.com",
+      "manus.im",
+      "*.manus.im",
+    ],
   },
   ios: {
     scheme: "higherself",

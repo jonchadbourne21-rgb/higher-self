@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { isNative } from "@/lib/platform";
+import { getCurrentOfferings, purchasePackage, restorePurchases } from "@/lib/purchases";
 
 const FREE_FEATURES = [
   { name: "3 AI chats per day", included: true },
@@ -85,16 +87,49 @@ export default function Pricing() {
   const handleUpgrade = async (tier: "pro" | "pro_voice", billingCycle: "monthly" | "annual" = "monthly") => {
     setIsLoadingCheckout(true);
     try {
-      const result = await createCheckoutMutation.mutateAsync({ billingCycle, tier });
-      if (result.checkoutUrl) {
-        toast.info("Redirecting to checkout...");
-        window.open(result.checkoutUrl, "_blank");
+      if (isNative()) {
+        // Native: use RevenueCat In-App Purchase
+        const offerings = await getCurrentOfferings();
+        if (!offerings || !offerings.availablePackages?.length) {
+          toast.error("No subscription packages available. Please try again later.");
+          return;
+        }
+        // Match the package by identifier convention: pro_monthly, pro_annual, pro_voice_monthly, pro_voice_annual
+        const targetId = `${tier}_${billingCycle}`;
+        const pkg = offerings.availablePackages.find(
+          (p: any) => p.identifier?.includes(targetId) || p.identifier?.includes(tier)
+        ) || offerings.availablePackages[0];
+        await purchasePackage(pkg);
+        toast.success("Purchase successful! Pro features are now active.");
+        subscriptionStatus.refetch();
+      } else {
+        // Web: use Stripe Checkout
+        const result = await createCheckoutMutation.mutateAsync({ billingCycle, tier });
+        if (result.checkoutUrl) {
+          toast.info("Redirecting to checkout...");
+          window.open(result.checkoutUrl, "_blank");
+        }
       }
-    } catch (error) {
-      toast.error("Failed to create checkout session. Please try again.");
+    } catch (error: any) {
+      if (error?.message?.includes("cancelled") || error?.code === "USER_CANCELLED") {
+        // User cancelled the purchase — not an error
+        return;
+      }
+      toast.error("Failed to process purchase. Please try again.");
       console.error("Checkout error:", error);
     } finally {
       setIsLoadingCheckout(false);
+    }
+  };
+
+  const handleRestorePurchases = async () => {
+    if (!isNative()) return;
+    try {
+      await restorePurchases();
+      toast.success("Purchases restored successfully.");
+      subscriptionStatus.refetch();
+    } catch {
+      toast.error("Could not restore purchases. Please try again.");
     }
   };
 
@@ -466,9 +501,24 @@ export default function Pricing() {
           >
             {currentTier === "free" ? "Start with Pro — $9.99/month" : "You're already on a paid plan ✓"}
           </button>
-          <p className="text-[10px]" style={{ color: "oklch(0.50 0.03 270)" }}>
-            No commitment · Cancel anytime · Test card: 4242 4242 4242 4242
-          </p>
+          {isNative() ? (
+            <>
+              <button
+                onClick={handleRestorePurchases}
+                className="text-[11px] underline opacity-70 hover:opacity-100 transition-opacity"
+                style={{ color: "oklch(0.65 0.16 185)" }}
+              >
+                Restore Purchases
+              </button>
+              <p className="text-[10px]" style={{ color: "oklch(0.50 0.03 270)" }}>
+                No commitment · Cancel anytime from your device settings
+              </p>
+            </>
+          ) : (
+            <p className="text-[10px]" style={{ color: "oklch(0.50 0.03 270)" }}>
+              No commitment · Cancel anytime · Test card: 4242 4242 4242 4242
+            </p>
+          )}
         </motion.div>
       </div>
     </AppShell>

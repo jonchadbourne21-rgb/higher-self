@@ -1517,6 +1517,7 @@
 - [x] Update ProgramDetail.tsx — use session abstraction for program insight cache
 - [x] Update ProgramInsight.tsx — use session abstraction for program insight cache
 - [x] Update Home.tsx — use storage abstraction for faqPulse keys
-- [ ] Next: Add Capacitor CLI + build scripts (pnpm cap:build, pnpm cap:sync, pnpm cap:open:ios/android)
-- [ ] Next: Wire RevenueCat product IDs to Pricing page (replace Stripe on native)
-- [ ] Next: Test OAuth deep-link flow on iOS simulator
+- [x] Add Capacitor CLI + build scripts (cap:build, cap:sync, cap:open:ios, cap:open:android)
+- [x] Wire RevenueCat product IDs to Pricing page (platform-aware: RevenueCat on native, Stripe on web)
+- [x] Configure native OAuth deep-link in server (client=native → higherself://oauth/callback redirect)
+- [ ] Test OAuth deep-link flow on iOS simulator (requires Xcode)
