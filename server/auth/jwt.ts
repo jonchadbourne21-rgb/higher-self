@@ -16,15 +16,15 @@ function getJwtSecret(): Uint8Array {
   }
   return new TextEncoder().encode(secret);
 }
-// JWT TTL matches the session row duration (30 days).
+// JWT TTL matches the session row duration (45 days).
 // A short 10-minute TTL with no refresh endpoint caused all users to be logged out
 // after 10 minutes, breaking every authenticated API call.
-const ACCESS_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
+const ACCESS_TOKEN_TTL_SECONDS = 45 * 24 * 60 * 60; // 45 days
 
 /**
  * Creates a long-lived session row and issues a JWT token.
  *
- * Both the session row and the JWT are valid for 30 days.
+ * Both the session row and the JWT are valid for 45 days.
  * The session row is the source of truth — it can be revoked server-side.
  * The JWT is the stateless hall pass verified on every request.
  *
@@ -41,7 +41,7 @@ export async function createSessionAndToken(
 ) {
   // Step 1: Create the long-lived session row
   const sessionId = `sess_${nanoid(24)}`;
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const expiresAt = new Date(Date.now() + 45 * 24 * 60 * 60 * 1000);
 
   const db = await getDb();
   if (!db) throw new Error("Database connection failed");

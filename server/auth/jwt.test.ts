@@ -49,7 +49,7 @@ describe("JWT Authentication Flow", () => {
       expect(typeof token).toBe("string");
       expect(token.split(".").length).toBe(3); // JWT has 3 parts
       expect(sessionId).toMatch(/^sess_/);
-      expect(maxAge).toBe(30 * 24 * 60 * 60); // 30 days
+      expect(maxAge).toBe(45 * 24 * 60 * 60); // 45 days
     });
 
     it("should insert a session row in the database", async () => {
@@ -72,9 +72,9 @@ describe("JWT Authentication Flow", () => {
       const callArgs = insertValues.mock.calls[0][0];
       const expiresAt = callArgs.expiresAt as Date;
 
-      const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+      const fortyFiveDaysMs = 45 * 24 * 60 * 60 * 1000;
       const diff = expiresAt.getTime() - Date.now();
-      expect(Math.abs(diff - thirtyDaysMs)).toBeLessThan(5000); // Within 5 seconds
+      expect(Math.abs(diff - fortyFiveDaysMs)).toBeLessThan(5000); // Within 5 seconds
     });
 
     it("should store userAgent and ipAddress when provided", async () => {
@@ -108,14 +108,14 @@ describe("JWT Authentication Flow", () => {
       expect(payload.sid).toMatch(/^sess_/);
     });
 
-    it("JWT should expire in 30 days", async () => {
+    it("JWT should expire in 45 days", async () => {
       const { token } = await createSessionAndToken(42);
 
       const parts = token.split(".");
       const payload = JSON.parse(Buffer.from(parts[1], "base64").toString("utf-8"));
 
       const ttlSeconds = payload.exp - payload.iat;
-      expect(ttlSeconds).toBe(30 * 24 * 60 * 60); // 30 days
+      expect(ttlSeconds).toBe(45 * 24 * 60 * 60); // 45 days
     });
 
     it("JWT should NOT contain user data (name, email, role)", async () => {
