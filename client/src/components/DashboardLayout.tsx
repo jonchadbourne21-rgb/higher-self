@@ -1,4 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import { storage, STORAGE_KEYS } from "@/lib/storage";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -20,6 +21,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
+import { redirectToLogin } from "@/lib/loginRedirect";
 import { useIsMobile } from "@/hooks/useMobile";
 import { LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
@@ -32,7 +34,6 @@ const menuItems = [
   { icon: Users, label: "Page 2", path: "/some-path" },
 ];
 
-const SIDEBAR_WIDTH_KEY = "sidebar-width";
 const DEFAULT_WIDTH = 280;
 const MIN_WIDTH = 200;
 const MAX_WIDTH = 480;
@@ -43,13 +44,13 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [sidebarWidth, setSidebarWidth] = useState(() => {
-    const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
+    const saved = storage.getItem(STORAGE_KEYS.sidebarWidth);
     return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
   });
   const { loading, user } = useAuth();
 
   useEffect(() => {
-    localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
+    storage.setItem(STORAGE_KEYS.sidebarWidth, sidebarWidth.toString());
   }, [sidebarWidth]);
 
   if (loading) {
@@ -70,7 +71,7 @@ export default function DashboardLayout({
           </div>
           <Button
             onClick={() => {
-              window.location.href = getLoginUrl();
+              redirectToLogin(getLoginUrl());
             }}
             size="lg"
             className="w-full shadow-lg hover:shadow-xl transition-all"

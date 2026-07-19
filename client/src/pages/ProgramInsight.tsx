@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { AIReveal } from "@/components/AIThinking";
 import { trpc } from "@/lib/trpc";
 import AppShell from "@/components/AppShell";
+import { session, programInsightKey } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
@@ -90,7 +91,7 @@ export default function ProgramInsight() {
   // Check sessionStorage for the just-submitted response (set by ProgramDetail on submit)
   const storedInsight = (() => {
     try {
-      const raw = sessionStorage.getItem(`program_insight_${programId}_${day}`);
+      const raw = session.getItem(programInsightKey(programId, day));
       return raw ? JSON.parse(raw) : null;
     } catch {
       return null;

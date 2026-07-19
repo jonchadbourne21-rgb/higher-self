@@ -1,5 +1,9 @@
 import { trpc } from "@/lib/trpc";
 import { isDemoMode } from "@/lib/demo";
+import { storage, STORAGE_KEYS, initStorage } from "@/lib/storage";
+import { registerNativeAuthCallback } from "@/lib/nativeAuth";
+import { redirectToLogin } from "@/lib/loginRedirect";
+import { initPurchases } from "@/lib/purchases";
 import { UNAUTHED_ERR_MSG } from '@shared/const';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, TRPCClientError } from "@trpc/client";
@@ -23,9 +27,9 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!isUnauthorized) return;
 
   // Clear any stale stored token so the login page starts fresh
-  try { localStorage.removeItem(SESSION_STORAGE_KEY); } catch (_) {}
+  storage.removeItem(STORAGE_KEYS.sessionToken);
 
-  window.location.href = getLoginUrl();
+  redirectToLogin(getLoginUrl());
 };
 
 queryClient.getQueryCache().subscribe(event => {
@@ -44,25 +48,24 @@ queryClient.getMutationCache().subscribe(event => {
   }
 });
 
-// ── Token-in-localStorage auth ──────────────────────────────────────────────
+// ── Token-in-localStorage/native-storage auth ───────────────────────────────
 // On custom domains (higherself.cloud), the Cloudflare proxy may strip
 // Set-Cookie headers. As a fallback, the OAuth callback redirects to
-// /?_t=JWT and we store the token in localStorage, then send it as
-// Authorization: Bearer on every tRPC request.
-const SESSION_STORAGE_KEY = "app_session_token";
+// /?_t=JWT and we store the token via the storage abstraction, then send it
+// as Authorization: Bearer on every tRPC request.
 
-// Pick up token from URL if present (just after OAuth redirect)
+// Pick up token from URL if present (just after OAuth redirect on web)
 const _urlParams = new URLSearchParams(window.location.search);
 const _urlToken = _urlParams.get("_t");
 if (_urlToken) {
-  localStorage.setItem(SESSION_STORAGE_KEY, _urlToken);
+  storage.setItem(STORAGE_KEYS.sessionToken, _urlToken);
   // Clean the token from the URL without a page reload
   const cleanUrl = window.location.pathname + window.location.hash;
   window.history.replaceState({}, "", cleanUrl);
 }
 
 function getStoredToken(): string | null {
-  return localStorage.getItem(SESSION_STORAGE_KEY);
+  return storage.getItem(STORAGE_KEYS.sessionToken);
 }
 
 const trpcClient = trpc.createClient({
@@ -87,10 +90,20 @@ const trpcClient = trpc.createClient({
   ],
 });
 
-createRoot(document.getElementById("root")!).render(
-  <trpc.Provider client={trpcClient} queryClient={queryClient}>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </trpc.Provider>
-);
+async function bootstrap() {
+  // On native, hydrate the storage cache before anything reads from it,
+  // then wire up the deep-link OAuth callback and store IAP.
+  await initStorage();
+  await registerNativeAuthCallback();
+  void initPurchases();
+
+  createRoot(document.getElementById("root")!).render(
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </trpc.Provider>
+  );
+}
+
+void bootstrap();

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { trpc } from "@/lib/trpc";
 import AppShell from "@/components/AppShell";
+import { session, programInsightKey } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -188,8 +189,8 @@ export default function ProgramDetail() {
       }
 
       try {
-        sessionStorage.setItem(
-          `program_insight_${programId}_${day}`,
+        session.setItem(
+          programInsightKey(programId, day),
           JSON.stringify({
             aiFeedback: res.aiFeedback,
             userReflection: reflection,
@@ -198,7 +199,7 @@ export default function ProgramDetail() {
           })
         );
       } catch {
-        // sessionStorage unavailable
+        // session storage unavailable
       }
       navigate(`/programs/${programId}/insight/${day}`);
     },
@@ -250,8 +251,8 @@ export default function ProgramDetail() {
         toast.success(`\uD83D\uDD25 ${res.streakMilestone.days}-Day Streak! +${res.streakMilestone.points} bonus points!`, { duration: 5000 });
       }
       try {
-        sessionStorage.setItem(
-          `program_insight_${programId}_${day}`,
+        session.setItem(
+          programInsightKey(programId, day),
           JSON.stringify({
             aiFeedback: res.aiFeedback,
             userReflection: "[Voice session completed]",

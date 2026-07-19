@@ -9,6 +9,7 @@ import { Sparkles, Sun, Moon, Bell, User, ChevronRight, Hourglass } from "lucide
 import { format, formatDistanceToNow } from "date-fns";
 import { BookOpen } from "lucide-react";
 import AppShell from "@/components/AppShell";
+import { storage, STORAGE_KEYS } from "@/lib/storage";
 
 // Inline SVG sparkline for the last 7 Aura scores
 function AuraSparkline({ data }: { data: { date: Date; aura: number }[] }) {
@@ -102,15 +103,15 @@ export default function Home() {
 
   // Show FAQ pulse for new users (first 3 visits only)
   useEffect(() => {
-    const key = "mirrored_faq_pulse_dismissed";
-    const dismissed = localStorage.getItem(key);
+    const key = STORAGE_KEYS.faqPulseDismissed;
+    const dismissed = storage.getItem(key);
     if (!dismissed) {
-      const count = parseInt(localStorage.getItem("mirrored_faq_pulse_count") || "0", 10);
+      const count = parseInt(storage.getItem(STORAGE_KEYS.faqPulseCount) || "0", 10);
       if (count < 3) {
         setShowFaqPulse(true);
-        localStorage.setItem("mirrored_faq_pulse_count", String(count + 1));
+        storage.setItem(STORAGE_KEYS.faqPulseCount, String(count + 1));
       } else {
-        localStorage.setItem(key, "1");
+        storage.setItem(key, "1");
       }
     }
   }, []);
@@ -582,7 +583,7 @@ export default function Home() {
               <button
                 onClick={() => {
                   setShowFaqPulse(false);
-                  localStorage.setItem("mirrored_faq_pulse_dismissed", "1");
+                  storage.setItem(STORAGE_KEYS.faqPulseDismissed, "1");
                 }}
                 className="text-xs transition-opacity hover:opacity-70 relative"
                 style={{ color: "oklch(0.50 0.08 295)" }}

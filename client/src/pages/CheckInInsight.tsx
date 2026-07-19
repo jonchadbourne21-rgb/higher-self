@@ -7,6 +7,7 @@ import AppShell from "@/components/AppShell";
 import { ArrowLeft, Loader2, TrendingUp } from "lucide-react";
 import { AIThinking, AIReveal } from "@/components/AIThinking";
 import { Streamdown } from "streamdown";
+import { session, STORAGE_KEYS } from "@/lib/storage";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
@@ -26,10 +27,10 @@ export default function CheckInInsight() {
 
   useEffect(() => {
     // Get insight from session storage or navigate back if not found
-    const storedInsight = sessionStorage.getItem("checkInInsight");
+    const storedInsight = session.getItem(STORAGE_KEYS.checkInInsight);
     if (storedInsight) {
       setDailyInsight(storedInsight);
-      sessionStorage.removeItem("checkInInsight");
+      session.removeItem(STORAGE_KEYS.checkInInsight);
     } else {
       navigate("/check-in");
     }

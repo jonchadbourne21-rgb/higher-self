@@ -1497,3 +1497,26 @@
 - [x] Echo pipeline already wrapped in fire-and-forget try/catch (line 827)
 - [x] Journal.create perspective already wrapped in try/catch (line 763)
 - [x] CheckIn.submit already wrapped in try/catch (line 462)
+
+## Native Migration (Capacitor Foundation) — Jul 19
+- [x] Add platform.ts — safe isNative() / getPlatform() detection (web/ios/android)
+- [x] Add storage.ts — unified storage abstraction (localStorage on web, @capacitor/preferences on native)
+- [x] Add nativeAuth.ts — native OAuth deep-link flow (higherself://oauth/callback)
+- [x] Add loginRedirect.ts — platform-aware login redirect
+- [x] Add purchases.ts — RevenueCat IAP abstraction (no-op on web, store IAP on native)
+- [x] Add usePushNotifications.ts — push notification hook for native
+- [x] Add capacitor.config.ts — Capacitor app config (appId: cloud.higherself.app)
+- [x] Install @capacitor/core, @capacitor/browser, @capacitor/app, @capacitor/preferences, @capacitor/push-notifications, @revenuecat/purchases-capacitor
+- [x] Update main.tsx — bootstrap() async init, native storage + auth registration
+- [x] Update useAuth.ts — use storage abstraction for session token and runtime user info
+- [x] Update DashboardLayout.tsx — use storage abstraction for sidebar width
+- [x] Update ThemeContext.tsx — use storage abstraction for theme preference
+- [x] Update demo.ts — use storage abstraction for demo mode flag
+- [x] Update CheckIn.tsx — use session abstraction for checkInInsight
+- [x] Update CheckInInsight.tsx — use session abstraction for checkInInsight
+- [x] Update ProgramDetail.tsx — use session abstraction for program insight cache
+- [x] Update ProgramInsight.tsx — use session abstraction for program insight cache
+- [x] Update Home.tsx — use storage abstraction for faqPulse keys
+- [ ] Next: Add Capacitor CLI + build scripts (pnpm cap:build, pnpm cap:sync, pnpm cap:open:ios/android)
+- [ ] Next: Wire RevenueCat product IDs to Pricing page (replace Stripe on native)
+- [ ] Next: Test OAuth deep-link flow on iOS simulator

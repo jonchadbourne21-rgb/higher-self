@@ -10,6 +10,7 @@ import { ChevronLeft, ChevronRight, Sparkles, BellRing, BellOff, Loader2 } from 
 import { AIThinking, AIReveal } from "@/components/AIThinking";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Streamdown } from "streamdown";
+import { session, STORAGE_KEYS } from "@/lib/storage";
 
 const MOOD_EMOJIS = ["😔", "😞", "😕", "😐", "🙂", "😊", "😄", "🌟", "✨", "🌈"];
 
@@ -86,7 +87,7 @@ export default function CheckIn() {
         }, 1500);
       }
       if (data.aiResponse) {
-        sessionStorage.setItem("checkInInsight", data.aiResponse);
+        session.setItem(STORAGE_KEYS.checkInInsight, data.aiResponse);
         navigate("/check-in-insight");
       } else {
         setDone(true);

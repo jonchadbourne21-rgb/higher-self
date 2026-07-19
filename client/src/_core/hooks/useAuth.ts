@@ -1,4 +1,6 @@
 import { getLoginUrl } from "@/const";
+import { redirectToLogin } from "@/lib/loginRedirect";
+import { storage, STORAGE_KEYS } from "@/lib/storage";
 import { trpc } from "@/lib/trpc";
 import { TRPCClientError } from "@trpc/client";
 import { useCallback, useEffect, useMemo } from "react";
@@ -25,8 +27,8 @@ export function useAuth(options?: UseAuthOptions) {
   });
 
   const logout = useCallback(async () => {
-    // Clear localStorage token (used on custom domains where cookies are stripped)
-    localStorage.removeItem("app_session_token");
+    // Clear stored session token (fallback auth where cookies are stripped)
+    storage.removeItem(STORAGE_KEYS.sessionToken);
     try {
       await logoutMutation.mutateAsync();
     } catch (error: unknown) {
@@ -44,8 +46,8 @@ export function useAuth(options?: UseAuthOptions) {
   }, [logoutMutation, utils]);
 
   const state = useMemo(() => {
-    localStorage.setItem(
-      "manus-runtime-user-info",
+    storage.setItem(
+      STORAGE_KEYS.runtimeUserInfo,
       JSON.stringify(meQuery.data)
     );
     return {
@@ -69,7 +71,7 @@ export function useAuth(options?: UseAuthOptions) {
     if (typeof window === "undefined") return;
     if (window.location.pathname === redirectPath) return;
 
-    window.location.href = redirectPath
+    redirectToLogin(redirectPath);
   }, [
     redirectOnUnauthenticated,
     redirectPath,

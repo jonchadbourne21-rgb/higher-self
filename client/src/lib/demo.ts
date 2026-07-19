@@ -1,3 +1,5 @@
+import { storage, STORAGE_KEYS } from "@/lib/storage";
+
 /**
  * Demo Mode Utilities
  * 
@@ -6,16 +8,16 @@
  * hardcoded demo user from context.ts.
  */
 
-const DEMO_MODE_KEY = "mirrored_demo_mode";
+
 
 export function isDemoMode(): boolean {
-  return localStorage.getItem(DEMO_MODE_KEY) === "true";
+  return storage.getItem(STORAGE_KEYS.demoMode) === "true";
 }
 
 export function enableDemoMode() {
-  localStorage.setItem(DEMO_MODE_KEY, "true");
+  storage.setItem(STORAGE_KEYS.demoMode, "true");
 }
 
 export function disableDemoMode() {
-  localStorage.removeItem(DEMO_MODE_KEY);
+  storage.removeItem(STORAGE_KEYS.demoMode);
 }
