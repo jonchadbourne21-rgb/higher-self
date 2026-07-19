@@ -410,11 +410,6 @@ export default function Mirror() {
             title="Session history"
           >
             <History size={18} />
-            {sessions && sessions.length > 1 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary/80 text-[9px] font-bold text-primary-foreground flex items-center justify-center">
-                {sessions.length}
-              </span>
-            )}
           </button>
 
           {/* Mode switcher */}
