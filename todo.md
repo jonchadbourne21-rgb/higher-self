@@ -1541,3 +1541,9 @@
 - [x] Replace CloudFront mandala URL with /mirrored-emblem-logo.png in FAQ.tsx
 - [x] Replace CloudFront mandala URL with /mirrored-emblem-logo.png in Privacy.tsx
 - [x] Replace CloudFront mandala URL with /mirrored-emblem-logo.png in Terms.tsx
+
+## Bug Fix: Voice Page Chat Bubble Overlap (Jul 19)
+- [x] Fix message list rendering — chat bubbles overlap during scroll on Voice page
+- [x] Ensure every mapped message has stable unique key (message ID, not array index)
+- [x] Verify auto-scroll doesn't cause layout shifts
+- [x] Investigate notification badge showing "33" — real data (sessions.length), removed badge entirely per user request
