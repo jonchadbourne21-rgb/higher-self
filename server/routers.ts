@@ -873,11 +873,12 @@ export const appRouter = router({
       .input(z.object({ content: z.string().min(30) }))
       .mutation(async ({ input }) => {
         // Route to Claude Sonnet for user-facing features
-        const res = await invokeLLM({
-          messages: [
-            {
-              role: "system",
-              content: `You are a deeply perceptive journal title writer. Read the journal entry and generate 3 title options, max 5 words each.
+        try {
+          const res = await invokeLLM({
+            messages: [
+              {
+                role: "system",
+                content: `You are a deeply perceptive journal title writer. Read the journal entry and generate 3 title options, max 5 words each.
 
 Option 1: Extract a phrase the user actually wrote — something raw or specific they said. Use their own words as the title.
 Option 2: Create a metaphor for the feeling or experience. Use imagery, nature, or a striking metaphor that captures the emotional undercurrent. Avoid clichés like sunrise, journey, becoming.
@@ -889,45 +890,49 @@ Rules:
 - Draw from the specific language, emotions, and details in the entry
 - Each title should feel like it could be the title of a chapter in their memoir
 - No quotes, no numbering, no explanation in the output`,
-            },
-            {
-              role: "user",
-              content: `Journal entry:\n\n${input.content.slice(0, 1200)}`,
-            },
-          ],
-          response_format: {
-            type: "json_schema",
-            json_schema: {
-              name: "title_suggestions",
-              strict: true,
-              schema: {
-                type: "object",
-                properties: {
-                  titles: {
-                    type: "array",
-                    items: { type: "string" },
-                    description: "Exactly 3 title suggestions, one per creative angle",
+              },
+              {
+                role: "user",
+                content: `Journal entry:\n\n${input.content.slice(0, 1200)}`,
+              },
+            ],
+            response_format: {
+              type: "json_schema",
+              json_schema: {
+                name: "title_suggestions",
+                strict: true,
+                schema: {
+                  type: "object",
+                  properties: {
+                    titles: {
+                      type: "array",
+                      items: { type: "string" },
+                      description: "Exactly 3 title suggestions, one per creative angle",
+                    },
                   },
+                  required: ["titles"],
+                  additionalProperties: false,
                 },
-                required: ["titles"],
-                additionalProperties: false,
               },
             },
-          },
-        });
-        const raw = res.choices[0]?.message?.content;
-        let titles: string[] = [];
-        try {
-          const parsed = JSON.parse(typeof raw === "string" ? raw : "{}");
-          titles = (parsed.titles || []).map((t: string) => t.trim().replace(/^"|"$/g, "")).filter(Boolean);
-        } catch {
-          // Fallback: treat raw as a single title
-          const fallback = (typeof raw === "string" ? raw : "").trim().replace(/^"|"$/g, "");
-          if (fallback) titles = [fallback];
+          });
+          const raw = res.choices[0]?.message?.content;
+          let titles: string[] = [];
+          try {
+            const parsed = JSON.parse(typeof raw === "string" ? raw : "{}");
+            titles = (parsed.titles || []).map((t: string) => t.trim().replace(/^"|"$/g, "")).filter(Boolean);
+          } catch {
+            // Fallback: treat raw as a single title
+            const fallback = (typeof raw === "string" ? raw : "").trim().replace(/^"|"$/g, "");
+            if (fallback) titles = [fallback];
+          }
+          // Always return at least one title
+          if (titles.length === 0) titles = ["Untitled"];
+          return { titles, title: titles[0] };
+        } catch (err: any) {
+          console.error("[Journal] suggestTitle LLM failed:", err?.message || err);
+          return { titles: ["Untitled"], title: "Untitled" };
         }
-        // Always return at least one title
-        if (titles.length === 0) titles = ["Untitled"];
-        return { titles, title: titles[0] };
       }),
   }),
 
@@ -974,31 +979,36 @@ Rules:
           .join("\n")
           .slice(0, 1500);
 
-        const response = await invokeLLM({
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are a concise labeler for personal growth conversations. " +
-                "Given a conversation transcript, return ONLY a short title (3-7 words, no quotes, no punctuation at end). " +
-                "The title should capture the emotional core or main theme. " +
-                "Examples: Facing the fear of failure, Finding clarity in chaos, Letting go of perfectionism",
-            },
-            {
-              role: "user",
-              content: `Label this conversation with a short title:\n\n${transcript}`,
-            },
-          ],
-        });
+        try {
+          const response = await invokeLLM({
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are a concise labeler for personal growth conversations. " +
+                  "Given a conversation transcript, return ONLY a short title (3-7 words, no quotes, no punctuation at end). " +
+                  "The title should capture the emotional core or main theme. " +
+                  "Examples: Facing the fear of failure, Finding clarity in chaos, Letting go of perfectionism",
+              },
+              {
+                role: "user",
+                content: `Label this conversation with a short title:\n\n${transcript}`,
+              },
+            ],
+          });
 
-        const rawContent = response?.choices?.[0]?.message?.content;
-        const raw = typeof rawContent === "string" ? rawContent.trim() : "";
-        // Strip surrounding quotes if LLM added them
-        const title = raw.replace(/^["']|["']$/g, "").trim().slice(0, 120);
-        if (!title) return { title: null, skipped: true };
+          const rawContent = response?.choices?.[0]?.message?.content;
+          const raw = typeof rawContent === "string" ? rawContent.trim() : "";
+          // Strip surrounding quotes if LLM added them
+          const title = raw.replace(/^["']|["']$/g, "").trim().slice(0, 120);
+          if (!title) return { title: null, skipped: true };
 
-        await updateSessionTitle(ctx.user.id, input.sessionId, title);
-        return { title, skipped: false };
+          await updateSessionTitle(ctx.user.id, input.sessionId, title);
+          return { title, skipped: false };
+        } catch (err: any) {
+          console.error("[Chat] generateTitle LLM failed:", err?.message || err);
+          return { title: null, skipped: true };
+        }
       }),
 
     getLastSession: protectedProcedure.query(async ({ ctx }) => {
@@ -1107,9 +1117,19 @@ Rules:
           })),
         ];
         // Route to OpenAI for user-facing conversation (Mirror chat)
-        const aiRes = await invokeLLM({ messages });
-        const rawAiContent = aiRes.choices[0]?.message?.content;
-        const aiContent = typeof rawAiContent === 'string' ? rawAiContent : "I'm here with you.";
+        let aiContent = "I'm here with you.";
+        try {
+          const aiRes = await invokeLLM({ messages });
+          const rawAiContent = aiRes.choices[0]?.message?.content;
+          aiContent = typeof rawAiContent === 'string' ? rawAiContent : "I'm here with you.";
+        } catch (llmErr: any) {
+          console.error("[Chat] LLM call failed:", llmErr?.message || llmErr);
+          if (llmErr?.code === "USAGE_EXHAUSTED") {
+            aiContent = "I'm taking a brief pause to recharge. My thoughts are still with you \u2014 try again in a moment.";
+          } else {
+            aiContent = "I'm having trouble finding my words right now. Give me a moment and try again.";
+          }
+        }
         // Save AI response with context snapshot
         const aiMsgId = await saveChatMessage({
           userId: ctx.user.id,
@@ -1230,46 +1250,51 @@ Recent journal themes:
 ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as string[]).join(", ")}]`).join("\n")}
       `.trim();
 
-      const aiRes = await invokeLLM({
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: `Here's my data from this week:\n\n${contextStr}\n\nGive me your honest read on this week. What patterns are actually showing up? What's working, what's not? Give me 3-5 real, specific things I can do next week — not generic advice. And give me a growth score (0-100) for the week. Respond in JSON format.`,
-          },
-        ],
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: "weekly_insight",
-            strict: true,
-            schema: {
-              type: "object",
-              properties: {
-                insightText: { type: "string" },
-                patterns: { type: "array", items: { type: "string" } },
-                actionableSteps: { type: "array", items: { type: "string" } },
-                growthScore: { type: "number" },
-              },
-              required: ["insightText", "patterns", "actionableSteps", "growthScore"],
-              additionalProperties: false,
-            },
-          },
-        },
-      });
-
       let insightData = {
-        insightText: "Keep going — your journey is unfolding beautifully.",
+        insightText: "Keep going \u2014 your journey is unfolding beautifully.",
         patterns: [] as string[],
         actionableSteps: [] as string[],
         growthScore: 50,
       };
 
       try {
-        const rawInsight = aiRes.choices[0]?.message?.content;
-        const parsed = JSON.parse((typeof rawInsight === 'string' ? rawInsight : null) || "{}");
-        insightData = { ...insightData, ...parsed };
-      } catch {}
+        const aiRes = await invokeLLM({
+          messages: [
+            { role: "system", content: systemPrompt },
+            {
+              role: "user",
+              content: `Here's my data from this week:\n\n${contextStr}\n\nGive me your honest read on this week. What patterns are actually showing up? What's working, what's not? Give me 3-5 real, specific things I can do next week \u2014 not generic advice. And give me a growth score (0-100) for the week. Respond in JSON format.`,
+            },
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "weekly_insight",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  insightText: { type: "string" },
+                  patterns: { type: "array", items: { type: "string" } },
+                  actionableSteps: { type: "array", items: { type: "string" } },
+                  growthScore: { type: "number" },
+                },
+                required: ["insightText", "patterns", "actionableSteps", "growthScore"],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+
+        try {
+          const rawInsight = aiRes.choices[0]?.message?.content;
+          const parsed = JSON.parse((typeof rawInsight === 'string' ? rawInsight : null) || "{}");
+          insightData = { ...insightData, ...parsed };
+        } catch {}
+      } catch (err: any) {
+        console.error("[Insights] generate LLM failed:", err?.message || err);
+        // Return default insight data — graceful degradation
+      }
 
       const weekStart = new Date();
       weekStart.setDate(weekStart.getDate() - weekStart.getDay());

@@ -320,6 +320,12 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
 
   if (!response.ok) {
     const errorText = await response.text();
+    // Detect usage exhaustion specifically
+    if (response.status === 412 || errorText.includes("usage exhausted")) {
+      const err = new Error("AI service temporarily unavailable. Please try again later.");
+      (err as any).code = "USAGE_EXHAUSTED";
+      throw err;
+    }
     throw new Error(
       `LLM invoke failed: ${response.status} ${response.statusText} – ${errorText}`
     );

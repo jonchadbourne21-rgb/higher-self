@@ -1487,3 +1487,13 @@
 - [x] Add challenge step to EchoReveal cinematic sequence (after reframing line, before controls)
 - [x] Build challenge completion flow (reflection textarea + done button)
 - [x] Add challenge data to echo history cards (shows category badge + completion status)
+
+## Critical Fix: LLM Crash Resilience (Jul 19)
+- [x] Add USAGE_EXHAUSTED detection in invokeLLM (HTTP 412 from Forge API)
+- [x] Wrap chat.send invokeLLM in try/catch with graceful fallback message
+- [x] Wrap journal.suggestTitle invokeLLM in try/catch (returns "Untitled" on failure)
+- [x] Wrap chat.generateTitle invokeLLM in try/catch (returns skipped on failure)
+- [x] Wrap insights.generate invokeLLM in try/catch (returns default insight data)
+- [x] Echo pipeline already wrapped in fire-and-forget try/catch (line 827)
+- [x] Journal.create perspective already wrapped in try/catch (line 763)
+- [x] CheckIn.submit already wrapped in try/catch (line 462)
