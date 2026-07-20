@@ -49,8 +49,10 @@ export const demoJournalEntries = [
     content: "Today I realized that holding onto expectations was creating most of my stress. When I let go of how I thought things should be, everything felt lighter. The conversation with Sarah helped me see that I was trying to control outcomes that aren't mine to control.",
     themes: ["letting go", "control", "relationships"],
     mood: "reflective",
+    moodTag: "reflective",
     categoryId: null,
     aiReflection: "You're recognizing a powerful pattern — the tension between wanting control and finding peace in surrender. This awareness itself is growth.",
+    aiPerspective: "You're recognizing a powerful pattern — the tension between wanting control and finding peace in surrender. This awareness itself is growth.",
     createdAt: new Date(Date.now() - 1 * 86400000),
     updatedAt: new Date(Date.now() - 1 * 86400000),
   },
@@ -61,8 +63,10 @@ export const demoJournalEntries = [
     content: "Woke up with a clear mind for the first time in weeks. The evening routine is working. No screens after 9pm, 10 minutes of breathwork, and journaling before bed. I feel like I'm finally building the foundation I've been talking about.",
     themes: ["routine", "clarity", "discipline"],
     mood: "energized",
+    moodTag: "energized",
     categoryId: null,
     aiReflection: "The compound effect of small consistent choices is showing up. You're not just building a routine — you're building trust with yourself.",
+    aiPerspective: "The compound effect of small consistent choices is showing up. You're not just building a routine — you're building trust with yourself.",
     createdAt: new Date(Date.now() - 3 * 86400000),
     updatedAt: new Date(Date.now() - 3 * 86400000),
   },
@@ -73,8 +77,10 @@ export const demoJournalEntries = [
     content: "Had the conversation I'd been avoiding for two weeks. It wasn't as bad as I imagined. Actually, it brought us closer. I need to remember this — the anticipation of discomfort is always worse than the discomfort itself.",
     themes: ["courage", "vulnerability", "growth"],
     mood: "proud",
+    moodTag: "proud",
     categoryId: null,
     aiReflection: "You chose courage over comfort. Notice how the fear was mostly a story you were telling yourself. What other conversations might be waiting?",
+    aiPerspective: "You chose courage over comfort. Notice how the fear was mostly a story you were telling yourself. What other conversations might be waiting?",
     createdAt: new Date(Date.now() - 5 * 86400000),
     updatedAt: new Date(Date.now() - 5 * 86400000),
   },
@@ -113,7 +119,7 @@ export const demoChatMessages = [
 ];
 
 export const demoMilestones = [
-  { id: 1, userId: DEMO_USER_ID, title: "First Week Complete", description: "Completed 7 consecutive days of check-ins", level: "bronze", achievedAt: new Date(Date.now() - 21 * 86400000), createdAt: new Date(Date.now() - 21 * 86400000) },
-  { id: 2, userId: DEMO_USER_ID, title: "Journal Explorer", description: "Wrote 10 journal entries", level: "silver", achievedAt: new Date(Date.now() - 14 * 86400000), createdAt: new Date(Date.now() - 14 * 86400000) },
-  { id: 3, userId: DEMO_USER_ID, title: "Habit Builder", description: "Maintained a 7-day streak on any habit", level: "gold", achievedAt: new Date(Date.now() - 7 * 86400000), createdAt: new Date(Date.now() - 7 * 86400000) },
+  { id: 1, userId: DEMO_USER_ID, habitId: 1, habitName: "Morning Meditation", habitEmoji: "🧘", emoji: "🧘", domain: "spirituality" as const, habitDomain: "spirituality" as const, streakDays: 7, title: "First Week Complete", description: "Completed 7 consecutive days of check-ins", level: "bronze", achievedAt: new Date(Date.now() - 21 * 86400000), createdAt: new Date(Date.now() - 21 * 86400000) },
+  { id: 2, userId: DEMO_USER_ID, habitId: 2, habitName: "Journaling", habitEmoji: "📝", emoji: "📝", domain: "mindset" as const, habitDomain: "mindset" as const, streakDays: 10, title: "Journal Explorer", description: "Wrote 10 journal entries", level: "silver", achievedAt: new Date(Date.now() - 14 * 86400000), createdAt: new Date(Date.now() - 14 * 86400000) },
+  { id: 3, userId: DEMO_USER_ID, habitId: 3, habitName: "Exercise", habitEmoji: "💪", emoji: "💪", domain: "health" as const, habitDomain: "health" as const, streakDays: 7, title: "Habit Builder", description: "Maintained a 7-day streak on any habit", level: "gold", achievedAt: new Date(Date.now() - 7 * 86400000), createdAt: new Date(Date.now() - 7 * 86400000) },
 ];

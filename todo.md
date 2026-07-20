@@ -1552,3 +1552,17 @@
 - [x] Add ITSAppUsesNonExemptEncryption=false to avoid App Store export compliance prompt
 - [x] Configure AppDelegate.swift with push notification registration handlers
 - [x] Verify Package.swift includes all 9 plugins (App, Browser, Haptics, Keyboard, Preferences, PushNotifications, SplashScreen, StatusBar, RevenueCat)
+
+## Demo Mode — Data Wiring (Jul 20)
+- [x] Create server/demoInterceptor.ts with demo data return functions for all query procedures
+- [x] Wire demo interceptor into routers.ts: profile.get, checkIn.today, checkIn.auraHistory, checkIn.getDailyPrompt, checkIn.recent
+- [x] Wire demo interceptor: habits.list, habits.currentStreak, habits.milestones, habits.milestonesByLevel, habits.milestoneCount
+- [x] Wire demo interceptor: domains.scores, domains.history, journal.list, journal.get, journal.categories.list
+- [x] Wire demo interceptor: chat.history, chat.sessions, chat.getSessionTitles, chat.getLastSession
+- [x] Wire demo interceptor: insights.latest, insights.all, insights.patterns
+- [x] Wire demo interceptor: dashboard.overview, dashboard.moodTrend
+- [x] Wire demo interceptor: calendar.list, calendar.upcoming, savedInsights.list
+- [x] Wire demo interceptor: home.tileEngagement, home.dailyQuote, home.getLatestDigest
+- [x] Wire demo interceptor: notifications.status, settings.get, timeline.milestones
+- [x] Wire demo interceptor into rewards router: rewards.proStatus
+- [x] Wire demo interceptor into weeklyInsight router: weeklyInsight.getWeeklyInsightWithDaily

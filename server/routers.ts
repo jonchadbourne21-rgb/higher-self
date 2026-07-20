@@ -85,6 +85,7 @@ import { storeMemory, retrieveMemories, formatMemoriesForPrompt, getPersonalityP
 import { buildIntentSpecificPrompt } from "./intentPrompts";
 import { extractAndSaveFingerprint } from "./timeCapsule/fingerprint";
 import { extractAndStoreFingerprint } from "./db/sessionFingerprints";
+import * as demo from "./demoInterceptor";
 
 // ─── Helperss ──────────────────────────────────────────────────────────────────
 
@@ -189,6 +190,7 @@ export const appRouter = router({
 
   profile: router({
     get: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoProfile();
       return getUserProfile(ctx.user.id);
     }),
 
@@ -260,11 +262,13 @@ export const appRouter = router({
 
   checkIn: router({
     today: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoTodayCheckIn();
       return getTodayCheckIn(ctx.user.id);
     }),
 
     // Returns last 7 days of Aura scores for the sparkline on Home
     auraHistory: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoAuraHistory();
       const recent = await getRecentCheckIns(ctx.user.id, 7);
       // Map each check-in to { date, aura } — aura = mood*0.4 + energy*0.3 + (11-stress)*0.3
       return recent
@@ -279,6 +283,7 @@ export const appRouter = router({
     // Returns a fresh AI-generated reflection prompt for today
     // Uses RAG memories + personality profile + theme exclusion for deep personalization
     getDailyPrompt: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoDailyPrompt();
       const profile = await getUserProfile(ctx.user.id);
       const name = profile?.preferredName || "friend";
       const recentCheckIns = await getRecentCheckIns(ctx.user.id, 7);
@@ -395,6 +400,7 @@ export const appRouter = router({
     recent: protectedProcedure
       .input(z.object({ days: z.number().default(30) }))
       .query(async ({ ctx, input }) => {
+        if (ctx.isDemo) return demo.getDemoRecentCheckIns(input.days);
         return getRecentCheckIns(ctx.user.id, input.days);
       }),
 
@@ -561,6 +567,7 @@ export const appRouter = router({
 
   habits: router({
     list: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoHabits();
       const [userHabits, todayCompletions, streaks] = await Promise.all([
         getUserHabits(ctx.user.id),
         getTodayCompletions(ctx.user.id),
@@ -603,21 +610,25 @@ export const appRouter = router({
       }),
 
     currentStreak: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoCurrentStreak();
       const streak = await getCurrentStreak(ctx.user.id);
       return { streak };
     }),
 
     milestones: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoMilestones();
       const milestones = await getUserMilestones(ctx.user.id);
       return milestones;
     }),
 
     milestonesByLevel: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoMilestonesByLevel();
       const milestones = await getUserMilestonesByLevel(ctx.user.id);
       return milestones;
     }),
 
     milestoneCount: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoMilestoneCount();
       const count = await getUserMilestoneCount(ctx.user.id);
       return { count };
     }),
@@ -627,6 +638,7 @@ export const appRouter = router({
 
   domains: router({
     scores: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoDomainScores();
       return getLatestDomainScores(ctx.user.id);
     }),
 
@@ -638,6 +650,7 @@ export const appRouter = router({
         })
       )
       .query(async ({ ctx, input }) => {
+        if (ctx.isDemo) return demo.getDemoDomainHistory(input.domain, input.days);
         return getDomainScoreHistory(ctx.user.id, input.domain, input.days);
       }),
 
@@ -671,6 +684,7 @@ export const appRouter = router({
         })
       )
       .query(async ({ ctx, input }) => {
+        if (ctx.isDemo) return demo.getDemoJournalEntries();
         const { limit, ...filters } = input;
         return getJournalEntries(ctx.user.id, limit, filters);
       }),
@@ -678,6 +692,11 @@ export const appRouter = router({
     get: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ ctx, input }) => {
+        if (ctx.isDemo) {
+          const entry = demo.getDemoJournalEntry(input.id);
+          if (!entry) throw new TRPCError({ code: "NOT_FOUND" });
+          return entry;
+        }
         const entry = await getJournalEntry(input.id, ctx.user.id);
         if (!entry) throw new TRPCError({ code: "NOT_FOUND" });
         return entry;
@@ -685,6 +704,7 @@ export const appRouter = router({
 
     categories: router({
       list: protectedProcedure.query(async ({ ctx }) => {
+        if (ctx.isDemo) return demo.getDemoJournalCategories();
         const { getJournalCategories } = await import("./db");
         return getJournalCategories(ctx.user.id);
       }),
@@ -942,6 +962,7 @@ Rules:
     history: protectedProcedure
       .input(z.object({ sessionId: z.string().nullable().optional() }).optional())
       .query(async ({ ctx, input }) => {
+        if (ctx.isDemo) return demo.getDemoChatHistory(input?.sessionId);
         const sid = input?.sessionId !== undefined
           ? input.sessionId
           : await getCurrentSessionId(ctx.user.id);
@@ -949,9 +970,11 @@ Rules:
       }),
 
     sessions: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoChatSessions();
       return getChatSessions(ctx.user.id);
     }),
     getSessionTitles: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoChatSessionTitles();
       return getChatSessionTitles(ctx.user.id);
     }),
     updateSessionTitle: protectedProcedure
@@ -1012,7 +1035,8 @@ Rules:
       }),
 
     getLastSession: protectedProcedure.query(async ({ ctx }) => {
-      const lastSessionId = await getLastSessionId(ctx.user.id);
+       if (ctx.isDemo) return { sessionId: "demo-session-1", messageCount: 4, lastMessageAt: new Date(Date.now() - 2 * 86400000) };
+       const lastSessionId = await getLastSessionId(ctx.user.id);
       if (!lastSessionId) return null;
       const messages = await getChatHistory(ctx.user.id, lastSessionId);
       const lastMsg = messages.length > 0 ? messages[messages.length - 1] : null;
@@ -1212,10 +1236,12 @@ Rules:
 
   insights: router({
     latest: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoLatestInsight();
       return getLatestInsight(ctx.user.id);
     }),
 
     all: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoAllInsights();
       return getAllInsights(ctx.user.id);
     }),
 
@@ -1310,6 +1336,7 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
     }),
     /** Semantic clustering: detect recurring themes across user's memories */
     patterns: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoInsightPatterns();
       const { clusterMemories } = await import("./rag/memory");
       const fourWeeksAgo = new Date();
       fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
@@ -1337,6 +1364,7 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
 
   dashboard: router({
     overview: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoDashboardOverview();
       const { isProUser } = await import("./db/subscriptions");
       const [domainScores, moodTrend, recentCheckIns, latestInsight, milestones, habits, isPro] =
         await Promise.all([
@@ -1369,6 +1397,7 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
     moodTrend: protectedProcedure
       .input(z.object({ days: z.number().default(14) }))
       .query(async ({ ctx, input }) => {
+        if (ctx.isDemo) return demo.getDemoMoodTrend(input.days);
         return getMoodTrend(ctx.user.id, input.days);
       }),
   }),
@@ -1400,6 +1429,7 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
     }),
 
     status: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return { isSubscribed: false, endpoint: null, prefs: { dailyReminderEnabled: true, reminderHour: 6, timezone: "UTC" } };
       const [sub, prefs] = await Promise.all([
         getActivePushSubscription(ctx.user.id),
         getNotificationPreferences(ctx.user.id),
@@ -1442,6 +1472,7 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
 
   settings: router({
     get: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return { phone: "", contactEmail: "", therapistName: "", therapistPhone: "", therapistEmail: "", therapistNotes: "" };
       const profile = await getUserProfile(ctx.user.id);
       return {
         phone: profile?.phone ?? "",
@@ -1481,6 +1512,7 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
         month: z.number().min(1).max(12),
       }))
       .query(async ({ ctx, input }) => {
+        if (ctx.isDemo) return demo.getDemoCalendarEvents(input.year, input.month);
         const { getCalendarEvents } = await import("./db");
         return getCalendarEvents(ctx.user.id, input.year, input.month);
       }),
@@ -1548,12 +1580,14 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
 
     upcoming: protectedProcedure
       .query(async ({ ctx }) => {
+        if (ctx.isDemo) return demo.getDemoUpcomingEvents();
         const { getUpcomingEvents } = await import("./db");
         return getUpcomingEvents(ctx.user.id, 3);
       }),
   }),  // ─── Saved Insights (chat reactions) ────────────────────────────────────────────────────────────────────────────────────
   savedInsights: router({
     list: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoSavedInsights();
       return listInsights(ctx.user.id);
     }),
     save: protectedProcedure
@@ -1579,6 +1613,7 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
   // ─── Timeline / Milestones ────────────────────────────────────────────────────────────────────────────────────
   timeline:router({
     milestones: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoMilestones();
       return getMilestones(ctx.user.id);
     }),
 
@@ -1603,8 +1638,9 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
 
   home: router({
     tileEngagement: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoTileEngagement();
       const db = await getDb();
-      if (!db) return {};
+      if (!db) return { mirror: 0, journal: 0, habits: 0, programs: 0, rewards: 0, calendar: 0 };
       const uid = ctx.user.id;
 
       // Count activity per feature over the last 30 days
@@ -1667,6 +1703,7 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
     }),
 
     dailyQuote: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoDailyQuote();
       const db = await getDb();
       if (!db) return null;
       const uid = ctx.user.id;
@@ -1729,6 +1766,7 @@ ${recentJournal.map((j) => `- "${j.title || "Entry"}": themes [${(j.themes as st
     }),
 
     getLatestDigest: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoLatestDigest();
       const digest = await getLatestWeeklyReflection(ctx.user.id);
       if (!digest) return null;
       // Check if digest is from the current week

@@ -1,4 +1,5 @@
 import { router, protectedProcedure } from "../_core/trpc";
+import * as demo from "../demoInterceptor";
 import { z } from "zod";
 import {
   getWeekMirrorSessions,
@@ -198,6 +199,7 @@ Avg stress: ${avgStress}/10`;
 
   getWeeklyInsightWithDaily: protectedProcedure
     .query(async ({ ctx }) => {
+      if (ctx.isDemo) return demo.getDemoWeeklyInsightWithDaily();
       const today = await getTodayCheckIn(ctx.user.id);
       const weeklyInsight = await getLatestWeeklyReflection(ctx.user.id);
 
