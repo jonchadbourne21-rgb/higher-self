@@ -1541,3 +1541,14 @@
 - [x] Replace CloudFront mandala URL with /mirrored-emblem-logo.png in FAQ.tsx
 - [x] Replace CloudFront mandala URL with /mirrored-emblem-logo.png in Privacy.tsx
 - [x] Replace CloudFront mandala URL with /mirrored-emblem-logo.png in Terms.tsx
+
+## Capacitor iOS Project Finalization (Jul 20)
+- [x] Update capacitor.config.ts with full iOS settings (backgroundColor, contentInset, allowsLinkPreview, api.hume.ai navigation)
+- [x] Install native plugins: @capacitor/haptics, @capacitor/status-bar, @capacitor/keyboard, @capacitor/splash-screen
+- [x] Generate iOS project via `npx cap add ios` — 9 plugins registered
+- [x] Add Info.plist permission strings (NSMicrophoneUsageDescription, NSSpeechRecognitionUsageDescription, NSCameraUsageDescription)
+- [x] Add UIBackgroundModes (audio, remote-notification) to Info.plist
+- [x] Add CFBundleURLTypes deep link scheme (higherself://) to Info.plist
+- [x] Add ITSAppUsesNonExemptEncryption=false to avoid App Store export compliance prompt
+- [x] Configure AppDelegate.swift with push notification registration handlers
+- [x] Verify Package.swift includes all 9 plugins (App, Browser, Haptics, Keyboard, Preferences, PushNotifications, SplashScreen, StatusBar, RevenueCat)
