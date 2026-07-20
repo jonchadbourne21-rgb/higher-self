@@ -1566,3 +1566,10 @@
 - [x] Wire demo interceptor: notifications.status, settings.get, timeline.milestones
 - [x] Wire demo interceptor into rewards router: rewards.proStatus
 - [x] Wire demo interceptor into weeklyInsight router: weeklyInsight.getWeeklyInsightWithDaily
+
+## OAuth Fix — Restore Standard Template Pattern (Jul 20)
+- [x] Restore oauth.ts to standard template approach (remove extra redirectUri param, verbose logging)
+- [x] Implement parseState() to extract origin from state for proper cross-domain redirect
+- [x] Preserve native deep-link path (client=native → higherself://oauth/callback?_t=JWT)
+- [x] Verify context.ts still resolves users correctly (JWT primary + SDK legacy fallback both work)
+- [x] Test: 0 TS errors, 698/698 tests pass, parseState correctly extracts origin from state

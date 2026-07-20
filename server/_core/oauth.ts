@@ -10,12 +10,26 @@ function getQueryParam(req: Request, key: string): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+/**
+ * Decode the state parameter to extract the origin for redirect.
+ * The frontend encodes the full redirectUri in state via btoa().
+ * We extract just the origin from it.
+ */
+function parseState(state: string): { origin: string; returnPath: string } {
+  try {
+    const decoded = Buffer.from(state, "base64").toString("utf-8");
+    // decoded is the full redirectUri, e.g. "https://themirroredapp.com/api/oauth/callback"
+    const url = new URL(decoded);
+    return { origin: url.origin, returnPath: "/" };
+  } catch {
+    return { origin: "", returnPath: "/" };
+  }
+}
+
 export function registerOAuthRoutes(app: Express) {
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
-    // The redirectUri in the query param is the exact URI registered with Manus OAuth
-    const redirectUri = getQueryParam(req, "redirectUri");
     // Native client flag — when present, redirect to deep link instead of web
     const clientType = getQueryParam(req, "client");
 
@@ -25,17 +39,9 @@ export function registerOAuthRoutes(app: Express) {
     }
 
     try {
-      console.log("[OAuth] Callback received, code length:", code?.length);
-      console.log("[OAuth] redirectUri from query:", redirectUri);
-      console.log("[OAuth] client type:", clientType || "web");
-
-      // Pass the redirectUri from query params if available (most reliable)
-      // Fall back to decoding from state for backwards compatibility
-      const tokenResponse = await sdk.exchangeCodeForToken(code, state, redirectUri);
-      console.log("[OAuth] Token exchange succeeded");
-
+      // Standard template approach: let SDK decode redirectUri from state
+      const tokenResponse = await sdk.exchangeCodeForToken(code, state);
       const userInfo = await sdk.getUserInfo(tokenResponse.accessToken);
-      console.log("[OAuth] Got user info, openId:", userInfo.openId ? "present" : "missing");
 
       if (!userInfo.openId) {
         res.status(400).json({ error: "openId missing from user info" });
@@ -51,54 +57,49 @@ export function registerOAuthRoutes(app: Express) {
         lastSignedIn: new Date(),
       });
 
-      // Get the user to retrieve their ID
+      // Get the user to retrieve their ID for JWT session
       const user = await db.getUserByOpenId(userInfo.openId);
 
-      if (!user) {
-        res.status(400).json({ error: "Failed to create or update user" });
-        return;
+      // Set JWT-based session cookie (primary auth path)
+      if (user) {
+        await setAuthCookie(res, user.id);
       }
 
-      // Create session + JWT token
-      await setAuthCookie(res, user.id);
-
-      // Also set legacy session cookie for backwards compatibility
+      // Set legacy SDK session cookie (fallback auth path)
       const sessionToken = await sdk.createSessionToken(userInfo.openId, {
-        name: userInfo.name || userInfo.openId,
+        name: userInfo.name || "",
         expiresInMs: ONE_YEAR_MS,
       });
-
       const cookieOptions = getSessionCookieOptions(req);
-      console.log("[OAuth] Setting legacy cookie with options:", JSON.stringify(cookieOptions));
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      // NATIVE PATH: redirect to deep link with JWT token so the native app can store it
-      if (clientType === "native") {
+      // NATIVE PATH: redirect to deep link with JWT token
+      if (clientType === "native" && user) {
         const { token } = await createSessionAndToken(user.id);
         const nativeRedirect = `higherself://oauth/callback?_t=${encodeURIComponent(token)}`;
-        console.log("[OAuth] Native login successful, redirecting to deep link");
         res.redirect(302, nativeRedirect);
         return;
       }
 
-      // WEB PATH: redirect to relative root — the SPA router handles the rest
-      console.log("[OAuth] Login successful, redirecting to /");
-      res.redirect(302, "/");
+      // WEB PATH: use parseState to extract origin for proper cross-domain redirect
+      const { origin } = parseState(state);
+      if (origin) {
+        res.redirect(302, `${origin}/`);
+      } else {
+        // Fallback to relative redirect if state parsing fails
+        res.redirect(302, "/");
+      }
     } catch (error: any) {
-      const errMsg = error?.response?.data
-        ? JSON.stringify(error.response.data)
-        : error instanceof Error ? error.message : String(error);
-      const sqlError = error?.sqlMessage || error?.code || "";
-      console.error("[OAuth] Callback failed:", errMsg, sqlError ? `| SQL: ${sqlError}` : "");
-      if (error?.sql) console.error("[OAuth] Failed SQL:", error.sql);
+      const errMsg = error instanceof Error ? error.message : String(error);
+      console.error("[OAuth] Callback failed:", errMsg);
 
       // Native error path
       if (clientType === "native") {
         res.redirect(302, "higherself://oauth/callback?error=auth_failed");
         return;
       }
-      // Redirect to landing page with error instead of showing raw JSON
-      res.redirect(302, "/?auth_error=1");
+
+      res.status(500).json({ error: "OAuth callback failed" });
     }
   });
 }
