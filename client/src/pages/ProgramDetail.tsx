@@ -206,6 +206,31 @@ export default function ProgramDetail() {
     onError: (err) => toast.error(err.message ?? "Could not submit. Please try again."),
   });
 
+  const completeVoiceDay = trpc.programs.completeVoiceDay.useMutation({
+    onSuccess: (res) => {
+      utils.programs.getCurrentLesson.invalidate({ programId });
+      utils.programs.getProgress.invalidate({ programId });
+      utils.programs.myEnrollments.invalidate();
+      const day = currentLessonData?.lesson.day ?? 1;
+      if (res.streakMilestone) {
+        toast.success(`🔥 ${res.streakMilestone.days}-Day Streak! +${res.streakMilestone.points} bonus points!`, { duration: 5000 });
+      }
+      try {
+        session.setItem(
+          programInsightKey(programId, day),
+          JSON.stringify({
+            aiFeedback: res.aiFeedback,
+            userReflection: "[Voice session completed]",
+            nextLesson: res.nextLesson,
+            unlockAt: res.unlockAt,
+          })
+        );
+      } catch {}
+      navigate(`/programs/${programId}/insight/${day}`);
+    },
+    onError: (err) => toast.error(err.message ?? "Could not complete voice day."),
+  });
+
   if (isLoading) {
     return (
       <AppShell>
@@ -240,31 +265,6 @@ export default function ProgramDetail() {
   const completedDays = new Set(progress?.completedDays ?? []);
 
   const handleEnroll = () => enroll.mutate({ programId });
-
-  const completeVoiceDay = trpc.programs.completeVoiceDay.useMutation({
-    onSuccess: (res) => {
-      utils.programs.getCurrentLesson.invalidate({ programId });
-      utils.programs.getProgress.invalidate({ programId });
-      utils.programs.myEnrollments.invalidate();
-      const day = currentLessonData?.lesson.day ?? 1;
-      if (res.streakMilestone) {
-        toast.success(`\uD83D\uDD25 ${res.streakMilestone.days}-Day Streak! +${res.streakMilestone.points} bonus points!`, { duration: 5000 });
-      }
-      try {
-        session.setItem(
-          programInsightKey(programId, day),
-          JSON.stringify({
-            aiFeedback: res.aiFeedback,
-            userReflection: "[Voice session completed]",
-            nextLesson: res.nextLesson,
-            unlockAt: res.unlockAt,
-          })
-        );
-      } catch {}
-      navigate(`/programs/${programId}/insight/${day}`);
-    },
-    onError: (err) => toast.error(err.message ?? "Could not complete voice day."),
-  });
 
   const handleSubmit = () => {
     if (!currentLessonData?.lesson) return;
