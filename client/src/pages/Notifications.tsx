@@ -113,7 +113,7 @@ export default function Notifications() {
                   <p className="font-medium mb-1">Notifications are blocked</p>
                   <p>
                     Go to your browser settings → Site permissions → Notifications and allow
-                    higherself.cloud.
+                    themirroredapp.com.
                   </p>
                 </div>
               ) : (

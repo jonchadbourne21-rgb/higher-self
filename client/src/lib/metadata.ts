@@ -99,7 +99,7 @@ export function getMetadataForRoute(pathname: string): PageMetadata {
  * Update document meta tags dynamically
  * Call this in useEffect when route changes
  */
-export function updateMetaTags(metadata: PageMetadata, baseUrl: string = "https://higherself.cloud") {
+export function updateMetaTags(metadata: PageMetadata, baseUrl: string = "https://themirroredapp.com") {
   // Update title
   document.title = metadata.title;
 

@@ -45,7 +45,11 @@ accepts a duplicate.
   and "for future features" is the exact phrasing reviewers flag); replaced the
   legacy `armv7` device capability with `arm64`; locked iPhone orientation to
   portrait to match the app's mobile-first layout and the PWA manifest.
-- **Native API base URL** (`client/src/lib/apiBase.ts`). See the blocker below.
+- **Native API base URL** (`client/src/lib/apiBase.ts`), defaulting to
+  `https://themirroredapp.com`. See the blocker below.
+- **iPhone-only target** (`TARGETED_DEVICE_FAMILY = "1"`), and the now-redundant
+  `UISupportedInterfaceOrientations~ipad` key removed. No iPad screenshot set or
+  iPad review pass needed.
 - **Keystore files gitignored** so a signing key can never be committed.
 - **PII removed from production logs** — the compiled prompt context (values,
   goals, vision, beliefs, mood) is now development-only.
@@ -54,31 +58,32 @@ accepts a duplicate.
 
 ## Blocking — must be resolved before any build works on device
 
-### 1. Set `VITE_API_BASE_URL`
+### 1. Confirm `themirroredapp.com` is serving the API
 
 On the web, the app and API share an origin, so `/api/trpc` works. Inside a
 Capacitor WebView the bundle is served from `capacitor://localhost` (iOS) or
 `http://localhost` (Android), so a relative path resolves to the packaged assets
 and **every API call fails**. The app would install, launch, and then do nothing.
 
-`client/src/lib/apiBase.ts` now reads `VITE_API_BASE_URL` and falls back to
-relative on web. Native builds must set it:
+`client/src/lib/apiBase.ts` now defaults native builds to
+`https://themirroredapp.com` and stays relative on web. Override for staging:
 
 ```bash
-VITE_API_BASE_URL=https://<your-production-host> pnpm cap:build
+VITE_API_BASE_URL=https://staging.themirroredapp.com pnpm cap:build
 ```
 
-Three different domains appear in the codebase and I could not determine which is
-authoritative — **pick one and make it consistent**:
+The stale `higherself.cloud` references in `lib/metadata.ts`,
+`lib/structuredData.ts`, and the Notifications page were repointed to
+`themirroredapp.com`. Two references were deliberately left alone:
 
-- `higherself.cloud` — used in `lib/metadata.ts`, `lib/structuredData.ts`,
-  `server/pushNotifications.ts`, and the Notifications page
-- `themirroredapp.com` — in `capacitor.config.ts` `allowNavigation` and the
-  example redirect URI in `server/_core/oauth.ts`
-- `mirroredapp.manus.space` — in `allowNavigation`; the current deploy
-
-Whichever you choose must also appear in `server.allowNavigation` in
-`capacitor.config.ts`. Note `higherself.cloud` is **not** currently in that list.
+- `server/pushNotifications.ts:22` — the VAPID contact is
+  `mailto:hello@higherself.cloud`. It only needs to be a reachable inbox, and
+  changing it to an address that doesn't exist yet would be worse. Update it
+  once `hello@themirroredapp.com` is live.
+- `client/src/lib/structuredData.ts` still names the organisation "Higher Self"
+  and links `twitter.com/higherself` and similar. That's rebranding, not domain
+  consolidation — see `REBRANDING_WORKFLOW.md`. Worth finishing before launch so
+  the store listing and schema.org data agree.
 
 ### 2. Server CORS for the native origin
 
@@ -111,11 +116,6 @@ never arrives — and push is load-bearing here (lesson unlocks, Echoes, the
 ---
 
 ## Decisions only you can make
-
-**iPad support.** `TARGETED_DEVICE_FAMILY` is `"1,2"` (iPhone + iPad). That means
-Apple reviews on iPad and you must supply a separate iPad screenshot set. The
-layout is `max-w-2xl` mobile-first, so it will work but look sparse on a 13"
-iPad. Setting it to `"1"` (iPhone only) is the lower-friction launch.
 
 **iOS background modes.** `UIBackgroundModes` declares `audio` and
 `remote-notification`. Guideline 2.5.4 rejects background modes the app doesn't
@@ -160,8 +160,8 @@ Declared there: email, name, user ID, purchase history, health (mood + domain
 scores), audio data (voice), sensitive info (beliefs/reflections), other user
 content (journal + chat). All linked to identity, none used for tracking.
 
-**Screenshots:** 6.9" and 6.5" iPhone required. Add 13" iPad if you keep iPad
-support.
+**Screenshots:** 6.9" and 6.5" iPhone. No iPad set needed — the target is
+iPhone-only.
 
 **Age rating:** expect 12+ or 17+. The app handles mental-health content and has
 crisis detection. Answer the "Medical/Treatment Information" question honestly —
@@ -238,14 +238,13 @@ to both. Differences:
 
 ## Pre-submission checklist
 
-- [ ] `VITE_API_BASE_URL` set; one canonical domain chosen everywhere
+- [ ] `themirroredapp.com` confirmed live and serving `/api/trpc`
 - [ ] Server CORS allows `capacitor://localhost` and `http://localhost`
 - [ ] Sign-in tested end-to-end on a **physical** iPhone and Android device
 - [ ] `google-services.json` added; push received on both platforms
 - [ ] Voice session tested on device (mic permission prompt, audio in/out)
 - [ ] IAP products created in both consoles and mapped in RevenueCat
 - [ ] Samsung billing decision made
-- [ ] iPad support decision made
 - [ ] `remote-notification` background mode kept or removed
 - [ ] Privacy policy and terms reachable at public URLs (pages exist at
       `/privacy` and `/terms`; the policy lists `support@mirrored.com` — confirm

@@ -46,8 +46,8 @@ export function getOrganizationSchema(): OrganizationSchema {
     name: "Higher Self",
     description:
       "Your AI Mirror — a personalized guide to emotional maturity, inner peace, and authentic living through daily growth and reflection.",
-    url: "https://higherself.cloud",
-    logo: "https://higherself.cloud/logo.png",
+    url: "https://themirroredapp.com",
+    logo: "https://themirroredapp.com/logo.png",
     sameAs: [
       "https://twitter.com/higherself",
       "https://linkedin.com/company/higherself",
@@ -56,7 +56,7 @@ export function getOrganizationSchema(): OrganizationSchema {
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "Customer Support",
-      url: "https://higherself.cloud/settings",
+      url: "https://themirroredapp.com/settings",
     },
   };
 }
@@ -71,7 +71,7 @@ export function getWebApplicationSchema(): WebApplicationSchema {
     name: "Higher Self",
     description:
       "Transform your life with daily check-ins, AI insights, and personalized guidance across 6 life domains: Mindset, Relationships, Work, Health, Spirituality, and Finances.",
-    url: "https://higherself.cloud",
+    url: "https://themirroredapp.com",
     applicationCategory: "LifestyleApplication",
     offers: {
       "@type": "Offer",

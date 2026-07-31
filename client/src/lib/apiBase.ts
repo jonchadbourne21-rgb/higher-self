@@ -10,8 +10,9 @@
  * call 404s against the packaged assets. Native builds must therefore call an
  * absolute origin.
  *
- * Set VITE_API_BASE_URL at build time for native builds, e.g.
- *   VITE_API_BASE_URL=https://themirroredapp.com pnpm cap:build
+ * Native builds default to the production host below. Override per-build with
+ * VITE_API_BASE_URL to point at staging:
+ *   VITE_API_BASE_URL=https://staging.themirroredapp.com pnpm cap:build
  *
  * Whatever host you use must also appear in `server.allowNavigation` in
  * capacitor.config.ts, and the server must send permissive CORS headers for it
@@ -23,21 +24,17 @@ import { isNative } from "@/lib/platform";
 const CONFIGURED_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").trim().replace(/\/$/, "");
 
 /**
+ * Production origin used by native builds when VITE_API_BASE_URL is not set.
+ * Must stay in sync with `server.allowNavigation` in capacitor.config.ts.
+ */
+const NATIVE_FALLBACK_BASE = "https://themirroredapp.com";
+
+/**
  * Origin to prefix API paths with. Empty string means "same origin" (web).
  */
 export function getApiBaseUrl(): string {
   if (CONFIGURED_BASE) return CONFIGURED_BASE;
-
-  if (isNative()) {
-    // Misconfigured native build — surface it loudly rather than failing with a
-    // confusing 404 on every request.
-    console.error(
-      "[apiBase] VITE_API_BASE_URL is not set. Native builds cannot use relative " +
-        "API paths — set it before running `pnpm cap:build` or the app will not " +
-        "be able to reach the server."
-    );
-  }
-
+  if (isNative()) return NATIVE_FALLBACK_BASE;
   return "";
 }
 
