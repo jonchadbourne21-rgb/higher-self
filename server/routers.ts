@@ -3,6 +3,7 @@ import { sql, and, eq, gte, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { getSessionCookieOptions } from "./_core/cookies";
+import { ENV } from "./_core/env";
 import { invokeLLM } from "./_core/llm";
 import { detectCrisisKeywords, SAFETY_KILL_SWITCH_RESPONSE, logSafetyBreach } from "./_core/safety";
 import { systemRouter } from "./_core/systemRouter";
@@ -109,18 +110,24 @@ async function buildHigherSelfSystemPrompt(userId: number, seedIntent?: string):
     .map((d) => `${d!.domain}: ${d!.score}/10`)
     .join(", ");
 
-  // Debug: Log compiled prompt context
-  console.log("[DEBUG] Compiled Prompt Context:", {
-    userId,
-    seedIntent,
-    name,
-    valuesStr,
-    goalsStr,
-    visionStr,
-    beliefsStr,
-    avgMood,
-    domainStr,
-  });
+  // Debug: log the compiled prompt context in development only.
+  // This object holds the user's values, goals, vision, beliefs and mood — it must
+  // never reach production logs, which are plaintext, retained outside the database,
+  // and unreachable by deleteUserAccount(). The AI receives this data via the
+  // buildIntentSpecificPrompt() return below, not from this log line.
+  if (!ENV.isProduction) {
+    console.log("[DEBUG] Compiled Prompt Context:", {
+      userId,
+      seedIntent,
+      name,
+      valuesStr,
+      goalsStr,
+      visionStr,
+      beliefsStr,
+      avgMood,
+      domainStr,
+    });
+  }
 
   // Use intent-specific prompts if seedIntent is provided
   return buildIntentSpecificPrompt(seedIntent, {
