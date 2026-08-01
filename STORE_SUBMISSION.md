@@ -50,6 +50,11 @@ accepts a duplicate.
 - **iPhone-only target** (`TARGETED_DEVICE_FAMILY = "1"`), and the now-redundant
   `UISupportedInterfaceOrientations~ipad` key removed. No iPad screenshot set or
   iPad review pass needed.
+- **Native CORS** (`server/_core/cors.ts`, mounted on `/api`). Allows exactly
+  `capacitor://localhost` and `http://localhost` to read API responses — an
+  allowlist, not a wildcard, and no substitute for auth. Covered by 8 tests in
+  `server/cors.test.ts`, including that same-origin web requests are untouched
+  and that an arbitrary website gets nothing.
 - **Keystore files gitignored** so a signing key can never be committed.
 - **PII removed from production logs** — the compiled prompt context (values,
   goals, vision, beliefs, mood) is now development-only.
@@ -85,14 +90,7 @@ The stale `higherself.cloud` references in `lib/metadata.ts`,
   consolidation — see `REBRANDING_WORKFLOW.md`. Worth finishing before launch so
   the store listing and schema.org data agree.
 
-### 2. Server CORS for the native origin
-
-Native requests arrive from `capacitor://localhost` / `http://localhost`, not
-from your domain. The server must allow those origins. Auth is Bearer-token
-based, so cookies aren't needed cross-origin — but the tRPC endpoint still needs
-permissive CORS headers or the WebView will block every response.
-
-### 3. Verify the native OAuth token exchange on a real device
+### 2. Verify the native OAuth token exchange on a real device
 
 `getLoginUrl()` builds `state` from `window.location.origin`, which on native is
 `capacitor://localhost`. `startNativeLogin()` then overrides the `redirectUri`
@@ -106,7 +104,7 @@ work. I did not change it because this area was stabilised recently and I can't
 test the OAuth portal from here. **Test sign-in on a physical device before
 submitting** — a broken sign-in is an instant rejection on both stores.
 
-### 4. Firebase config for Android push
+### 3. Firebase config for Android push
 
 FCM requires `android/app/google-services.json` from the Firebase console, plus
 the Google Services Gradle plugin. Without it the app builds but push silently
@@ -239,7 +237,6 @@ to both. Differences:
 ## Pre-submission checklist
 
 - [ ] `themirroredapp.com` confirmed live and serving `/api/trpc`
-- [ ] Server CORS allows `capacitor://localhost` and `http://localhost`
 - [ ] Sign-in tested end-to-end on a **physical** iPhone and Android device
 - [ ] `google-services.json` added; push received on both platforms
 - [ ] Voice session tested on device (mic permission prompt, audio in/out)
