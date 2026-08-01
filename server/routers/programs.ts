@@ -16,6 +16,7 @@ import {
   computeProgramStreak,
 } from "../db/programs";
 import { invokeLLM } from "../_core/llm";
+import { nextUnlockAfter } from "../_core/easternTime";
 import { retrieveMemories, formatMemoriesForPrompt, getPersonalityProfile, formatPersonalityForPrompt } from "../rag/memory";
 import { addRewardPoints } from "../db/rewards";
 import { createRewardGrant } from "../db/rewardGrants";
@@ -24,58 +25,24 @@ import { FREE_LIMITS } from "../_core/stripe-products";
 
 // ── Time helpers ──────────────────────────────────────────────────────────────
 
-const EST_OFFSET_MS = -5 * 60 * 60 * 1000; // UTC-5 (EST / no DST adjustment needed for lock logic)
-
 /**
- * Convert a UTC Date to the equivalent Eastern Standard Time Date object.
- * We use a fixed UTC-5 offset so the gate is consistent year-round.
- */
-function toEST(utcDate: Date): Date {
-  return new Date(utcDate.getTime() + EST_OFFSET_MS);
-}
-
-/**
- * Return the next 6:00 AM EST timestamp (as UTC ms) after a given UTC date.
- * If it is currently before 6 AM EST today, returns today's 6 AM EST.
- * Otherwise returns tomorrow's 6 AM EST.
- */
-function next6amEST(afterUtc: Date): Date {
-  const estNow = toEST(afterUtc);
-
-  // Build today's 6 AM EST as a UTC date
-  const todayEST = new Date(estNow);
-  todayEST.setHours(6, 0, 0, 0);
-  // Convert back to UTC
-  const today6amUTC = new Date(todayEST.getTime() - EST_OFFSET_MS);
-
-  if (afterUtc < today6amUTC) {
-    // We haven't reached 6 AM EST today yet — unlock is today at 6 AM EST
-    return today6amUTC;
-  }
-
-  // Past 6 AM EST today — unlock is tomorrow at 6 AM EST
-  const tomorrowEST = new Date(estNow);
-  tomorrowEST.setDate(tomorrowEST.getDate() + 1);
-  tomorrowEST.setHours(6, 0, 0, 0);
-  return new Date(tomorrowEST.getTime() - EST_OFFSET_MS);
-}
-
-/**
- * Returns true if the current time (UTC) is past the unlock time for the next
- * day after a lesson was completed at `completedAt`.
- * Unlock = 6:00 AM EST on the calendar day AFTER the submission day (EST).
+ * Returns true if the current time is past the unlock time for the next day
+ * after a lesson was completed at `completedAt`.
+ *
+ * Unlock = 6:00 AM Eastern on the calendar day AFTER the submission day.
+ * Eastern follows DST, so this is UTC-5 in winter and UTC-4 in summer — see
+ * _core/easternTime.ts. The client formats the same instant with the real
+ * `America/New_York` zone, so the two always agree.
  */
 function isNextDayUnlocked(completedAt: Date): boolean {
-  const now = new Date();
-  const unlockAt = next6amEST(completedAt);
-  return now >= unlockAt;
+  return new Date() >= nextUnlockAfter(completedAt);
 }
 
 /**
  * Returns the unlock timestamp (UTC) for the next day after a submission.
  */
 function getUnlockAt(completedAt: Date): Date {
-  return next6amEST(completedAt);
+  return nextUnlockAfter(completedAt);
 }
 
 export const programsRouter = router({

@@ -259,8 +259,10 @@ to both. Differences:
   in by `streamdown`. Bundled locally in the native app so there's no download
   cost, but it slows first paint and bloats the web build. Worth code-splitting
   later.
-- **Program lesson unlock uses a fixed UTC-5 offset**
-  (`server/routers/programs.ts:27`), so during daylight saving (March–November)
-  lessons unlock at 7 AM Eastern while the client countdown — which uses real
-  `America/New_York` — displays 6 AM. Cosmetic mismatch, not a rejection risk,
-  but users will notice.
+- **Program lesson unlock cron.** The DST bug in the gate itself is fixed
+  (`server/_core/easternTime.ts`), but the notification job that tells users a
+  lesson is ready is scheduled externally at 11:00 UTC — correct in winter, an
+  hour late during EDT. The job only notifies about lessons completed 6–30 hours
+  ago, so nothing breaks; the push just arrives at 7 AM local for eight months of
+  the year. Move the cron to 10:00 UTC in summer, or split it into two entries,
+  if you want the push to track the gate exactly.
