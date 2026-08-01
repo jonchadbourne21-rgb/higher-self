@@ -1051,3 +1051,30 @@ export const weeklyDigests = mysqlTable("weekly_digests", {
 
 export type WeeklyDigest = typeof weeklyDigests.$inferSelect;
 export type InsertWeeklyDigest = typeof weeklyDigests.$inferInsert;
+
+// ─── RAG Evaluation Runs ──────────────────────────────────────────────────────
+// One row per evaluation of the memory retrieval pipeline. Aggregates only —
+// no queries, no memory content, no user identifiers. See server/rag/evals/.
+
+export const ragEvalRuns = mysqlTable("rag_eval_runs", {
+  id: int("id").autoincrement().primaryKey(),
+  runAt: timestamp("runAt").defaultNow().notNull(),
+  // Run name, matching the evalRunId used to tag traces (mirrored-rag-eval-<ts>)
+  runName: varchar("runName", { length: 128 }).notNull(),
+  // Named retrieval configuration this row measures, e.g. "baseline"
+  configName: varchar("configName", { length: 64 }).notNull(),
+  meanPrecision: float("meanPrecision").notNull(),
+  meanRecall: float("meanRecall").notNull(),
+  meanMRR: float("meanMRR").notNull(),
+  // Null when the LLM judge did not run (disabled, or every call failed)
+  meanRelevance: float("meanRelevance"),
+  meanGroundedness: float("meanGroundedness"),
+  latencyP95: int("latencyP95").notNull(),
+  // Full run configuration and tags, for comparing runs after the fact
+  configJson: json("configJson").$type<Record<string, unknown>>(),
+  queryCount: int("queryCount").notNull().default(0),
+  errorCount: int("errorCount").notNull().default(0),
+});
+
+export type RagEvalRun = typeof ragEvalRuns.$inferSelect;
+export type InsertRagEvalRun = typeof ragEvalRuns.$inferInsert;
