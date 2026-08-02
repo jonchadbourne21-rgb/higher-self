@@ -11,6 +11,7 @@
  * 4. Personality profile: accumulated from interactions via LLM analysis
  */
 
+import { createHash } from "crypto";
 import { getDb } from "../db";
 import { memoryEmbeddings, userPersonalityProfiles } from "../../drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
@@ -22,6 +23,84 @@ const EMBEDDING_DIMENSION = 3072;
 const RAG_ENABLED = !!GEMINI_API_KEY;
 
 // ─── Embedding Generation ────────────────────────────────────────────────────
+
+// ─── Embedding cache ─────────────────────────────────────────────────────────
+
+/**
+ * Embeddings are deterministic for a given input, so identical text never needs
+ * to be embedded twice. This matters most for retrieval: every chat message,
+ * every scheduled job and every letter embeds a query before it can search, and
+ * those queries repeat constantly — the same journal excerpt, the same weekly
+ * transcript, the same topic asked twice.
+ *
+ * Process-local and bounded. On a multi-instance deployment each instance keeps
+ * its own cache, which is fine: the cost of a miss is the call we would have
+ * made anyway. Entries expire so a corpus that shifts underneath a cached query
+ * cannot serve a stale vector indefinitely.
+ */
+const EMBEDDING_CACHE_MAX_ENTRIES = 500;
+const EMBEDDING_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+interface CachedEmbedding {
+  vector: number[];
+  storedAt: number;
+}
+
+const embeddingCache = new Map<string, CachedEmbedding>();
+let embeddingCacheHits = 0;
+let embeddingCacheMisses = 0;
+
+function embeddingCacheKey(text: string): string {
+  return createHash("sha256").update(text).digest("hex");
+}
+
+function readEmbeddingCache(text: string): number[] | null {
+  const entry = embeddingCache.get(embeddingCacheKey(text));
+  if (!entry) {
+    embeddingCacheMisses++;
+    return null;
+  }
+  if (Date.now() - entry.storedAt > EMBEDDING_CACHE_TTL_MS) {
+    embeddingCache.delete(embeddingCacheKey(text));
+    embeddingCacheMisses++;
+    return null;
+  }
+  embeddingCacheHits++;
+  return entry.vector;
+}
+
+function writeEmbeddingCache(text: string, vector: number[]): void {
+  // Evict oldest first. Map preserves insertion order, so the first key is the
+  // least recently written.
+  if (embeddingCache.size >= EMBEDDING_CACHE_MAX_ENTRIES) {
+    const oldest = embeddingCache.keys().next();
+    if (!oldest.done) embeddingCache.delete(oldest.value);
+  }
+  embeddingCache.set(embeddingCacheKey(text), { vector, storedAt: Date.now() });
+}
+
+/** Cache counters, for the eval harness and for debugging. */
+export function embeddingCacheStats(): {
+  size: number;
+  hits: number;
+  misses: number;
+  hitRate: number;
+} {
+  const total = embeddingCacheHits + embeddingCacheMisses;
+  return {
+    size: embeddingCache.size,
+    hits: embeddingCacheHits,
+    misses: embeddingCacheMisses,
+    hitRate: total === 0 ? 0 : embeddingCacheHits / total,
+  };
+}
+
+/** Clear the cache and reset counters. Used by tests. */
+export function clearEmbeddingCache(): void {
+  embeddingCache.clear();
+  embeddingCacheHits = 0;
+  embeddingCacheMisses = 0;
+}
 
 /**
  * Generate embedding vector using Gemini embedding-001
@@ -42,6 +121,9 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 
   // Truncate to ~8000 chars to stay within token limits
   const truncated = text.slice(0, 8000);
+
+  const cached = readEmbeddingCache(truncated);
+  if (cached) return cached;
 
   try {
     const response = await fetch(
@@ -71,6 +153,9 @@ export async function generateEmbedding(text: string): Promise<number[]> {
       return new Array(EMBEDDING_DIMENSION).fill(0);
     }
 
+    // Only successful embeddings are cached. Caching a zero vector would pin a
+    // transient API failure in memory and silently break retrieval for an hour.
+    writeEmbeddingCache(truncated, values);
     return values;
   } catch (err) {
     console.error("[RAG] Embedding generation error:", err);
@@ -365,7 +450,54 @@ export function formatPersonalityForPrompt(profile: PersonalityProfile | null): 
  * Update personality profile based on recent interactions
  * Called periodically (every 5 interactions or on session end)
  */
-export async function updatePersonalityProfile(userId: number): Promise<void> {
+/**
+ * Minimum gap between personality analyses for one user.
+ *
+ * The profile is a rollup of the last 20 memories. Two adjacent sessions barely
+ * move it, so recomputing after every single one burns a full LLM call to
+ * produce nearly the same JSON. This is the single largest source of avoidable
+ * model calls in the app.
+ */
+export const PERSONALITY_MIN_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+/**
+ * Or recompute early once this many new memories have accumulated.
+ *
+ * Note the ceiling: `interactionCount` is written as the size of the last-20
+ * window, so for any user past 20 memories both sides of the comparison sit at
+ * 20 and this check stops firing. That is intentional rather than broken — the
+ * count gate is what catches a brand-new user going from 3 memories to 8 in one
+ * evening, and the time gate is what governs everyone thereafter.
+ */
+export const PERSONALITY_MIN_NEW_MEMORIES = 5;
+
+/**
+ * Decide whether a personality analysis is worth running.
+ * Exported for testing — the throttle is the whole point, so it is tested
+ * directly rather than inferred from call counts.
+ */
+export function shouldReanalysePersonality(params: {
+  lastAnalyzedAt: Date | null;
+  analyzedInteractionCount: number;
+  currentMemoryCount: number;
+  now?: Date;
+}): boolean {
+  const { lastAnalyzedAt, analyzedInteractionCount, currentMemoryCount } = params;
+  const now = params.now ?? new Date();
+
+  // Never analysed — always run.
+  if (!lastAnalyzedAt) return true;
+
+  const newMemories = currentMemoryCount - analyzedInteractionCount;
+  if (newMemories >= PERSONALITY_MIN_NEW_MEMORIES) return true;
+
+  return now.getTime() - lastAnalyzedAt.getTime() >= PERSONALITY_MIN_INTERVAL_MS;
+}
+
+export async function updatePersonalityProfile(
+  userId: number,
+  options: { force?: boolean } = {}
+): Promise<void> {
   try {
     const db = await getDb();
     if (!db) return;
@@ -381,6 +513,28 @@ export async function updatePersonalityProfile(userId: number): Promise<void> {
     if (recentMemories.length < 3) {
       console.log(`[RAG] Not enough memories (${recentMemories.length}) to build personality profile`);
       return;
+    }
+
+    // Throttle before spending an LLM call.
+    if (!options.force) {
+      const existing = await db
+        .select()
+        .from(userPersonalityProfiles)
+        .where(eq(userPersonalityProfiles.userId, userId))
+        .limit(1);
+
+      const profile = existing[0];
+      if (
+        profile &&
+        !shouldReanalysePersonality({
+          lastAnalyzedAt: profile.lastAnalyzedAt ?? null,
+          analyzedInteractionCount: profile.interactionCount ?? 0,
+          currentMemoryCount: recentMemories.length,
+        })
+      ) {
+        console.log(`[RAG] Personality profile for user ${userId} is fresh — skipping analysis`);
+        return;
+      }
     }
 
     // Build a summary of recent interactions for analysis
