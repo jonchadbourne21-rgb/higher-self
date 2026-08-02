@@ -10,6 +10,8 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
+    "eval:rag": "tsx server/rag/evals/cli.ts",
+    "eval:rag:dataset": "tsx server/rag/evals/build_dataset.ts",
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
     "cap:build": "pnpm build && npx cap sync",
     "cap:sync": "npx cap sync",

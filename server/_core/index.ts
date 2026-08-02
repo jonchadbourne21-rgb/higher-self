@@ -14,6 +14,7 @@ import { linguisticDriftHandler } from "../jobs/linguisticDriftJob";
 import { thirtyDayLetterHandler } from "../jobs/thirtyDayLetterJob";
 import { entropyDetectionHandler } from "../jobs/entropyDetectionJob";
 import { programLessonUnlockHandler } from "../jobs/programLessonUnlockJob";
+import { ragEvalHandler } from "../rag/evals/schedule";
 import { attachV2VRelay } from "../v2vRelay";
 import { humeWebhookHandler } from "../humeWebhook";
 
@@ -113,6 +114,8 @@ Request-rate: 1/1s`;
   app.post("/api/scheduled/thirtyDayLetter", thirtyDayLetterHandler);
   app.post("/api/scheduled/entropyDetection", entropyDetectionHandler);
   app.post("/api/scheduled/programLessonUnlock", programLessonUnlockHandler);
+  // Weekly RAG retrieval-quality evaluation. See server/rag/evals/README.md.
+  app.post("/api/scheduled/ragEval", ragEvalHandler);
 
   // Hume EVI webhook — receives real-time voice session events
   app.post("/api/hume/webhook", humeWebhookHandler);
