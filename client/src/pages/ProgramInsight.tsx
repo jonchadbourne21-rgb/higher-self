@@ -40,25 +40,17 @@ export default function ProgramInsight() {
   const [, navigate] = useLocation();
   const confettiFired = useRef(false);
 
-  // Fetch the program info and the submitted lesson response
+  // Program info — used for the name in the header and the duration that
+  // tells us whether this was the final day.
   const { data: programData } = trpc.programs.getById.useQuery(
     { id: programId },
-    { enabled: !!programId }
-  );
-  const { data: progressData } = trpc.programs.getProgress.useQuery(
-    { id: programId } as any,
-    { enabled: false } // We'll use getCurrentLesson instead
-  );
-  const { data: lessonData } = trpc.programs.getCurrentLesson.useQuery(
-    { programId },
     { enabled: !!programId }
   );
 
   const program = programData?.program;
   const isLastDay = program ? day >= program.durationDays : false;
-  const nextDay = isLastDay ? null : day + 1;
 
-  // Fire confetti on Day 21 completion
+  // Fire confetti when the final day is completed
   useEffect(() => {
     if (isLastDay && !confettiFired.current) {
       confettiFired.current = true;
@@ -66,29 +58,10 @@ export default function ProgramInsight() {
     }
   }, [isLastDay]);
 
-  // The response for the day we just submitted — we look at lessonData which now points to next day
-  // We need to fetch the specific day's response via a different approach
-  // Since getCurrentLesson now points to the NEXT day, we use the insight page to show what was just submitted
-  // We pass the data via navigation state or re-fetch via a dedicated query
-  // For simplicity, we'll use the getAllLessonResponses via getProgress + a direct fetch
-  const { data: allResponses } = trpc.programs.getProgress.useQuery(
-    { programId },
-    { enabled: !!programId }
-  );
-
-  // We need the actual response text — fetch it from the lesson response
-  // Use a dedicated query for the specific day's response
-  const { data: currentLessonForInsight } = trpc.programs.getCurrentLesson.useQuery(
-    { programId },
-    { enabled: !!programId }
-  );
-
-  // The insight page shows the response from the day just completed (day param)
-  // Since getCurrentLesson now returns the NEXT day's lesson, we need a way to get the submitted response
-  // We'll use a workaround: store the response in sessionStorage when submitting, or use a new endpoint
-  // For now, we'll use the lessonData's response if it matches, otherwise show a generic success view
-  
-  // Check sessionStorage for the just-submitted response (set by ProgramDetail on submit)
+  // This page shows the day that was just submitted, but by the time we land
+  // here getCurrentLesson has already advanced to the NEXT day — so there is no
+  // server query that returns it. ProgramDetail stashes the submission result in
+  // sessionStorage on success and we read it back here.
   const storedInsight = (() => {
     try {
       const raw = session.getItem(programInsightKey(programId, day));

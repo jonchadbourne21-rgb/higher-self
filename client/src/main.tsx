@@ -3,6 +3,7 @@ import { isDemoMode } from "@/lib/demo";
 import { storage, STORAGE_KEYS, initStorage } from "@/lib/storage";
 import { registerNativeAuthCallback } from "@/lib/nativeAuth";
 import { redirectToLogin } from "@/lib/loginRedirect";
+import { apiUrl } from "@/lib/apiBase";
 import { initPurchases } from "@/lib/purchases";
 import { UNAUTHED_ERR_MSG } from '@shared/const';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -71,7 +72,10 @@ function getStoredToken(): string | null {
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      url: "/api/trpc",
+      // Relative on web (same origin); absolute on native, where the WebView
+      // origin is capacitor://localhost and a relative path would resolve to
+      // the bundled assets instead of the server. See lib/apiBase.ts.
+      url: apiUrl("/api/trpc"),
       transformer: superjson,
       headers() {
         const headers: Record<string, string> = {};

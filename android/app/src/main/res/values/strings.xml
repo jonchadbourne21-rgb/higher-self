@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Mirrored</string>
+    <string name="title_activity_main">Mirrored</string>
+    <string name="package_name">cloud.higherself.app</string>
+    <string name="custom_url_scheme">higherself</string>
+</resources>
