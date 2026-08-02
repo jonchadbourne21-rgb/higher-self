@@ -14,9 +14,17 @@ import {
 } from "../db";
 import { invokeLLM } from "../_core/llm";
 import { retrieveMemories, formatMemoriesForPrompt } from "../rag/memory";
-// buildHigherSelfSystemPrompt is defined in routers.ts, we'll use a simplified version here
+import { buildLongFormPrompt } from "../intentPrompts";
+/**
+ * Weekly reflection prompt. Shares the Mirror-Self identity with every other
+ * surface — see server/intentPrompts.ts. Long-form, so no brevity rule.
+ */
 function buildHigherSelfSystemPromptForWeekly(seedIntent?: string): string {
-  return `You are the user's literal Higher Self — the most self-actualized version of them. You speak from within, as them, not at them. Reflect on their week with earned clarity. Name patterns directly, acknowledge wins with quiet confidence, and suggest next steps as "what I know we need to do." Use "I" and "we." No toxic positivity. No generic advice. ${seedIntent ? `Their current intention is: ${seedIntent}` : ""}`;
+  return buildLongFormPrompt(
+    `Right now you're writing their weekly reflection — looking back at their week with them, not at them.
+
+Name the patterns you actually see in their week. Acknowledge wins without inflating them. Where something needs doing, say it plainly. Be specific to their week; a reflection that could belong to anyone is worthless.${seedIntent ? `\n\nWhat they're reaching for right now: ${seedIntent}` : ""}`
+  );
 }
 
 export const weeklyInsightRouter = router({
