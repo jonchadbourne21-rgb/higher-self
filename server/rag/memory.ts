@@ -650,3 +650,46 @@ ${clusterSummaries.map((s, i) => `Cluster ${i + 1}:\n${s}`).join("\n\n")}`;
     return [];
   }
 }
+
+// ─── Shared learning context ─────────────────────────────────────────────────
+
+/**
+ * Retrieve the learning context for a user: relevant past memories plus their
+ * accumulated personality profile, formatted for injection into a system prompt.
+ *
+ * Every surface that speaks as the Mirror should call this, so that what the
+ * app has learned about someone shows up consistently — in chat, in voice, in a
+ * weekly insight, in a program reflection, in an outbound call. Before this
+ * existed, coverage was uneven: chat and voice had both, the weekly insight had
+ * memories but no personality, and the digest, outbound call and letters had
+ * neither.
+ *
+ * Never throws. A retrieval or embedding failure degrades to an empty string,
+ * because a scheduled job that fails to write a weekly digest is a worse outcome
+ * than one written without memory context.
+ */
+export async function buildLearningContext(params: {
+  userId: number;
+  /** Text to find relevant memories for — the user's message, or a topic summary. */
+  query: string;
+  topK?: number;
+  sourceTypes?: SourceType[];
+  /** Skip the personality profile when the caller only wants memories. */
+  includePersonality?: boolean;
+}): Promise<string> {
+  const { userId, query, topK = 5, sourceTypes, includePersonality = true } = params;
+
+  try {
+    const [memories, personality] = await Promise.all([
+      retrieveMemories({ userId, query, topK, sourceTypes }),
+      includePersonality ? getPersonalityProfile(userId) : Promise.resolve(null),
+    ]);
+
+    return [formatMemoriesForPrompt(memories), formatPersonalityForPrompt(personality)]
+      .filter((section) => section && section.trim().length > 0)
+      .join("\n");
+  } catch (error) {
+    console.error("[RAG] buildLearningContext failed:", error);
+    return "";
+  }
+}

@@ -7,6 +7,7 @@ import {
 } from "../db";
 import { invokeLLM } from "../_core/llm";
 import { buildLongFormPrompt } from "../intentPrompts";
+import { buildLearningContext } from "../rag/memory";
 import { ENV } from "../_core/env";
 
 /**
@@ -42,6 +43,14 @@ export async function generateWeeklyDigest(userId: number, weekStart: string): P
 
     const transcript = `This week's Mirror sessions:\n\n${sessionSummaries}`;
 
+    // Memories + personality. This job previously had no learning context, so
+    // the digest read the week in isolation with no sense of the person.
+    const learningContext = await buildLearningContext({
+      userId,
+      query: sessionSummaries.slice(0, 1000),
+      topK: 5,
+    });
+
     // Call LLM to generate a digest
     const response = await invokeLLM({
       messages: [
@@ -51,7 +60,9 @@ export async function generateWeeklyDigest(userId: number, weekStart: string): P
             "Right now you're writing their weekly digest from a summary of this week's " +
               "conversations. Two to three paragraphs, under 300 words. Name the themes " +
               "and patterns you actually see. Be specific to what they said — a digest " +
-              "that could belong to anyone is worthless."
+              "that could belong to anyone is worthless.",
+            undefined,
+            learningContext
           ),
         },
         {

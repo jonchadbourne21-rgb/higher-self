@@ -15,6 +15,7 @@ import { higherSelfVoicemails } from "../drizzle/schema";
 import { humeTextToSpeech } from "./humeTts";
 import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
+import { buildLearningContext } from "./rag/memory";
 import { buildLongFormPrompt } from "./intentPrompts";
 import { getUserProfile, getRecentCheckIns } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -110,6 +111,10 @@ export async function buildEntropyAwarePrompt(userId: number): Promise<string> {
       ).join("\n")
     : "No fingerprints available";
 
+  const lastTensionQuery = recentFingerprints.length > 0
+    ? `${recentFingerprints[0].unresolvedTension ?? ""} ${recentFingerprints[0].selfBelief ?? ""}`.trim()
+    : "";
+
   const driftContext = latestDrift.length > 0
     ? `Drift score: ${latestDrift[0].driftScore.toFixed(2)} (${latestDrift[0].driftScore > 0 ? "moving toward goals" : "drifting away from goals"})`
     : "No drift data yet";
@@ -121,6 +126,15 @@ export async function buildEntropyAwarePrompt(userId: number): Promise<string> {
   const daysSinceLastCheckin = recentCheckIns.length > 0
     ? Math.floor((Date.now() - new Date(recentCheckIns[0].createdAt).getTime()) / (1000 * 60 * 60 * 24))
     : "unknown";
+
+  // Memories + personality. An intervention that does not remember what someone
+  // has actually been working through reads as a form letter, which is the one
+  // thing this call cannot afford to be.
+  const learningContext = await buildLearningContext({
+    userId,
+    query: `${lastTensionQuery} disengagement withdrawal what they have been avoiding`,
+    topK: 5,
+  });
 
   return buildLongFormPrompt(`You are initiating this conversation because you've noticed ${name} pulling away. This is NOT a regular check-in. This is an intervention — gentle but direct.
 
@@ -147,7 +161,10 @@ VOICE GUIDELINES:
 - Short, punchy sentences. No monologues.
 - If they deflect, gently redirect: "I hear you, but that's not what I asked."
 
-SAFETY: If ${name} expresses self-harm intent, immediately provide crisis resources (988 Suicide & Crisis Lifeline) and state you cannot continue until they're safe. This overrides everything else about how you show up.`);
+SAFETY: If ${name} expresses self-harm intent, immediately provide crisis resources (988 Suicide & Crisis Lifeline) and state you cannot continue until they're safe. This overrides everything else about how you show up.`,
+    undefined,
+    learningContext
+  );
 }
 
 function getFallbackPrompt(): string {
@@ -186,6 +203,12 @@ export async function generateVoicemail(userId: number, voicemailId: number): Pr
     ? recentFingerprints[0].selfBelief
     : "";
 
+  const learningContext = await buildLearningContext({
+    userId,
+    query: `${lastTension} ${lastBelief}`.trim() || "recent reflections",
+    topK: 4,
+  });
+
   // Generate voicemail text via LLM
   const response = await invokeLLM({
     messages: [
@@ -206,7 +229,10 @@ Rules:
 - End with ONE question that will linger in their mind
 - No toxic positivity, no guilt-tripping
 - Sound natural — contractions, pauses, real speech patterns
-- Keep it under 150 words`)
+- Keep it under 150 words`,
+          undefined,
+          learningContext
+        )
       },
       {
         role: "user",

@@ -18,7 +18,7 @@ import {
 import { invokeLLM } from "../_core/llm";
 import { nextUnlockAfter } from "../_core/easternTime";
 import { buildLongFormPrompt } from "../intentPrompts";
-import { retrieveMemories, formatMemoriesForPrompt, getPersonalityProfile, formatPersonalityForPrompt } from "../rag/memory";
+import { retrieveMemories, formatMemoriesForPrompt, getPersonalityProfile, formatPersonalityForPrompt, storeMemory, updatePersonalityProfile } from "../rag/memory";
 import { addRewardPoints } from "../db/rewards";
 import { createRewardGrant } from "../db/rewardGrants";
 import { isProUser } from "../db/subscriptions";
@@ -339,6 +339,22 @@ Reflect back what they actually shared. Name what you notice. Ask one question t
         userReflection: input.reflection,
         aiFeedback,
       });
+
+      // Feed the reflection back into the learning layer. "program_response" is
+      // a declared SourceType but nothing was ever writing it, so weeks of a
+      // user's deepest reflections were invisible to every later conversation.
+      // Fire-and-forget: a failed embedding must not fail the submission.
+      storeMemory({
+        userId: ctx.user.id,
+        sourceType: "program_response",
+        content: input.reflection,
+        sourceId: input.lessonId,
+        metadata: { lessonTitle: lesson.title, day: String(input.day) },
+      })
+        .then(() => updatePersonalityProfile(ctx.user.id))
+        .catch((err) =>
+          console.error("[Programs] Storing reflection as memory failed:", err)
+        );
 
       // Advance enrollment to next day
       const program = await getProgramById(input.programId);

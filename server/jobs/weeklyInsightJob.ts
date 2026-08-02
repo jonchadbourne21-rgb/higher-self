@@ -29,6 +29,7 @@ import {
 } from "../db";
 import { invokeLLM } from "../_core/llm";
 import { buildLongFormPrompt } from "../intentPrompts";
+import { buildLearningContext } from "../rag/memory";
 import { notifyOwner } from "../_core/notification";
 import { sendPushNotification } from "../pushNotifications";
 import { getDb } from "../db";
@@ -177,6 +178,15 @@ ${profile?.shortTermGoals ? `\nUser's current goals: ${profile.shortTermGoals}` 
 ${profile?.coreValues && Array.isArray(profile.coreValues) && profile.coreValues.length > 0 ? `\nCore values: ${(profile.coreValues as string[]).join(", ")}` : ""}
 `;
 
+    // Memories + personality. This job previously had no learning context at
+    // all, so the scheduled Sunday reflection knew less about the user than the
+    // manually-triggered one did.
+    const learningContext = await buildLearningContext({
+      userId,
+      query: transcript.slice(0, 1000),
+      topK: 5,
+    });
+
     const systemPrompt = buildLongFormPrompt(
       `Right now you're writing ${profile?.name || "this person"}'s Sunday reflection from this week's data.
 
@@ -185,7 +195,9 @@ ${profile?.coreValues && Array.isArray(profile.coreValues) && profile.coreValues
 - Name the emotional patterns you actually see.
 - Ask one question that lands.
 - Where something needs doing, name two or three concrete steps.
-- Length: 250-350 words.${profile?.seedIntent ? `\n- What they're reaching for right now: "${profile.seedIntent}"` : ""}`
+- Length: 250-350 words.${profile?.seedIntent ? `\n- What they're reaching for right now: "${profile.seedIntent}"` : ""}`,
+      undefined,
+      learningContext
     );
 
     const userPrompt = `Here is ${profile?.name || "the user"}'s week. Write their Sunday reflection:\n${transcript}`;

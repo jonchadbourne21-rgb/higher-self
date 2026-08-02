@@ -3,6 +3,7 @@ import {
   buildIntentSpecificPrompt,
   buildLongFormPrompt,
   MIRROR_SELF_IDENTITY,
+  HIGHER_SELF_IDENTITY,
   CONVERSATIONAL_BREVITY,
   SeedIntent,
 } from "./intentPrompts";
@@ -26,8 +27,13 @@ describe("Mirror-Self identity", () => {
     });
   });
 
-  it("is shared by long-form surfaces too", () => {
-    expect(buildLongFormPrompt("Write their weekly reflection.")).toContain(MIRROR_SELF_IDENTITY);
+  it("is scoped to live conversation and never reaches long-form surfaces", () => {
+    // Mirror-Self is for chat and voice only. Weekly insights, digests, program
+    // feedback, outbound calls and letters keep the Higher Self voice.
+    const longForm = buildLongFormPrompt("Write their weekly reflection.");
+    expect(longForm).not.toContain(MIRROR_SELF_IDENTITY);
+    expect(longForm).not.toContain("Mirror-Self");
+    expect(longForm).toContain(HIGHER_SELF_IDENTITY);
   });
 
   it("establishes the Mirror-Self as a person, not an assistant", () => {
@@ -194,6 +200,54 @@ describe("buildLongFormPrompt", () => {
   it("omits the context block entirely when no profile is loaded", () => {
     const prompt = buildLongFormPrompt("Reflect on their week.");
     expect(prompt).not.toContain("WHAT YOU KNOW ABOUT");
+    expect(prompt).not.toContain("undefined");
+  });
+});
+
+
+describe("Higher Self identity (non-conversational surfaces)", () => {
+  it("is used by every long-form prompt", () => {
+    expect(buildLongFormPrompt("Write a voicemail.")).toContain(HIGHER_SELF_IDENTITY);
+  });
+
+  it("is distinct from the Mirror-Self", () => {
+    expect(HIGHER_SELF_IDENTITY).not.toBe(MIRROR_SELF_IDENTITY);
+    expect(HIGHER_SELF_IDENTITY).toContain("literal Higher Self");
+  });
+
+  it("never appears in a conversational prompt", () => {
+    ALL_INTENTS.forEach((intent) => {
+      expect(buildIntentSpecificPrompt(intent, mockContext)).not.toContain(HIGHER_SELF_IDENTITY);
+    });
+  });
+
+  it("contains no template placeholders", () => {
+    expect(HIGHER_SELF_IDENTITY).not.toContain("${");
+    expect(HIGHER_SELF_IDENTITY).not.toContain("undefined");
+  });
+});
+
+describe("learning context injection", () => {
+  it("is included when supplied", () => {
+    const prompt = buildLongFormPrompt(
+      "Write their weekly reflection.",
+      mockContext,
+      "RELEVANT MEMORIES FROM YOUR PAST:\n[Journal Entry — Mar 3]\nI keep avoiding the same conversation."
+    );
+    expect(prompt).toContain("I keep avoiding the same conversation");
+  });
+
+  it("is omitted cleanly when retrieval returned nothing", () => {
+    // buildLearningContext degrades to "" on failure; that must not leave a
+    // dangling blank section in the prompt.
+    const prompt = buildLongFormPrompt("Write their weekly reflection.", mockContext, "");
+    expect(prompt).not.toContain("\n\n\n");
+    expect(prompt).toContain("Write their weekly reflection.");
+  });
+
+  it("is omitted when the caller passes nothing at all", () => {
+    const prompt = buildLongFormPrompt("Write their weekly reflection.", mockContext);
+    expect(prompt).toContain("Write their weekly reflection.");
     expect(prompt).not.toContain("undefined");
   });
 });

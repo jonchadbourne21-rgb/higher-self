@@ -13,6 +13,7 @@
  */
 
 import { invokeLLM } from "../_core/llm";
+import { buildLearningContext } from "../rag/memory";
 import { getDb } from "../db";
 import {
   sessionFingerprints,
@@ -304,10 +305,22 @@ export async function generateThirtyDayLetter(userId: number): Promise<ThirtyDay
 
   const fullContext = parts.join("\n");
 
+  const learningContext = await buildLearningContext({
+    userId,
+    query: fullContext.slice(0, 800),
+    topK: 5,
+  });
+
   try {
     const response = await invokeLLM({
       messages: [
-        { role: "system", content: THIRTY_DAY_LETTER_PROMPT },
+        {
+          role: "system",
+          content:
+            learningContext && learningContext.trim().length > 0
+              ? `${THIRTY_DAY_LETTER_PROMPT}\n${learningContext}`
+              : THIRTY_DAY_LETTER_PROMPT,
+        },
         {
           role: "user",
           content: `Generate the 30-day letter for this user.\n\n${fullContext}`,

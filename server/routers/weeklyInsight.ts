@@ -13,17 +13,22 @@ import {
   saveWeeklyInsight,
 } from "../db";
 import { invokeLLM } from "../_core/llm";
-import { retrieveMemories, formatMemoriesForPrompt } from "../rag/memory";
+import { buildLearningContext } from "../rag/memory";
 import { buildLongFormPrompt } from "../intentPrompts";
 /**
  * Weekly reflection prompt. Shares the Mirror-Self identity with every other
  * surface — see server/intentPrompts.ts. Long-form, so no brevity rule.
  */
-function buildHigherSelfSystemPromptForWeekly(seedIntent?: string): string {
+function buildHigherSelfSystemPromptForWeekly(
+  seedIntent?: string,
+  learningContext?: string
+): string {
   return buildLongFormPrompt(
     `Right now you're writing their weekly reflection — looking back at their week with them, not at them.
 
-Name the patterns you actually see in their week. Acknowledge wins without inflating them. Where something needs doing, say it plainly. Be specific to their week; a reflection that could belong to anyone is worthless.${seedIntent ? `\n\nWhat they're reaching for right now: ${seedIntent}` : ""}`
+Name the patterns you actually see in their week. Acknowledge wins without inflating them. Where something needs doing, say it plainly. Be specific to their week; a reflection that could belong to anyone is worthless.${seedIntent ? `\n\nWhat they're reaching for right now: ${seedIntent}` : ""}`,
+    undefined,
+    learningContext
   );
 }
 
@@ -102,20 +107,19 @@ Avg stress: ${avgStress}/10`;
           "weekly growth patterns emotional themes progress",
         ].filter(Boolean).join(" ");
 
-        let ragContext = "";
-        try {
-          const memories = await retrieveMemories({
-            userId: ctx.user.id,
-            query: ragQuery,
-            topK: 5,
-            dateFrom: new Date(weekStart.getTime() - 21 * 24 * 60 * 60 * 1000), // last 3 weeks
-          });
-          ragContext = formatMemoriesForPrompt(memories);
-        } catch (e) {
-          console.warn("[WeeklyInsight] RAG retrieval failed, continuing without context:", e);
-        }
+        // Memories AND personality profile. This surface previously pulled
+        // memories but not personality, so what the app had learned about how
+        // someone communicates never reached their weekly reflection.
+        const learningContext = await buildLearningContext({
+          userId: ctx.user.id,
+          query: ragQuery,
+          topK: 5,
+        });
 
-        const systemPrompt = buildHigherSelfSystemPromptForWeekly(ctx.user.seedIntent || undefined) + ragContext;
+        const systemPrompt = buildHigherSelfSystemPromptForWeekly(
+          ctx.user.seedIntent || undefined,
+          learningContext
+        );
         const isFirstDayOfWeek = now.getDay() === 0;
 
         // Use structured LLM output to generate insight, patterns, and actionable steps together
