@@ -23,7 +23,7 @@ import { getUserProfile, getRecentCheckIns, getLatestDomainScores } from "./db";
 import { buildIntentSpecificPrompt } from "./intentPrompts";
 import { users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
-import { storeMemory, retrieveMemories, formatMemoriesForPrompt, getPersonalityProfile, formatPersonalityForPrompt, updatePersonalityProfile } from "./rag/memory";
+import { storeMemory, retrieveMemories, formatMemoriesForPrompt, getPersonalityProfile, formatPersonalityForPrompt, updatePersonalityProfile, getReturnAnchor, formatReturnAnchor } from "./rag/memory";
 
 // ─── Env ─────────────────────────────────────────────────────────────────────
 
@@ -106,10 +106,16 @@ async function buildVoiceSystemPrompt(userId: number): Promise<string> {
       domainStr: domainStr || "not yet assessed",
     });
 
-    // RAG: Inject personality profile and recent relevant memories
+    // RAG: personality profile, the return anchor, and a similarity pass.
+    //
+    // This function runs once per WebSocket connection, which is the cleanest
+    // session-start boundary in the app — so this is where the anchor belongs.
+    // Without it the first turn of a session searches on a generic placeholder
+    // query, because the user has not said anything yet to search against.
     try {
-      const [personalityProfile, recentMemories] = await Promise.all([
+      const [personalityProfile, anchor, recentMemories] = await Promise.all([
         getPersonalityProfile(userId),
+        getReturnAnchor(userId),
         retrieveMemories({
           userId,
           query: "personal growth reflection emotional patterns",
@@ -117,7 +123,14 @@ async function buildVoiceSystemPrompt(userId: number): Promise<string> {
         }),
       ]);
       basePrompt += formatPersonalityForPrompt(personalityProfile);
-      basePrompt += formatMemoriesForPrompt(recentMemories);
+      basePrompt += formatReturnAnchor(anchor);
+
+      // Drop similarity hits the anchor already carries, so the same memory is
+      // not pasted into the prompt twice.
+      const anchorIds = new Set(anchor.map((a) => a.id));
+      basePrompt += formatMemoriesForPrompt(
+        recentMemories.filter((m) => !anchorIds.has(m.id))
+      );
     } catch (err) {
       console.error("[v2v-relay] RAG context injection failed:", err);
     }

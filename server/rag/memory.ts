@@ -451,23 +451,32 @@ export function formatPersonalityForPrompt(profile: PersonalityProfile | null): 
  * Called periodically (every 5 interactions or on session end)
  */
 /**
- * Minimum gap between personality analyses for one user.
+ * Number of recent memories the personality analysis reads.
  *
- * The profile is a rollup of the last 20 memories. Two adjacent sessions barely
- * move it, so recomputing after every single one burns a full LLM call to
- * produce nearly the same JSON. This is the single largest source of avoidable
- * model calls in the app.
+ * Each is sliced to 300 chars, so 60 is roughly 4,700 input tokens — a wider,
+ * less recency-biased picture than 20 without the token cost of 100+. Note the
+ * tradeoff: a wider window is slower to notice someone changing, because a
+ * recent shift is averaged against more history.
  */
-export const PERSONALITY_MIN_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
+export const PERSONALITY_WINDOW = 60;
 
 /**
- * Or recompute early once this many new memories have accumulated.
+ * Minimum gap between personality analyses for one user.
  *
- * Note the ceiling: `interactionCount` is written as the size of the last-20
- * window, so for any user past 20 memories both sides of the comparison sit at
- * 20 and this check stops firing. That is intentional rather than broken — the
- * count gate is what catches a brand-new user going from 3 memories to 8 in one
- * evening, and the time gate is what governs everyone thereafter.
+ * The profile is a slow-moving rollup — traits, communication style, recurring
+ * themes. Recomputing it on a short clock produces near-identical JSON at real
+ * cost, so the primary trigger is change (PERSONALITY_MIN_NEW_MEMORIES) and this
+ * is only a floor to stop a burst of activity firing back-to-back analyses.
+ */
+export const PERSONALITY_MIN_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
+
+/**
+ * Recompute once this many new memories have accumulated.
+ *
+ * This is the primary trigger. `interactionCount` stores the user's true total
+ * memory count, not the size of the analysis window — an earlier version stored
+ * the capped window length, which meant that past 20 memories both sides of the
+ * subtraction were pinned to 20 and this check silently stopped firing forever.
  */
 export const PERSONALITY_MIN_NEW_MEMORIES = 5;
 
@@ -502,13 +511,13 @@ export async function updatePersonalityProfile(
     const db = await getDb();
     if (!db) return;
 
-    // Get recent memories to analyze (last 20)
+    // Get recent memories to analyze.
     const recentMemories = await db
       .select()
       .from(memoryEmbeddings)
       .where(eq(memoryEmbeddings.userId, userId))
       .orderBy(desc(memoryEmbeddings.createdAt))
-      .limit(20);
+      .limit(PERSONALITY_WINDOW);
 
     if (recentMemories.length < 3) {
       console.log(`[RAG] Not enough memories (${recentMemories.length}) to build personality profile`);
@@ -529,7 +538,8 @@ export async function updatePersonalityProfile(
         !shouldReanalysePersonality({
           lastAnalyzedAt: profile.lastAnalyzedAt ?? null,
           analyzedInteractionCount: profile.interactionCount ?? 0,
-          currentMemoryCount: recentMemories.length,
+          // True total, not the capped window — see PERSONALITY_MIN_NEW_MEMORIES.
+          currentMemoryCount: await countUserMemories(userId),
         })
       ) {
         console.log(`[RAG] Personality profile for user ${userId} is fresh — skipping analysis`);
@@ -599,6 +609,9 @@ Return a JSON object with:
       .where(eq(userPersonalityProfiles.userId, userId))
       .limit(1);
 
+    // Persist the true total so the change gate keeps working at any scale.
+    const totalMemories = await countUserMemories(userId);
+
     if (existing.length > 0) {
       await db
         .update(userPersonalityProfiles)
@@ -610,7 +623,7 @@ Return a JSON object with:
           growthEdges: analysis.growthEdges,
           challengeStyle: analysis.challengeStyle,
           lastAnalyzedAt: new Date(),
-          interactionCount: recentMemories.length,
+          interactionCount: totalMemories,
         })
         .where(eq(userPersonalityProfiles.userId, userId));
     } else {
@@ -623,7 +636,7 @@ Return a JSON object with:
         growthEdges: analysis.growthEdges,
         challengeStyle: analysis.challengeStyle,
         lastAnalyzedAt: new Date(),
-        interactionCount: recentMemories.length,
+        interactionCount: totalMemories,
       });
     }
 
@@ -846,4 +859,185 @@ export async function buildLearningContext(params: {
     console.error("[RAG] buildLearningContext failed:", error);
     return "";
   }
+}
+
+// ─── Memory counting ─────────────────────────────────────────────────────────
+
+/**
+ * True total number of stored memories for a user.
+ *
+ * One indexed COUNT, used only inside the personality throttle where it gates an
+ * LLM call — a round trip to Postgres to avoid a model call is a trade worth
+ * making every time. Returns 0 on failure, which makes the caller conservative
+ * (no analysis) rather than wasteful.
+ */
+export async function countUserMemories(userId: number): Promise<number> {
+  try {
+    const db = await getDb();
+    if (!db) return 0;
+    const rows = await db
+      .select({ total: sql<number>`count(*)` })
+      .from(memoryEmbeddings)
+      .where(eq(memoryEmbeddings.userId, userId));
+    return Number(rows[0]?.total ?? 0);
+  } catch (error) {
+    console.error("[RAG] countUserMemories failed:", error);
+    return 0;
+  }
+}
+
+// ─── Return anchor ───────────────────────────────────────────────────────────
+
+/**
+ * The "who is this, right now" snapshot loaded when someone comes back.
+ *
+ * Nothing is lost when the app closes — memories live in MySQL permanently. The
+ * problem this solves is different: on the first message of a new session there
+ * is no query yet, so similarity search has nothing to search *for*. The Mirror
+ * starts cold and only warms up once the user has already said something.
+ *
+ * This ranks memories by importance rather than similarity, so the Mirror opens
+ * a session already holding what matters. No LLM call — pure scoring over
+ * signals the app already records.
+ */
+
+/** How long it takes an unremarkable memory to lose half its weight. */
+const ANCHOR_RECENCY_HALF_LIFE_DAYS = 21;
+
+/** Memories older than this are not considered for the anchor at all. */
+const ANCHOR_MAX_AGE_DAYS = 120;
+
+/** Rows scored per anchor build. */
+const ANCHOR_CANDIDATE_POOL = 100;
+
+export interface AnchorCandidate {
+  id: number;
+  sourceType: SourceType;
+  content: string;
+  createdAt: Date;
+  /** Echo's 0-10 intensity for journal entries, when known. */
+  intensityScore?: number | null;
+  /** Echo's resolution state. An open tension outranks a resolved one. */
+  resolutionStatus?: "open" | "resolved" | "unclear" | null;
+}
+
+/**
+ * Weight per source. A written reflection or a spoken session carries more
+ * signal about who someone is than a one-tap mood check-in.
+ */
+const SOURCE_WEIGHT: Record<SourceType, number> = {
+  journal: 1.0,
+  voice: 1.0,
+  program_response: 0.95,
+  chat: 0.75,
+  checkin: 0.4,
+};
+
+/**
+ * Importance score in roughly [0, 1]. Higher ranks first.
+ *
+ * Pure and exported so the ranking is testable without a database — the whole
+ * value of this feature is *which* ten memories it picks.
+ */
+export function scoreImportance(candidate: AnchorCandidate, now: Date = new Date()): number {
+  const ageDays = Math.max(
+    0,
+    (now.getTime() - candidate.createdAt.getTime()) / (24 * 60 * 60 * 1000)
+  );
+
+  // Exponential decay: 1.0 today, 0.5 at one half-life, approaching 0 after that.
+  const recency = Math.pow(0.5, ageDays / ANCHOR_RECENCY_HALF_LIFE_DAYS);
+
+  const source = SOURCE_WEIGHT[candidate.sourceType] ?? 0.5;
+
+  // Echo scores intensity 0-10. Absent means "unknown", not "flat", so it lands
+  // mid-range rather than scoring zero and burying every non-journal memory.
+  const intensity =
+    typeof candidate.intensityScore === "number"
+      ? Math.min(Math.max(candidate.intensityScore, 0), 10) / 10
+      : 0.5;
+
+  // An unresolved tension is the single most useful thing to walk back into.
+  const unresolved = candidate.resolutionStatus === "open" ? 1 : 0;
+
+  return 0.4 * recency + 0.2 * source + 0.25 * intensity + 0.15 * unresolved;
+}
+
+/** Rank candidates by importance and take the top `limit`. Pure. */
+export function rankByImportance(
+  candidates: readonly AnchorCandidate[],
+  limit = 10,
+  now: Date = new Date()
+): AnchorCandidate[] {
+  const cutoff = now.getTime() - ANCHOR_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
+
+  return candidates
+    .filter((c) => c.createdAt.getTime() >= cutoff)
+    .map((c) => ({ candidate: c, score: scoreImportance(c, now) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map((entry) => entry.candidate);
+}
+
+/**
+ * Build the return anchor for a user: the most important memories to walk back
+ * into, ranked without an LLM call. Never throws.
+ */
+export async function getReturnAnchor(userId: number, limit = 10): Promise<AnchorCandidate[]> {
+  try {
+    const db = await getDb();
+    if (!db) return [];
+
+    const rows = await db
+      .select()
+      .from(memoryEmbeddings)
+      .where(eq(memoryEmbeddings.userId, userId))
+      .orderBy(desc(memoryEmbeddings.createdAt))
+      .limit(ANCHOR_CANDIDATE_POOL);
+
+    const candidates: AnchorCandidate[] = rows.map((row) => {
+      const meta = (row.metadata ?? null) as Record<string, string> | null;
+      const rawIntensity = meta?.intensityScore;
+      const rawResolution = meta?.resolutionStatus;
+
+      return {
+        id: row.id,
+        sourceType: row.sourceType as SourceType,
+        content: row.content,
+        createdAt: row.createdAt,
+        intensityScore: rawIntensity !== undefined ? Number(rawIntensity) : null,
+        resolutionStatus:
+          rawResolution === "open" || rawResolution === "resolved" || rawResolution === "unclear"
+            ? rawResolution
+            : null,
+      };
+    });
+
+    return rankByImportance(candidates, limit);
+  } catch (error) {
+    console.error("[RAG] getReturnAnchor failed:", error);
+    return [];
+  }
+}
+
+/** Format the anchor for injection into a session-opening system prompt. */
+export function formatReturnAnchor(anchor: readonly AnchorCandidate[]): string {
+  if (anchor.length === 0) return "";
+
+  const sourceLabel: Record<SourceType, string> = {
+    journal: "Journal",
+    chat: "Conversation",
+    voice: "Voice session",
+    checkin: "Check-in",
+    program_response: "Program reflection",
+  };
+
+  const lines = anchor.map((m) => {
+    const date = m.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const open = m.resolutionStatus === "open" ? " (still unresolved)" : "";
+    const content = m.content.length > 300 ? `${m.content.slice(0, 300)}…` : m.content;
+    return `[${sourceLabel[m.sourceType] ?? "Memory"} — ${date}${open}]\n${content}`;
+  });
+
+  return `\n\nWHERE THEY LEFT OFF — the things that matter most from before this session. You already know these; don't recap them back. Let them shape what you notice.\n\n${lines.join("\n\n---\n\n")}`;
 }
