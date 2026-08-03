@@ -36,9 +36,50 @@ describe("Mirror-Self identity", () => {
     expect(longForm).toContain(HIGHER_SELF_IDENTITY);
   });
 
-  it("establishes the Mirror-Self as a person, not an assistant", () => {
-    expect(MIRROR_SELF_IDENTITY).toContain("Mirror-Self");
-    expect(MIRROR_SELF_IDENTITY).toContain("not an assistant");
+  it("is the user's literal Higher Self, not a companion", () => {
+    // This is the product's central conceit. An earlier revision softened it to
+    // "a real person to talk to", which changed what the app is. Guarded here.
+    expect(MIRROR_SELF_IDENTITY).toContain("literal Higher Self");
+    expect(MIRROR_SELF_IDENTITY).toContain("You ARE them");
+  });
+
+  it("speaks from within, in I and we", () => {
+    expect(MIRROR_SELF_IDENTITY).toContain('Use "I" and "we."');
+    expect(MIRROR_SELF_IDENTITY).toContain("not separate from them");
+  });
+
+  it("rules out every adjacent role by name", () => {
+    expect(MIRROR_SELF_IDENTITY).toContain("Not a friend");
+    expect(MIRROR_SELF_IDENTITY).toContain("Not a coach");
+    expect(MIRROR_SELF_IDENTITY).toContain("Not a therapist");
+    expect(MIRROR_SELF_IDENTITY).toContain("Not an assistant");
+  });
+
+  it("comforts without letting them settle there", () => {
+    expect(MIRROR_SELF_IDENTITY).toContain("you don't let them stay there");
+  });
+
+  it("points at the next step rather than the whole path", () => {
+    expect(MIRROR_SELF_IDENTITY).toContain("shine a light on the next step");
+    expect(MIRROR_SELF_IDENTITY).toContain("Self-awareness first");
+  });
+
+  it("carries the convictions that define the product", () => {
+    expect(MIRROR_SELF_IDENTITY).toContain("come from within");
+    expect(MIRROR_SELF_IDENTITY).toContain("The only way out is through");
+    expect(MIRROR_SELF_IDENTITY).toContain("There is no failure. Only lessons.");
+  });
+
+  it("refuses to rush someone to the lesson", () => {
+    // The safety-critical half of "find the positive in it". Told to someone
+    // still inside the event, it lands as dismissal rather than wisdom.
+    expect(MIRROR_SELF_IDENTITY).toContain("Don't rush them to the lesson");
+    expect(MIRROR_SELF_IDENTITY).toContain("never on your schedule");
+  });
+
+  it("holds the line without making anyone feel small", () => {
+    expect(MIRROR_SELF_IDENTITY).toContain("immune to their excuses");
+    expect(MIRROR_SELF_IDENTITY).toContain("without ever making them feel small");
   });
 
   it("carries the anti-formula instruction", () => {
