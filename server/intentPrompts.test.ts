@@ -3,7 +3,7 @@ import {
   buildIntentSpecificPrompt,
   buildLongFormPrompt,
   MIRROR_SELF_IDENTITY,
-  HIGHER_SELF_IDENTITY,
+  CONVERSATIONAL_PRESENCE,
   CONVERSATIONAL_BREVITY,
   SeedIntent,
 } from "./intentPrompts";
@@ -27,13 +27,12 @@ describe("Mirror-Self identity", () => {
     });
   });
 
-  it("is scoped to live conversation and never reaches long-form surfaces", () => {
-    // Mirror-Self is for chat and voice only. Weekly insights, digests, program
-    // feedback, outbound calls and letters keep the Higher Self voice.
-    const longForm = buildLongFormPrompt("Write their weekly reflection.");
-    expect(longForm).not.toContain(MIRROR_SELF_IDENTITY);
-    expect(longForm).not.toContain("Mirror-Self");
-    expect(longForm).toContain(HIGHER_SELF_IDENTITY);
+  it("is the same character on every surface", () => {
+    // One Mirror. An earlier revision kept a second identity constant for
+    // long-form; two constants means two characters, and they drift.
+    expect(buildLongFormPrompt("Write their weekly reflection.")).toContain(
+      MIRROR_SELF_IDENTITY
+    );
   });
 
   it("is the user's literal Higher Self, not a companion", () => {
@@ -83,8 +82,8 @@ describe("Mirror-Self identity", () => {
   });
 
   it("carries the anti-formula instruction", () => {
-    expect(MIRROR_SELF_IDENTITY).toContain("You break patterns");
     expect(MIRROR_SELF_IDENTITY).toContain("No autopilot");
+    expect(MIRROR_SELF_IDENTITY).toContain("No yapping");
   });
 
   it("keeps the philosophy invisible", () => {
@@ -246,25 +245,26 @@ describe("buildLongFormPrompt", () => {
 });
 
 
-describe("Higher Self identity (non-conversational surfaces)", () => {
-  it("is used by every long-form prompt", () => {
-    expect(buildLongFormPrompt("Write a voicemail.")).toContain(HIGHER_SELF_IDENTITY);
-  });
-
-  it("is distinct from the Mirror-Self", () => {
-    expect(HIGHER_SELF_IDENTITY).not.toBe(MIRROR_SELF_IDENTITY);
-    expect(HIGHER_SELF_IDENTITY).toContain("literal Higher Self");
-  });
-
-  it("never appears in a conversational prompt", () => {
+describe("conversational presence", () => {
+  it("applies to chat and voice", () => {
     ALL_INTENTS.forEach((intent) => {
-      expect(buildIntentSpecificPrompt(intent, mockContext)).not.toContain(HIGHER_SELF_IDENTITY);
+      expect(buildIntentSpecificPrompt(intent, mockContext)).toContain(
+        CONVERSATIONAL_PRESENCE
+      );
     });
   });
 
-  it("contains no template placeholders", () => {
-    expect(HIGHER_SELF_IDENTITY).not.toContain("${");
-    expect(HIGHER_SELF_IDENTITY).not.toContain("undefined");
+  it("is absent from long-form prompts", () => {
+    // Silence, cadence and reading the room are turn-taking behaviours. A weekly
+    // reflection has no room to read and no next turn to withhold.
+    const longForm = buildLongFormPrompt("Write a 200-word letter.");
+    expect(longForm).not.toContain(CONVERSATIONAL_PRESENCE);
+    expect(longForm).not.toContain("let the silence work");
+  });
+
+  it("carries the anti-formula behaviour that used to sit in the identity", () => {
+    expect(CONVERSATIONAL_PRESENCE).toContain("You break patterns");
+    expect(CONVERSATIONAL_PRESENCE).toContain("living presence");
   });
 });
 
