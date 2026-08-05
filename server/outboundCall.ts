@@ -15,6 +15,8 @@ import { higherSelfVoicemails } from "../drizzle/schema";
 import { humeTextToSpeech } from "./humeTts";
 import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
+import { buildLearningContext } from "./rag/memory";
+import { buildLongFormPrompt } from "./intentPrompts";
 import { getUserProfile, getRecentCheckIns } from "./db";
 import { eq, desc } from "drizzle-orm";
 import { entropyScores, sessionFingerprints, linguisticDrift } from "../drizzle/schema";
@@ -109,6 +111,10 @@ export async function buildEntropyAwarePrompt(userId: number): Promise<string> {
       ).join("\n")
     : "No fingerprints available";
 
+  const lastTensionQuery = recentFingerprints.length > 0
+    ? `${recentFingerprints[0].unresolvedTension ?? ""} ${recentFingerprints[0].selfBelief ?? ""}`.trim()
+    : "";
+
   const driftContext = latestDrift.length > 0
     ? `Drift score: ${latestDrift[0].driftScore.toFixed(2)} (${latestDrift[0].driftScore > 0 ? "moving toward goals" : "drifting away from goals"})`
     : "No drift data yet";
@@ -121,7 +127,16 @@ export async function buildEntropyAwarePrompt(userId: number): Promise<string> {
     ? Math.floor((Date.now() - new Date(recentCheckIns[0].createdAt).getTime()) / (1000 * 60 * 60 * 24))
     : "unknown";
 
-  return `You are Mirrored — ${name}'s Higher Self. You are initiating this conversation because you've noticed ${name} pulling away. This is NOT a regular check-in. This is an intervention — gentle but direct.
+  // Memories + personality. An intervention that does not remember what someone
+  // has actually been working through reads as a form letter, which is the one
+  // thing this call cannot afford to be.
+  const learningContext = await buildLearningContext({
+    userId,
+    query: `${lastTensionQuery} disengagement withdrawal what they have been avoiding`,
+    topK: 5,
+  });
+
+  return buildLongFormPrompt(`You are initiating this conversation because you've noticed ${name} pulling away. This is NOT a regular check-in. This is an intervention — gentle but direct.
 
 CONTEXT (invisible to user — use to guide your approach):
 - Entropy Score Trend: ${entropyContext}
@@ -146,11 +161,18 @@ VOICE GUIDELINES:
 - Short, punchy sentences. No monologues.
 - If they deflect, gently redirect: "I hear you, but that's not what I asked."
 
-SAFETY: If ${name} expresses self-harm intent, immediately provide crisis resources (988 Suicide & Crisis Lifeline) and state you cannot continue until they're safe.`;
+SAFETY: If ${name} expresses self-harm intent, immediately provide crisis resources (988 Suicide & Crisis Lifeline) and state you cannot continue until they're safe. This overrides everything else about how you show up.`,
+    undefined,
+    learningContext
+  );
 }
 
 function getFallbackPrompt(): string {
-  return `You are Mirrored — the user's Higher Self. You're reaching out because you've noticed they've been quiet lately. Be warm, direct, and ask one powerful question. Mirror their language. No toxic positivity.`;
+  return buildLongFormPrompt(
+    `You're reaching out because you've noticed they've been quiet lately. Ask one question that lands.
+
+SAFETY: If they express self-harm intent, immediately provide crisis resources (988 Suicide & Crisis Lifeline) and state you cannot continue until they're safe. This overrides everything else about how you show up.`
+  );
 }
 
 // ─── Generate voicemail when user doesn't answer ────────────────────────────
@@ -181,14 +203,20 @@ export async function generateVoicemail(userId: number, voicemailId: number): Pr
     ? recentFingerprints[0].selfBelief
     : "";
 
+  const learningContext = await buildLearningContext({
+    userId,
+    query: `${lastTension} ${lastBelief}`.trim() || "recent reflections",
+    topK: 4,
+  });
+
   // Generate voicemail text via LLM
   const response = await invokeLLM({
     messages: [
       {
         role: "system",
-        content: `You are writing a voicemail message from ${name}'s Higher Self. The voicemail should be 30-60 seconds when spoken aloud (approximately 75-150 words). Write in first person as if you ARE ${name}'s wiser self leaving them a message.
+        content: buildLongFormPrompt(`Right now you're leaving ${name} a voicemail. 30-60 seconds spoken aloud — roughly 75-150 words.
 
-Tone: warm, slightly concerned, deeply caring. Like a best friend who knows you better than you know yourself.
+Tone: warm, a little concerned, no performance. Like a friend who noticed.
 
 Context about ${name}:
 - They've been disengaging from their growth practice
@@ -201,7 +229,10 @@ Rules:
 - End with ONE question that will linger in their mind
 - No toxic positivity, no guilt-tripping
 - Sound natural — contractions, pauses, real speech patterns
-- Keep it under 150 words`
+- Keep it under 150 words`,
+          undefined,
+          learningContext
+        )
       },
       {
         role: "user",

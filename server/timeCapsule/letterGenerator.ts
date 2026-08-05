@@ -9,6 +9,7 @@
  */
 
 import { invokeLLM } from "../_core/llm";
+import { buildLearningContext } from "../rag/memory";
 import { getDb } from "../db";
 import { timeCapsuleLetters, psychologicalFingerprints } from "../../drizzle/schema";
 import { eq, desc, and, gte, lte } from "drizzle-orm";
@@ -56,7 +57,14 @@ This letter should make the user stop scrolling. It should make them feel seen a
  * Generate a time capsule letter from a collection of fingerprints.
  */
 export async function generateLetter(
-  fingerprints: PsychologicalFingerprint[]
+  fingerprints: PsychologicalFingerprint[],
+  /**
+   * Memories + personality from the RAG layer. Optional so the existing
+   * single-argument callers keep working; supplied by generateAndSaveLetter so
+   * the letter is written with the same learning context every other surface
+   * now gets.
+   */
+  learningContext?: string
 ): Promise<string | null> {
   if (fingerprints.length === 0) return null;
 
@@ -79,7 +87,13 @@ ${fp.aspirationalSelf ? `Who They Want to Become: "${fp.aspirationalSelf}"` : ""
   try {
     const response = await invokeLLM({
       messages: [
-        { role: "system", content: LETTER_GENERATION_PROMPT },
+        {
+          role: "system",
+          content:
+            learningContext && learningContext.trim().length > 0
+              ? `${LETTER_GENERATION_PROMPT}\n${learningContext}`
+              : LETTER_GENERATION_PROMPT,
+        },
         {
           role: "user",
           content: `Here are the psychological fingerprints from this person's past ${fingerprints.length} sessions. Write their letter.\n\n${fingerprintContext}`,
@@ -129,7 +143,16 @@ export async function generateAndSaveLetter(
     return null;
   }
 
-  const letterContent = await generateLetter(fingerprints);
+  const learningContext = await buildLearningContext({
+    userId,
+    query: fingerprints
+      .map((fp) => `${fp.coreBelief ?? ""} ${fp.unresolvedTension ?? ""}`)
+      .join(" ")
+      .slice(0, 800),
+    topK: 5,
+  });
+
+  const letterContent = await generateLetter(fingerprints, learningContext);
   if (!letterContent) return null;
 
   const fingerprintIds = fingerprints.map((fp) => fp.id);

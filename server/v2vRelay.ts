@@ -23,7 +23,7 @@ import { getUserProfile, getRecentCheckIns, getLatestDomainScores } from "./db";
 import { buildIntentSpecificPrompt } from "./intentPrompts";
 import { users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
-import { storeMemory, retrieveMemories, formatMemoriesForPrompt, getPersonalityProfile, formatPersonalityForPrompt } from "./rag/memory";
+import { storeMemory, retrieveMemories, formatMemoriesForPrompt, getPersonalityProfile, formatPersonalityForPrompt, updatePersonalityProfile, getReturnAnchor, formatReturnAnchor } from "./rag/memory";
 
 // ─── Env ─────────────────────────────────────────────────────────────────────
 
@@ -106,10 +106,16 @@ async function buildVoiceSystemPrompt(userId: number): Promise<string> {
       domainStr: domainStr || "not yet assessed",
     });
 
-    // RAG: Inject personality profile and recent relevant memories
+    // RAG: personality profile, the return anchor, and a similarity pass.
+    //
+    // This function runs once per WebSocket connection, which is the cleanest
+    // session-start boundary in the app — so this is where the anchor belongs.
+    // Without it the first turn of a session searches on a generic placeholder
+    // query, because the user has not said anything yet to search against.
     try {
-      const [personalityProfile, recentMemories] = await Promise.all([
+      const [personalityProfile, anchor, recentMemories] = await Promise.all([
         getPersonalityProfile(userId),
+        getReturnAnchor(userId),
         retrieveMemories({
           userId,
           query: "personal growth reflection emotional patterns",
@@ -117,7 +123,14 @@ async function buildVoiceSystemPrompt(userId: number): Promise<string> {
         }),
       ]);
       basePrompt += formatPersonalityForPrompt(personalityProfile);
-      basePrompt += formatMemoriesForPrompt(recentMemories);
+      basePrompt += formatReturnAnchor(anchor);
+
+      // Drop similarity hits the anchor already carries, so the same memory is
+      // not pasted into the prompt twice.
+      const anchorIds = new Set(anchor.map((a) => a.id));
+      basePrompt += formatMemoriesForPrompt(
+        recentMemories.filter((m) => !anchorIds.has(m.id))
+      );
     } catch (err) {
       console.error("[v2v-relay] RAG context injection failed:", err);
     }
@@ -184,6 +197,9 @@ export function attachV2VRelay(server: HttpServer): void {
     // Extract userId from query string (?userId=123)
     const url = new URL(req.url ?? "/", `http://${req.headers.host}`);
     const userId = parseInt(url.searchParams.get("userId") ?? "0", 10);
+    // Set when at least one voice memory is embedded, so the personality profile
+    // is only recomputed for sessions that actually produced something.
+    let storedAnyMemory = false;
     const sessionId = userId ? await createSession(userId) : null;
 
     let upstream: WebSocket | null = null;
@@ -244,6 +260,7 @@ export function attachV2VRelay(server: HttpServer): void {
           await saveMessage(sessionId, "user", transcript, emotions);
           // RAG: Embed user voice messages for personality learning (fire-and-forget)
           if (userId && transcript.length > 30) {
+            storedAnyMemory = true;
             const emotionCtx = emotions.length > 0
               ? ` [emotions: ${emotions.map(e => `${e.name}(${e.score.toFixed(2)})`).join(", ")}]`
               : "";
@@ -328,6 +345,16 @@ export function attachV2VRelay(server: HttpServer): void {
         upstream?.close();
       } catch {
         /* noop */
+      }
+
+      // Voice sessions stored memories but never refreshed the personality
+      // profile, so spoken conversations never shaped how the Mirror showed up
+      // next time. Runs once at session end rather than per message — the
+      // profile is a rollup, and recomputing it mid-call would be wasteful.
+      if (storedAnyMemory && userId) {
+        updatePersonalityProfile(userId).catch((err) =>
+          console.error("[v2v-relay] personality profile update failed:", err)
+        );
       }
     });
 

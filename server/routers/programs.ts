@@ -17,7 +17,8 @@ import {
 } from "../db/programs";
 import { invokeLLM } from "../_core/llm";
 import { nextUnlockAfter } from "../_core/easternTime";
-import { retrieveMemories, formatMemoriesForPrompt, getPersonalityProfile, formatPersonalityForPrompt } from "../rag/memory";
+import { buildLongFormPrompt } from "../intentPrompts";
+import { retrieveMemories, formatMemoriesForPrompt, getPersonalityProfile, formatPersonalityForPrompt, storeMemory, updatePersonalityProfile } from "../rag/memory";
 import { addRewardPoints } from "../db/rewards";
 import { createRewardGrant } from "../db/rewardGrants";
 import { isProUser } from "../db/subscriptions";
@@ -312,8 +313,11 @@ export const programsRouter = router({
           messages: [
             {
               role: "system",
-              content: `You are the user's Higher Self — the most self-actualized version of them — guiding them through the "${lesson.title}" lesson. ${lesson.guidanceTemplate ?? ""}
-Speak from within, as them. Reflect back what they shared, name what you notice with grounded honesty, and ask one powerful question that only their Higher Self would know to ask. Keep it to 3-5 sentences. Use "I" and "we." No sugarcoating. No minimizing.${ragContext ? `\n\nContext from their journey so far:\n${ragContext}` : ""}`,
+              content: buildLongFormPrompt(
+                `Right now you're with them in the "${lesson.title}" lesson. ${lesson.guidanceTemplate ?? ""}
+
+Reflect back what they actually shared. Name what you notice. Ask one question that lands. Three to five sentences.${ragContext ? `\n\nWhat you remember from their journey so far:\n${ragContext}` : ""}`
+              ),
             },
             {
               role: "user",
@@ -335,6 +339,22 @@ Speak from within, as them. Reflect back what they shared, name what you notice 
         userReflection: input.reflection,
         aiFeedback,
       });
+
+      // Feed the reflection back into the learning layer. "program_response" is
+      // a declared SourceType but nothing was ever writing it, so weeks of a
+      // user's deepest reflections were invisible to every later conversation.
+      // Fire-and-forget: a failed embedding must not fail the submission.
+      storeMemory({
+        userId: ctx.user.id,
+        sourceType: "program_response",
+        content: input.reflection,
+        sourceId: input.lessonId,
+        metadata: { lessonTitle: lesson.title, day: String(input.day) },
+      })
+        .then(() => updatePersonalityProfile(ctx.user.id))
+        .catch((err) =>
+          console.error("[Programs] Storing reflection as memory failed:", err)
+        );
 
       // Advance enrollment to next day
       const program = await getProgramById(input.programId);
