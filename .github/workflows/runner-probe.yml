@@ -1,0 +1,12 @@
+name: runner-probe
+on:
+  push:
+    branches:
+      - experiment/runner-probe-20260816
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: uname -a
+      - run: python3 --version
+      - run: curl -I --max-time 15 https://pypi.org/simple/temporalio/
