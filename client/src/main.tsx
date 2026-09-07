@@ -11,96 +11,65 @@ import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
-import { getLoginUrl } from "./const";
 import "./index.css";
 
 const queryClient = new QueryClient();
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {
-  if (isDemoMode()) return; // Don't redirect in demo mode
+  if (isDemoMode()) return;
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
-
-  const isUnauthorized =
-    error.message === UNAUTHED_ERR_MSG ||
-    error.data?.code === "UNAUTHORIZED";
-
+  const isUnauthorized = error.message === UNAUTHED_ERR_MSG || error.data?.code === "UNAUTHORIZED";
   if (!isUnauthorized) return;
-
-  // Clear any stale stored token so the login page starts fresh
   storage.removeItem(STORAGE_KEYS.sessionToken);
-
-  redirectToLogin(getLoginUrl());
+  redirectToLogin("/");
 };
 
 queryClient.getQueryCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
-    const error = event.query.state.error;
-    redirectToLoginIfUnauthorized(error);
-    console.error("[API Query Error]", error);
+    redirectToLoginIfUnauthorized(event.query.state.error);
+    console.error("[API Query Error]", event.query.state.error);
   }
 });
-
 queryClient.getMutationCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
-    const error = event.mutation.state.error;
-    redirectToLoginIfUnauthorized(error);
-    console.error("[API Mutation Error]", error);
+    redirectToLoginIfUnauthorized(event.mutation.state.error);
+    console.error("[API Mutation Error]", event.mutation.state.error);
   }
 });
 
-// ── Token-in-localStorage/native-storage auth ───────────────────────────────
-// On custom domains (higherself.cloud), the Cloudflare proxy may strip
-// Set-Cookie headers. As a fallback, the OAuth callback redirects to
-// /?_t=JWT and we store the token via the storage abstraction, then send it
-// as Authorization: Bearer on every tRPC request.
-
-// Pick up token from URL if present (just after OAuth redirect on web)
-const _urlParams = new URLSearchParams(window.location.search);
-const _urlToken = _urlParams.get("_t");
-if (_urlToken) {
-  storage.setItem(STORAGE_KEYS.sessionToken, _urlToken);
-  // Clean the token from the URL without a page reload
-  const cleanUrl = window.location.pathname + window.location.hash;
-  window.history.replaceState({}, "", cleanUrl);
-}
-
-function getStoredToken(): string | null {
-  return storage.getItem(STORAGE_KEYS.sessionToken);
+// Generic JWT pickup remains for browser/session migration paths. Native Apple
+// authentication stores the Mirrored JWT directly and does not use a callback.
+const urlParams = new URLSearchParams(window.location.search);
+const urlToken = urlParams.get("_t");
+if (urlToken) {
+  storage.setItem(STORAGE_KEYS.sessionToken, urlToken);
+  window.history.replaceState({}, "", window.location.pathname + window.location.hash);
 }
 
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      // Relative on web (same origin); absolute on native, where the WebView
-      // origin is capacitor://localhost and a relative path would resolve to
-      // the bundled assets instead of the server. See lib/apiBase.ts.
       url: apiUrl("/api/trpc"),
       transformer: superjson,
       headers() {
         const headers: Record<string, string> = {};
-        const token = getStoredToken();
-        if (token) headers["Authorization"] = `Bearer ${token}`;
+        const token = storage.getItem(STORAGE_KEYS.sessionToken);
+        if (token) headers.Authorization = `Bearer ${token}`;
         if (isDemoMode()) headers["x-demo-mode"] = "true";
         return headers;
       },
       fetch(input, init) {
-        return globalThis.fetch(input, {
-          ...(init ?? {}),
-          credentials: "include",
-        });
+        return globalThis.fetch(input, { ...(init ?? {}), credentials: "include" });
       },
     }),
   ],
 });
 
 async function bootstrap() {
-  // On native, hydrate the storage cache before anything reads from it,
-  // then wire up the deep-link OAuth callback and store IAP.
   await initStorage();
   await registerNativeAuthCallback();
   void initPurchases();
-
   createRoot(document.getElementById("root")!).render(
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
