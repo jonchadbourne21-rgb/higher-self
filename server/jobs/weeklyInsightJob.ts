@@ -258,11 +258,6 @@ ${profile?.coreValues && Array.isArray(profile.coreValues) && profile.coreValues
 
 export async function weeklyInsightHandler(req: Request, res: Response) {
   try {
-    // Verify this is a cron call via the x-manus-cron-task-uid header
-    const cronTaskUid = req.headers["x-manus-cron-task-uid"];
-    if (!cronTaskUid) {
-      return res.status(403).json({ error: "cron-only endpoint" });
-    }
 
     const weekStart = getWeekStart();
     console.log(`[WeeklyInsight] Job triggered for week starting ${weekStart.toDateString()}`);
@@ -327,7 +322,7 @@ export async function weeklyInsightHandler(req: Request, res: Response) {
     return res.status(500).json({
       error: String(error),
       stack: error instanceof Error ? error.stack : undefined,
-      context: { url: req.url, taskUid: req.headers["x-manus-cron-task-uid"] },
+      context: { url: req.url, scheduledRequest: true },
       timestamp: new Date().toISOString(),
     });
   }

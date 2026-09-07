@@ -33,11 +33,6 @@ async function getActivePushSubscription(userId: number) {
 
 export async function programLessonUnlockHandler(req: Request, res: Response) {
   try {
-    // Verify this is a cron call
-    const cronTaskUid = req.headers["x-manus-cron-task-uid"];
-    if (!cronTaskUid) {
-      return res.status(403).json({ error: "cron-only endpoint" });
-    }
 
     const db = await getDb();
     if (!db) {
