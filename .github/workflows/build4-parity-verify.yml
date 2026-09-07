@@ -47,7 +47,7 @@ jobs:
       - name: Production build
         run: pnpm build
 
-      - name: Core unit suite excluding only credential-presence assertions
+      - name: Core unit suite excluding only deployment credential assertions
         shell: bash
         run: |
           set -euo pipefail
@@ -56,29 +56,29 @@ jobs:
             --exclude '**/v2v.test.ts' \
             --exclude '**/voice.test.ts'
 
-          # Preserve the useful tests in these files. Only the three assertions
-          # whose sole purpose is to prove deployment credentials are present are
-          # excluded here; deployment Hume configuration remains a separate HOLD.
+          # Vitest matches the full test name, including the describe block.
+          # Exclude exactly the three deployment-presence assertions by substring;
+          # all other functional tests in these files still execute.
           pnpm exec vitest run server/humeWebhook.test.ts \
-            --testNamePattern='^(?!should have HUME_WEBHOOK_SIGNING_KEY set in environment$).*$'
+            --testNamePattern='^(?!.*should have HUME_WEBHOOK_SIGNING_KEY set in environment).*$'
           pnpm exec vitest run server/v2v.test.ts \
-            --testNamePattern='^(?!should have HUME_API_KEY and HUME_SECRET_KEY set$).*$'
+            --testNamePattern='^(?!.*should have HUME_API_KEY and HUME_SECRET_KEY set).*$'
           pnpm exec vitest run server/voice.test.ts \
-            --testNamePattern='^(?!returns apiKey and configId from environment$).*$'
+            --testNamePattern='^(?!.*returns apiKey and configId from environment).*$'
 
       - name: Record Hume deployment HOLD without exposing secrets
         shell: bash
         run: |
           cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
           ### Hume runtime configuration — HOLD
-          The compile/unit gate intentionally does not treat missing deployment credentials as a source-code failure.
-          The following credential-presence assertions remain open for the deployed Railway environment:
+          Source compilation and functional unit tests do not prove deployment credentials are present.
+          Exactly three deployment-presence assertions are intentionally excluded from this source gate and remain open for the deployed Railway environment:
           - `HUME_API_KEY`
           - `HUME_SECRET_KEY`
           - `HUME_WEBHOOK_SIGNING_KEY`
           - the applicable Hume configuration ID
 
-          No secret values are printed or requested by this workflow. This HOLD must be cleared separately before Voice parity can pass.
+          No secret values are printed or requested by this workflow. Voice parity cannot pass until a separate Railway runtime check clears this HOLD.
           EOF
 
   ios-unsigned-compile:
