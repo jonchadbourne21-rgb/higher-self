@@ -1,0 +1,73 @@
+name: Build 4 Scheduled Handler Cleanup
+
+on:
+  push:
+    branches:
+      - repair/build4-parity
+    paths:
+      - .github/workflows/build4-scheduled-cleanup.yml
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: repair/build4-parity
+      - name: Remove legacy platform cron checks from handlers
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          paths = [
+              Path('server/jobs/linguisticDriftJob.ts'),
+              Path('server/jobs/thirtyDayLetterJob.ts'),
+              Path('server/jobs/timeCapsuleJob.ts'),
+              Path('server/jobs/weeklyInsightJob.ts'),
+              Path('server/jobs/programLessonUnlockJob.ts'),
+          ]
+          block = '''    const cronTaskUid = req.headers["x-manus-cron-task-uid"];
+              if (!cronTaskUid) {
+                return res.status(403).json({ error: "cron-only endpoint" });
+              }
+          '''
+          changed = []
+          for path in paths:
+              text = path.read_text()
+              count = text.count(block)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected one legacy cron block, found {count}')
+              text = text.replace(block, '')
+              text = '\n'.join(
+                  line for line in text.splitlines()
+                  if 'Verify this is a cron call' not in line
+                  and 'x-manus-cron-task-uid header' not in line
+              ) + '\n'
+              text = text.replace('taskUid: req.headers["x-manus-cron-task-uid"]', 'scheduledRequest: true')
+              if 'x-manus-cron-task-uid' in text:
+                  raise SystemExit(f'{path}: legacy header remains')
+              path.write_text(text)
+              changed.append(str(path))
+
+          expected = sorted(str(p) for p in paths)
+          if sorted(changed) != expected:
+              raise SystemExit('unexpected changed file set')
+          PY
+          git diff --check
+          test -z "$(grep -RIl 'x-manus-cron-task-uid' server/jobs || true)"
+      - name: Commit exact handler cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED=$'server/jobs/linguisticDriftJob.ts\nserver/jobs/programLessonUnlockJob.ts\nserver/jobs/thirtyDayLetterJob.ts\nserver/jobs/timeCapsuleJob.ts\nserver/jobs/weeklyInsightJob.ts'
+          test "$(git diff --name-only | sort)" = "$EXPECTED"
+          git config user.name 'JCEE Labs Build 4 Gate'
+          git config user.email 'actions@users.noreply.github.com'
+          git add server/jobs
+          git commit -m 'Remove legacy Manus cron checks from scheduled handlers'
+          git push origin HEAD:repair/build4-parity
