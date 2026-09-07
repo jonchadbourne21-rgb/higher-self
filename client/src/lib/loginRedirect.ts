@@ -1,9 +1,9 @@
 /**
- * Platform-aware login redirect.
+ * Platform-aware login entry.
  *
- * Web: full-page navigation to the OAuth portal (existing behavior).
- * Native: opens the system browser via startNativeLogin so the OAuth
- * callback can return into the app through the higherself:// deep link.
+ * Native: Sign in with Apple → Railway → Mirrored JWT.
+ * Web: legacy URL handling remains temporarily for browser compatibility and
+ * must be replaced before the final no-Manus runtime gate closes.
  */
 
 import { isNative } from "@/lib/platform";
@@ -11,13 +11,12 @@ import { startNativeLogin } from "@/lib/nativeAuth";
 
 export function redirectToLogin(url: string): void {
   if (isNative()) {
-    void startNativeLogin().then((opened) => {
-      if (!opened && typeof window !== "undefined") {
-        window.location.href = url;
-      }
-    });
+    // Never fall through to the legacy URL on native. A failed Apple attempt
+    // remains a failed Apple attempt rather than silently reintroducing Manus.
+    void startNativeLogin();
     return;
   }
+
   if (typeof window !== "undefined") {
     window.location.href = url;
   }
