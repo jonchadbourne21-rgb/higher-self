@@ -1,0 +1,80 @@
+name: Build 4 Parity Verify
+
+on:
+  push:
+    branches:
+      - repair/build4-parity
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  web-and-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.4.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Resolve dependencies without trusting stale lockfile
+        run: pnpm install --no-frozen-lockfile
+      - name: Record lockfile drift
+        shell: bash
+        run: |
+          if git diff --quiet -- pnpm-lock.yaml; then
+            echo "lockfile_changed=false" >> "$GITHUB_ENV"
+          else
+            echo "lockfile_changed=true" >> "$GITHUB_ENV"
+            git diff -- pnpm-lock.yaml > /tmp/pnpm-lock.diff
+          fi
+      - name: TypeScript check
+        run: pnpm check
+      - name: Production build
+        run: pnpm build
+      - name: Unit tests
+        run: pnpm test
+      - name: Upload regenerated lockfile
+        if: always() && env.lockfile_changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build4-regenerated-pnpm-lock
+          path: |
+            pnpm-lock.yaml
+            /tmp/pnpm-lock.diff
+          if-no-files-found: error
+
+  ios-unsigned-compile:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.4.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Resolve dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: Build canonical app
+        run: pnpm build
+      - name: Sync Capacitor iOS
+        run: npx cap sync ios
+      - name: Show synced Capacitor plugins
+        run: npx cap ls ios
+      - name: Unsigned iOS simulator compile
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
