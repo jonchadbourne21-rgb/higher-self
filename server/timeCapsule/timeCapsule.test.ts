@@ -36,8 +36,7 @@ describe("Time Capsule - Fingerprint Extraction", () => {
   it("should call LLM with correct extraction prompt structure", async () => {
     const { invokeLLM } = await import("../_core/llm");
     const { getDb } = await import("../db");
-    
-    // Mock LLM to return valid JSON
+
     (invokeLLM as any).mockResolvedValue({
       choices: [{
         message: {
@@ -52,7 +51,6 @@ describe("Time Capsule - Fingerprint Extraction", () => {
       }],
     });
 
-    // Mock DB
     const mockInsert = vi.fn().mockReturnValue({ values: vi.fn().mockResolvedValue({}) });
     (getDb as any).mockResolvedValue({
       insert: mockInsert,
@@ -179,7 +177,6 @@ describe("Time Capsule - Letter Generation", () => {
     expect(result).toBeTruthy();
     expect(typeof result).toBe("string");
 
-    // Verify the prompt includes fingerprint data
     const call = (invokeLLM as any).mock.calls[0][0];
     expect(call.messages[0].content).toContain("psychological confrontation");
     expect(call.messages[1].content).toContain("anxious determination");
@@ -234,17 +231,8 @@ describe("Time Capsule - Scheduled Job Handler", () => {
     expect(typeof timeCapsuleHandler).toBe("function");
   });
 
-  it("should reject non-cron requests with 403", async () => {
-    const { timeCapsuleHandler } = await import("../jobs/timeCapsuleJob");
-    
-    const req = { headers: {} } as any;
-    const res = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn(),
-    } as any;
-
-    await timeCapsuleHandler(req, res);
-    expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.json).toHaveBeenCalledWith({ error: "cron-only endpoint" });
-  });
+  // Authorization is intentionally enforced once at the /api/scheduled/*
+  // middleware boundary. See server/_core/scheduledAuth.test.ts. Handler-level
+  // tests here cover only Time Capsule behavior and must not duplicate or
+  // reintroduce the former platform-specific cron-header contract.
 });
