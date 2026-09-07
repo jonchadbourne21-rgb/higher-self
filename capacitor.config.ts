@@ -1,45 +1,32 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 /**
- * Capacitor configuration — wraps the existing Vite web build as a native
- * iOS/Android app. The web app keeps working in browsers unchanged.
+ * Capacitor configuration for the canonical Mirrored product.
  *
- * Bundle ID: cloud.higherself.app
- * App Name: Mirrored
- * URL Scheme: higherself://
- *
- * Setup (one time on Mac with Xcode):
- *   pnpm cap:add:ios
- * Build & sync:
- *   pnpm cap:build
- * Open in Xcode:
- *   pnpm cap:open:ios
+ * Build 4 parity branch:
+ * - Existing App Store bundle identity: com.mirrored.aiself
+ * - Native URL scheme: mirrored://
+ * - Production API: Railway
+ * - No Manus runtime/navigation dependency
  */
 const config: CapacitorConfig = {
-  appId: "cloud.higherself.app",
+  appId: "com.mirrored.aiself",
   appName: "Mirrored",
   webDir: "dist/public",
 
   server: {
-    // Allow navigation to the production API + OAuth portal from the WebView.
+    // Native API and voice provider origins only. Authentication uses the
+    // native Sign in with Apple flow and does not navigate to Manus.
     allowNavigation: [
-      "mirroredapp.manus.space",
-      "themirroredapp.com",
-      "*.themirroredapp.com",
-      "manus.im",
-      "*.manus.im",
+      "mirrored-backend-production.up.railway.app",
       "api.hume.ai",
     ],
   },
 
   ios: {
-    // Custom URL scheme for OAuth deep-link callback
-    scheme: "higherself",
-    // Content inset behavior for safe areas
+    scheme: "mirrored",
     contentInset: "automatic",
-    // Background color while web view loads
     backgroundColor: "#0a0a1a",
-    // Allow inline media playback (needed for voice)
     allowsLinkPreview: false,
     preferredContentMode: "mobile",
   },
@@ -51,7 +38,6 @@ const config: CapacitorConfig = {
 
   plugins: {
     PushNotifications: {
-      // Request push permission on first launch
       presentationOptions: ["badge", "sound", "alert"],
     },
   },
