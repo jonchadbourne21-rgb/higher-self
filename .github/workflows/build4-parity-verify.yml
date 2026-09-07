@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   web-and-server:
-    name: Frozen dependencies, typecheck, build, core tests
+    name: Frozen dependencies, runtime audit, build, core tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +31,6 @@ jobs:
           PBX='ios/App/App.xcodeproj/project.pbxproj'
           PLIST='ios/App/App/Info.plist'
           ENT='ios/App/App/App.entitlements'
-
           test "$(grep -c 'PRODUCT_BUNDLE_IDENTIFIER = com.mirrored.aiself;' "$PBX")" -eq 2
           test "$(grep -c 'CODE_SIGN_ENTITLEMENTS = App/App.entitlements;' "$PBX")" -eq 2
           test "$(grep -c 'PRODUCT_BUNDLE_IDENTIFIER = cloud.higherself.app;' "$PBX" || true)" -eq 0
@@ -40,6 +39,9 @@ jobs:
           grep -q 'com.apple.developer.applesignin' "$ENT"
           grep -q '@capawesome/capacitor-apple-sign-in' package.json
           grep -q "'@capawesome/capacitor-apple-sign-in@0.1.4'" pnpm-lock.yaml
+
+      - name: Active runtime independence audit
+        run: node scripts/runtime-independence-audit.mjs
 
       - name: TypeScript check
         run: pnpm check
@@ -55,10 +57,6 @@ jobs:
             --exclude '**/humeWebhook.test.ts' \
             --exclude '**/v2v.test.ts' \
             --exclude '**/voice.test.ts'
-
-          # Vitest matches the full test name, including the describe block.
-          # Exclude exactly the three deployment-presence assertions by substring;
-          # all other functional tests in these files still execute.
           pnpm exec vitest run server/humeWebhook.test.ts \
             --testNamePattern='^(?!.*should have HUME_WEBHOOK_SIGNING_KEY set in environment).*$'
           pnpm exec vitest run server/v2v.test.ts \
@@ -66,19 +64,18 @@ jobs:
           pnpm exec vitest run server/voice.test.ts \
             --testNamePattern='^(?!.*returns apiKey and configId from environment).*$'
 
-      - name: Record Hume deployment HOLD without exposing secrets
+      - name: Record deployment configuration holds without exposing secrets
         shell: bash
         run: |
           cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
-          ### Hume runtime configuration — HOLD
-          Source compilation and functional unit tests do not prove deployment credentials are present.
-          Exactly three deployment-presence assertions are intentionally excluded from this source gate and remain open for the deployed Railway environment:
-          - `HUME_API_KEY`
-          - `HUME_SECRET_KEY`
-          - `HUME_WEBHOOK_SIGNING_KEY`
-          - the applicable Hume configuration ID
+          ### Deployment configuration — HOLD until Railway execution proof
+          Source qualification does not prove deployed credentials/infrastructure are present.
 
-          No secret values are printed or requested by this workflow. Voice parity cannot pass until a separate Railway runtime check clears this HOLD.
+          Voice still requires runtime evidence for the Hume API/secret, webhook signing key, and applicable configuration ID.
+          Scheduled jobs require `SCHEDULED_JOB_SECRET` plus an external scheduler using Bearer authentication.
+          Private voicemail audio requires a private S3-compatible bucket (`S3_BUCKET` and runtime credentials/role; optional endpoint/KMS settings).
+
+          No secret values are printed or requested by this workflow. These are deployment gates, not source-code failures.
           EOF
 
   ios-unsigned-compile:
@@ -91,29 +88,22 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-
       - name: Install exactly the committed dependency graph
         run: pnpm install --frozen-lockfile
-
       - name: Build canonical app
         run: pnpm build
-
       - name: Require clean tracked iOS state before sync
         run: git diff --exit-code -- ios/
-
       - name: Sync Capacitor iOS
         run: npx cap sync ios
-
       - name: Reject any uncommitted native repair from Capacitor sync
         run: git diff --exit-code -- ios/
-
       - name: Verify synced Apple Sign-In plugin
         shell: bash
         run: |
           set -euo pipefail
           npx cap ls ios | tee /tmp/cap-ios-plugins.txt
           grep -F '@capawesome/capacitor-apple-sign-in' /tmp/cap-ios-plugins.txt
-
       - name: Unsigned iOS simulator compile
         run: |
           xcodebuild \
@@ -125,6 +115,5 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             build
-
       - name: Require clean tracked iOS state after compile
         run: git diff --exit-code -- ios/
