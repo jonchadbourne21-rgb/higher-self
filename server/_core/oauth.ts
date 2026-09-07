@@ -28,17 +28,17 @@ function normalizeEmail(value: unknown): string | null {
   return trimmed.length > 0 && trimmed.length <= 320 ? trimmed : null;
 }
 
+function normalizeNonce(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().toLowerCase();
+  return /^[a-f0-9]{64}$/.test(normalized) ? normalized : null;
+}
+
 function appleOpenId(subject: string): string {
-  // Do not expose Apple's raw stable subject as the product-level openId.
   const digest = createHash("sha256").update(subject).digest("hex");
   return `apple:${digest.slice(0, 58)}`;
 }
 
-/**
- * Decode the legacy state parameter to extract the origin for redirect.
- * This remains only as a temporary web-compatibility bridge on the parity
- * branch. Native Build 4 uses /api/auth/apple and Mirrored JWT sessions.
- */
 function parseState(state: string): { origin: string; returnPath: string } {
   try {
     const decoded = Buffer.from(state, "base64").toString("utf-8");
@@ -50,22 +50,19 @@ function parseState(state: string): { origin: string; returnPath: string } {
 }
 
 export function registerOAuthRoutes(app: Express) {
-  /**
-   * Native Sign in with Apple exchange.
-   *
-   * The iOS client obtains an Apple identity JWT from AuthenticationServices.
-   * This server verifies signature + issuer + audience before trusting claims,
-   * upserts the Mirrored account, and issues the same revocable Mirrored JWT
-   * used by the rest of the canonical tRPC application.
-   */
   app.post("/api/auth/apple", async (req: Request, res: Response) => {
     const identityToken =
       typeof req.body?.identityToken === "string" ? req.body.identityToken : "";
+    const expectedNonce = normalizeNonce(req.body?.nonce);
     const suppliedEmail = normalizeEmail(req.body?.email);
     const suppliedName = normalizeName(req.body?.name);
 
     if (!identityToken) {
       res.status(400).json({ error: "identityToken is required" });
+      return;
+    }
+    if (!expectedNonce) {
+      res.status(400).json({ error: "valid nonce is required" });
       return;
     }
 
@@ -78,6 +75,10 @@ export function registerOAuthRoutes(app: Express) {
 
       if (typeof payload.sub !== "string" || payload.sub.length === 0) {
         res.status(401).json({ error: "Apple identity token is missing subject" });
+        return;
+      }
+      if (typeof payload.nonce !== "string" || payload.nonce.toLowerCase() !== expectedNonce) {
+        res.status(401).json({ error: "Apple identity nonce verification failed" });
         return;
       }
 
@@ -121,8 +122,8 @@ export function registerOAuthRoutes(app: Express) {
     }
   });
 
-  // Legacy web callback retained temporarily during parity migration. It is
-  // explicitly disallowed from the final no-Manus runtime gate.
+  // Temporary legacy web callback retained only while Build 4 parity migration
+  // is in progress. It must be removed before the no-Manus runtime gate closes.
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
