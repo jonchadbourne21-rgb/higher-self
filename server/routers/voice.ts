@@ -26,7 +26,7 @@ async function getVoiceUsage(userId: number) {
     .where(and(eq(voiceUsageMonthly.userId, userId), eq(voiceUsageMonthly.usageMonth, month)))
     .limit(1);
   if (existing.length) return existing[0];
-  // Create new record for this month
+  // Create new record for current month
   await db.insert(voiceUsageMonthly).values({ userId, usageMonth: month, responseCount: 0 });
   return { responseCount: 0 };
 }
@@ -266,10 +266,10 @@ export const voiceRouter = router({
 
   /** Mark a voicemail as listened */
   markVoicemailListened: protectedProcedure
-    .input(z.object({ voicemailId: z.number() }))
-    .mutation(async ({ input }) => {
+    .input(z.object({ voicemailId: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
       const { markVoicemailListened } = await import("../outboundCall");
-      await markVoicemailListened(input.voicemailId);
+      await markVoicemailListened(ctx.user.id, input.voicemailId);
       return { ok: true };
     }),
 
