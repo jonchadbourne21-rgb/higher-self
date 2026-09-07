@@ -1,0 +1,104 @@
+name: Build 4 Private Audio Wiring
+
+on:
+  push:
+    branches:
+      - repair/build4-parity
+    paths:
+      - .github/workflows/build4-private-audio-wire.yml
+
+permissions:
+  contents: write
+
+jobs:
+  wire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: repair/build4-parity
+      - name: Wire signed playback and voicemail ownership
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          outbound = Path('server/outboundCall.ts')
+          text = outbound.read_text()
+          old_import = 'import { eq, desc } from "drizzle-orm";'
+          if text.count(old_import) != 1:
+              raise SystemExit('outboundCall drizzle import precondition failed')
+          text = text.replace(old_import, 'import { eq, desc, and } from "drizzle-orm";')
+          old_mark = '''export async function markVoicemailListened(voicemailId: number): Promise<void> {
+            const db = await getDb();
+            if (!db) return;
+            await db.update(higherSelfVoicemails)
+              .set({ listenedAt: new Date() })
+              .where(eq(higherSelfVoicemails.id, voicemailId));
+          }'''
+          new_mark = '''export async function markVoicemailListened(userId: number, voicemailId: number): Promise<void> {
+            const db = await getDb();
+            if (!db) return;
+            await db.update(higherSelfVoicemails)
+              .set({ listenedAt: new Date() })
+              .where(and(
+                eq(higherSelfVoicemails.id, voicemailId),
+                eq(higherSelfVoicemails.userId, userId)
+              ));
+          }'''
+          if text.count(old_mark) != 1:
+              raise SystemExit('outboundCall mark-listened precondition failed')
+          outbound.write_text(text.replace(old_mark, new_mark))
+
+          router = Path('server/routers/timeCapsule.ts')
+          text = router.read_text()
+          old_list = '''  getVoicemails: protectedProcedure.query(async ({ ctx }) => {
+              const { getUserVoicemails } = await import("../outboundCall");
+              return getUserVoicemails(ctx.user.id);
+            }),'''
+          new_list = '''  getVoicemails: protectedProcedure.query(async ({ ctx }) => {
+              const { getUserVoicemails } = await import("../outboundCall");
+              const { storageGet, isPrivateStorageReference } = await import("../storage");
+              const rows = await getUserVoicemails(ctx.user.id);
+              return Promise.all(rows.map(async (voicemail) => {
+                if (!isPrivateStorageReference(voicemail.audioUrl)) return voicemail;
+                try {
+                  const { url } = await storageGet(voicemail.audioUrl);
+                  return { ...voicemail, audioUrl: url };
+                } catch {
+                  return { ...voicemail, audioUrl: null };
+                }
+              }));
+            }),'''
+          if text.count(old_list) != 1:
+              raise SystemExit('timeCapsule voicemail-list precondition failed')
+          text = text.replace(old_list, new_list)
+
+          old_mark_router = '''  markVoicemailListened: protectedProcedure
+              .input(z.object({ voicemailId: z.number() }))
+              .mutation(async ({ input }) => {
+                const { markVoicemailListened } = await import("../outboundCall");
+                await markVoicemailListened(input.voicemailId);
+                return { ok: true };
+              }),'''
+          new_mark_router = '''  markVoicemailListened: protectedProcedure
+              .input(z.object({ voicemailId: z.number().int().positive() }))
+              .mutation(async ({ ctx, input }) => {
+                const { markVoicemailListened } = await import("../outboundCall");
+                await markVoicemailListened(ctx.user.id, input.voicemailId);
+                return { ok: true };
+              }),'''
+          if text.count(old_mark_router) != 1:
+              raise SystemExit('timeCapsule mark-listened precondition failed')
+          router.write_text(text.replace(old_mark_router, new_mark_router))
+          PY
+          git diff --check
+          test "$(git diff --name-only | sort)" = $'server/outboundCall.ts\nserver/routers/timeCapsule.ts'
+      - name: Commit exact storage wiring
+        run: |
+          git config user.name 'JCEE Labs Build 4 Gate'
+          git config user.email 'actions@users.noreply.github.com'
+          git add server/outboundCall.ts server/routers/timeCapsule.ts
+          git commit -m 'Serve private voicemail audio with signed URLs'
+          git push origin HEAD:repair/build4-parity
