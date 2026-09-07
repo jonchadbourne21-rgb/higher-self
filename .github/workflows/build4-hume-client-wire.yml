@@ -1,0 +1,52 @@
+name: Build 4 Hume Client Token Wiring
+
+on:
+  push:
+    branches:
+      - repair/build4-parity
+    paths:
+      - .github/workflows/build4-hume-client-wire.yml
+
+permissions:
+  contents: write
+
+jobs:
+  wire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: repair/build4-parity
+      - name: Switch Mirror voice connections to access tokens
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('client/src/pages/Mirror.tsx')
+          text = p.read_text()
+          if text.count('const { apiKey, configId } = await mintTokenMut.mutateAsync({ voice: voiceGender });') != 2:
+              raise SystemExit('unexpected mintToken client call count')
+          if text.count('auth: { type: "apiKey" as const, value: apiKey },') != 2:
+              raise SystemExit('unexpected apiKey auth call count')
+          text = text.replace(
+              'const { apiKey, configId } = await mintTokenMut.mutateAsync({ voice: voiceGender });',
+              'const { accessToken, configId } = await mintTokenMut.mutateAsync({ voice: voiceGender });'
+          )
+          text = text.replace(
+              'auth: { type: "apiKey" as const, value: apiKey },',
+              'auth: { type: "accessToken" as const, value: accessToken },'
+          )
+          if 'type: "apiKey"' in text:
+              raise SystemExit('permanent Hume API-key client auth still present')
+          p.write_text(text)
+          PY
+          git diff --check
+          test "$(git diff --name-only)" = 'client/src/pages/Mirror.tsx'
+      - name: Commit client token contract
+        run: |
+          git config user.name 'JCEE Labs Build 4 Gate'
+          git config user.email 'actions@users.noreply.github.com'
+          git add client/src/pages/Mirror.tsx
+          git commit -m 'Use short-lived Hume access tokens in Mirror'
+          git push origin HEAD:repair/build4-parity
