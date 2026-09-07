@@ -1,99 +1,116 @@
 /**
- * Native OAuth flow (Capacitor).
+ * Native Sign in with Apple flow for the canonical Capacitor app.
  *
- * Web flow (unchanged): window.location.href → OAuth portal → server callback
- * sets a cookie, or redirects back with ?_t=JWT which main.tsx picks up.
+ * iOS:
+ * 1. AuthenticationServices produces an Apple identity JWT.
+ * 2. The client sends that JWT + a bound nonce to the Railway backend.
+ * 3. Railway verifies Apple signature/issuer/audience/nonce and returns a
+ *    revocable Mirrored session JWT.
+ * 4. The Mirrored JWT is stored through the existing native storage adapter,
+ *    so every canonical tRPC screen continues to use the same auth contract.
  *
- * Native flow:
- *   1. startNativeLogin() opens the OAuth portal in the system browser
- *      (ASWebAuthenticationSession on iOS / Chrome Custom Tab on Android)
- *      with redirect URI = higherself://oauth/callback
- *   2. The server callback redirects to that deep link with ?_t=JWT
- *   3. handleNativeAuthCallback() (registered in main.tsx via
- *      App.addListener("appUrlOpen")) extracts the token, stores it via the
- *      storage abstraction, and closes the browser
- *
- * SERVER NOTE: the OAuth callback on the server must allow
- * `higherself://oauth/callback` as a redirect target for native clients.
- * Pass `?client=native` (added by startNativeLogin) so the server knows to
- * redirect to the deep link instead of a web URL.
+ * No Manus portal, callback, browser, or Manus identity is involved.
  */
 
+import {
+  AppleSignIn,
+  SignInScope,
+} from "@capawesome/capacitor-apple-sign-in";
+import { apiUrl } from "@/lib/apiBase";
 import { isNative } from "@/lib/platform";
 import { storage, STORAGE_KEYS } from "@/lib/storage";
-import { getLoginUrl } from "@/const";
 
-const NATIVE_CALLBACK_SCHEME = "higherself";
-const NATIVE_CALLBACK_HOST = "oauth/callback";
-
-type BrowserPlugin = {
-  open(opts: { url: string; presentationStyle?: string }): Promise<void>;
-  close(): Promise<void>;
-};
-
-type AppPlugin = {
-  addListener(
-    event: "appUrlOpen",
-    cb: (data: { url: string }) => void
-  ): Promise<{ remove(): Promise<void> }>;
-};
-
-async function getBrowser(): Promise<BrowserPlugin | null> {
-  try {
-    const mod = await import("@capacitor/browser");
-    return mod.Browser as unknown as BrowserPlugin;
-  } catch {
-    return null;
-  }
+function randomHex(bytes = 32): string {
+  const value = new Uint8Array(bytes);
+  globalThis.crypto.getRandomValues(value);
+  return Array.from(value, byte => byte.toString(16).padStart(2, "0")).join("");
 }
 
+async function sha256Hex(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), byte =>
+    byte.toString(16).padStart(2, "0")
+  ).join("");
+}
+
+type AppleSessionResponse = {
+  token?: string;
+  user?: {
+    onboardingCompleted?: boolean;
+  };
+  error?: string;
+};
+
 /**
- * Open the OAuth portal in the system browser. Returns false if the native
- * browser plugin is unavailable (caller should fall back to web behavior).
+ * Starts native Apple sign-in. The URL argument used by the old redirect
+ * helper is intentionally irrelevant on native; this function owns the flow.
  */
 export async function startNativeLogin(): Promise<boolean> {
   if (!isNative()) return false;
-  const browser = await getBrowser();
-  if (!browser) return false;
 
-  const url = new URL(getLoginUrl());
-  url.searchParams.set("client", "native");
-  url.searchParams.set("redirectUri", `${NATIVE_CALLBACK_SCHEME}://${NATIVE_CALLBACK_HOST}`);
+  try {
+    // Apple recommends a fresh nonce for each authorization attempt. The raw
+    // value never leaves the process; AuthenticationServices receives its
+    // SHA-256 digest and the server verifies the same value in the identity JWT.
+    const rawNonce = randomHex();
+    const hashedNonce = await sha256Hex(rawNonce);
 
-  await browser.open({ url: url.toString(), presentationStyle: "popover" });
-  return true;
+    const result = await AppleSignIn.signIn({
+      scopes: [SignInScope.Email, SignInScope.FullName],
+      nonce: hashedNonce,
+    });
+
+    if (!result.idToken) {
+      throw new Error("APPLE_ID_TOKEN_MISSING");
+    }
+
+    const name = [result.givenName, result.familyName]
+      .filter((part): part is string => typeof part === "string" && part.trim().length > 0)
+      .join(" ")
+      .trim();
+
+    const response = await globalThis.fetch(apiUrl("/api/auth/apple"), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        identityToken: result.idToken,
+        nonce: hashedNonce,
+        email: result.email,
+        name: name || undefined,
+      }),
+    });
+
+    let body: AppleSessionResponse = {};
+    try {
+      body = (await response.json()) as AppleSessionResponse;
+    } catch {
+      // Preserve a generic failure below; never expose raw provider responses.
+    }
+
+    if (!response.ok || !body.token) {
+      throw new Error("MIRRORED_SESSION_EXCHANGE_FAILED");
+    }
+
+    storage.setItem(STORAGE_KEYS.sessionToken, body.token);
+
+    // A brand-new Apple identity must not bypass the canonical onboarding.
+    const nextPath = body.user?.onboardingCompleted ? "/home" : "/onboarding";
+    globalThis.location?.replace(nextPath);
+    return true;
+  } catch {
+    if (typeof globalThis.alert === "function") {
+      globalThis.alert("Sign in with Apple could not be completed. Please try again.");
+    }
+    return false;
+  }
 }
 
 /**
- * Register the deep-link listener that completes native login.
- * Call once at app startup (main.tsx). Safe no-op on web.
+ * Kept for bootstrap compatibility while the old deep-link listener is removed.
+ * Apple AuthenticationServices returns directly to this process, so no callback
+ * registration is needed for Build 4.
  */
 export async function registerNativeAuthCallback(): Promise<void> {
-  if (!isNative()) return;
-  try {
-    const mod = await import("@capacitor/app");
-    const App = mod.App as unknown as AppPlugin;
-    await App.addListener("appUrlOpen", async ({ url }) => {
-      try {
-        const parsed = new URL(url);
-        const isAuthCallback =
-          parsed.protocol === `${NATIVE_CALLBACK_SCHEME}:` &&
-          (parsed.host === "oauth" || url.includes(NATIVE_CALLBACK_HOST));
-        if (!isAuthCallback) return;
-
-        const token = parsed.searchParams.get("_t");
-        if (token) {
-          storage.setItem(STORAGE_KEYS.sessionToken, token);
-        }
-        const browser = await getBrowser();
-        await browser?.close();
-        // Reload so tRPC picks up the stored token and auth state refreshes.
-        globalThis.location?.replace("/home");
-      } catch {
-        /* malformed deep link — ignore */
-      }
-    });
-  } catch {
-    /* @capacitor/app unavailable */
-  }
+  return;
 }
