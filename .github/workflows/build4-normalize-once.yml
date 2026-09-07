@@ -45,7 +45,7 @@ jobs:
           DIFF="$(git diff -- pnpm-lock.yaml)"
           printf '%s\n' "$DIFF"
           test "$(printf '%s' "$DIFF" | grep -c '^+.*@capawesome/capacitor-apple-sign-in')" -eq 3
-          test "$(printf '%s' "$DIFF" | grep -c '^-' || true)" -eq 0
+          test "$(printf '%s' "$DIFF" | grep -c '^-[^-]' || true)" -eq 0
 
       - name: Bind App Store identity and Apple entitlement to Xcode target
         shell: bash
