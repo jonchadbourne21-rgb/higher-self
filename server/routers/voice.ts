@@ -52,19 +52,20 @@ async function incrementVoiceUsage(userId: number) {
 }
 
 export const voiceRouter = router({
-  /** Return Hume API key and config ID for direct WebSocket connection */
+  /** Mint a short-lived Hume client credential; never expose permanent provider keys. */
   mintToken: protectedProcedure
     .input(z.object({ voice: z.enum(["male", "female"]).optional() }).optional())
     .mutation(async ({ input }) => {
-      const apiKey = process.env.HUME_API_KEY;
+      const { fetchHumeAccessToken } = await import("../v2vRelay");
       const maleConfigId = process.env.HUME_CONFIG_ID || "";
-      const femaleConfigId = "b5b9a42c-ef7e-42c6-bd7d-7495a10da489";
-      if (!apiKey) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Hume API key not configured" });
-      }
+      const femaleConfigId = process.env.HUME_FEMALE_CONFIG_ID || "b5b9a42c-ef7e-42c6-bd7d-7495a10da489";
       const selectedVoice = input?.voice ?? "male";
       const configId = selectedVoice === "female" ? femaleConfigId : maleConfigId;
-      return { apiKey, configId };
+      if (!configId) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Hume config not configured" });
+      }
+      const accessToken = await fetchHumeAccessToken();
+      return { accessToken, configId };
     }),
 
   /** Create a new voice session record */

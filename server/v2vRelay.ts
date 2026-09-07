@@ -33,7 +33,7 @@ const HUME_CONFIG_ID = process.env.HUME_CONFIG_ID ?? "";
 
 // ─── Hume auth ───────────────────────────────────────────────────────────────
 
-async function fetchHumeAccessToken(): Promise<string> {
+export async function fetchHumeAccessToken(): Promise<string> {
   if (!HUME_API_KEY || !HUME_SECRET_KEY) {
     throw new Error("HUME_API_KEY / HUME_SECRET_KEY not set");
   }
