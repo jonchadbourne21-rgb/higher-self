@@ -11,17 +11,6 @@ export type TrpcContext = {
   isDemo?: boolean;
 };
 
-/**
- * tRPC Context Builder — runs on every request.
- * This is where the JWT validator is called.
- *
- * Flow:
- * 1. Extract session cookie from request
- * 2. Verify JWT signature
- * 3. Check session in database (catches revocations)
- * 4. Return user data or null
- */
-// Demo user for bypassing OAuth in demo mode
 const DEMO_USER: User = {
   id: 999999,
   openId: "demo-user-readonly",
@@ -44,26 +33,31 @@ export async function createContext(
 ): Promise<TrpcContext> {
   let user: User | null = null;
 
-  // Demo mode — return a read-only demo user without hitting the database
   if (opts.req.headers["x-demo-mode"] === "true") {
     return { req: opts.req, res: opts.res, user: DEMO_USER, isDemo: true };
   }
 
   try {
-    // First try new JWT-based authentication
     const cookies = parseCookieHeader(opts.req.headers.cookie || "");
-    const sessionToken = cookies.session_token;
+    const cookieToken = cookies.session_token;
+    const authHeader = opts.req.headers.authorization;
+    const bearerToken =
+      typeof authHeader === "string" && authHeader.startsWith("Bearer ")
+        ? authHeader.slice(7).trim()
+        : undefined;
+    const sessionToken = bearerToken || cookieToken;
 
     if (sessionToken) {
       user = await verifySessionToken(sessionToken);
     }
 
-    // Fallback to legacy OAuth authentication if JWT fails
+    // Temporary web-compatibility bridge during Build 4 migration only.
+    // Native Build 4 must authenticate through Mirrored JWT sessions. This
+    // fallback is removed before the no-Manus runtime gate can close.
     if (!user) {
       user = await sdk.authenticateRequest(opts.req);
     }
-  } catch (error) {
-    // Authentication is optional for public procedures.
+  } catch {
     user = null;
   }
 
