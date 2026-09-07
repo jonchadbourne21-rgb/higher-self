@@ -1,6 +1,5 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import type { User } from "../../drizzle/schema";
-import { sdk } from "./sdk";
 import { verifySessionToken } from "../auth/validator";
 import { parse as parseCookieHeader } from "cookie";
 
@@ -31,12 +30,11 @@ const DEMO_USER: User = {
 export async function createContext(
   opts: CreateExpressContextOptions
 ): Promise<TrpcContext> {
-  let user: User | null = null;
-
   if (opts.req.headers["x-demo-mode"] === "true") {
     return { req: opts.req, res: opts.res, user: DEMO_USER, isDemo: true };
   }
 
+  let user: User | null = null;
   try {
     const cookies = parseCookieHeader(opts.req.headers.cookie || "");
     const cookieToken = cookies.session_token;
@@ -50,20 +48,11 @@ export async function createContext(
     if (sessionToken) {
       user = await verifySessionToken(sessionToken);
     }
-
-    // Temporary web-compatibility bridge during Build 4 migration only.
-    // Native Build 4 must authenticate through Mirrored JWT sessions. This
-    // fallback is removed before the no-Manus runtime gate can close.
-    if (!user) {
-      user = await sdk.authenticateRequest(opts.req);
-    }
   } catch {
+    // Authentication is optional for public procedures. Protected procedures
+    // enforce user presence downstream.
     user = null;
   }
 
-  return {
-    req: opts.req,
-    res: opts.res,
-    user,
-  };
+  return { req: opts.req, res: opts.res, user };
 }
