@@ -186,15 +186,25 @@ export const timeCapsuleRouter = router({
   /** Get user's voicemails from Higher Self */
   getVoicemails: protectedProcedure.query(async ({ ctx }) => {
     const { getUserVoicemails } = await import("../outboundCall");
-    return getUserVoicemails(ctx.user.id);
+    const { storageGet, isPrivateStorageReference } = await import("../storage");
+    const rows = await getUserVoicemails(ctx.user.id);
+    return Promise.all(rows.map(async (voicemail) => {
+      if (!isPrivateStorageReference(voicemail.audioUrl)) return voicemail;
+      try {
+        const { url } = await storageGet(voicemail.audioUrl);
+        return { ...voicemail, audioUrl: url };
+      } catch {
+        return { ...voicemail, audioUrl: null };
+      }
+    }));
   }),
 
   /** Mark a voicemail as listened */
   markVoicemailListened: protectedProcedure
-    .input(z.object({ voicemailId: z.number() }))
-    .mutation(async ({ input }) => {
+    .input(z.object({ voicemailId: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
       const { markVoicemailListened } = await import("../outboundCall");
-      await markVoicemailListened(input.voicemailId);
+      await markVoicemailListened(ctx.user.id, input.voicemailId);
       return { ok: true };
     }),
 });

@@ -18,7 +18,7 @@ import { invokeLLM } from "./_core/llm";
 import { buildLearningContext } from "./rag/memory";
 import { buildLongFormPrompt } from "./intentPrompts";
 import { getUserProfile, getRecentCheckIns } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { entropyScores, sessionFingerprints, linguisticDrift } from "../drizzle/schema";
 import { randomUUID } from "crypto";
 
@@ -292,12 +292,15 @@ export async function markCallAnswered(voicemailId: number): Promise<void> {
 
 // ─── Mark voicemail as listened ─────────────────────────────────────────────
 
-export async function markVoicemailListened(voicemailId: number): Promise<void> {
+export async function markVoicemailListened(userId: number, voicemailId: number): Promise<void> {
   const db = await getDb();
   if (!db) return;
   await db.update(higherSelfVoicemails)
     .set({ listenedAt: new Date() })
-    .where(eq(higherSelfVoicemails.id, voicemailId));
+    .where(and(
+      eq(higherSelfVoicemails.id, voicemailId),
+      eq(higherSelfVoicemails.userId, userId)
+    ));
 }
 
 // ─── Get user's voicemails ──────────────────────────────────────────────────
