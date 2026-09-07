@@ -1,70 +1,57 @@
-// Preconfigured storage helpers for Manus WebDev templates
-// Uses the Biz-provided storage proxy (Authorization: Bearer <token>)
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+  type S3ClientConfig,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-import { ENV } from './_core/env';
+const SIGNED_URL_TTL_SECONDS = 15 * 60;
 
-type StorageConfig = { baseUrl: string; apiKey: string };
+function normalizeKey(value: string): string {
+  const key = value.replace(/^\/+/, "").replace(/\\/g, "/");
+  if (!key || key.includes("..") || key.includes("\0")) {
+    throw new Error("Invalid storage key");
+  }
+  return key;
+}
 
-function getStorageConfig(): StorageConfig {
-  const baseUrl = ENV.forgeApiUrl;
-  const apiKey = ENV.forgeApiKey;
+function getConfig() {
+  const bucket = process.env.S3_BUCKET?.trim();
+  const region = (process.env.S3_REGION || process.env.AWS_REGION || "us-east-1").trim();
+  const endpoint = process.env.S3_ENDPOINT?.trim();
+  if (!bucket) throw new Error("S3_BUCKET is not configured");
 
-  if (!baseUrl || !apiKey) {
-    throw new Error(
-      "Storage proxy credentials missing: set BUILT_IN_FORGE_API_URL and BUILT_IN_FORGE_API_KEY"
-    );
+  const config: S3ClientConfig = {
+    region,
+    ...(endpoint ? { endpoint } : {}),
+    ...(process.env.S3_FORCE_PATH_STYLE === "true" ? { forcePathStyle: true } : {}),
+  };
+
+  const accessKeyId = process.env.S3_ACCESS_KEY_ID?.trim();
+  const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY?.trim();
+  if (accessKeyId || secretAccessKey) {
+    if (!accessKeyId || !secretAccessKey) {
+      throw new Error("Both S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY are required when using explicit credentials");
+    }
+    config.credentials = { accessKeyId, secretAccessKey };
   }
 
-  return { baseUrl: baseUrl.replace(/\/+$/, ""), apiKey };
+  return { bucket, client: new S3Client(config) };
 }
 
-function buildUploadUrl(baseUrl: string, relKey: string): URL {
-  const url = new URL("v1/storage/upload", ensureTrailingSlash(baseUrl));
-  url.searchParams.set("path", normalizeKey(relKey));
-  return url;
+function storageReference(bucket: string, key: string): string {
+  return `s3://${bucket}/${key}`;
 }
 
-async function buildDownloadUrl(
-  baseUrl: string,
-  relKey: string,
-  apiKey: string
-): Promise<string> {
-  const downloadApiUrl = new URL(
-    "v1/storage/downloadUrl",
-    ensureTrailingSlash(baseUrl)
-  );
-  downloadApiUrl.searchParams.set("path", normalizeKey(relKey));
-  const response = await fetch(downloadApiUrl, {
-    method: "GET",
-    headers: buildAuthHeaders(apiKey),
-  });
-  return (await response.json()).url;
-}
-
-function ensureTrailingSlash(value: string): string {
-  return value.endsWith("/") ? value : `${value}/`;
-}
-
-function normalizeKey(relKey: string): string {
-  return relKey.replace(/^\/+/, "");
-}
-
-function toFormData(
-  data: Buffer | Uint8Array | string,
-  contentType: string,
-  fileName: string
-): FormData {
-  const blob =
-    typeof data === "string"
-      ? new Blob([data], { type: contentType })
-      : new Blob([data as any], { type: contentType });
-  const form = new FormData();
-  form.append("file", blob, fileName || "file");
-  return form;
-}
-
-function buildAuthHeaders(apiKey: string): HeadersInit {
-  return { Authorization: `Bearer ${apiKey}` };
+function parseStorageReference(value: string, expectedBucket: string): string {
+  if (!value.startsWith("s3://")) return normalizeKey(value);
+  const withoutScheme = value.slice("s3://".length);
+  const slash = withoutScheme.indexOf("/");
+  if (slash <= 0) throw new Error("Invalid storage reference");
+  const bucket = withoutScheme.slice(0, slash);
+  if (bucket !== expectedBucket) throw new Error("Storage reference bucket mismatch");
+  return normalizeKey(withoutScheme.slice(slash + 1));
 }
 
 export async function storagePut(
@@ -72,31 +59,36 @@ export async function storagePut(
   data: Buffer | Uint8Array | string,
   contentType = "application/octet-stream"
 ): Promise<{ key: string; url: string }> {
-  const { baseUrl, apiKey } = getStorageConfig();
+  const { bucket, client } = getConfig();
   const key = normalizeKey(relKey);
-  const uploadUrl = buildUploadUrl(baseUrl, key);
-  const formData = toFormData(data, contentType, key.split("/").pop() ?? key);
-  const response = await fetch(uploadUrl, {
-    method: "POST",
-    headers: buildAuthHeaders(apiKey),
-    body: formData,
-  });
+  const body = typeof data === "string" ? Buffer.from(data) : Buffer.from(data);
 
-  if (!response.ok) {
-    const message = await response.text().catch(() => response.statusText);
-    throw new Error(
-      `Storage upload failed (${response.status} ${response.statusText}): ${message}`
-    );
-  }
-  const url = (await response.json()).url;
+  await client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+      ServerSideEncryption: process.env.S3_SERVER_SIDE_ENCRYPTION === "aws:kms" ? "aws:kms" : "AES256",
+      ...(process.env.S3_KMS_KEY_ID ? { SSEKMSKeyId: process.env.S3_KMS_KEY_ID } : {}),
+    })
+  );
+
+  return { key, url: storageReference(bucket, key) };
+}
+
+/** Returns a short-lived signed GET URL for an internal storage reference/key. */
+export async function storageGet(referenceOrKey: string): Promise<{ key: string; url: string }> {
+  const { bucket, client } = getConfig();
+  const key = parseStorageReference(referenceOrKey, bucket);
+  const url = await getSignedUrl(
+    client,
+    new GetObjectCommand({ Bucket: bucket, Key: key }),
+    { expiresIn: SIGNED_URL_TTL_SECONDS }
+  );
   return { key, url };
 }
 
-export async function storageGet(relKey: string): Promise<{ key: string; url: string; }> {
-  const { baseUrl, apiKey } = getStorageConfig();
-  const key = normalizeKey(relKey);
-  return {
-    key,
-    url: await buildDownloadUrl(baseUrl, key, apiKey),
-  };
+export function isPrivateStorageReference(value: string | null | undefined): value is string {
+  return typeof value === "string" && value.startsWith("s3://");
 }
