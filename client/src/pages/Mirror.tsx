@@ -279,11 +279,11 @@ export default function Mirror() {
     try {
       const { systemPrompt } = await answerCallMut.mutateAsync({ voicemailId: entropyVoicemailId });
       // Start voice session with entropy-aware prompt via configId
-      const { apiKey, configId } = await mintTokenMut.mutateAsync({ voice: voiceGender });
+      const { accessToken, configId } = await mintTokenMut.mutateAsync({ voice: voiceGender });
       await createSessionMut.mutateAsync();
       setMode("voice");
       await connect({
-        auth: { type: "apiKey" as const, value: apiKey },
+        auth: { type: "accessToken" as const, value: accessToken },
         hostname: "api.hume.ai",
         configId,
         // Pass the entropy-aware system prompt as initial context
@@ -308,10 +308,10 @@ export default function Mirror() {
 
   const handleStartVoice = useCallback(async () => {
     try {
-      const { apiKey, configId } = await mintTokenMut.mutateAsync({ voice: voiceGender });
+      const { accessToken, configId } = await mintTokenMut.mutateAsync({ voice: voiceGender });
       await createSessionMut.mutateAsync();
       await connect({
-        auth: { type: "apiKey" as const, value: apiKey },
+        auth: { type: "accessToken" as const, value: accessToken },
         hostname: "api.hume.ai",
         configId,
       });
