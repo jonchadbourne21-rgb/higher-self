@@ -1,0 +1,143 @@
+name: Program restore qualification
+
+on:
+  push:
+    branches:
+      - repair/build4-parity
+    paths:
+      - .github/workflows/program-restore-qualification.yml
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: mirrored_test
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DATABASE_URL: mysql://root:root@127.0.0.1:3306/mirrored_test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create disposable canonical program tables
+        run: |
+          node --input-type=module <<'NODE'
+          import mysql from 'mysql2/promise';
+          const db=await mysql.createConnection(process.env.DATABASE_URL);
+          await db.execute(`CREATE TABLE growth_programs (
+            id int AUTO_INCREMENT PRIMARY KEY,
+            name varchar(200) NOT NULL,
+            slug varchar(100) NOT NULL UNIQUE,
+            description text,
+            durationDays int NOT NULL,
+            category enum('emotional-mastery','building-presence','relationships','mindfulness','self-awareness','zen-philosophy','stoicism') NOT NULL,
+            status enum('active','archived') DEFAULT 'active',
+            createdAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+          ) ENGINE=InnoDB`);
+          await db.execute(`CREATE TABLE program_lessons (
+            id int AUTO_INCREMENT PRIMARY KEY,
+            programId int NOT NULL,
+            day int NOT NULL,
+            title varchar(200) NOT NULL,
+            concept text NOT NULL,
+            exercisePrompt text NOT NULL,
+            guidanceTemplate text,
+            isVoiceDay boolean DEFAULT false,
+            \`order\` int NOT NULL,
+            createdAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+          ) ENGINE=InnoDB`);
+          await db.end();
+          NODE
+
+      - name: Dry-run exact production restore tool
+        run: |
+          set -euo pipefail
+          node scripts/parity/restore-programs.mjs \
+            --catalog scripts/parity/recovered-program-catalog-v2.json \
+            --database mirrored_test | tee /tmp/restore-plan.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const p=JSON.parse(fs.readFileSync('/tmp/restore-plan.json','utf8'));
+          if(p.status!=='READY_FOR_REVIEW') throw new Error(`EXPECTED_READY_FOR_REVIEW_GOT_${p.status}`);
+          if(p.mode!=='DRY_RUN_NO_WRITES') throw new Error('DRY_RUN_MODE_MISSING');
+          if(p.programsToInsert!==7) throw new Error(`EXPECTED_7_PROGRAMS_GOT_${p.programsToInsert}`);
+          if(p.lessonsToInsert!==178) throw new Error(`EXPECTED_178_LESSONS_GOT_${p.lessonsToInsert}`);
+          if(p.voiceDaysToInsert!==3) throw new Error(`EXPECTED_3_VOICE_DAYS_GOT_${p.voiceDaysToInsert}`);
+          if(p.conflicts.length!==0) throw new Error('UNEXPECTED_CONFLICTS');
+          if(!/^[a-f0-9]{64}$/.test(p.planHash)) throw new Error('INVALID_PLAN_HASH');
+          fs.writeFileSync('/tmp/plan-hash',p.planHash);
+          NODE
+
+      - name: Apply reviewed plan to disposable database
+        run: |
+          set -euo pipefail
+          PLAN_HASH="$(cat /tmp/plan-hash)"
+          node scripts/parity/restore-programs.mjs \
+            --catalog scripts/parity/recovered-program-catalog-v2.json \
+            --database mirrored_test \
+            --apply \
+            --expected-plan "$PLAN_HASH" | tee /tmp/apply.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const r=JSON.parse(fs.readFileSync('/tmp/apply.json','utf8'));
+          if(r.status!=='RESTORE_COMMITTED') throw new Error(`EXPECTED_RESTORE_COMMITTED_GOT_${r.status}`);
+          if(r.verification!=='CATALOG_MATCH') throw new Error('POST_WRITE_CATALOG_MISMATCH');
+          NODE
+
+      - name: Verify exact disposable database state
+        run: |
+          node --input-type=module <<'NODE'
+          import mysql from 'mysql2/promise';
+          const db=await mysql.createConnection(process.env.DATABASE_URL);
+          const [[p]]=await db.query('SELECT COUNT(*) count FROM growth_programs');
+          const [[l]]=await db.query('SELECT COUNT(*) count FROM program_lessons');
+          const [voice]=await db.query(`SELECT gp.slug, pl.day
+            FROM program_lessons pl
+            JOIN growth_programs gp ON gp.id=pl.programId
+            WHERE pl.isVoiceDay=1
+            ORDER BY gp.slug, pl.day`);
+          const actual=voice.map(x=>`${x.slug}:${x.day}`);
+          const expected=['ifs-parts-work:3','ifs-parts-work:12','ifs-parts-work:21'];
+          if(Number(p.count)!==7) throw new Error(`PROGRAM_COUNT_${p.count}`);
+          if(Number(l.count)!==178) throw new Error(`LESSON_COUNT_${l.count}`);
+          if(JSON.stringify(actual)!==JSON.stringify(expected)) throw new Error(`VOICE_DAYS_${JSON.stringify(actual)}`);
+          await db.end();
+          console.log(JSON.stringify({status:'PASS_DISPOSABLE_RESTORE',programs:Number(p.count),lessons:Number(l.count),voiceDays:actual}));
+          NODE
+
+      - name: Prove idempotent read-only rerun
+        run: |
+          set -euo pipefail
+          node scripts/parity/restore-programs.mjs \
+            --catalog scripts/parity/recovered-program-catalog-v2.json \
+            --database mirrored_test | tee /tmp/rerun.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const r=JSON.parse(fs.readFileSync('/tmp/rerun.json','utf8'));
+          if(r.status!=='NO_CHANGE') throw new Error(`EXPECTED_NO_CHANGE_GOT_${r.status}`);
+          if(r.programsToInsert!==0||r.lessonsToInsert!==0||r.voiceDaysToInsert!==0) throw new Error('RERUN_PROPOSED_WRITES');
+          if(r.conflicts.length!==0) throw new Error('RERUN_CONFLICTS');
+          console.log(JSON.stringify({status:'PASS_IDEMPOTENT_RERUN'}));
+          NODE
