@@ -6,6 +6,9 @@ on:
       - repair/build4-parity
     paths:
       - .github/workflows/program-restore-qualification.yml
+      - scripts/parity/catalog.mjs
+      - scripts/parity/restore-programs.mjs
+      - scripts/parity/recovered-program-catalog-v2.json
 
 permissions:
   contents: read
