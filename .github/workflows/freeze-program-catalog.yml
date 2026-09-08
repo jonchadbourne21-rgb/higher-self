@@ -1,0 +1,72 @@
+name: Freeze recovered program catalog
+
+on:
+  push:
+    branches:
+      - repair/build4-parity
+    paths:
+      - .github/workflows/freeze-program-catalog.yml
+
+permissions:
+  contents: write
+
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Checkout pinned canonical source
+        run: |
+          set -euo pipefail
+          git worktree add --detach /tmp/mirrored-canonical-source 0c67fac5cfd4d0bc419f79595944a49f6ba45b91
+
+      - name: Extract source-pinned catalog
+        run: |
+          set -euo pipefail
+          rm -f /tmp/recovered-program-catalog-v1.json
+          node scripts/parity/extract-programs.mjs \
+            --source-root /tmp/mirrored-canonical-source \
+            --out /tmp/recovered-program-catalog-v1.json
+
+      - name: Verify exact recovered catalog
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { digest, validateCatalog } from './scripts/parity/catalog.mjs';
+          const expectedHash = 'fbc2eaedeca75a9e840e94d3eff98b1ab0c38079bc9290f6df8d1be3507ad85f';
+          const catalog = validateCatalog(JSON.parse(fs.readFileSync('/tmp/recovered-program-catalog-v1.json','utf8')));
+          const programs = catalog.programs.length;
+          const lessons = catalog.programs.reduce((n,p)=>n+p.lessons.length,0);
+          const hash = digest(catalog);
+          if (programs !== 7) throw new Error(`EXPECTED_7_PROGRAMS_GOT_${programs}`);
+          if (lessons !== 178) throw new Error(`EXPECTED_178_LESSONS_GOT_${lessons}`);
+          if (hash !== expectedHash) throw new Error(`CATALOG_HASH_MISMATCH_${hash}`);
+          console.log(JSON.stringify({status:'PASS_CATALOG_FREEZE', programs, lessons, catalogHash:hash}));
+          NODE
+
+      - name: Commit derived catalog only
+        run: |
+          set -euo pipefail
+          cp /tmp/recovered-program-catalog-v1.json scripts/parity/recovered-program-catalog-v1.json
+          git add scripts/parity/recovered-program-catalog-v1.json
+          if git diff --cached --quiet; then
+            echo 'Catalog already frozen at identical bytes.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Freeze recovered 7-program canonical catalog'
+          git push origin HEAD:repair/build4-parity
