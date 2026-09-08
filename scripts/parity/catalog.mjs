@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 
 export const PROGRAM_FIELDS = ['name', 'slug', 'description', 'durationDays', 'category', 'status'];
-export const LESSON_FIELDS = ['day', 'title', 'concept', 'exercisePrompt', 'guidanceTemplate', 'order'];
+export const LESSON_FIELDS = ['day', 'title', 'concept', 'exercisePrompt', 'guidanceTemplate', 'isVoiceDay', 'order'];
 const CATEGORIES = new Set(['emotional-mastery','building-presence','relationships','mindfulness','self-awareness','zen-philosophy','stoicism']);
 export function canonicalJson(value) {
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
@@ -12,7 +12,7 @@ export const digest = value => createHash('sha256').update(canonicalJson(value))
 export const gitBlobSha = bytes => createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
 
 export function validateCatalog(catalog) {
-  if (catalog?.format !== 'mirrored-recovered-catalog-v1' || !Array.isArray(catalog.programs) || !catalog.programs.length) throw new Error('CATALOG_FORMAT');
+  if (catalog?.format !== 'mirrored-recovered-catalog-v2' || !Array.isArray(catalog.programs) || !catalog.programs.length) throw new Error('CATALOG_FORMAT');
   const slugs = new Set();
   for (const { program, lessons } of catalog.programs) {
     if (!program || !/^[a-z0-9-]+$/.test(program.slug ?? '') || slugs.has(program.slug)) throw new Error('CATALOG_SLUG');
@@ -24,6 +24,7 @@ export function validateCatalog(catalog) {
     for (const lesson of lessons) {
       if (Object.keys(lesson).some(k=>!LESSON_FIELDS.includes(k))) throw new Error('CATALOG_LESSON_FIELDS');
       if (!Number.isSafeInteger(lesson.day) || lesson.day<1 || lesson.day>program.durationDays || days.has(lesson.day) || lesson.order!==lesson.day) throw new Error('CATALOG_LESSON_DAY');
+      if (typeof lesson.isVoiceDay !== 'boolean') throw new Error('CATALOG_VOICE_DAY');
       days.add(lesson.day);
       for (const field of ['title','concept','exercisePrompt','guidanceTemplate']) if (typeof lesson[field]!=='string' || !lesson[field].trim()) throw new Error('CATALOG_LESSON_CONTENT');
     }

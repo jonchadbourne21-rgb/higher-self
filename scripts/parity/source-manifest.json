@@ -19,5 +19,14 @@
     "path": ".manus/db/db-query-1778797509470.json",
     "gitBlobSha": "39007ec2e82b3a96e41428d391f0b138791d2b6f",
     "slug": "21-day-inner-voice-reset"
+  },
+  "behavioralSources": {
+    "todo.md": "4c3d7a3858a7047ed1b6a09ee92e8b8f93ba0522"
+  },
+  "behavioralReconciliations": {
+    "ifs-parts-work": {
+      "isVoiceDayTrueDays": [3, 12, 21],
+      "evidence": ["scripts/seed-ifs-parts-work.mjs", "todo.md"]
+    }
   }
 }
