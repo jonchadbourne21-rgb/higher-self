@@ -1,0 +1,7 @@
+# Historical recovery evidence — never ship to production build context
+.manus/
+
+# CI and parity-recovery artifacts are not runtime dependencies
+.github/
+scripts/parity/
+docs/parity/
