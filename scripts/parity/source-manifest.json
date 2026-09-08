@@ -1,0 +1,23 @@
+{
+  "canonicalRepository": "jonchadbourne21-rgb/higher-self",
+  "canonicalCommit": "0c67fac5cfd4d0bc419f79595944a49f6ba45b91",
+  "scriptSources": {
+    "scripts/seed-alan-watts.mjs": "56ad4e83e3422e5c5972515e3b1b8d91ff2ab6f7",
+    "scripts/seed-frankl.mjs": "e5c6b5678f18aa724f1229e6fd9e1241ce978aa7",
+    "scripts/seed-ifs-parts-work.mjs": "c08606b98c5ad9593f7ad5651c1daae1baf1dfe2",
+    "scripts/seed-self-actualization.mjs": "f79d8e80ba562e6bb8ae95f9d193886b2af21088",
+    "scripts/seed-stoic-path.mjs": "aaca768879707be40e7ff1fa2bdb2eba6e9c8eb4"
+  },
+  "querySources": {
+    ".manus/db/db-query-1778749653864.json": "a864286faf794376051276d45d2aa86da8aaacee",
+    ".manus/db/db-query-1778797498457.json": "cb580333ec60e3028ee0b8652f2dfd47c051bb19",
+    ".manus/db/db-query-1778797558877.json": "b6692c85aa1580f77d7b5079ec225ced037bde00",
+    ".manus/db/db-query-1778797600555.json": "a275b0afc53fe3cd64769da21a99febb5a0bea3f",
+    ".manus/db/db-query-1778797636436.json": "8f3d70b54edbc7aeb1284e2fb91f51a91c738358"
+  },
+  "identitySource": {
+    "path": ".manus/db/db-query-1778797509470.json",
+    "gitBlobSha": "39007ec2e82b3a96e41428d391f0b138791d2b6f",
+    "slug": "21-day-inner-voice-reset"
+  }
+}
